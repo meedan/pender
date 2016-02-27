@@ -1030,10 +1030,10 @@ table {
   margin: 0 10px 0 0;
 }
 #header form#api_selector .input input#input_apiKey {
-  width: 200px;
+  width: 120px;
 }
 #header form#api_selector .input input#input_baseUrl {
-  width: 400px;
+  width: 200px;
 }
 #header form#api_selector .input a#explore {
   display: block;

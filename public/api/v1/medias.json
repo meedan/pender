@@ -1,0 +1,64 @@
+{
+  "apiVersion": "1.0",
+  "swaggerVersion": "1.2",
+  "basePath": "/",
+  "resourcePath": "medias",
+  "apis": [
+    {
+      "path": "api/medias",
+      "operations": [
+        {
+          "summary": "Get the metadata for a given URL or render it",
+          "notes": "Parse or render a given URL, that can be a post or a profile, from different providers",
+          "parameters": [
+            {
+              "paramType": "query",
+              "name": "url",
+              "type": "string",
+              "description": "URL to be parsed/rendered",
+              "required": true
+            }
+          ],
+          "responseMessages": [
+            {
+              "code": 200,
+              "responseModel": {
+                "query": {
+                  "url": "http://meedan.com"
+                },
+                "headers": {
+                  "x-Pender-Token": "test"
+                }
+              },
+              "message": "Parsed data"
+            },
+            {
+              "code": 400,
+              "responseModel": {
+                "query": {
+                  "url": null
+                },
+                "headers": {
+                  "x-Pender-Token": "test"
+                }
+              },
+              "message": "URL not provided"
+            },
+            {
+              "code": 401,
+              "responseModel": {
+                "query": {
+                  "url": "http://meedan.com"
+                }
+              },
+              "message": "Access denied"
+            }
+          ],
+          "nickname": "Api::V1::Medias#index",
+          "method": "get"
+        }
+      ]
+    }
+  ],
+  "authorizations": null
+}

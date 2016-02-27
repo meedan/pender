@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>API Docs</title>
+  <title>Pender API</title>
   <link href='//fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'/>
   <link href='/api/swagger-ui/css/highlight.default.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='/api/swagger-ui/css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
@@ -40,7 +40,7 @@
     $('#input_apiKey').change(function() {
       var key = $('#input_apiKey')[0].value;
       if (key && key.trim() != "") {
-        window.authorizations.add('token', new ApiKeyAuthorization('X-Lapis-Token', key, 'header'));
+        window.authorizations.add('token', new ApiKeyAuthorization('X-Pender-Token', key, 'header'));
       }
     });
 
@@ -62,7 +62,7 @@
 <body>
 <div id='header'>
   <div class="swagger-ui-wrap">
-    <a id="logo" href="/api">API Docs</a>
+    <a id="logo" href="/api">Pender API</a>
 
     <form id='api_selector'>
       <div class='input'><input placeholder="/api" id="input_baseUrl" name="baseUrl" type="text"/></div>

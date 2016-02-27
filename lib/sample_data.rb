@@ -17,4 +17,8 @@ module SampleData
   def create_api_key(options = {})
     ApiKey.create! options
   end
+
+  def create_media(options = {})
+    Media.new({ url: 'http://test.com' }.merge(options))
+  end
 end
