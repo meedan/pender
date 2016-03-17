@@ -38,6 +38,7 @@ class ActiveSupport::TestCase
   def teardown
     WebMock.reset!
     WebMock.allow_net_connect!
+    Time.unstub(:now)
   end
 
   def authenticate_with_token(api_key = nil)
