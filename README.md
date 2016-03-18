@@ -15,7 +15,7 @@ A parsing and rendering service
 
 #### Docker-based
 
-* You can also start the application on Docker by running `./docker/run.sh` (it will run on port 80 and your local hostname) - you first need to create an API key after entering the container (`./docker/shell.sh`) before using the web interface
+* You can also start the application on Docker by running `rake lapis:docker:run` (it will run on port 80 and your local hostname) - you first need to create an API key after entering the container (`rake lapis:docker:shell`) before using the web interface
 
 ### Integration
 
