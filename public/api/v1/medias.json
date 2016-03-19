@@ -8,8 +8,8 @@
       "path": "api/medias",
       "operations": [
         {
-          "summary": "Get the metadata for a given URL or render it",
-          "notes": "Parse or render a given URL, that can be a post or a profile, from different providers",
+          "summary": "Get the metadata for a given URL",
+          "notes": "Get parseable data for a given URL, that can be a post or a profile, from different providers",
           "parameters": [
             {
               "paramType": "query",
@@ -24,7 +24,7 @@
               "code": 200,
               "responseModel": {
                 "query": {
-                  "url": "http://meedan.com"
+                  "url": "https://www.youtube.com/user/MeedanTube"
                 },
                 "headers": {
                   "x-Pender-Token": "test"
@@ -48,17 +48,16 @@
               "code": 401,
               "responseModel": {
                 "query": {
-                  "url": "http://meedan.com"
+                  "url": "https://www.youtube.com/user/MeedanTube"
                 }
               },
               "message": "Access denied"
             }
           ],
-          "nickname": "Api::V1::Medias#index",
-          "method": "get"
+          "method": "get",
+          "nickname": "Api::V1::Medias#index"
         }
       ]
     }
-  ],
-  "authorizations": null
+  ]
 }

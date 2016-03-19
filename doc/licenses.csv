@@ -1,0 +1,81 @@
+Ruby Gem: actionmailer,Email composition delivery and receiving framework (part of Rails).,MIT,http://www.rubyonrails.org
+Ruby Gem: actionpack,Web-flow and rendering framework putting the VC in MVC (part of Rails).,MIT,http://www.rubyonrails.org
+Ruby Gem: actionview,Rendering framework putting the V in MVC (part of Rails).,MIT,http://www.rubyonrails.org
+Ruby Gem: activejob,Job framework with pluggable queues.,MIT,http://www.rubyonrails.org
+Ruby Gem: activemodel,A toolkit for building modeling frameworks (part of Rails).,MIT,http://www.rubyonrails.org
+Ruby Gem: activerecord,Object-relational mapper framework (part of Rails).,MIT,http://www.rubyonrails.org
+Ruby Gem: activesupport,A toolkit of support libraries and Ruby core extensions extracted from the Rails framework.,MIT,http://www.rubyonrails.org
+Ruby Gem: airbrake,Send your application errors to our hosted service and reclaim your inbox.,MIT,http://www.airbrake.io
+Ruby Gem: akami,Web Service Security,MIT,https://github.com/savonrb/akami
+Ruby Gem: arel,Arel Really Exasperates Logicians  Arel is a SQL AST manager for Ruby,MIT,https://github.com/rails/arel
+Ruby Gem: auto_localize,Machine-translates an application by generating a config/locales/<target-language>.yml file from a config/locales/<source-language>.yml using Bing to translate strings from the source file automatically,MIT,https://github.com/caiosba/auto_localize
+Ruby Gem: awesome_print,Pretty print Ruby objects with proper indentation and colors,MIT,http://github.com/michaeldv/awesome_print
+Ruby Gem: binding_of_caller,Retrieve the binding of a method's caller. Can also retrieve bindings even further up the stack.,MIT,http://github.com/banister/binding_of_caller
+Ruby Gem: bing_translator,Translate using the Bing HTTP API,MIT,https://www.github.com/relrod/bing_translator-gem
+Ruby Gem: builder,Builders for MarkUp.,MIT,http://onestepback.org
+Ruby Gem: bundler,The best way to manage your application's dependencies,MIT,http://bundler.io
+Ruby Gem: codeclimate-test-reporter,Uploads Ruby test coverage data to Code Climate.,MIT,https://github.com/codeclimate/ruby-test-reporter
+Ruby Gem: concurrent-ruby,Modern concurrency tools for Ruby. Inspired by Erlang Clojure Scala Haskell F# C# Java and classic concurrency patterns.,MIT,http://www.concurrent-ruby.com
+Ruby Gem: crack,Really simple JSON and XML parsing ripped from Merb and Rails.,MIT,http://github.com/jnunemaker/crack
+Ruby Gem: daemons,A toolkit to create and control daemons in different ways,MIT,https://github.com/thuehlinger/daemons
+Ruby Gem: debug_inspector,A Ruby wrapper for the MRI 2.0 debug_inspector API,MIT,https://github.com/banister/debug_inspector
+Ruby Gem: docile,Docile keeps your Ruby DSLs tame and well-behaved,MIT,https://ms-ati.github.io/docile/
+Ruby Gem: erubis,a fast and extensible eRuby implementation which supports multi-language,MIT,http://www.kuwata-lab.com/erubis/
+Ruby Gem: gem-licenses,Attempts to figure out what licenses various gems use.,MIT,http://github.com/dblock/gem-licenses
+Ruby Gem: globalid,Refer to any model with a URI: gid://app/class/id,MIT,http://www.rubyonrails.org
+Ruby Gem: gyoku,Translates Ruby Hashes to XML,MIT,https://github.com/savonrb/gyoku
+Ruby Gem: hashdiff,HashDiff is a diff lib to compute the smallest difference between two hashes.,MIT,https://github.com/liufengyun/hashdiff
+Ruby Gem: httpi,Common interface for Ruby's HTTP libraries,MIT,http://github.com/savonrb/httpi
+Ruby Gem: i18n,New wave Internationalization support for Ruby,MIT,http://github.com/svenfuchs/i18n
+Ruby Gem: logstasher,Awesome rails logs,MIT,https://github.com/shadabahmed/logstasher
+Ruby Gem: loofah,Loofah is a general library for manipulating and transforming HTML/XML documents and fragments,MIT,https://github.com/flavorjones/loofah
+Ruby Gem: mail,Mail provides a nice Ruby DSL for making sending and reading emails.,MIT,https://github.com/mikel/mail
+Ruby Gem: metaclass,Adds a metaclass method to all Ruby objects,MIT,http://github.com/floehopper/metaclass
+Ruby Gem: mime-types,The mime-types library provides a library and registry for information about MIME content type definitions,MIT,https://github.com/mime-types/ruby-mime-types/
+Ruby Gem: mini_portile2,Simplistic port-like solution for developers,MIT,http://github.com/flavorjones/mini_portile
+Ruby Gem: minitest,minitest provides a complete suite of testing facilities supporting TDD BDD mocking and benchmarking,MIT,https://github.com/seattlerb/minitest
+Ruby Gem: mocha,Mocking and stubbing library,MIT,http://gofreerange.com/mocha/docs
+Ruby Gem: multi_json,A common interface to multiple JSON libraries.,MIT,http://github.com/intridea/multi_json
+Ruby Gem: nokogiri,Nokogiri (鋸) is an HTML XML SAX and Reader parser,MIT,http://nokogiri.org
+Ruby Gem: nori,XML to Hash translator,MIT,https://github.com/savonrb/nori
+Ruby Gem: protected_attributes,Protect attributes from mass assignment in Active Record models,MIT,https://github.com/rails/protected_attributes
+Ruby Gem: rack,a modular Ruby webserver interface,MIT,http://rack.github.io/
+Ruby Gem: rack-test,Simple testing API built on Rack,MIT,http://github.com/brynary/rack-test
+Ruby Gem: rails,Full-stack web application framework.,MIT,http://www.rubyonrails.org
+Ruby Gem: rails-deprecated_sanitizer,Deprecated sanitizer API extracted from Action View.,MIT,https://github.com/rails/rails-deprecated_sanitizer
+Ruby Gem: rails-dom-testing,Dom and Selector assertions for Rails applications,MIT,https://github.com/rails/rails-dom-testing
+Ruby Gem: rails-html-sanitizer,This gem is responsible to sanitize HTML fragments in Rails applications.,MIT,https://github.com/rails/rails-html-sanitizer
+Ruby Gem: railties,Tools for creating working with and running Rails applications.,MIT,http://www.rubyonrails.org
+Ruby Gem: rake,Rake is a Make-like program implemented in Ruby,MIT,https://github.com/ruby/rake
+Ruby Gem: request_store,RequestStore gives you per-request global storage.,MIT,http://github.com/steveklabnik/request_store
+Ruby Gem: responders,A set of Rails responders to dry up your application,MIT,http://github.com/plataformatec/responders
+Ruby Gem: safe_yaml,SameYAML provides an alternative implementation of YAML.load suitable for accepting user input in Ruby applications.,MIT,https://github.com/dtao/safe_yaml
+Ruby Gem: savon,Heavy metal SOAP client,MIT,http://savonrb.com
+Ruby Gem: simplecov,Code coverage for Ruby 1.9+ with a powerful configuration library and automatic merging of coverage across test suites,MIT,http://github.com/colszowka/simplecov
+Ruby Gem: simplecov-html,Default HTML formatter for SimpleCov code coverage tool for ruby 1.9+,MIT,https://github.com/colszowka/simplecov-html
+Ruby Gem: sprockets,Rack-based asset packaging system,MIT,https://github.com/rails/sprockets
+Ruby Gem: sprockets-rails,Sprockets Rails integration,MIT,https://github.com/rails/sprockets-rails
+Ruby Gem: swagger-docs,Generates swagger-ui json files for rails apps with APIs. You add the swagger DSL to your controller classes and then run one rake task to generate the json files.,MIT,https://github.com/richhollis/swagger-docs
+Ruby Gem: thor,Thor is a toolkit for building powerful command-line interfaces.,MIT,http://whatisthor.com/
+Ruby Gem: tzinfo,Daylight savings aware timezone library,MIT,http://tzinfo.github.io
+Ruby Gem: wasabi,A simple WSDL parser,MIT,https://github.com/savonrb/wasabi
+Ruby Gem: web-console,A debugging tool for your Ruby on Rails applications.,MIT,https://github.com/rails/web-console
+Ruby Gem: webmock,Library for stubbing HTTP requests in Ruby.,MIT,http://github.com/bblimke/webmock
+Ruby Gem: yt,Yt makes it easy to interact with Youtube V3 API by providing a modular intuitive and tested Ruby-style API.,MIT,http://github.com/Fullscreen/yt
+Ruby Gem: eventmachine,Ruby/EventMachine library,Ruby,http://rubyeventmachine.com
+Ruby Gem: json,JSON Implementation for Ruby,Ruby,http://flori.github.com/json
+Ruby Gem: thin,A thin and fast web server,Ruby,http://code.macournoyer.com/thin/
+Ruby Gem: addressable,URI Implementation,Apache 2.0,https://github.com/sporkmonger/addressable
+Ruby Gem: thread_safe,A collection of data structures and utilities to make thread-safe programming in Ruby easier,Apache 2.0,https://github.com/ruby-concurrency/thread_safe
+Ruby Gem: mime-types,The mime-types library provides a library and registry for information about MIME content type definitions,artistic-2.0,https://github.com/mime-types/ruby-mime-types/
+Ruby Gem: mime-types,The mime-types library provides a library and registry for information about MIME content type definitions,gpl-2.0,https://github.com/mime-types/ruby-mime-types/
+Ruby Gem: byebug,Ruby 2.0 fast debugger - base + CLI,BSD,http://github.com/deivid-rodriguez/byebug
+Ruby Gem: eventmachine,Ruby/EventMachine library,gpl,http://rubyeventmachine.com
+Ruby Gem: kgio,kinder gentler I/O for Ruby,LGPLv2.1,http://bogomips.org/kgio/
+Ruby Gem: raindrops,real-time stats for preforking Rack servers,LGPLv2.1,http://raindrops.bogomips.org/
+Ruby Gem: logstash-event,Library that contains the classes required to create LogStash events,apache license (2.0),https://github.com/logstash/logstash
+Ruby Gem: railroady,Ruby on Rails 3/4 model and controller UML class diagram generator.,GPLv2,http://github.com/preston/railroady
+Ruby Gem: thin,A thin and fast web server,GPLv2,http://code.macournoyer.com/thin/
+Ruby Gem: sqlite3,This module allows Ruby programs to interface with the SQLite3 database engine (http://www.sqlite.org),bsd-3,https://github.com/sparklemotion/sqlite3-ruby
+Ruby Gem: unicorn,Rack HTTP server for fast clients and Unix,gpl-2.0+,http://unicorn.bogomips.org/
+Ruby Gem: unicorn,Rack HTTP server for fast clients and Unix,ruby-1.8,http://unicorn.bogomips.org/

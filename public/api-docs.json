@@ -8,7 +8,6 @@
       "description": "Medias"
     }
   ],
-  "authorizations": null,
   "info": {
     "title": "Pender",
     "description": "A parsing and rendering service"
