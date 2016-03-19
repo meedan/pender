@@ -4,14 +4,14 @@
 
 Get parseable data for a given URL, that can be a post or a profile, from different providers
 
-*Parameters*
+**Parameters**
 
 * `url`: URL to be parsed/rendered _(required)_
 
-*Response*
+**Response**
 
 200: Parsed data
-`
+```json
 {
   "type": "media",
   "data": {
@@ -26,10 +26,10 @@ Get parseable data for a given URL, that can be a post or a profile, from differ
     "subscriber_count": 137
   }
 }
-`
+```
 
 400: URL not provided
-`
+```json
 {
   "type": "error",
   "data": {
@@ -37,10 +37,10 @@ Get parseable data for a given URL, that can be a post or a profile, from differ
     "code": 2
   }
 }
-`
+```
 
 401: Access denied
-`
+```json
 {
   "type": "error",
   "data": {
@@ -48,5 +48,5 @@ Get parseable data for a given URL, that can be a post or a profile, from differ
     "code": 1
   }
 }
-`
+```
 

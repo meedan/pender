@@ -34,7 +34,7 @@ namespace :swagger do
             output.puts
             output.puts("#{op[:notes]}")
             output.puts
-            output.puts("*Parameters*")
+            output.puts("**Parameters**")
             output.puts
 
             op[:parameters].each do |p|
@@ -43,7 +43,7 @@ namespace :swagger do
             end
             output.puts
 
-            output.puts("*Response*")
+            output.puts("**Response**")
             output.puts
 
             op[:response_messages].each do |r|
@@ -58,9 +58,9 @@ namespace :swagger do
 
               begin
                 object = JSON.parse(json)
-                output.puts('`')
+                output.puts('```json')
                 output.puts JSON.pretty_generate(object)
-                output.puts('`')
+                output.puts('```')
               rescue
               end # rescue
 
