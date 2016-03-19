@@ -8,12 +8,13 @@ module MediasDoc
 
     swagger_api :index do
       summary 'Get the metadata for a given URL'
-      notes 'Getparseable data for a given URL, that can be a post or a profile, from different providers'
+      notes 'Get parseable data for a given URL, that can be a post or a profile, from different providers'
       param :query, :url, :string, :required, 'URL to be parsed/rendered'
       authed = { CONFIG['authorization_header'] => 'test' }
-      response :ok, 'Parsed data', { query: { url: 'http://meedan.com' }, headers: authed }
+      url = 'https://www.youtube.com/user/MeedanTube'
+      response :ok, 'Parsed data', { query: { url: url }, headers: authed }
       response 400, 'URL not provided', { query: { url: nil }, headers: authed }
-      response 401, 'Access denied', { query: { url: 'http://meedan.com' } }
+      response 401, 'Access denied', { query: { url: url } }
     end
   end
 end
