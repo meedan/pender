@@ -2,7 +2,7 @@ module MediaYoutubeProfile
   extend ActiveSupport::Concern
 
   included do
-    Media.declare('youtube_profile', [/^https?:\/\/(www\.)?youtube\.com\/user\/([^\/]+)$/])
+    Media.declare('youtube_profile', [/^https?:\/\/(www\.)?youtube\.com\/(user|channel)\/([^\/]+)$/])
   end
 
   def youtube_profile_attributes

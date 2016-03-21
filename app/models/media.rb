@@ -18,14 +18,14 @@ class Media
   end
 
   def as_json(options = {})
-    #Rails.cache.fetch(self.get_id) do
+    Rails.cache.fetch(self.get_id) do
       self.parse
       {
         url: self.url,
         provider: self.provider,
         type: self.type
       }.merge(self.data)
-    #end
+    end
   end
   
   include MediaYoutubeProfile

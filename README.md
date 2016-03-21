@@ -95,6 +95,8 @@ There are rake tasks for a few tasks (besides Rails' default ones). Run them thi
 * `lapis:docker:shell`: Enter the Docker container
 * `swagger:docs:markdown`: Generate the documentation in markdown format
 
+### How to add a new type
+
 ### Credits
 
 Meedan (hello@meedan.com)
