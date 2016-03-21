@@ -1,11 +1,11 @@
 namespace :lapis do
   namespace :docker do
     task :run do
-      puts %x(./docker/run.sh)
+      exec('./docker/run.sh')
     end
 
     task :shell do
-      puts %x(./docker/shell.sh)
+      exec('./docker/shell.sh')
     end
   end
 end

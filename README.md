@@ -17,6 +17,12 @@ A parsing and rendering service
 
 * You can also start the application on Docker by running `rake lapis:docker:run` (it will run on port 3000 and your local hostname) - you first need to create an API key after entering the container (`lapis:docker:shell`) before using the web interface
 
+### Running the tests
+
+* `bundle install --without nothing`
+* `RAILS_ENV=test bundle exec rake db:migrate`
+* `RAILS_ENV=test bundle exec rake test:coverage`
+
 ### Integration
 
 Other applications can communicate with this service (and test this communication) using the client library, which can be automatically generated.

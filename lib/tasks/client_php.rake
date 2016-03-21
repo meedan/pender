@@ -152,7 +152,7 @@ namespace :lapis do
 =end
         doc[:apis].each do |api|
 
-          path = api[:path].gsub(/^\/api\//, '').gsub('/', '_')
+          path = api[:path].gsub(/^api\//, '').gsub('/', '_')
 
           # Generate one method per operation
           api[:operations].each do |op|
@@ -165,7 +165,7 @@ namespace :lapis do
             method_args_map = op[:parameters].collect{ |p| "'#{p[:name]}' => $#{p[:name]}" }.join(", ")
             method_args_doc = op[:parameters].collect{ |p| "@param $#{p[:name]}\n  //  #{p[:description]}" }.join("\n  // ")
 
-            request_methods_sigs << "#{method_name} (`#{endpoint}`)"
+            request_methods_sigs << "#{method_name}(#{method_args})"
 
             request_methods << %{
   // #{endpoint}
@@ -185,14 +185,14 @@ namespace :lapis do
 
               mock_method = "mock_#{path}_returns_#{r[:message].parameterize.gsub('-', '_')}"
               test_method = "test_#{path}_returns_#{r[:message].parameterize.gsub('-', '_')}"
-              mock_args = example[:query].nil? ? "''" : example[:query].collect{ |k, v| "#{v.inspect}" }.join(', ')
+              mock_args = example[:query].nil? ? "''" : example[:query].collect{ |k, v| v.nil? ? "''" : "#{v.inspect}" }.join(', ')
               token = example[:headers].nil? ? '' : example[:headers][CONFIG['authorization_header'] || 'X-Token']
 
-              mock_methods_sigs << mock_method
+              mock_methods_sigs << "#{mock_method}()"
 
               # Call the actual method with the sample request to get the sample response
               app = ActionDispatch::Integration::Session.new(Rails.application)
-              response = app.send(op[:method], api[:path], example[:query], example[:headers])
+              response = app.send(op[:method], '/' + api[:path], example[:query], example[:headers])
               json = app.body.chomp
               response = nil
               begin
@@ -202,15 +202,15 @@ namespace :lapis do
 
               mock_methods << %{
   public static function #{mock_method}() \{
-    $c = new LangidClient(['token_value' => '#{token}', 'client' => self::createMockClient(
+    $c = new #{client_name_camel}(['token_value' => '#{token}', 'client' => self::createMockClient(
       #{r[:code]}, json_decode(#{json.inspect}, true)
     )]);
-    return $c->get_languages_classify(#{mock_args});
+    return $c->#{method_name}(#{mock_args});
   \}}
               test_assertions = response.nil? ? '' : recursive_assert(response, '$res')
               test_methods << %{
   public function #{test_method}() \{
-    $res = LangidClient::#{mock_method}();
+    $res = #{client_name_camel}::#{mock_method}();
     #{test_assertions}
   \}}
             end
@@ -261,45 +261,33 @@ class #{client_name_camel}Test extends \\PHPUnit_Framework_TestCase \{
 
       # README.md
       readme = %{
-  # #{client_name_camel}
+# #{client_name_camel}
 
-  This package is a PHP client for #{api_name_snake}, which defines itself as '#{INFO[:description]}'. It also provides mock methods to test it.
+This package is a PHP client for #{api_name_snake}, which defines itself as '#{INFO[:description]}'. It also provides mock methods to test it.
 
-  ## Installation
+## Installation
 
-  Add this line to your application's `composer.json` `require` dependencies:
+Add this line to your application's `composer.json` `require` dependencies:
 
-  ```php
-  "#{vendor_name_dash}/#{client_name_dash}": "*"
-  ```
+```php
+"#{vendor_name_dash}/#{client_name_dash}": "*"
+```
 
-  And then execute:
+And then execute:
 
-      $ composer install
+    $ composer install
 
-  Or install it yourself as:
+## Usage
 
-      $ composer install #{client_name_snake}
+With this package you can call methods from #{api_name_snake}'s API and also test them by using the provided mocks.
 
-  ## Usage
+The available methods are:
 
-  With this package you can call methods from #{api_name_snake}'s API and also test them by using the provided mocks.
+#{request_methods_sigs.collect{ |r| "* #{client_name_camel}::#{r}" }.join("\n")}
 
-  The available methods are:
+If you are going to test something that uses the '#{api_name_snake}' service, first you need to mock each possible response it can return, which are:
 
-  #{request_methods_sigs.collect{ |r| "* #{client_name_camel}::#{r}" }.join("\n")}
-
-  If you are going to test something that uses the '#{api_name_snake}' service, first you need to mock each possible response it can return, which are:
-
-  #{mock_methods_sigs.collect{ |r| "* #{client_name_camel}::#{r}" }.join("\n")}
-
-  ## Contributing
-
-  1. Fork it
-  2. Create your feature branch (`git checkout -b my-new-feature`)
-  3. Commit your changes (`git commit -am 'Add some feature'`)
-  4. Push to the branch (`git push origin my-new-feature`)
-  5. Create a new Pull Request
+#{mock_methods_sigs.collect{ |r| "* #{client_name_camel}::#{r}" }.join("\n")}
       }
       f = File.open(File.join(basedir, 'README.md'), 'w')
       f.puts(readme)
@@ -308,9 +296,7 @@ class #{client_name_camel}Test extends \\PHPUnit_Framework_TestCase \{
       # Finish
       puts
       puts '----------------------------------------------------------------------------------------------------------------'
-      puts "Done! Your package is at '#{basedir}'. Now please submit it to a remote Github repository."
-      puts "After that, add the repository address in line 14 ('homepage') of file #{basedir}/composer.json."
-      puts "Or publish to Packagist.org and add that URL."
+      puts "Done! Your PHP package is at '#{basedir}'."
       puts '----------------------------------------------------------------------------------------------------------------'
     end
   end

@@ -207,6 +207,3 @@ DEPENDENCIES
   web-console (~> 2.0)
   webmock
   yt (~> 0.25.5)
-
-BUNDLED WITH
-   1.11.2

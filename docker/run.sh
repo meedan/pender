@@ -17,7 +17,7 @@ docker ps | grep 'pender'
 echo
 
 echo '-----------------------------------------------------------'
-echo 'Now go to your browser and access http://localhost/api'
+echo 'Now go to your browser and access http://localhost:3000/api'
 echo '-----------------------------------------------------------'
 
 rm Dockerfile
