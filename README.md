@@ -97,6 +97,24 @@ There are rake tasks for a few tasks (besides Rails' default ones). Run them thi
 
 ### How to add a new type
 
+* Add a new file at `app/models/concerns/media_<provider>_<type>` (example... `provider` could be `facebook` and type could be `post`, `page` or `profile`)
+* The skeleton should look like this:
+
+```ruby
+module Media<Provider><Type>
+  extend ActiveSupport::Concern
+
+  included do
+    Media.declare('<provider>_<type>', [<list of URL patterns>])
+  end
+
+  def data_from_<provider>_<type>
+    # Populate `self.data` with information
+    # `self.data` is a hash whose key is the attribute and the value is... the value
+  end
+end 
+```
+
 ### Credits
 
 Meedan (hello@meedan.com)
