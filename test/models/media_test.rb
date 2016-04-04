@@ -11,13 +11,15 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse YouTube user" do
-    m = create_media url: 'https://www.youtube.com/user/MeedanTube'
-    assert_equal 'MeedanTube', m.as_json['title']
+    m = create_media url: 'https://www.youtube.com/user/portadosfundos'
+    assert_equal 'Porta dos Fundos', m.as_json['title']
+    assert_equal 'portadosfundos', m.as_json['username']
   end
 
   test "should parse YouTube channel" do
     m = create_media url: 'https://www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQ'
     assert_equal 'Barbixas', m.as_json['title']
+    assert_nil m.as_json['username']
   end
 
   test "should not cache result" do

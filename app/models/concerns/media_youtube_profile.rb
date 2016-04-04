@@ -43,7 +43,7 @@ module MediaYoutubeProfile
 
   def data_from_youtube_profile
     channel = Yt::Channel.new url: self.url
-    data = {}
+    data = { 'username' => self.get_youtube_username }
     self.youtube_profile_attributes.each do |attr|
       begin
         data[attr] = channel.send(attr)
@@ -53,4 +53,11 @@ module MediaYoutubeProfile
     end
     self.data = data
   end
-end 
+
+  def get_youtube_username
+    username = nil
+    match = self.url.match(/^https?:\/\/(www\.)?youtube\.com\/user\/([^\/]+)$/)
+    username = match[2] unless match.nil?
+    username
+  end
+end
