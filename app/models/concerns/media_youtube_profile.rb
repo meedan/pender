@@ -43,21 +43,27 @@ module MediaYoutubeProfile
 
   def data_from_youtube_profile
     channel = Yt::Channel.new url: self.url
-    data = { 'username' => self.get_youtube_username }
+    self.data = {}
     self.youtube_profile_attributes.each do |attr|
       begin
-        data[attr] = channel.send(attr)
+        self.data[attr] = channel.send(attr)
       rescue
         # This field is private
       end
     end
-    self.data = data
+    self.data['username'] = self.get_youtube_username
+    self.data['subtype'] = self.get_youtube_subtype
   end
 
   def get_youtube_username
     username = nil
     match = self.url.match(/^https?:\/\/(www\.)?youtube\.com\/user\/([^\/]+)$/)
-    username = match[2] unless match.nil?
+    username = match.nil? ? self.data['title'].gsub(/[^a-zA-Z0-9]/, '') : match[2]
     username
+  end
+
+  def get_youtube_subtype
+    match = self.url.match(/^https?:\/\/(www\.)?youtube\.com\/(user|channel)\/([^\/]+)$/)
+    match[2]
   end
 end

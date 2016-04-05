@@ -23,7 +23,8 @@ class Media
       {
         url: self.url,
         provider: self.provider,
-        type: self.type
+        type: self.type,
+        parsed_at: Time.now
       }.merge(self.data)
     end
   end
