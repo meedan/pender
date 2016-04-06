@@ -1,0 +1,29 @@
+<% 
+  content_for :title do
+    data['title']
+  end
+%>
+
+<div class="pender-container pender-provider-<%= data['provider'] %>">
+  <h2 class="pender-top">
+    <img src="http://www.google.com/s2/favicons?domain_url=<%= data['url'] %>" alt="favicon" class="pender-favicon" /> 
+    <span class="pender-provider"><%= data['provider'] %></span>
+  </h2>
+
+  <img src="<%= data['picture'] %>" alt="" class="pender-picture" />
+
+  <div class="pender-info">
+    <h1 class="pender-title"><%= data['title'] %></h2>
+    <p class="pender-description"><%= data['description'] %></p>
+    <p class="pender-more">
+      <a href="#" onclick="document.getElementById('pender-data').style.display = 'block'">View more information &raquo;</a>
+      <a href="<%= data['url'] %>" target="_blank">Go to original &raquo;</a>
+    </p>
+  </div>
+
+  <ul class="pender-data" id="pender-data" style="display: none;">
+    <% data.each do |key, value| %>
+      <li><span class="pender-key"><%= key %></span> <span class="pender-value"><%= value %></span></li>
+    <% end %>
+  </ul>
+</div>

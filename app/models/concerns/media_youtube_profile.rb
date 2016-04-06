@@ -27,6 +27,7 @@ module MediaYoutubeProfile
     end
 
     self.data.merge!({
+      picture: self.data['thumbnail_url'].to_s,
       country: channel.snippet.data['country'],
       username: self.get_youtube_username,
       subtype: self.get_youtube_subtype,

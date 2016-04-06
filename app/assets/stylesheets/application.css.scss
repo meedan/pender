@@ -1,0 +1,86 @@
+@import url(https://fonts.googleapis.com/css?family=Lato:400,600,300);
+
+$unit       : 10px;
+$small      : 12px;
+$medium     : 16px;
+$large      : 18px;
+$picsize    : 64px;
+
+$grey       : #444;
+$light-grey : #EEE;
+$blue       : #667C95;
+
+body {
+  padding: 0;
+  margin: 0;
+  font-family: 'Lato', "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.pender-container {
+  width: 100%;
+  padding: $unit;
+  border: 1px solid $grey;
+
+  .pender-top {
+    font-size: $small;
+    text-transform: uppercase;
+    color: $grey;
+    margin: $unit 0;
+
+    .pender-provider {
+      vertical-align: top;
+    }
+  }
+
+  .pender-picture {
+    float: left;
+    width: $picsize;
+    margin-right: $unit;
+  }
+
+  .pender-info {
+    padding-left: $picsize;
+
+    .pender-title {
+      margin: $unit;
+      font-size: $large;
+    }
+
+    .pender-description {
+      margin: $unit;
+      font-size: $medium;
+    }
+
+    .pender-more {
+      margin: $unit;
+      a {
+        color: $blue;
+        font-size: $small;
+        text-transform: uppercase;
+        text-decoration: none;
+        margin-right: $unit;
+      }
+    }
+  }
+
+  .pender-data {
+    clear: both;
+    display: table;
+    padding: 0;
+    width: 100%;
+
+    li {
+      display: table-row;
+      font-size: $small;
+
+      &:nth-child(odd) {
+        background: $light-grey;
+      }
+    }
+
+    .pender-key, .pender-value {
+      display: table-cell;
+      padding: $unit;
+    }
+  }
+}

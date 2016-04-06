@@ -25,7 +25,7 @@ class Media
         provider: self.provider,
         type: self.type,
         parsed_at: Time.now
-      }.merge(self.data)
+      }.merge(self.data).with_indifferent_access
     end
   end
   

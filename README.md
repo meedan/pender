@@ -39,6 +39,12 @@ Get parseable data for a given URL, that can be a post or a profile, from differ
 
 **Response**
 
+**HTML**
+
+A card-representation of the URL.
+
+**JSON**
+
 200: Parsed data
 ```json
 {
@@ -98,6 +104,7 @@ There are rake tasks for a few tasks (besides Rails' default ones). Run them thi
 ### How to add a new type
 
 * Add a new file at `app/models/concerns/media_<provider>_<type>` (example... `provider` could be `facebook` and type could be `post` or `profile`)
+* It should return at least `title`, `description` and `picture`
 * The skeleton should look like this:
 
 ```ruby
