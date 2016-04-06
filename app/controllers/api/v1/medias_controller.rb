@@ -19,7 +19,11 @@ module Api
       private
 
       def render_as_json
-        render_success 'media', @media
+        begin
+          render_success 'media', @media
+        rescue Exception => e
+          render_error e.message, 'UNKNOWN'
+        end
       end
 
       def render_as_html

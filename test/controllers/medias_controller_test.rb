@@ -27,4 +27,11 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'http://meedan.com', format: :html
     assert_response :success
   end
+
+  test "should show error message if Twitter user does not exist" do
+    authenticate_with_token
+    get :index, url: 'https://twitter.com/caiosba32153623', format: :json
+    assert_response 400
+    assert_equal 'User not found.', JSON.parse(@response.body)['data']['message']
+  end
 end

@@ -104,6 +104,7 @@ There are rake tasks for a few tasks (besides Rails' default ones). Run them thi
 ### How to add a new type
 
 * Add a new file at `app/models/concerns/media_<provider>_<type>` (example... `provider` could be `facebook` and type could be `post` or `profile`)
+* Include the class in `app/models/media.rb`
 * It should return at least `title`, `description` and `picture`
 * The skeleton should look like this:
 

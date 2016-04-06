@@ -2,6 +2,10 @@ development: &default
   secret_token: somethingsecret
   authorization_header: 'X-Pender-Token'
   youtube_api_key: ''
+  twitter_consumer_key:
+  twitter_consumer_secret:
+  twitter_access_token:
+  twitter_access_token_secret:
 
 test:
   <<: *default

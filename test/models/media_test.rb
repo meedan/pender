@@ -34,4 +34,11 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:parse).never
     create_media url: 'https://www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQ'
   end
+
+  test "should parse Twitter profile" do
+    m = create_media url: 'https://twitter.com/caiosba'
+    assert_equal 'Caio Almeida', m.as_json['title']
+    assert_equal 'caiosba', m.as_json['username']
+    assert_equal 'twitter', m.as_json['provider']
+  end
 end

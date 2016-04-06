@@ -11,6 +11,7 @@ class Media
     attributes.each do |name, value|
       send("#{name}=", value)
     end
+    self.data = {}.with_indifferent_access
   end
 
   def self.declare(type, patterns)
@@ -20,16 +21,17 @@ class Media
   def as_json(options = {})
     Rails.cache.fetch(self.get_id) do
       self.parse
-      {
+      self.data.merge({
         url: self.url,
         provider: self.provider,
         type: self.type,
         parsed_at: Time.now
-      }.merge(self.data).with_indifferent_access
+      }).with_indifferent_access
     end
   end
   
   include MediaYoutubeProfile
+  include MediaTwitterProfile
 
   protected
 

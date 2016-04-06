@@ -20,7 +20,6 @@ module MediaYoutubeProfile
 
   def data_from_youtube_profile
     channel = Yt::Channel.new url: self.url
-    self.data = {}.with_indifferent_access
 
     self.youtube_profile_direct_attributes.each do |attr|
       self.data[attr] = channel.send(attr)
