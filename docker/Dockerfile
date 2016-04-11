@@ -11,9 +11,13 @@ ADD docker/nginx.conf /etc/nginx/sites-enabled/default
 # Install Rails App
 ADD Gemfile /app/Gemfile
 ADD Gemfile.lock /app/Gemfile.lock
-RUN bundle install --without development test
+RUN cd /app && bundle install --without development test
 ADD . /app
-RUN bundle exec rake db:migrate
+RUN cd /app && bundle exec rake db:migrate
+ADD docker/create-dev-key.rb /app/create-dev-key.rb
+RUN cd /app && ruby create-dev-key.rb
+
+WORKDIR /app
 
 # Nginx port number
 EXPOSE 80
