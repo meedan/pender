@@ -70,9 +70,7 @@ module MediaFacebookProfile
     %w(
       id
       about
-      artists_we_like
       awards
-      best_page
       bio
       birthday
       built
@@ -112,9 +110,7 @@ module MediaFacebookProfile
       new_like_count
       parent_page
       personal_info
-      personal_interests
       phone
-      place_type
       press_contact
       talking_about_count
       username
@@ -122,12 +118,10 @@ module MediaFacebookProfile
       website
       were_here_count
       written_by
-      albums
       events
       insights
       likes
       locations
-      milestones
       photos
       picture
     )
@@ -143,7 +137,7 @@ module MediaFacebookProfile
     client = self.facebook_client
     # Try to parse as a user profile first
     begin
-      data = client.get_object(id, fields: self.facebook_user_fields)
+      data = client.get_object(id, { fields: self.facebook_user_fields }, { method: 'post' })
       data['subtype'] = 'user'
     # If it fails, try to parse as a page
     rescue
