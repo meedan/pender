@@ -32,6 +32,7 @@ class Media
   
   include MediaYoutubeProfile
   include MediaTwitterProfile
+  include MediaFacebookProfile
 
   protected
 

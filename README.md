@@ -1,6 +1,12 @@
 ## Pender
 
-A parsing and rendering service
+A parsing and rendering service.
+
+### Current support
+
+* Twitter profiles
+* YouTube profiles (users and channels)
+* Facebook profiles (users and pages)
 
 ### Installation
 
@@ -105,7 +111,7 @@ There are rake tasks for a few tasks (besides Rails' default ones). Run them thi
 
 * Add a new file at `app/models/concerns/media_<provider>_<type>` (example... `provider` could be `facebook` and type could be `post` or `profile`)
 * Include the class in `app/models/media.rb`
-* It should return at least `title`, `description` and `picture`
+* It should return at least `username`, `title`, `description` and `picture`
 * The skeleton should look like this:
 
 ```ruby

@@ -6,6 +6,7 @@ development: &default
   twitter_consumer_secret:
   twitter_access_token:
   twitter_access_token_secret:
+  facebook_auth_token:
 
 test:
   <<: *default

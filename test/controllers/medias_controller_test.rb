@@ -34,4 +34,9 @@ class MediasControllerTest < ActionController::TestCase
     assert_response 400
     assert_equal 'User not found.', JSON.parse(@response.body)['data']['message']
   end
+
+  test "should return HTML error" do
+    get :index, url: 'https://www.facebook.com/Meedan-54421674438/?fref=ts', format: :html
+    assert_response 400
+  end
 end

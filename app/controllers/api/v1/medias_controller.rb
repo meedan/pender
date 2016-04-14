@@ -27,7 +27,11 @@ module Api
       end
 
       def render_as_html
-        render template: 'medias/index', locals: { data: @media.as_json }
+        begin
+          render template: 'medias/index', locals: { data: @media.as_json }
+        rescue Exception => e
+          render html: e.message, status: 400
+        end
       end
     end
   end
