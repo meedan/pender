@@ -74,7 +74,6 @@ module MediaFacebookProfile
       bio
       birthday
       built
-      business
       can_checkin
       category
       category_list
@@ -88,7 +87,6 @@ module MediaFacebookProfile
       description
       display_subtext
       emails
-      features
       founded
       general_info
       general_manager
