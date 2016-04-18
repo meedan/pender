@@ -18,6 +18,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'user', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
+    assert_not_nil data['published_at']
   end
 
   test "should parse YouTube channel" do
@@ -28,6 +29,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'channel', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
+    assert_not_nil data['published_at']
   end
 
   test "should not cache result" do
@@ -49,6 +51,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'twitter', data['provider']
     assert_not_nil data['description']
     assert_not_nil data['picture']
+    assert_not_nil data['published_at']
   end
 
   test "should parse Facebook user profile with identifier" do
@@ -60,6 +63,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'user', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
+    assert_not_nil data['published_at']
   end
 
   test "should parse Facebook user profile with numeric id" do
@@ -71,6 +75,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'user', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
+    assert_not_nil data['published_at']
   end
 
   test "should parse Facebook page" do
@@ -82,6 +87,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'page', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
+    assert_not_nil data['published_at']
   end
 
   test "should parse Facebook page with numeric id" do
@@ -93,5 +99,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'page', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
+    assert_not_nil data['published_at']
   end
 end

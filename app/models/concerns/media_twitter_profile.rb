@@ -21,7 +21,8 @@ module MediaTwitterProfile
 
     self.data.merge!({
       title: self.data['name'],
-      picture: self.data['profile_image_url_https']
+      picture: self.data['profile_image_url_https'],
+      published_at: self.data['created_at']
     })
   end
 

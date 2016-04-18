@@ -142,6 +142,7 @@ module MediaFacebookProfile
       data = client.get_object(id, { fields: self.facebook_page_fields }, { method: 'post' })
       data['subtype'] = 'page'
     end
+    data['published_at'] = ''
     data
   end
 
