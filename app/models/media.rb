@@ -18,7 +18,7 @@ class Media
     TYPES[type] = patterns
   end
 
-  def as_json(options = {})
+  def as_json(_options = {})
     Rails.cache.fetch(self.get_id) do
       self.parse
       self.data.merge({

@@ -1,7 +1,6 @@
 module MediaFacebookProfile
   extend ActiveSupport::Concern
 
-  #FIXME: Should work with pages as well
   included do
     Media.declare('facebook_profile',
       [
@@ -14,114 +13,26 @@ module MediaFacebookProfile
 
   def facebook_user_fields
     %w(
-      link
-      name
-      first_name
-      id
-      last_name
-      picture
-      timezone
-      albums
-      books
-      events
-      family
-      games
-      groups
-      likes
-      movies
-      music
-      photos
-      tagged_places
-      television
-      videos
-      feed
-      about
-      age_range
-      bio
-      birthday
-      cover
-      currency
-      education
-      email
-      favorite_athletes
-      favorite_teams
-      gender
-      hometown
-      inspirational_people
-      interested_in
-      is_verified
-      languages
-      locale
-      location
-      middle_name
-      name_format
-      political
-      quotes
-      relationship_status
-      religion
-      sports
-      updated_time
-      verified
-      website
+      link        name                first_name     id            last_name    picture              timezone
+      albums      books               events         family        games        groups               likes
+      movies      music               photos         tagged_places television   videos               feed
+      about       age_range           bio            birthday      cover        currency             education
+      email       favorite_athletes   favorite_teams gender        hometown     inspirational_people interested_in
+      is_verified languages           locale         location      middle_name  name_format          political
+      quotes      relationship_status religion       sports        updated_time verified             website
     )
   end
 
   def facebook_page_fields
     %w(
-      id
-      about
-      awards
-      bio
-      birthday
-      built
-      can_checkin
-      category
-      category_list
-      checkins
-      company_overview
-      contact_address
-      context
-      country_page_likes
-      cover
-      current_location
-      description
-      display_subtext
-      emails
-      founded
-      general_info
-      general_manager
-      genre
-      hometown
-      hours
-      is_community_page
-      is_permanently_closed
-      is_published
-      is_unclaimed
-      is_verified
-      keywords
-      last_used_time
-      leadgen_tos_accepted
-      link
-      location
-      name
-      network
-      new_like_count
-      parent_page
-      personal_info
-      phone
-      press_contact
-      talking_about_count
-      username
-      voip_info
-      website
-      were_here_count
-      written_by
-      events
-      insights
-      likes
-      locations
-      photos
-      picture
+      id                  about            awards         bio              birthday             built                 can_checkin
+      category            category_list    checkins       company_overview contact_address      context               country_page_likes
+      cover               current_location description    display_subtext  emails               founded               general_info
+      general_manager     genre            hometown       hours            is_community_page    is_permanently_closed is_published
+      is_unclaimed        is_verified      keywords       last_used_time   leadgen_tos_accepted link                  location
+      name                network          new_like_count parent_page      personal_info        phone                 press_contact
+      talking_about_count username         voip_info      website          were_here_count      written_by            events
+      insights            likes            locations      photos           picture
     )
   end
 
@@ -167,7 +78,7 @@ module MediaFacebookProfile
     if username === 'pages'
       username = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/pages\/([^\/]+)\/([^\/\?]+).*/)[2]
     elsif username === 'profile.php'
-      username = self.data['name'].gsub(' ', '')
+      username = self.data['name'].to_s.gsub(' ', '')
     end
     username
   end

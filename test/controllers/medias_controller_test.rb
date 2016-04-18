@@ -19,7 +19,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should parse media" do
     authenticate_with_token
-    get :index, url: 'http://meedan.com', format: :json
+    get :index, url: 'http://ca.ios.ba', format: :json
     assert_response :success
   end
 
@@ -32,7 +32,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     get :index, url: 'https://twitter.com/caiosba32153623', format: :json
     assert_response 400
-    assert_equal 'User not found.', JSON.parse(@response.body)['data']['message']
+    assert_equal 'Could not parse this media', JSON.parse(@response.body)['data']['message']
   end
 
   test "should return HTML error" do

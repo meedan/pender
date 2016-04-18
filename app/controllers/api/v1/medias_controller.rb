@@ -21,16 +21,16 @@ module Api
       def render_as_json
         begin
           render_success 'media', @media
-        rescue Exception => e
-          render_error e.message, 'UNKNOWN'
+        rescue
+          render_error 'Could not parse this media', 'UNKNOWN'
         end
       end
 
       def render_as_html
         begin
           render template: 'medias/index', locals: { data: @media.as_json }
-        rescue Exception => e
-          render html: e.message, status: 400
+        rescue
+          render html: 'Could not parse this media', status: 400
         end
       end
     end
