@@ -2,3 +2,4 @@ languages:
   Ruby: true
 exclude_paths:
 - "app/controllers/concerns/*_doc.rb"
+- "public/api"
