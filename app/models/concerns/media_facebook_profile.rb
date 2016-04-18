@@ -78,7 +78,7 @@ module MediaFacebookProfile
     if username === 'pages'
       username = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/pages\/([^\/]+)\/([^\/\?]+).*/)[2]
     elsif username === 'profile.php'
-      username = self.data['name'].to_s.gsub(' ', '')
+      username = self.data['name'].delete(' ')
     end
     username
   end

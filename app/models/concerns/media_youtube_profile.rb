@@ -81,7 +81,6 @@ module MediaYoutubeProfile
   # end
 
   def get_youtube_username
-    username = nil
     match = self.url.match(/^https?:\/\/(www\.)?youtube\.com\/user\/([^\/]+)$/)
     username = match.nil? ? self.data['title'].gsub(/[^a-zA-Z0-9]/, '') : match[2]
     username
