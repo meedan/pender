@@ -1,5 +1,7 @@
 ## Pender
 
+<a href="https://codeclimate.com/repos/5715585edb5e930072004cc5/feed"><img src="https://codeclimate.com/repos/5715585edb5e930072004cc5/badges/f5868b936888747f319f/gpa.svg" /></a>
+
 A parsing and rendering service.
 
 ### Current support
