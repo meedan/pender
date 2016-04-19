@@ -4,6 +4,18 @@
   end
 %>
 
+<script type="text/javascript">
+  var toggleDetails = function() {
+    var details = document.getElementById('pender-data');
+    if (details.style.display === 'none') {
+      details.style.display = 'block';
+    }
+    else {
+      details.style.display = 'none';
+    }
+  }
+</script>
+
 <div class="pender-container pender-provider-<%= data['provider'] %>">
   <h2 class="pender-top">
     <img src="http://www.google.com/s2/favicons?domain_url=<%= data['url'] %>" alt="favicon" class="pender-favicon" /> 
@@ -16,7 +28,7 @@
     <h1 class="pender-title"><%= data['title'] %></h2>
     <p class="pender-description"><%= data['description'] %></p>
     <p class="pender-more">
-      <a href="#" onclick="document.getElementById('pender-data').style.display = 'block'">View more information &raquo;</a>
+      <a href="#" onclick="toggleDetails()">View more information &raquo;</a>
       <a href="<%= data['url'] %>" target="_blank">Go to original &raquo;</a>
       <label>Copy the embed code:</label> <input value='<%= embed_url %>' readonly />
     </p>
