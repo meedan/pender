@@ -53,12 +53,16 @@ body {
 
     .pender-more {
       margin: $unit;
-      a {
+      a, label, input {
         color: $blue;
         font-size: $small;
         text-transform: uppercase;
         text-decoration: none;
         margin-right: $unit;
+      }
+      input {
+        text-transform: none;
+        width: 200px;
       }
     }
   }

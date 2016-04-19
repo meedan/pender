@@ -2,10 +2,23 @@
 <html>
 <head>
   <title><%= content_for(:title) || 'Pender' %></title>
-  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track' => true %>
+  <%= javascript_include_tag 'jquery-2.1.3.min' %>
+  <%= javascript_include_tag 'md5' %>
+  <%= javascript_include_tag 'embed' %>
   <%= csrf_meta_tags %>
 </head>
 <body>
   <%= yield %>
+
+  <script type="text/javascript">
+    Pender.id = '<%= @id %>';
+  </script>
 </body>
 </html>
