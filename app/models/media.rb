@@ -30,7 +30,19 @@ class Media
     end
   end
 
+  include MediaYoutubeProfile
+  include MediaTwitterProfile
+  include MediaFacebookProfile
+
   def as_oembed(original_url, maxwidth, maxheight)
+    data = self.as_json
+    oembed = "#{data['provider']}_as_oembed"
+    self.respond_to?(oembed)? self.send(oembed, original_url, maxwidth, maxheight) : self.default_oembed(original_url, maxwidth, maxheight)
+  end
+
+  protected
+
+  def default_oembed(original_url, maxwidth, maxheight)
     maxwidth ||= 600
     maxheight ||= 300
     data = self.as_json
@@ -49,12 +61,6 @@ class Media
       height: maxheight
     }.with_indifferent_access
   end
-  
-  include MediaYoutubeProfile
-  include MediaTwitterProfile
-  include MediaFacebookProfile
-
-  protected
 
   def get_id
     Digest::MD5.hexdigest(self.url)

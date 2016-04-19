@@ -160,6 +160,11 @@ module Media<Provider><Type>
     # Populate `self.data` with information
     # `self.data` is a hash whose key is the attribute and the value is... the value
   end
+
+  def <provider>_as_oembed(original_url, maxwidth, maxheight)
+    # Optional method
+    # Define a custom oEmbed structure for this provider
+  end
 end 
 ```
 
