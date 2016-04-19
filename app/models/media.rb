@@ -29,6 +29,26 @@ class Media
       }).with_indifferent_access
     end
   end
+
+  def as_oembed(original_url, maxwidth, maxheight)
+    maxwidth ||= 600
+    maxheight ||= 300
+    data = self.as_json
+    src = original_url.gsub('medias.oembed', 'medias.html')
+    {
+      type: 'rich',
+      version: '1.0',
+      title: data['title'] || 'Pender',
+      author_name: data['username'],
+      author_url: (data['type'] === 'profile' ? data['url'] : ''),
+      provider_name: data['provider'],
+      provider_url: 'http://' + URI.parse(data['url']).host,
+      thumbnail_url: data['picture'],
+      html: "<iframe src=\"#{src}\" width=\"#{maxwidth}\" height=\"#{maxheight}\" scrolling=\"no\" seamless>Not supported</iframe>",
+      width: maxwidth, 
+      height: maxheight
+    }.with_indifferent_access
+  end
   
   include MediaYoutubeProfile
   include MediaTwitterProfile

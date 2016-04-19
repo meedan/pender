@@ -60,4 +60,9 @@ class MediasControllerTest < ActionController::TestCase
     assert_response :success
     assert_not_nil assigns(:caller)
   end
+
+  test "should return oEmbed format" do
+    get :index, url: 'http://meedan.com', format: :oembed
+    assert_response :success
+  end
 end

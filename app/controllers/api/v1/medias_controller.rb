@@ -3,7 +3,7 @@ module Api
     class MediasController < Api::V1::BaseApiController
       include MediasDoc
       
-      skip_before_filter :authenticate_from_token!, if: proc { request.format.html? || request.format.js? }
+      skip_before_filter :authenticate_from_token!, if: proc { request.format.html? || request.format.js? || request.format.oembed? }
       after_action :allow_iframe, only: :index, if: proc { request.format.js? }
 
       def index
@@ -12,9 +12,10 @@ module Api
         @id = Digest::MD5.hexdigest(@url)
         @media = Media.new(url: @url)
         respond_to do |format|
-          format.html { render_as_html }
-          format.js   { render_as_js   }
-          format.json { render_as_json }
+          format.html   { render_as_html   }
+          format.js     { render_as_js     }
+          format.json   { render_as_json   }
+          format.oembed { render_as_oembed }
         end
       end
 
@@ -43,6 +44,11 @@ module Api
       def render_as_js
         @caller = request.original_url.gsub(/#.*/, '')
         render template: 'medias/index'
+      end
+
+      def render_as_oembed
+        json = @media.as_oembed(request.original_url, params[:maxwidth], params[:maxheight])
+        render json: json, status: 200
       end
     end
   end
