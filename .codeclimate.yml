@@ -7,3 +7,4 @@ exclude_paths:
 - "pender-client-php"
 - "public/coverage"
 - "test"
+- "public/javascripts/jquery-2.1.3.min.js"
