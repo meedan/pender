@@ -43,8 +43,8 @@ class Media
   protected
 
   def default_oembed(original_url, maxwidth, maxheight)
-    maxwidth ||= 600
-    maxheight ||= 300
+    maxwidth ||= 800
+    maxheight ||= 200
     data = self.as_json
     src = original_url.gsub('medias.oembed', 'medias.html')
     {
