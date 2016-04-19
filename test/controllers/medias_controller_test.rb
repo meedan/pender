@@ -45,14 +45,9 @@ class MediasControllerTest < ActionController::TestCase
     assert_response :success
   end
 
-  test "should allow iframe in JS format" do
+  test "should allow iframe" do
     get :index, url: 'http://meedan.com', format: :js
     assert !@response.headers.include?('X-Frame-Options')
-  end
-
-  test "should allow iframe in HTML format" do
-    get :index, url: 'http://meedan.com', format: :html
-    assert @response.headers.include?('X-Frame-Options')
   end
 
   test "should have JS format" do

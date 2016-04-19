@@ -14,7 +14,7 @@
       <img src="./assets/0.10.0/loading.gif" alt="loading"/>
     </div>
     <div id="wrapper" style="display:none;">
-      <div class="timestamp">Generated <abbr class="timeago" title="2016-04-19T18:29:34-03:00">2016-04-19T18:29:34-03:00</abbr></div>
+      <div class="timestamp">Generated <abbr class="timeago" title="2016-04-19T19:00:44-03:00">2016-04-19T19:00:44-03:00</abbr></div>
       <ul class="group_tabs"></ul>
 
       <div id="content">
@@ -25,7 +25,7 @@
      covered at
      <span class="covered_strength">
        <span class="green">
-         8.52
+         8.17
        </span>
     </span> hits/line)
   </h2>
@@ -57,7 +57,7 @@
         <td>42</td>
         <td>42</td>
         <td>0</td>
-        <td>29.2</td>
+        <td>28.0</td>
       </tr>
       
       <tr>
@@ -67,7 +67,7 @@
         <td>33</td>
         <td>33</td>
         <td>0</td>
-        <td>4.5</td>
+        <td>4.0</td>
       </tr>
       
       <tr>
@@ -107,7 +107,7 @@
         <td>3</td>
         <td>3</td>
         <td>0</td>
-        <td>1.7</td>
+        <td>1.3</td>
       </tr>
       
       <tr>
@@ -157,7 +157,7 @@
         <td>41</td>
         <td>41</td>
         <td>0</td>
-        <td>7.7</td>
+        <td>7.2</td>
       </tr>
       
       <tr>
@@ -167,7 +167,7 @@
         <td>8</td>
         <td>8</td>
         <td>0</td>
-        <td>17.5</td>
+        <td>17.1</td>
       </tr>
       
       <tr>
@@ -213,7 +213,7 @@
      covered at
      <span class="covered_strength">
        <span class="green">
-         17.67
+         16.81
        </span>
     </span> hits/line)
   </h2>
@@ -245,7 +245,7 @@
         <td>42</td>
         <td>42</td>
         <td>0</td>
-        <td>29.2</td>
+        <td>28.0</td>
       </tr>
       
       <tr>
@@ -255,7 +255,7 @@
         <td>33</td>
         <td>33</td>
         <td>0</td>
-        <td>4.5</td>
+        <td>4.0</td>
       </tr>
       
       <tr>
@@ -290,7 +290,7 @@
      covered at
      <span class="covered_strength">
        <span class="green">
-         4.59
+         4.43
        </span>
     </span> hits/line)
   </h2>
@@ -362,7 +362,7 @@
         <td>41</td>
         <td>41</td>
         <td>0</td>
-        <td>7.7</td>
+        <td>7.2</td>
       </tr>
       
     </tbody>
@@ -414,7 +414,7 @@
      covered at
      <span class="covered_strength">
        <span class="green">
-         1.53
+         1.23
        </span>
     </span> hits/line)
   </h2>
@@ -456,7 +456,7 @@
         <td>3</td>
         <td>3</td>
         <td>0</td>
-        <td>1.7</td>
+        <td>1.3</td>
       </tr>
       
     </tbody>
@@ -508,7 +508,7 @@
      covered at
      <span class="covered_strength">
        <span class="green">
-         4.98
+         4.91
        </span>
     </span> hits/line)
   </h2>
@@ -540,7 +540,7 @@
         <td>8</td>
         <td>8</td>
         <td>0</td>
-        <td>17.5</td>
+        <td>17.1</td>
       </tr>
       
       <tr>
@@ -872,14 +872,14 @@
           <code class="ruby">      def remove_empty_params_and_headers</code>
         </li>
       
-        <li class="covered" data-hits="87" data-linenumber="46">
-          <span class="hits">87</span>
+        <li class="covered" data-hits="82" data-linenumber="46">
+          <span class="hits">82</span>
           
           <code class="ruby">        params.reject!{ |_k, v| v.blank? }</code>
         </li>
       
-        <li class="covered" data-hits="979" data-linenumber="47">
-          <span class="hits">979</span>
+        <li class="covered" data-hits="933" data-linenumber="47">
+          <span class="hits">933</span>
           
           <code class="ruby">        request.headers.each{ |k, v| request.headers[k] = nil if (k =~ /HTTP_/).present? &amp;&amp; v.blank? }</code>
         </li>
@@ -902,14 +902,14 @@
           <code class="ruby">      def set_custom_response_headers</code>
         </li>
       
-        <li class="covered" data-hits="21" data-linenumber="51">
-          <span class="hits">21</span>
+        <li class="covered" data-hits="20" data-linenumber="51">
+          <span class="hits">20</span>
           
           <code class="ruby">        response.headers[&#39;X-Build&#39;] = BUILD</code>
         </li>
       
-        <li class="covered" data-hits="21" data-linenumber="52">
-          <span class="hits">21</span>
+        <li class="covered" data-hits="20" data-linenumber="52">
+          <span class="hits">20</span>
           
           <code class="ruby">        response.headers[&#39;Accept&#39;] ||= ApiConstraints.accept(1)</code>
         </li>
@@ -1262,16 +1262,16 @@
           <code class="ruby">      </code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="6">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="6">
+          <span class="hits">11</span>
           
           <code class="ruby">      skip_before_filter :authenticate_from_token!, if: proc { request.format.html? || request.format.js? || request.format.oembed? }</code>
         </li>
       
-        <li class="covered" data-hits="11" data-linenumber="7">
-          <span class="hits">11</span>
+        <li class="covered" data-hits="1" data-linenumber="7">
+          <span class="hits">1</span>
           
-          <code class="ruby">      after_action :allow_iframe, only: :index, if: proc { request.format.js? }</code>
+          <code class="ruby">      after_action :allow_iframe, only: :index</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="8">
@@ -1286,56 +1286,56 @@
           <code class="ruby">      def index</code>
         </li>
       
-        <li class="covered" data-hits="10" data-linenumber="10">
-          <span class="hits">10</span>
+        <li class="covered" data-hits="9" data-linenumber="10">
+          <span class="hits">9</span>
           
           <code class="ruby">        @url = params[:url]</code>
         </li>
       
-        <li class="covered" data-hits="10" data-linenumber="11">
-          <span class="hits">10</span>
+        <li class="covered" data-hits="9" data-linenumber="11">
+          <span class="hits">9</span>
           
           <code class="ruby">        (render_parameters_missing and return) if @url.blank?</code>
         </li>
       
-        <li class="covered" data-hits="9" data-linenumber="12">
-          <span class="hits">9</span>
+        <li class="covered" data-hits="8" data-linenumber="12">
+          <span class="hits">8</span>
           
           <code class="ruby">        @id = Digest::MD5.hexdigest(@url)</code>
         </li>
       
-        <li class="covered" data-hits="9" data-linenumber="13">
-          <span class="hits">9</span>
+        <li class="covered" data-hits="8" data-linenumber="13">
+          <span class="hits">8</span>
           
           <code class="ruby">        @media = Media.new(url: @url)</code>
         </li>
       
-        <li class="covered" data-hits="9" data-linenumber="14">
-          <span class="hits">9</span>
+        <li class="covered" data-hits="8" data-linenumber="14">
+          <span class="hits">8</span>
           
           <code class="ruby">        respond_to do |format|</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="15">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="10" data-linenumber="15">
+          <span class="hits">10</span>
           
           <code class="ruby">          format.html   { render_as_html   }</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="16">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="16">
+          <span class="hits">11</span>
           
           <code class="ruby">          format.js     { render_as_js     }</code>
         </li>
       
-        <li class="covered" data-hits="11" data-linenumber="17">
-          <span class="hits">11</span>
+        <li class="covered" data-hits="10" data-linenumber="17">
+          <span class="hits">10</span>
           
           <code class="ruby">          format.json   { render_as_json   }</code>
         </li>
       
-        <li class="covered" data-hits="10" data-linenumber="18">
-          <span class="hits">10</span>
+        <li class="covered" data-hits="9" data-linenumber="18">
+          <span class="hits">9</span>
           
           <code class="ruby">          format.oembed { render_as_oembed }</code>
         </li>
@@ -1376,8 +1376,8 @@
           <code class="ruby">      def allow_iframe</code>
         </li>
       
-        <li class="covered" data-hits="3" data-linenumber="25">
-          <span class="hits">3</span>
+        <li class="covered" data-hits="9" data-linenumber="25">
+          <span class="hits">9</span>
           
           <code class="ruby">        response.headers.except! &#39;X-Frame-Options&#39;</code>
         </li>
@@ -1448,14 +1448,14 @@
           <code class="ruby">      def render_as_html</code>
         </li>
       
-        <li class="covered" data-hits="3" data-linenumber="37">
-          <span class="hits">3</span>
+        <li class="covered" data-hits="2" data-linenumber="37">
+          <span class="hits">2</span>
           
           <code class="ruby">        begin</code>
         </li>
       
-        <li class="covered" data-hits="3" data-linenumber="38">
-          <span class="hits">3</span>
+        <li class="covered" data-hits="2" data-linenumber="38">
+          <span class="hits">2</span>
           
           <code class="ruby">          render template: &#39;medias/index&#39;, locals: { data: @media.as_json }</code>
         </li>
@@ -1808,8 +1808,8 @@
           <code class="ruby">  def embed_url</code>
         </li>
       
-        <li class="covered" data-hits="3" data-linenumber="3">
-          <span class="hits">3</span>
+        <li class="covered" data-hits="2" data-linenumber="3">
+          <span class="hits">2</span>
           
           <code class="ruby">    javascript_include_tag(request.original_url.gsub(/medias\.html/, &#39;medias.js&#39;))</code>
         </li>
@@ -3434,14 +3434,14 @@
           <code class="ruby">  def initialize(attributes = {})</code>
         </li>
       
-        <li class="covered" data-hits="22" data-linenumber="11">
-          <span class="hits">22</span>
+        <li class="covered" data-hits="21" data-linenumber="11">
+          <span class="hits">21</span>
           
           <code class="ruby">    attributes.each do |name, value|</code>
         </li>
       
-        <li class="covered" data-hits="22" data-linenumber="12">
-          <span class="hits">22</span>
+        <li class="covered" data-hits="21" data-linenumber="12">
+          <span class="hits">21</span>
           
           <code class="ruby">      send(&quot;#{name}=&quot;, value)</code>
         </li>
@@ -3452,8 +3452,8 @@
           <code class="ruby">    end</code>
         </li>
       
-        <li class="covered" data-hits="22" data-linenumber="14">
-          <span class="hits">22</span>
+        <li class="covered" data-hits="21" data-linenumber="14">
+          <span class="hits">21</span>
           
           <code class="ruby">    self.data = {}.with_indifferent_access</code>
         </li>
@@ -3500,14 +3500,14 @@
           <code class="ruby">  def as_json(_options = {})</code>
         </li>
       
-        <li class="covered" data-hits="16" data-linenumber="22">
-          <span class="hits">16</span>
+        <li class="covered" data-hits="15" data-linenumber="22">
+          <span class="hits">15</span>
           
           <code class="ruby">    Rails.cache.fetch(self.get_id) do</code>
         </li>
       
-        <li class="covered" data-hits="14" data-linenumber="23">
-          <span class="hits">14</span>
+        <li class="covered" data-hits="13" data-linenumber="23">
+          <span class="hits">13</span>
           
           <code class="ruby">      self.parse</code>
         </li>
@@ -3542,8 +3542,8 @@
           <code class="ruby">        parsed_at: Time.now</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="29">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="29">
+          <span class="hits">11</span>
           
           <code class="ruby">      }).with_indifferent_access</code>
         </li>
@@ -3764,8 +3764,8 @@
           <code class="ruby">  def get_id</code>
         </li>
       
-        <li class="covered" data-hits="16" data-linenumber="66">
-          <span class="hits">16</span>
+        <li class="covered" data-hits="15" data-linenumber="66">
+          <span class="hits">15</span>
           
           <code class="ruby">    Digest::MD5.hexdigest(self.url)</code>
         </li>
@@ -3788,26 +3788,26 @@
           <code class="ruby">  def parse</code>
         </li>
       
-        <li class="covered" data-hits="14" data-linenumber="70">
-          <span class="hits">14</span>
+        <li class="covered" data-hits="13" data-linenumber="70">
+          <span class="hits">13</span>
           
           <code class="ruby">    self.data = {}</code>
         </li>
       
-        <li class="covered" data-hits="14" data-linenumber="71">
-          <span class="hits">14</span>
+        <li class="covered" data-hits="13" data-linenumber="71">
+          <span class="hits">13</span>
           
           <code class="ruby">    TYPES.each do |type, patterns|</code>
         </li>
       
-        <li class="covered" data-hits="41" data-linenumber="72">
-          <span class="hits">41</span>
+        <li class="covered" data-hits="38" data-linenumber="72">
+          <span class="hits">38</span>
           
           <code class="ruby">      patterns.each do |pattern|</code>
         </li>
       
-        <li class="covered" data-hits="55" data-linenumber="73">
-          <span class="hits">55</span>
+        <li class="covered" data-hits="50" data-linenumber="73">
+          <span class="hits">50</span>
           
           <code class="ruby">        unless pattern.match(self.url).nil?</code>
         </li>
@@ -3890,14 +3890,14 @@
           <code class="ruby">  def initialize(options)</code>
         </li>
       
-        <li class="covered" data-hits="57" data-linenumber="3">
-          <span class="hits">57</span>
+        <li class="covered" data-hits="56" data-linenumber="3">
+          <span class="hits">56</span>
           
           <code class="ruby">    @version = options[:version]</code>
         </li>
       
-        <li class="covered" data-hits="57" data-linenumber="4">
-          <span class="hits">57</span>
+        <li class="covered" data-hits="56" data-linenumber="4">
+          <span class="hits">56</span>
           
           <code class="ruby">    @default = options[:default]</code>
         </li>
@@ -3944,8 +3944,8 @@
           <code class="ruby">  def self.accept(version = 1)</code>
         </li>
       
-        <li class="covered" data-hits="21" data-linenumber="12">
-          <span class="hits">21</span>
+        <li class="covered" data-hits="20" data-linenumber="12">
+          <span class="hits">20</span>
           
           <code class="ruby">    &quot;application/vnd.lapis.v#{version}&quot;</code>
         </li>

@@ -4,7 +4,7 @@ module Api
       include MediasDoc
       
       skip_before_filter :authenticate_from_token!, if: proc { request.format.html? || request.format.js? || request.format.oembed? }
-      after_action :allow_iframe, only: :index, if: proc { request.format.js? }
+      after_action :allow_iframe, only: :index
 
       def index
         @url = params[:url]
