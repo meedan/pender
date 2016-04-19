@@ -47,7 +47,11 @@ Get parseable data for a given URL, that can be a post or a profile, from differ
 
 **HTML**
 
-A card-representation of the URL.
+A card-representation of the URL, like the ones below:
+
+![YouTube](screenshots/youtube.png?raw=true "YouTube") 
+![Facebook](screenshots/facebook.png?raw=true "Facebook") 
+![Twitter](screenshots/twitter.png?raw=true "Twitter") 
 
 **JavaScript**
 
