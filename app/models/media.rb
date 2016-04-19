@@ -56,7 +56,7 @@ class Media
       provider_name: data['provider'],
       provider_url: 'http://' + URI.parse(data['url']).host,
       thumbnail_url: data['picture'],
-      html: "<iframe src=\"#{src}\" width=\"#{maxwidth}\" height=\"#{maxheight}\" scrolling=\"no\" seamless>Not supported</iframe>",
+      html: "<iframe src=\"#{src}\" width=\"#{maxwidth}\" height=\"#{maxheight}\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>",
       width: maxwidth, 
       height: maxheight
     }.with_indifferent_access
