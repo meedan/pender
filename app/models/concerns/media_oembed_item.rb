@@ -7,15 +7,9 @@ module MediaOembedItem
 
   def get_oembed_url
     require 'open-uri'
-    url = nil
-    begin
-      doc = Nokogiri::HTML(open(self.url))
-      tag = doc.at_css('link[type="application/json+oembed"]')
-      url = tag.attribute('href').to_s unless tag.nil?
-    rescue
-      # Could not open that document
-    end
-    url
+    doc = Nokogiri::HTML(open(self.url))
+    tag = doc.at_css('link[type="application/json+oembed"]')
+    tag.nil? ? '' : tag.attribute('href').to_s
   end
 
   def post_process_oembed_data
@@ -53,7 +47,7 @@ module MediaOembedItem
     end
   end
 
-  def oembed_as_oembed(original_url, maxwidth, maxheight)
-    self.data[:oembed]
+  def oembed_as_oembed(_original_url, _maxwidth, _maxheight)
+    self.data[:oembed] || self.data['oembed']
   end
 end
