@@ -26,11 +26,11 @@ module Api
       end
 
       def render_as_json
-        #begin
+        begin
           render_success 'media', @media
-        #rescue
-        #  render_error 'Could not parse this media', 'UNKNOWN'
-        #end
+        rescue
+          render_error 'Could not parse this media', 'UNKNOWN'
+        end
       end
 
       def render_as_html
