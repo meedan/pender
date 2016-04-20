@@ -33,6 +33,7 @@ class Media
   include MediaYoutubeProfile
   include MediaTwitterProfile
   include MediaFacebookProfile
+  include MediaOembedItem
 
   def as_oembed(original_url, maxwidth, maxheight)
     data = self.as_json

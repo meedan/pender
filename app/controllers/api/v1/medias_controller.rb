@@ -26,16 +26,22 @@ module Api
       end
 
       def render_as_json
-        begin
+        #begin
           render_success 'media', @media
-        rescue
-          render_error 'Could not parse this media', 'UNKNOWN'
-        end
+        #rescue
+        #  render_error 'Could not parse this media', 'UNKNOWN'
+        #end
       end
 
       def render_as_html
         begin
-          render template: 'medias/index', locals: { data: @media.as_json }
+          data = @media.as_json
+          oembed = data[:oembed]
+          if oembed && oembed['html']
+            render template: 'medias/oembed', locals: { html: oembed['html'].html_safe }
+          else
+            render template: 'medias/index', locals: { data: @media.as_json }
+          end
         rescue
           render html: 'Could not parse this media', status: 400
         end
