@@ -30,6 +30,7 @@ class ActiveSupport::TestCase
 
   def setup
     Rails.cache.clear if File.exists?(File.join(Rails.root, 'tmp', 'cache'))
+    FileUtils.rm_rf File.join(Rails.root, 'public', 'cache', 'test')
     Rails.application.reload_routes!
   end
 

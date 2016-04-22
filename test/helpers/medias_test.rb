@@ -1,11 +1,12 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 
 class MediasHelperTest < ActionView::TestCase
-  def request
-    req = ActionController::TestRequest.new 
-    req.host = 'foo.bar'
-    req.path = '/api/medias.html?url=http://twitter.com/meedan'
-    req
+  def setup
+    super
+    @request = ActionController::TestRequest.new 
+    @request.host = 'foo.bar'
+    @request.path = '/api/medias.html?url=http://twitter.com/meedan'
+    @request
   end
 
   test "should get embed URL" do

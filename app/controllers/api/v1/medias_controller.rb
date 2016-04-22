@@ -35,13 +35,12 @@ module Api
 
       def render_as_html
         begin
-          data = @media.as_json
-          oembed = data[:oembed]
-          if oembed && oembed['html']
-            render template: 'medias/oembed', locals: { html: oembed['html'].html_safe }
-          else
-            render template: 'medias/index', locals: { data: @media.as_json }
+          @cache = true
+          unless File.exists?(cache_path)
+            @cache = false
+            save_cache
           end
+          render text: File.read(cache_path), status: 200
         rescue
           render html: 'Could not parse this media', status: 400
         end
@@ -55,6 +54,33 @@ module Api
       def render_as_oembed
         json = @media.as_oembed(request.original_url, params[:maxwidth], params[:maxheight])
         render json: json, status: 200
+      end
+
+      def save_cache
+        av = ActionView::Base.new(Rails.root.join('app', 'views'))
+        template = locals = nil
+        data = @media.as_json
+        oembed = data[:oembed]
+
+        if oembed && oembed['html']
+          locals = { html: oembed['html'].html_safe }
+          template = 'oembed'
+        else
+          locals = { data: data }
+          template = 'index'
+        end
+
+        av.assign(locals.merge({ request: request }))
+        ActionView::Base.send :include, MediasHelper
+        content = av.render(template: "medias/#{template}.html.erb", layout: 'layouts/application.html.erb')
+        File.atomic_write(cache_path) { |file| file.write(content) }
+      end
+
+      def cache_path
+        name = Digest::MD5.hexdigest(@url)
+        dir = File.join('public', 'cache', Rails.env)
+        FileUtils.mkdir_p(dir) unless File.exists?(dir)
+        File.join(dir, "#{name}.html")
       end
     end
   end
