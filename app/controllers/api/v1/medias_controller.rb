@@ -36,7 +36,7 @@ module Api
       def render_as_html
         begin
           @cache = true
-          unless File.exists?(cache_path)
+          unless File.exist?(cache_path)
             @cache = false
             save_cache
           end
@@ -79,7 +79,7 @@ module Api
       def cache_path
         name = Digest::MD5.hexdigest(@url)
         dir = File.join('public', 'cache', Rails.env)
-        FileUtils.mkdir_p(dir) unless File.exists?(dir)
+        FileUtils.mkdir_p(dir) unless File.exist?(dir)
         File.join(dir, "#{name}.html")
       end
     end
