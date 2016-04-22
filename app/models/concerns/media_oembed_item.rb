@@ -49,6 +49,7 @@ module MediaOembedItem
   end
 
   def oembed_as_oembed(_original_url, _maxwidth, _maxheight)
-    self.data[:oembed] || self.data['oembed']
+    data = self.as_json
+    data[:oembed] || data['oembed']
   end
 end
