@@ -70,7 +70,7 @@ module Api
           template = 'index'
         end
 
-        av.assign(locals.merge({ request: request }))
+        av.assign(locals.merge({ request: request, id: @id, media: @media }))
         ActionView::Base.send :include, MediasHelper
         content = av.render(template: "medias/#{template}.html.erb", layout: 'layouts/application.html.erb')
         File.atomic_write(cache_path) { |file| file.write(content) }
