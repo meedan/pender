@@ -113,7 +113,18 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'http://www.facebook.com', data['provider_url']
     assert_equal 300, data['width']
     assert_equal 150, data['height']
-    assert_equal '<iframe src="http://pender.org/medias.html?url=https://www.facebook.com/pages/Meedan/105510962816034?fref=ts" width="300" height="150" scrolling="no" seamless>Not supported</iframe>', data['html']
+    assert_equal '<iframe src="http://pender.org/medias.html?url=https://www.facebook.com/pages/Meedan/105510962816034?fref=ts" width="300" height="150" scrolling="no" border="0" seamless>Not supported</iframe>', data['html']
     assert_not_nil data['thumbnail_url']
+  end
+
+  test "should parse Checkdesk report" do
+    m = create_media url: 'https://meedan.checkdesk.org/node/2161'
+    data = m.as_json
+    assert_equal 'Twitter / History In Pictures: Little Girl &amp; Ba...', data['title']
+    assert_equal 'Tom', data['username']
+    assert_equal 'oembed', data['provider']
+    assert_not_nil data['description']
+    assert_not_nil data['picture']
+    assert_not_nil data['published_at']
   end
 end

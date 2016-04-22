@@ -129,6 +129,7 @@ GEM
     nokogiri (1.6.7.2)
       mini_portile2 (~> 2.0.0.rc2)
     nori (2.6.0)
+    open_uri_redirections (0.2.1)
     protected_attributes (1.1.3)
       activemodel (>= 4.0.1, < 5.0)
     rack (1.6.4)
@@ -252,6 +253,7 @@ DEPENDENCIES
   koala
   logstasher
   mocha
+  open_uri_redirections
   protected_attributes
   railroady
   rails (= 4.2.6)
@@ -266,3 +268,6 @@ DEPENDENCIES
   web-console (~> 2.0)
   webmock
   yt (~> 0.25.5)
+
+BUNDLED WITH
+   1.11.2

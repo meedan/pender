@@ -69,14 +69,17 @@ class Media
 
   def parse
     self.data = {}
+    parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|
         unless pattern.match(self.url).nil?
           self.provider, self.type = type.split('_')
           self.send("data_from_#{type}")
+          parsed = true
           break
         end
       end
+      break if parsed
     end
   end
 end
