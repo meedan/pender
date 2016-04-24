@@ -52,6 +52,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
+    assert_kind_of Hash, data['pictures']
   end
 
   test "should parse Facebook user profile with identifier" do
