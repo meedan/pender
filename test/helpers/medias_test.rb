@@ -10,6 +10,6 @@ class MediasHelperTest < ActionView::TestCase
   end
 
   test "should get embed URL" do
-    assert_equal '<script src="http://foo.bar/api/medias.js?url=http://twitter.com/meedan"></script>', embed_url
+    assert_equal '<script src="http://foo.bar/api/medias.js?url=http://twitter.com/meedan" type="text/javascript"></script>', embed_url
   end
 end
