@@ -2,6 +2,7 @@ module Api
   module V1
     class MediasController < Api::V1::BaseApiController
       include MediasDoc
+      include MediasHelper
       
       skip_before_filter :authenticate_from_token!, if: proc { request.format.html? || request.format.js? || request.format.oembed? }
       after_action :allow_iframe, only: :index
@@ -26,8 +27,9 @@ module Api
       end
 
       def render_as_json
+        @request = request
         begin
-          render_success 'media', @media
+          render_success 'media', @media.as_json.merge({ embed_tag: embed_url })
         rescue
           render_error 'Could not parse this media', 'UNKNOWN'
         end

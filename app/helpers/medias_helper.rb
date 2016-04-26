@@ -1,5 +1,6 @@
 module MediasHelper
   def embed_url
-    javascript_include_tag(@request.original_url.gsub(/medias\.html/, 'medias.js'))
+    src = @request.original_url.gsub(/medias([^\?]*)/, 'medias.js')
+    "<script src=\"#{src}\" type=\"text/javascript\"></script>".html_safe
   end
 end
