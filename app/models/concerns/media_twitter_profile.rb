@@ -19,11 +19,23 @@ module MediaTwitterProfile
 
     self.data.merge!(self.twitter_client.user(username).as_json)
 
+    self.process_twitter_profile_images
+
     self.data.merge!({
       title: self.data['name'],
-      picture: self.data['profile_image_url_https'],
+      picture: self.data[:pictures][:original],
       published_at: self.data['created_at']
     })
+  end
+  
+  def process_twitter_profile_images
+    picture = self.data['profile_image_url_https'].to_s
+    self.data[:pictures] = {
+      normal: picture,
+      bigger: picture.gsub('_normal', '_bigger'),
+      mini: picture.gsub('_normal', '_mini'),
+      original: picture.gsub('_normal', '')
+    }
   end
 
   def get_twitter_username

@@ -27,3 +27,4 @@ gem 'twitter'
 gem 'koala'
 gem 'ids_please', git: 'https://github.com/meedan/ids_please', branch: 'master', ref: '2a89df'
 gem 'unicorn', group: :production
+gem 'open_uri_redirections'
