@@ -6,7 +6,7 @@ development: &default
   twitter_consumer_secret:
   twitter_access_token:
   twitter_access_token_secret:
-  facebook_auth_token:
+  facebook_auth_token: # It needs to be a longer token... check scripts/facebook-longer-token.sh for instructions
 
 test:
   <<: *default
