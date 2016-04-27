@@ -44,13 +44,14 @@ USER ${DEPLOYUSER}
 RUN mv ./latest ./pender-$(date -I) \
 	&& ln -s ./pender-$(date -I) ./current
 
-# test again
+# link to persisted objects and runtime config from the codebase
 
 RUN ln -s ${DEPLOYDIR}/shared/cache/json ${DEPLOYDIR}/current/tmp/cache \
  && ln -s ${DEPLOYDIR}/shared/cache/html ${DEPLOYDIR}/current/public/cache \
  && ln -s ${DEPLOYDIR}/shared/runtime/database.yml ${DEPLOYDIR}/current/config/database.yml \
  && ln -s ${DEPLOYDIR}/shared/runtime/config.yml ${DEPLOYDIR}/current/config/config.yml \
  && ln -s ${DEPLOYDIR}/shared/runtime/errbit.rb ${DEPLOYDIR}/current/config/initializers/errbit.rb
+ && ln -s ${DEPLOYDIR}/shared/runtime/secret_token.rb ${DEPLOYDIR}/current/config/initializers/secret_token.rb
 
 # runtime config
 USER root
