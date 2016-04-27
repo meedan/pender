@@ -71,7 +71,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/profile.php?id=100008161175765&fref=ts'
     data = m.as_json
     assert_equal 'Tico Santa Cruz', data['title']
-    assert_equal 'TicoSantaCruz', data['username']
+    assert_equal 'Tico-Santa-Cruz', data['username']
     assert_equal 'facebook', data['provider']
     assert_equal 'user', data['subtype']
     assert_not_nil data['description']
@@ -127,5 +127,12 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
+  end
+
+  test "should parse Facebook with numeric id" do
+    m = create_media url: 'http://facebook.com/513415662050479'
+    data = m.as_json
+    assert_equal 'https://www.facebook.com/NautilusMag/', data['url']
+    assert_equal 'Nautilus Magazine', data['title']
   end
 end

@@ -57,7 +57,32 @@ module MediaFacebookProfile
     data
   end
 
+  def normalize_facebook_url
+    attempts = 0
+    code = '301'
+    
+    while attempts < 5 && code == '301'
+      attempts += 1
+      uri = URI.parse(self.url)
+      http = Net::HTTP.new(uri.host, uri.port)
+
+      unless self.url.match(/^https/).nil?
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
+      
+      request = Net::HTTP::Get.new(uri.request_uri)
+      response = http.request(request)
+      code = response.code
+    
+      if code == '301'
+        self.url = response.header['location']
+      end
+    end
+  end
+
   def data_from_facebook_profile
+    self.normalize_facebook_url
     self.data.merge! self.get_data_from_facebook
     self.data[:username] = self.get_facebook_username
     description = self.data['bio'] || self.data['about'] || ''
@@ -74,11 +99,13 @@ module MediaFacebookProfile
   end
 
   def get_facebook_username
-    username = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+)/)[2]
+    match = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+)/)
+    match = self.url.match(/^https?:\/\/([^\.]+\.)?facebook\.com\/people\/([^\/\?]+)/) if match.nil?
+    username = match[2]
     if username === 'pages'
       username = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/pages\/([^\/]+)\/([^\/\?]+).*/)[2]
-    elsif username === 'profile.php'
-      username = self.data['name'].delete(' ')
+    # elsif username === 'profile.php'
+    #   username = self.data['name'].delete(' ')
     end
     username
   end
