@@ -14,7 +14,7 @@
       <img src="./assets/0.10.0/loading.gif" alt="loading"/>
     </div>
     <div id="wrapper" style="display:none;">
-      <div class="timestamp">Generated <abbr class="timeago" title="2016-04-25T21:15:23-03:00">2016-04-25T21:15:23-03:00</abbr></div>
+      <div class="timestamp">Generated <abbr class="timeago" title="2016-04-26T21:24:22-03:00">2016-04-26T21:24:22-03:00</abbr></div>
       <ul class="group_tabs"></ul>
 
       <div id="content">
@@ -25,7 +25,7 @@
      covered at
      <span class="covered_strength">
        <span class="green">
-         10.06
+         10.07
        </span>
     </span> hits/line)
   </h2>
@@ -117,7 +117,7 @@
         <td>16</td>
         <td>16</td>
         <td>0</td>
-        <td>4.8</td>
+        <td>4.9</td>
       </tr>
       
       <tr>
@@ -163,7 +163,7 @@
       <tr>
         <td class="strong"><a href="#f199307481a5ba201d2ae31fec93401ee105459c" class="src_link" title="app/models/media.rb">app/models/media.rb</a></td>
         <td class="green strong">100.0 %</td>
-        <td>85</td>
+        <td>86</td>
         <td>45</td>
         <td>45</td>
         <td>0</td>
@@ -300,7 +300,7 @@
      covered at
      <span class="covered_strength">
        <span class="green">
-         5.74
+         5.75
        </span>
     </span> hits/line)
   </h2>
@@ -332,7 +332,7 @@
         <td>16</td>
         <td>16</td>
         <td>0</td>
-        <td>4.8</td>
+        <td>4.9</td>
       </tr>
       
       <tr>
@@ -378,7 +378,7 @@
       <tr>
         <td class="strong"><a href="#f199307481a5ba201d2ae31fec93401ee105459c" class="src_link" title="app/models/media.rb">app/models/media.rb</a></td>
         <td class="green strong">100.0 %</td>
-        <td>85</td>
+        <td>86</td>
         <td>45</td>
         <td>45</td>
         <td>0</td>
@@ -2140,8 +2140,8 @@
           <code class="ruby">  def self.applications</code>
         </li>
       
-        <li class="covered" data-hits="5" data-linenumber="12">
-          <span class="hits">5</span>
+        <li class="covered" data-hits="8" data-linenumber="12">
+          <span class="hits">8</span>
           
           <code class="ruby">    [nil]</code>
         </li>
@@ -4189,346 +4189,352 @@
         <li class="never" data-hits="" data-linenumber="28">
           
           
-          <code class="ruby">        parsed_at: Time.now</code>
+          <code class="ruby">        parsed_at: Time.now,</code>
         </li>
       
-        <li class="covered" data-hits="17" data-linenumber="29">
+        <li class="never" data-hits="" data-linenumber="29">
+          
+          
+          <code class="ruby">        favicon: &quot;http://www.google.com/s2/favicons?domain_url=#{self.url}&quot; </code>
+        </li>
+      
+        <li class="covered" data-hits="17" data-linenumber="30">
           <span class="hits">17</span>
           
           <code class="ruby">      }).with_indifferent_access</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="30">
-          
-          
-          <code class="ruby">    end</code>
-        </li>
-      
         <li class="never" data-hits="" data-linenumber="31">
           
           
-          <code class="ruby">  end</code>
+          <code class="ruby">    end</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="32">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">  end</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="33">
-          <span class="hits">1</span>
+        <li class="never" data-hits="" data-linenumber="33">
           
-          <code class="ruby">  include MediaYoutubeProfile</code>
+          
+          <code class="ruby"></code>
         </li>
       
         <li class="covered" data-hits="1" data-linenumber="34">
           <span class="hits">1</span>
           
-          <code class="ruby">  include MediaTwitterProfile</code>
+          <code class="ruby">  include MediaYoutubeProfile</code>
         </li>
       
         <li class="covered" data-hits="1" data-linenumber="35">
           <span class="hits">1</span>
           
-          <code class="ruby">  include MediaFacebookProfile</code>
+          <code class="ruby">  include MediaTwitterProfile</code>
         </li>
       
         <li class="covered" data-hits="1" data-linenumber="36">
           <span class="hits">1</span>
           
+          <code class="ruby">  include MediaFacebookProfile</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="37">
+          <span class="hits">1</span>
+          
           <code class="ruby">  include MediaOembedItem</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="37">
+        <li class="never" data-hits="" data-linenumber="38">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="38">
+        <li class="covered" data-hits="1" data-linenumber="39">
           <span class="hits">1</span>
           
           <code class="ruby">  def as_oembed(original_url, maxwidth, maxheight)</code>
         </li>
       
-        <li class="covered" data-hits="3" data-linenumber="39">
-          <span class="hits">3</span>
-          
-          <code class="ruby">    data = self.as_json</code>
-        </li>
-      
         <li class="covered" data-hits="3" data-linenumber="40">
           <span class="hits">3</span>
           
-          <code class="ruby">    oembed = &quot;#{data[&#39;provider&#39;]}_as_oembed&quot;</code>
+          <code class="ruby">    data = self.as_json</code>
         </li>
       
         <li class="covered" data-hits="3" data-linenumber="41">
           <span class="hits">3</span>
           
-          <code class="ruby">    self.respond_to?(oembed)? self.send(oembed, original_url, maxwidth, maxheight) : self.default_oembed(original_url, maxwidth, maxheight)</code>
+          <code class="ruby">    oembed = &quot;#{data[&#39;provider&#39;]}_as_oembed&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="42">
+        <li class="covered" data-hits="3" data-linenumber="42">
+          <span class="hits">3</span>
           
-          
-          <code class="ruby">  end</code>
+          <code class="ruby">    self.respond_to?(oembed)? self.send(oembed, original_url, maxwidth, maxheight) : self.default_oembed(original_url, maxwidth, maxheight)</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="43">
           
           
+          <code class="ruby">  end</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="44">
+          
+          
           <code class="ruby"></code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="44">
+        <li class="covered" data-hits="1" data-linenumber="45">
           <span class="hits">1</span>
           
           <code class="ruby">  protected</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="45">
+        <li class="never" data-hits="" data-linenumber="46">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="46">
+        <li class="covered" data-hits="1" data-linenumber="47">
           <span class="hits">1</span>
           
           <code class="ruby">  def default_oembed(original_url, maxwidth, maxheight)</code>
         </li>
       
-        <li class="covered" data-hits="2" data-linenumber="47">
+        <li class="covered" data-hits="2" data-linenumber="48">
           <span class="hits">2</span>
           
           <code class="ruby">    maxwidth ||= 800</code>
         </li>
       
-        <li class="covered" data-hits="2" data-linenumber="48">
+        <li class="covered" data-hits="2" data-linenumber="49">
           <span class="hits">2</span>
           
           <code class="ruby">    maxheight ||= 200</code>
         </li>
       
-        <li class="covered" data-hits="2" data-linenumber="49">
+        <li class="covered" data-hits="2" data-linenumber="50">
           <span class="hits">2</span>
           
           <code class="ruby">    data = self.as_json</code>
         </li>
       
-        <li class="covered" data-hits="2" data-linenumber="50">
+        <li class="covered" data-hits="2" data-linenumber="51">
           <span class="hits">2</span>
           
           <code class="ruby">    src = original_url.gsub(&#39;medias.oembed&#39;, &#39;medias.html&#39;)</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="51">
+        <li class="never" data-hits="" data-linenumber="52">
           
           
           <code class="ruby">    {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="52">
+        <li class="never" data-hits="" data-linenumber="53">
           
           
           <code class="ruby">      type: &#39;rich&#39;,</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="53">
+        <li class="never" data-hits="" data-linenumber="54">
           
           
           <code class="ruby">      version: &#39;1.0&#39;,</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="54">
+        <li class="never" data-hits="" data-linenumber="55">
           
           
           <code class="ruby">      title: data[&#39;title&#39;] || &#39;Pender&#39;,</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="55">
+        <li class="never" data-hits="" data-linenumber="56">
           
           
           <code class="ruby">      author_name: data[&#39;username&#39;],</code>
         </li>
       
-        <li class="covered" data-hits="2" data-linenumber="56">
+        <li class="covered" data-hits="2" data-linenumber="57">
           <span class="hits">2</span>
           
           <code class="ruby">      author_url: (data[&#39;type&#39;] === &#39;profile&#39; ? data[&#39;url&#39;] : &#39;&#39;),</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="57">
+        <li class="never" data-hits="" data-linenumber="58">
           
           
           <code class="ruby">      provider_name: data[&#39;provider&#39;],</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="58">
+        <li class="never" data-hits="" data-linenumber="59">
           
           
           <code class="ruby">      provider_url: &#39;http://&#39; + URI.parse(data[&#39;url&#39;]).host,</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="59">
+        <li class="never" data-hits="" data-linenumber="60">
           
           
           <code class="ruby">      thumbnail_url: data[&#39;picture&#39;],</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="60">
+        <li class="never" data-hits="" data-linenumber="61">
           
           
           <code class="ruby">      html: &quot;&lt;iframe src=\&quot;#{src}\&quot; width=\&quot;#{maxwidth}\&quot; height=\&quot;#{maxheight}\&quot; scrolling=\&quot;no\&quot; border=\&quot;0\&quot; seamless&gt;Not supported&lt;/iframe&gt;&quot;,</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="61">
+        <li class="never" data-hits="" data-linenumber="62">
           
           
           <code class="ruby">      width: maxwidth, </code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="62">
+        <li class="never" data-hits="" data-linenumber="63">
           
           
           <code class="ruby">      height: maxheight</code>
         </li>
       
-        <li class="covered" data-hits="2" data-linenumber="63">
+        <li class="covered" data-hits="2" data-linenumber="64">
           <span class="hits">2</span>
           
           <code class="ruby">    }.with_indifferent_access</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="64">
+        <li class="never" data-hits="" data-linenumber="65">
           
           
           <code class="ruby">  end</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="65">
+        <li class="never" data-hits="" data-linenumber="66">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="66">
+        <li class="covered" data-hits="1" data-linenumber="67">
           <span class="hits">1</span>
           
           <code class="ruby">  def get_id</code>
         </li>
       
-        <li class="covered" data-hits="23" data-linenumber="67">
+        <li class="covered" data-hits="23" data-linenumber="68">
           <span class="hits">23</span>
           
           <code class="ruby">    Digest::MD5.hexdigest(self.url)</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="68">
+        <li class="never" data-hits="" data-linenumber="69">
           
           
           <code class="ruby">  end</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="69">
+        <li class="never" data-hits="" data-linenumber="70">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="70">
+        <li class="covered" data-hits="1" data-linenumber="71">
           <span class="hits">1</span>
           
           <code class="ruby">  def parse</code>
         </li>
       
-        <li class="covered" data-hits="20" data-linenumber="71">
+        <li class="covered" data-hits="20" data-linenumber="72">
           <span class="hits">20</span>
           
           <code class="ruby">    self.data = {}</code>
         </li>
       
-        <li class="covered" data-hits="20" data-linenumber="72">
+        <li class="covered" data-hits="20" data-linenumber="73">
           <span class="hits">20</span>
           
           <code class="ruby">    parsed = false</code>
         </li>
       
-        <li class="covered" data-hits="20" data-linenumber="73">
+        <li class="covered" data-hits="20" data-linenumber="74">
           <span class="hits">20</span>
           
           <code class="ruby">    TYPES.each do |type, patterns|</code>
         </li>
       
-        <li class="covered" data-hits="54" data-linenumber="74">
+        <li class="covered" data-hits="54" data-linenumber="75">
           <span class="hits">54</span>
           
           <code class="ruby">      patterns.each do |pattern|</code>
         </li>
       
-        <li class="covered" data-hits="64" data-linenumber="75">
+        <li class="covered" data-hits="64" data-linenumber="76">
           <span class="hits">64</span>
           
           <code class="ruby">        unless pattern.match(self.url).nil?</code>
         </li>
       
-        <li class="covered" data-hits="20" data-linenumber="76">
+        <li class="covered" data-hits="20" data-linenumber="77">
           <span class="hits">20</span>
           
           <code class="ruby">          self.provider, self.type = type.split(&#39;_&#39;)</code>
         </li>
       
-        <li class="covered" data-hits="20" data-linenumber="77">
+        <li class="covered" data-hits="20" data-linenumber="78">
           <span class="hits">20</span>
           
           <code class="ruby">          self.send(&quot;data_from_#{type}&quot;)</code>
         </li>
       
-        <li class="covered" data-hits="17" data-linenumber="78">
+        <li class="covered" data-hits="17" data-linenumber="79">
           <span class="hits">17</span>
           
           <code class="ruby">          parsed = true</code>
         </li>
       
-        <li class="covered" data-hits="17" data-linenumber="79">
+        <li class="covered" data-hits="17" data-linenumber="80">
           <span class="hits">17</span>
           
           <code class="ruby">          break</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="80">
+        <li class="never" data-hits="" data-linenumber="81">
           
           
           <code class="ruby">        end</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="81">
+        <li class="never" data-hits="" data-linenumber="82">
           
           
           <code class="ruby">      end</code>
         </li>
       
-        <li class="covered" data-hits="51" data-linenumber="82">
+        <li class="covered" data-hits="51" data-linenumber="83">
           <span class="hits">51</span>
           
           <code class="ruby">      break if parsed</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="83">
+        <li class="never" data-hits="" data-linenumber="84">
           
           
           <code class="ruby">    end</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="84">
+        <li class="never" data-hits="" data-linenumber="85">
           
           
           <code class="ruby">  end</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="85">
+        <li class="never" data-hits="" data-linenumber="86">
           
           
           <code class="ruby">end</code>

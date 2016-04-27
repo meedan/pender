@@ -25,7 +25,8 @@ class Media
         url: self.url,
         provider: self.provider,
         type: self.type,
-        parsed_at: Time.now
+        parsed_at: Time.now,
+        favicon: "http://www.google.com/s2/favicons?domain_url=#{self.url}" 
       }).with_indifferent_access
     end
   end
