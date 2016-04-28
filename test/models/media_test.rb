@@ -135,4 +135,26 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.facebook.com/NautilusMag/', data['url']
     assert_equal 'Nautilus Magazine', data['title']
   end
+
+  test "should parse YouTube user with slash" do
+    m = create_media url: 'https://www.youtube.com/user/portadosfundos/'
+    data = m.as_json
+    assert_equal 'Porta dos Fundos', data['title']
+    assert_equal 'portadosfundos', data['username']
+    assert_equal 'user', data['subtype']
+    assert_not_nil data['description']
+    assert_not_nil data['picture']
+    assert_not_nil data['published_at']
+  end
+
+  test "should parse YouTube channel with slash" do
+    m = create_media url: 'https://www.youtube.com/channel/UCQDZiehIRKS6o9AlX1g8lSw/'
+    data = m.as_json
+    assert_equal 'Documentarios em Portugues', data['title']
+    assert_equal 'DocumentariosemPortugues', data['username']
+    assert_equal 'channel', data['subtype']
+    assert_not_nil data['description']
+    assert_not_nil data['picture']
+    assert_not_nil data['published_at']
+  end
 end
