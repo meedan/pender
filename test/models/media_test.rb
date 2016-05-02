@@ -173,6 +173,6 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/ironmaiden/?fref=ts'
     data = m.as_json
     assert_match /^[0-9]+$/, data['likes'].to_s
-    assert_equal likes, data['likes']
+    assert data['likes'].to_i >= likes.to_i
   end
 end
