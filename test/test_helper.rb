@@ -41,6 +41,7 @@ class ActiveSupport::TestCase
     WebMock.allow_net_connect!
     Time.unstub(:now)
     Media.any_instance.unstub(:parse)
+    CONFIG.unstub(:[])
   end
 
   def authenticate_with_token(api_key = nil)
@@ -48,6 +49,15 @@ class ActiveSupport::TestCase
       header = CONFIG['authorization_header'] || 'X-Token'
       api_key ||= create_api_key
       @request.headers.merge!({ header => api_key.access_token })
+    end
+  end
+
+  def stub_configs(configs)
+    CONFIG.each do |k, v|
+      CONFIG.stubs(:[]).with(k).returns(v) unless configs.keys.map(&:to_s).include?(k.to_s)
+    end
+    configs.each do |k, v|
+      CONFIG.stubs(:[]).with(k.to_s).returns(v)
     end
   end
 end

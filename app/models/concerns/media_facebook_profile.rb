@@ -12,7 +12,7 @@ module MediaFacebookProfile
   end
 
   def facebook_user_fields
-    %w(
+    fields = %w(
       link        name                first_name     id            last_name    picture              timezone
       albums      books               events         family        games        groups               likes
       movies      music               photos         tagged_places television   videos               feed
@@ -21,10 +21,12 @@ module MediaFacebookProfile
       is_verified languages           locale         location      middle_name  name_format          political
       quotes      relationship_status religion       sports        updated_time verified             website
     )
+    fields << 'fan_count' if CONFIG['facebook_api_version'].to_s === 'v2.6'
+    fields
   end
 
   def facebook_page_fields
-    %w(
+    fields = %w(
       id                  about            awards         bio              birthday             built                 can_checkin
       category            category_list    checkins       company_overview contact_address      context               country_page_likes
       cover               current_location description    display_subtext  emails               founded               general_info
@@ -34,9 +36,12 @@ module MediaFacebookProfile
       talking_about_count username         voip_info      website          were_here_count      written_by            events
       insights            likes            locations      photos           picture
     )
+    fields << 'fan_count' if CONFIG['facebook_api_version'].to_s === 'v2.6'
+    fields
   end
 
   def facebook_client
+    Koala.config.api_version = CONFIG['facebook_api_version'] || 'v2.5'
     Koala::Facebook::API.new CONFIG['facebook_auth_token']
   end
 
@@ -87,6 +92,13 @@ module MediaFacebookProfile
     self.data[:username] = self.get_facebook_username
     description = self.data['bio'] || self.data['about'] || ''
     self.data.merge!({ title: self.data['name'], description: description, picture: self.facebook_picture })
+    self.get_facebook_likes
+  end
+
+  def get_facebook_likes
+    if self.data['likes'].to_s.match(/^[0-9]+$/).nil?
+      self.data['likes'] = self.data['fan_count']
+    end
   end
 
   def facebook_picture
