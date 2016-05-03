@@ -99,4 +99,11 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://meedan.checkdesk.org/en/report/2161', format: :html
     assert assigns(:cache)
   end
+
+  test "should return timeout error" do
+    stub_configs({ 'timeout' => 0.01 })
+    authenticate_with_token
+    get :index, url: 'http://twitter.com/caiosba', format: :json
+    assert_response 408
+  end
 end

@@ -1,3 +1,4 @@
+require 'timeout'
 module Api
   module V1
     class MediasController < Api::V1::BaseApiController
@@ -28,8 +29,11 @@ module Api
 
       def render_as_json
         @request = request
+        timeout = CONFIG['timeout'] || 5
         begin
-          render_success 'media', @media.as_json.merge({ embed_tag: embed_url })
+          Timeout::timeout(timeout) { render_success 'media', @media.as_json.merge({ embed_tag: embed_url }) }
+        rescue Timeout::Error
+          render_error 'Timeout', 'TIMEOUT', 408
         rescue
           render_error 'Could not parse this media', 'UNKNOWN'
         end
