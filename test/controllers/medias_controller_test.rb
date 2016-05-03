@@ -101,7 +101,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return timeout error" do
-    stub_configs({ 'timeout' => 0.01 })
+    stub_configs({ 'timeout' => 0.001 })
     authenticate_with_token
     get :index, url: 'http://twitter.com/caiosba', format: :json
     assert_response 408

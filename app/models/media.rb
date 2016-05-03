@@ -11,6 +11,7 @@ class Media
     attributes.each do |name, value|
       send("#{name}=", value)
     end
+    self.normalize_url
     self.data = {}.with_indifferent_access
   end
 
@@ -82,5 +83,9 @@ class Media
       end
       break if parsed
     end
+  end
+
+  def normalize_url
+    self.url = PostRank::URI.normalize(self.url).to_s
   end
 end

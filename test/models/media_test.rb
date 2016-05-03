@@ -6,8 +6,8 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should have URL" do
-    m = create_media url: 'http://foo.bar'
-    assert_equal 'http://foo.bar', m.url
+    m = create_media url: 'http://foo.bar/'
+    assert_equal 'http://foo.bar/', m.url
   end
 
   test "should parse YouTube user" do
@@ -174,5 +174,40 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_match /^[0-9]+$/, data['likes'].to_s
     assert data['likes'].to_i >= likes.to_i
+  end
+
+  test "should normalize URL" do
+    expected = 'http://www.test.com/'
+    variations = %w(
+      http://www.test.com
+      www.test.com
+      http://www.test.com:80
+      http://www.test.com//
+      http://www.test.com/?
+      http://www.test.com/#foo
+      http://www.test.com/
+      http://www.TEST.COM
+      http://www.test.com/foo/..
+      http://www.test.com/?#
+    )
+    variations.each do |url|
+      media = Media.new(url: url)
+      assert_equal expected, media.url
+    end
+
+    media = Media.new(url: 'http://www.TEst.com/a%c2/%7Euser?a=b')
+    assert_equal 'http://www.test.com/a%C2/~user?a=b', media.url
+  end
+
+  test "should not normalize URL" do
+    urls = %w(
+      https://www.test.com/
+      http://test.com/
+      http://www.test.com/?foo=bar
+    )
+    urls.each do |url|
+      media = Media.new(url: url)
+      assert_equal url, media.url
+    end
   end
 end
