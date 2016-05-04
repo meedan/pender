@@ -208,37 +208,6 @@
         null,
         null
       ],
-      "/home/caiosba/Meedan/pender/app/models/api_key.rb": [
-        1,
-        1,
-        1,
-        null,
-        1,
-        1,
-        null,
-        1,
-        null,
-        null,
-        1,
-        3,
-        null,
-        null,
-        14,
-        null,
-        1,
-        null,
-        1,
-        13,
-        13,
-        13,
-        null,
-        null,
-        null,
-        1,
-        13,
-        null,
-        null
-      ],
       "/home/caiosba/Meedan/pender/app/models/media.rb": [
         1,
         1,
@@ -660,6 +629,37 @@
         null,
         null
       ],
+      "/home/caiosba/Meedan/pender/app/models/api_key.rb": [
+        1,
+        1,
+        1,
+        null,
+        1,
+        1,
+        null,
+        1,
+        null,
+        null,
+        1,
+        4,
+        null,
+        null,
+        14,
+        null,
+        1,
+        null,
+        1,
+        13,
+        13,
+        13,
+        null,
+        null,
+        null,
+        1,
+        13,
+        null,
+        null
+      ],
       "/home/caiosba/Meedan/pender/app/controllers/api/v1/medias_controller.rb": [
         1,
         1,
@@ -779,6 +779,6 @@
         null
       ]
     },
-    "timestamp": 1462404019
+    "timestamp": 1462405898
   }
 }
