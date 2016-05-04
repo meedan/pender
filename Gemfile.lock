@@ -1,10 +1,10 @@
 GIT
   remote: https://github.com/meedan/ids_please
-  revision: 2a89df0f1bda44406c3dfb1c71998d43c144a7d0
-  ref: 2a89df
+  revision: 20fb6630045191a683fdf37dbcece015ebeffe4e
+  ref: 20fb66
   branch: master
   specs:
-    ids_please (2.1.2)
+    ids_please (2.2.2)
 
 GEM
   remote: https://rubygems.org/

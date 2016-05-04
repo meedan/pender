@@ -42,7 +42,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return HTML error" do
-    get :index, url: 'https://www.facebook.com/Meedan-54421674438/?fref=ts', format: :html
+    get :index, url: 'https://www.facebook.com/non-sense-stuff-892173891273', format: :html
     assert_response 400
   end
 

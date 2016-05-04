@@ -210,4 +210,10 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal url, media.url
     end
   end
+
+  test "should parse Arabic Facebook profile" do
+    m = create_media url: 'https://www.facebook.com/%D8%A7%D9%84%D9%85%D8%B1%D9%83%D8%B2-%D8%A7%D9%84%D8%AB%D9%82%D8%A7%D9%81%D9%8A-%D8%A7%D9%84%D9%82%D8%A8%D8%B7%D9%8A-%D8%A7%D9%84%D8%A3%D8%B1%D8%AB%D9%88%D8%B0%D9%83%D8%B3%D9%8A-%D8%A8%D8%A7%D9%84%D9%85%D8%A7%D9%86%D9%8A%D8%A7-179240385797/'
+    data = m.as_json
+    assert_equal 'المركز الثقافي القبطي الأرثوذكسي بالمانيا', data['title']
+  end
 end
