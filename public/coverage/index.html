@@ -14,7 +14,7 @@
       <img src="./assets/0.10.0/loading.gif" alt="loading"/>
     </div>
     <div id="wrapper" style="display:none;">
-      <div class="timestamp">Generated <abbr class="timeago" title="2016-05-04T23:46:00-03:00">2016-05-04T23:46:00-03:00</abbr></div>
+      <div class="timestamp">Generated <abbr class="timeago" title="2016-05-05T00:15:37-03:00">2016-05-05T00:15:37-03:00</abbr></div>
       <ul class="group_tabs"></ul>
 
       <div id="content">
@@ -25,15 +25,15 @@
      covered at
      <span class="covered_strength">
        <span class="green">
-         14.13
+         13.97
        </span>
     </span> hits/line)
   </h2>
   <a name="AllFiles"></a>
   <div>
     <b>17</b> files in total.
-    <b>377</b> relevant lines. 
-    <span class="green"><b>377</b> lines covered</span> and
+    <b>375</b> relevant lines. 
+    <span class="green"><b>375</b> lines covered</span> and
     <span class="red"><b>0</b> lines missed </span>
   </div>
   <table class="file_list">
@@ -117,7 +117,7 @@
         <td>16</td>
         <td>16</td>
         <td>0</td>
-        <td>5.7</td>
+        <td>5.6</td>
       </tr>
       
       <tr>
@@ -163,11 +163,11 @@
       <tr>
         <td class="strong"><a href="#f199307481a5ba201d2ae31fec93401ee105459c" class="src_link" title="app/models/media.rb">app/models/media.rb</a></td>
         <td class="green strong">100.0 %</td>
-        <td>124</td>
-        <td>70</td>
-        <td>70</td>
+        <td>119</td>
+        <td>68</td>
+        <td>68</td>
         <td>0</td>
-        <td>29.8</td>
+        <td>29.4</td>
       </tr>
       
       <tr>
@@ -310,15 +310,15 @@
      covered at
      <span class="covered_strength">
        <span class="green">
-         13.62
+         13.32
        </span>
     </span> hits/line)
   </h2>
   <a name="Models"></a>
   <div>
     <b>6</b> files in total.
-    <b>207</b> relevant lines. 
-    <span class="green"><b>207</b> lines covered</span> and
+    <b>205</b> relevant lines. 
+    <span class="green"><b>205</b> lines covered</span> and
     <span class="red"><b>0</b> lines missed </span>
   </div>
   <table class="file_list">
@@ -342,7 +342,7 @@
         <td>16</td>
         <td>16</td>
         <td>0</td>
-        <td>5.7</td>
+        <td>5.6</td>
       </tr>
       
       <tr>
@@ -388,11 +388,11 @@
       <tr>
         <td class="strong"><a href="#f199307481a5ba201d2ae31fec93401ee105459c" class="src_link" title="app/models/media.rb">app/models/media.rb</a></td>
         <td class="green strong">100.0 %</td>
-        <td>124</td>
-        <td>70</td>
-        <td>70</td>
+        <td>119</td>
+        <td>68</td>
+        <td>68</td>
         <td>0</td>
-        <td>29.8</td>
+        <td>29.4</td>
       </tr>
       
     </tbody>
@@ -2220,8 +2220,8 @@
           <code class="ruby">  def self.applications</code>
         </li>
       
-        <li class="covered" data-hits="10" data-linenumber="12">
-          <span class="hits">10</span>
+        <li class="covered" data-hits="8" data-linenumber="12">
+          <span class="hits">8</span>
           
           <code class="ruby">    [nil]</code>
         </li>
@@ -4215,8 +4215,8 @@
     <h3>app/models/media.rb</h3>
     <h4><span class="green">100.0 %</span> covered</h4>
     <div>
-      <b>70</b> relevant lines. 
-      <span class="green"><b>70</b> lines covered</span> and
+      <b>68</b> relevant lines. 
+      <span class="green"><b>68</b> lines covered</span> and
       <span class="red"><b>0</b> lines missed.</span>
     </div>
   </div>
@@ -4908,61 +4908,31 @@
           <code class="ruby">    http.read_timeout = 30</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="115">
+        <li class="covered" data-hits="72" data-linenumber="115">
+          <span class="hits">72</span>
           
-          
-          <code class="ruby"></code>
+          <code class="ruby">    http.use_ssl = true unless self.url.match(/^https/).nil?</code>
         </li>
       
         <li class="covered" data-hits="72" data-linenumber="116">
           <span class="hits">72</span>
           
-          <code class="ruby">    unless self.url.match(/^https/).nil?</code>
-        </li>
-      
-        <li class="covered" data-hits="43" data-linenumber="117">
-          <span class="hits">43</span>
-          
-          <code class="ruby">      http.use_ssl = true</code>
-        </li>
-      
-        <li class="covered" data-hits="43" data-linenumber="118">
-          <span class="hits">43</span>
-          
-          <code class="ruby">      http.verify_mode = OpenSSL::SSL::VERIFY_NONE</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="119">
-          
-          
-          <code class="ruby">    end</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="120">
-          
-          
-          <code class="ruby">    </code>
-        </li>
-      
-        <li class="covered" data-hits="72" data-linenumber="121">
-          <span class="hits">72</span>
-          
           <code class="ruby">    request = Net::HTTP::Get.new(uri.request_uri)</code>
         </li>
       
-        <li class="covered" data-hits="72" data-linenumber="122">
+        <li class="covered" data-hits="72" data-linenumber="117">
           <span class="hits">72</span>
           
           <code class="ruby">    http.request(request)</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="123">
+        <li class="never" data-hits="" data-linenumber="118">
           
           
           <code class="ruby">  end</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="124">
+        <li class="never" data-hits="" data-linenumber="119">
           
           
           <code class="ruby">end</code>

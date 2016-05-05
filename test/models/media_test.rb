@@ -201,7 +201,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should not normalize URL" do
     urls = %w(
-      https://ca.ios.ba/
+      https://meedan.com/en
       http://ios.ba/
       http://ca.ios.ba/?foo=bar
     )
