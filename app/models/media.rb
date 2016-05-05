@@ -11,6 +11,7 @@ class Media
     attributes.each do |name, value|
       send("#{name}=", value)
     end
+    self.follow_redirections
     self.normalize_url
     self.data = {}.with_indifferent_access
   end
@@ -87,5 +88,37 @@ class Media
 
   def normalize_url
     self.url = PostRank::URI.normalize(self.url).to_s
+  end
+
+  def follow_redirections
+    self.url = 'http://' + self.url unless self.url =~ /^https?:/
+    attempts = 0
+    code = '301'
+    path = []
+    
+    while attempts < 5 && code == '301' && !path.include?(self.url)
+      attempts += 1
+      path << self.url
+      response = self.request_media_url
+      code = response.code
+    
+      if code == '301'
+        self.url = response.header['location']
+      end
+    end
+  end
+
+  def request_media_url
+    uri = URI.parse(self.url)
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.read_timeout = 30
+
+    unless self.url.match(/^https/).nil?
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    end
+    
+    request = Net::HTTP::Get.new(uri.request_uri)
+    http.request(request)
   end
 end

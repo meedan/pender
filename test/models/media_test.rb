@@ -6,8 +6,8 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should have URL" do
-    m = create_media url: 'http://foo.bar/'
-    assert_equal 'http://foo.bar/', m.url
+    m = create_media url: 'http://ca.ios.ba/'
+    assert_equal 'http://ca.ios.ba/', m.url
   end
 
   test "should parse YouTube user" do
@@ -132,7 +132,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Facebook with numeric id" do
     m = create_media url: 'http://facebook.com/513415662050479'
     data = m.as_json
-    assert_equal 'https://www.facebook.com/NautilusMag/', data['url']
+    assert_equal 'https://www.facebook.com/NautilusMag', data['url']
     assert_equal 'Nautilus Magazine', data['title']
   end
 
@@ -177,33 +177,33 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should normalize URL" do
-    expected = 'http://www.test.com/'
+    expected = 'http://ca.ios.ba/'
     variations = %w(
-      http://www.test.com
-      www.test.com
-      http://www.test.com:80
-      http://www.test.com//
-      http://www.test.com/?
-      http://www.test.com/#foo
-      http://www.test.com/
-      http://www.TEST.COM
-      http://www.test.com/foo/..
-      http://www.test.com/?#
+      http://ca.ios.ba
+      ca.ios.ba
+      http://ca.ios.ba:80
+      http://ca.ios.ba//
+      http://ca.ios.ba/?
+      http://ca.ios.ba/#foo
+      http://ca.ios.ba/
+      http://ca.ios.ba
+      http://ca.ios.ba/foo/..
+      http://ca.ios.ba/?#
     )
     variations.each do |url|
       media = Media.new(url: url)
       assert_equal expected, media.url
     end
 
-    media = Media.new(url: 'http://www.TEst.com/a%c2/%7Euser?a=b')
-    assert_equal 'http://www.test.com/a%C2/~user?a=b', media.url
+    media = Media.new(url: 'http://ca.ios.ba/a%c2/%7Euser?a=b')
+    assert_equal 'http://ca.ios.ba/a%C2/~user?a=b', media.url
   end
 
   test "should not normalize URL" do
     urls = %w(
-      https://www.test.com/
-      http://test.com/
-      http://www.test.com/?foo=bar
+      https://ca.ios.ba/
+      http://ios.ba/
+      http://ca.ios.ba/?foo=bar
     )
     urls.each do |url|
       media = Media.new(url: url)
@@ -224,5 +224,18 @@ class MediaTest < ActiveSupport::TestCase
       m.as_json
     end
     Twitter::REST::Client.any_instance.unstub(:user)
+  end
+
+  test "should parse shortened URL" do
+    m = create_media url: 'http://bit.ly/23qFxCn'
+    data = m.as_json
+    assert_equal 'https://twitter.com/caiosba', data['url']
+    assert_equal 'Caio Almeida', data['title']
+    assert_equal 'caiosba', data['username']
+    assert_equal 'twitter', data['provider']
+    assert_not_nil data['description']
+    assert_not_nil data['picture']
+    assert_not_nil data['published_at']
+    assert_kind_of Hash, data['pictures']
   end
 end
