@@ -125,6 +125,28 @@ An oEmbed representation of the item, e.g.:
 }
 ```
 
+408: Timeout
+```json
+{
+  "type": "error",
+  "data": {
+    "message": "Timeout",
+    "code": 10
+  }
+}
+```
+
+429: API limit reached
+```json
+{
+  "type": "error",
+  "data": {
+    "message": 354, # Waiting time in seconds
+    "code": 11
+  }
+}
+```
+
 ### Rake tasks
 
 There are rake tasks for a few tasks (besides Rails' default ones). Run them this way: `bundle exec rake <task name>`
