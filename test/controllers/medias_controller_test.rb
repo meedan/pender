@@ -106,4 +106,17 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'http://twitter.com/caiosba', format: :json
     assert_response 408
   end
+
+  test "should return API limit reached error" do
+    Twitter::REST::Client.any_instance.stubs(:user).raises(Twitter::Error::TooManyRequests)
+    Twitter::Error::TooManyRequests.any_instance.stubs(:rate_limit).returns(OpenStruct.new(reset_in: 123))
+    
+    authenticate_with_token
+    get :index, url: 'http://twitter.com/caiosba', format: :json
+    assert_response 429
+    assert_equal 123, JSON.parse(@response.body)['data']['message']
+
+    Twitter::REST::Client.any_instance.unstub(:user)
+    Twitter::Error::TooManyRequests.any_instance.unstub(:rate_limit)
+  end
 end

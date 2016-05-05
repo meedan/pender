@@ -1,3 +1,5 @@
+require 'pender_exceptions'
+
 module MediaTwitterProfile
   extend ActiveSupport::Concern
 
@@ -17,7 +19,11 @@ module MediaTwitterProfile
   def data_from_twitter_profile
     username = self.data[:username] = self.get_twitter_username
 
-    self.data.merge!(self.twitter_client.user(username).as_json)
+    begin
+      self.data.merge!(self.twitter_client.user(username).as_json)
+    rescue Twitter::Error::TooManyRequests => e
+      raise Pender::ApiLimitReached.new(e.rate_limit.reset_in)
+    end
 
     self.process_twitter_profile_images
 

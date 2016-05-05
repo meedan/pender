@@ -6,6 +6,7 @@ require 'rails/test_help'
 require 'webmock'
 require 'mocha/test_unit'
 require 'sample_data'
+require 'pender_exceptions'
 
 class Api::V1::TestController < Api::V1::BaseApiController
   before_filter :verify_payload!, only: [:notify]

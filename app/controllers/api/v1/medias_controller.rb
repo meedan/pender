@@ -1,4 +1,6 @@
 require 'timeout'
+require 'pender_exceptions'
+
 module Api
   module V1
     class MediasController < Api::V1::BaseApiController
@@ -34,7 +36,9 @@ module Api
           Timeout::timeout(timeout) { render_success 'media', @media.as_json.merge({ embed_tag: embed_url }) }
         rescue Timeout::Error
           render_error 'Timeout', 'TIMEOUT', 408
-        rescue
+        rescue Pender::ApiLimitReached => e
+          render_error e.reset_in, 'API_LIMIT_REACHED', 429
+        rescue 
           render_error 'Could not parse this media', 'UNKNOWN'
         end
       end
