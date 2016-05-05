@@ -52,6 +52,30 @@
                 }
               },
               "message": "Access denied"
+            },
+            {
+              "code": 408,
+              "responseModel": {
+                "query": {
+                  "url": "https://www.youtube.com/user/MeedanTube"
+                },
+                "headers": {
+                  "x-Pender-Token": "test"
+                }
+              },
+              "message": "Timeout"
+            },
+            {
+              "code": 429,
+              "responseModel": {
+                "query": {
+                  "url": "https://www.youtube.com/user/MeedanTube"
+                },
+                "headers": {
+                  "x-Pender-Token": "test"
+                }
+              },
+              "message": "API limit reached"
             }
           ],
           "method": "get",
