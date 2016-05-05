@@ -238,4 +238,11 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
     assert_kind_of Hash, data['pictures']
   end
+
+  test "should parse Arabic URLs" do
+    assert_nothing_raised do
+      m = create_media url: 'https://www.facebook.com/إدارة-تموين-أبنوب-217188161807938/'
+      data = m.as_json
+    end
+  end
 end
