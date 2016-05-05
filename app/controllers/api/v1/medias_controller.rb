@@ -14,7 +14,7 @@ module Api
         @url = params[:url]
         (render_parameters_missing and return) if @url.blank?
         @id = Digest::MD5.hexdigest(@url)
-        @media = Media.new(url: @url)
+        render_timeout { @media = Media.new(url: @url) } and return
         respond_to do |format|
           format.html   { render_as_html   }
           format.js     { render_as_js     }
@@ -31,15 +31,23 @@ module Api
 
       def render_as_json
         @request = request
-        timeout = CONFIG['timeout'] || 5
         begin
-          Timeout::timeout(timeout) { render_success 'media', @media.as_json.merge({ embed_tag: embed_url }) }
-        rescue Timeout::Error
-          render_error 'Timeout', 'TIMEOUT', 408
+          render_timeout { render_success('media', @media.as_json.merge({ embed_tag: embed_url })) and return }
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
         rescue 
           render_error 'Could not parse this media', 'UNKNOWN'
+        end
+      end
+
+      def render_timeout
+        timeout = CONFIG['timeout'] || 5
+        begin
+          Timeout::timeout(timeout) { yield }
+          return false
+        rescue Timeout::Error
+          render_error('Timeout', 'TIMEOUT', 408)
+          return true
         end
       end
 

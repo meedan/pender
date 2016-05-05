@@ -111,7 +111,7 @@ class Media
   def request_media_url
     uri = URI.parse(URI.encode(self.url))
     http = Net::HTTP.new(uri.host, uri.port)
-    http.read_timeout = 30
+    http.read_timeout = 5
     http.use_ssl = true unless self.url.match(/^https/).nil?
     request = Net::HTTP::Get.new(uri.request_uri)
     http.request(request)
