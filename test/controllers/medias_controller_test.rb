@@ -23,12 +23,6 @@ class MediasControllerTest < ActionController::TestCase
     assert_response :success
   end
 
-  test "should return error for unsupported media" do
-    authenticate_with_token
-    get :index, url: 'http://meedan.com', format: :json
-    assert_response 400
-  end
-
   test "should be able to fetch HTML without token" do
     get :index, url: 'http://twitter.com/meedan', format: :html
     assert_response :success

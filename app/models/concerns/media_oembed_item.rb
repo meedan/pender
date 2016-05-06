@@ -25,7 +25,7 @@ module MediaOembedItem
 
   def data_from_oembed_item
     oembed_url = self.get_oembed_url
-    if oembed_url
+    unless oembed_url.blank?
       uri = URI.parse(oembed_url)
       http = Net::HTTP.new(uri.host, uri.port)
 

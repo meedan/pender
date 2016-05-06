@@ -96,14 +96,21 @@ class Media
     code = '301'
     path = []
     
-    while attempts < 5 && code == '301' && !path.include?(self.url)
+    while attempts < 5 && %w(301 302).include?(code) && !path.include?(self.url)
       attempts += 1
       path << self.url
       response = self.request_media_url
       code = response.code
-    
-      if code == '301'
-        self.url = response.header['location']
+      self.set_url_from_location(response, path)
+    end
+  end
+
+  def set_url_from_location(response, path)
+    if %w(301 302).include?(response.code)
+      self.url = response.header['location']
+      if self.url =~ /^\//
+        previous = path.last.match(/^https?:\/\/[^\/]+/)[0]
+        self.url = previous + self.url
       end
     end
   end
@@ -111,7 +118,7 @@ class Media
   def request_media_url
     uri = URI.parse(URI.encode(self.url))
     http = Net::HTTP.new(uri.host, uri.port)
-    http.read_timeout = 5
+    http.read_timeout = 30
     http.use_ssl = true unless self.url.match(/^https/).nil?
     request = Net::HTTP::Get.new(uri.request_uri)
     http.request(request)

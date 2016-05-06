@@ -41,7 +41,7 @@ module Api
       end
 
       def render_timeout
-        timeout = CONFIG['timeout'] || 5
+        timeout = CONFIG['timeout'] || 10
         begin
           Timeout::timeout(timeout) { yield }
           return false
