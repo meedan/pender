@@ -253,4 +253,10 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal 'http://www.almasryalyoum.com/editor/details/968', data['url']
     end
   end
+
+  test "should parse HTTP-authed URL" do
+    m = create_media url: 'http://qa.checkdesk.org/en/source/2777'
+    data = m.as_json
+    assert_equal 'Western Sahara AF', data['title']
+  end
 end
