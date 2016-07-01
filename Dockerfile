@@ -12,11 +12,13 @@ ENV RAILS_ENV production
 COPY ./docker/bin/* /opt/bin/
 RUN chmod 755 /opt/bin/*.sh
 
-
 # nginx
 COPY ./docker/nginx.conf /etc/nginx/sites-available/pender
 RUN ln -s /etc/nginx/sites-available/pender /etc/nginx/sites-enabled/pender
 RUN rm /etc/nginx/sites-enabled/default
+
+# dependencies
+RUN apt-get install wget -y
 
 # pender user
 RUN useradd ${DEPLOYUSER} -s /bin/bash -m
