@@ -121,6 +121,15 @@ class Media
     http.read_timeout = 30
     http.use_ssl = true unless self.url.match(/^https/).nil?
     request = Net::HTTP::Get.new(uri.request_uri)
+    request['Cookie'] = self.set_cookies
     http.request(request)
+  end
+
+  def set_cookies
+    cookies = []
+    CONFIG['cookies'].each do |k, v|
+      cookies << "#{k}=#{v}"
+    end
+    cookies.join('; ')
   end
 end

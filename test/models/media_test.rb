@@ -259,4 +259,16 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'Western Sahara AF', data['title']
   end
+
+  test "should parse Facebook user profile using user token" do
+    m = create_media url: 'https://facebook.com/1061897617191825'
+    data = m.as_json
+    assert_equal 'Caio Sacramento', data['title']
+    assert_equal 'caiosba', data['username']
+    assert_equal 'facebook', data['provider']
+    assert_equal 'user', data['subtype']
+    assert_not_nil data['description']
+    assert_not_nil data['picture']
+    assert_not_nil data['published_at']
+  end
 end
