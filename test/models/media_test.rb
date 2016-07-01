@@ -267,6 +267,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'caiosba', data['username']
     assert_equal 'facebook', data['provider']
     assert_equal 'user', data['subtype']
+    assert_equal 'https://www.facebook.com/caiosba', data['url']
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
