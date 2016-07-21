@@ -160,7 +160,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should get likes for Facebook profile" do
     # Token for v2.5 API
-    stub_configs({ facebook_api_version: 'v2.5', facebook_auth_token: 'CAAIwqnm9a9cBAMQyV3UeawV9vfnrT0DgGKYrDJ72gzoCBZArHZCvsVZBZCJvl8NgrQZAWgFlGLbXWsbw1gZAPvAn2zSJjvwRBSz1yykrAhgNM1m89WJfG5Sw3behKArplgBws6ZC3Arx2eNZAAcGv2HowPd3ZCIycmNx9mjFiSdpSwKudPKmJZARx1aH6e35gO49kZD' })
+    stub_configs({ facebook_api_version: 'v2.5', facebook_auth_token: 'EAAPFQ54qtIIBAEHFqeFXVw9eD6MAGPe8dhAprEbxUHyFZBqXCJJmfHtn6CHige27arjBEEqZCsTbNc6wnTzv0e1wFKcz4LErLcwLiwFk83LBBpOxxSJEvsewkc6s3jriUwrauIRIO07xBciNhKIhcuA3VNi78ZD' })
     m = create_media url: 'https://www.facebook.com/ironmaiden/?fref=ts'
     data = m.as_json
     likes = data['likes']
@@ -169,7 +169,7 @@ class MediaTest < ActiveSupport::TestCase
     Rails.cache.clear
 
     # Token for v2.6 API
-    stub_configs({ facebook_api_version: 'v2.6', facebook_auth_token: 'EAAW42ANfhLIBAA7VsZBA9n763j9oMYQ0fqdFA14QdFUdiot2ZBTAkkFZA3eydNdL14A7fjeOyhHJC8v0NQjQwxw9P4zvR86SE3KDjxns9ZAXNHsynjGme6gN0ZC02nZBZCk5dvTtOkvbulRjDvfsxqcyK3C7RvZAjeIZD' })
+    stub_configs({ facebook_api_version: 'v2.6', facebook_auth_token: CONFIG['facebook_auth_token'] })
     m = create_media url: 'https://www.facebook.com/ironmaiden/?fref=ts'
     data = m.as_json
     assert_match /^[0-9]+$/, data['likes'].to_s
