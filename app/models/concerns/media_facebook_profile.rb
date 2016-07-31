@@ -98,6 +98,11 @@ module MediaFacebookProfile
   end
 
   def get_facebook_id_from_url
-    IdsPlease.new(self.url).grab[:facebook].first.network_id.to_i
+    id = IdsPlease.new(self.url).grab[:facebook].first.network_id.to_i
+    if id === 0
+      id = self.url.match(/^https:\/\/www\.facebook\.com\/profile\.php\?id=([0-9]+)$/)
+      id = id[1].to_i unless id.nil?
+    end
+    id
   end
 end

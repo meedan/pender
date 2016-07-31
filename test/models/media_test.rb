@@ -272,4 +272,10 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
   end
+
+  test "should parse numeric Facebook profile" do
+    m = create_media url: 'https://facebook.com/150101502089286'
+    data = m.as_json
+    assert_equal 'José Silva', data['title']
+  end
 end
