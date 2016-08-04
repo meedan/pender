@@ -278,4 +278,12 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'José Silva', data['title']
   end
+
+  # http://errbit.test.meedan.net/apps/576218088583c6f1ea000231/problems/57a1bf968583c6f1ea000c01
+  # https://mantis.meedan.com/view.php?id=4913
+  test "should parse numeric Facebook profile 2" do
+    m = create_media url: 'https://facebook.com/10153811412781094'
+    data = m.as_json
+    assert_equal 'Noha Nazieh Daoud', data['title']
+  end
 end
