@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/meedan/ids_please
-  revision: 927191c43027db6ba63feb58cb5aaa6ec4e5b107
-  ref: 927191
+  revision: 31b9e03fe7860d57697e9b6deec321bc7d7482f4
+  ref: 31b9e0
   branch: master
   specs:
     ids_please (2.2.2)
