@@ -1,7 +1,7 @@
 # pender
 # https://github.com/meedan/pender
 
-FROM dreg.meedan.net/meedan/ruby
+FROM meedan/ruby
 MAINTAINER sysops@meedan.com
 
 ENV DEPLOYUSER pender
@@ -9,11 +9,12 @@ ENV DEPLOYDIR /app/pender
 ENV RAILS_ENV production
 
 # runtime binaries
-COPY ./docker/bin/* /opt/bin/
+USER root
+COPY production/bin /opt/bin/
 RUN chmod 755 /opt/bin/*.sh
 
 # nginx
-COPY ./docker/nginx.conf /etc/nginx/sites-available/pender
+COPY ./production/nginx.conf /etc/nginx/sites-available/pender
 RUN ln -s /etc/nginx/sites-available/pender /etc/nginx/sites-enabled/pender
 RUN rm /etc/nginx/sites-enabled/default
 
