@@ -286,4 +286,19 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'Noha Nazieh Daoud', data['title']
   end
+
+  test "should parse tweet" do
+    m = create_media url: 'https://twitter.com/caiosba/status/742779467521773568'
+    data = m.as_json
+    assert_equal 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
+  end
+
+  test "should throw Pender::ApiLimitReached when Twitter::Error::TooManyRequests is thrown when parsing tweet" do
+    Twitter::REST::Client.any_instance.stubs(:status).raises(Twitter::Error::TooManyRequests)
+    assert_raises Pender::ApiLimitReached do
+      m = create_media url: 'https://twitter.com/caiosba/status/742779467521773568'
+      m.as_json
+    end
+    Twitter::REST::Client.any_instance.unstub(:status)
+  end
 end

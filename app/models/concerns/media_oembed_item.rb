@@ -22,7 +22,8 @@ module MediaOembedItem
       username: data[:oembed]['author_name'],
       description: data[:oembed]['title'],
       title: data[:oembed]['title'],
-      picture: ''
+      picture: '',
+      html: data[:oembed]['html']
     })
   end
 

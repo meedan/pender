@@ -9,6 +9,8 @@ A parsing and rendering service.
 * Twitter profiles
 * YouTube profiles (users and channels)
 * Facebook profiles (users and pages)
+* Twitter posts
+* Any link with an oEmbed endpoint
 
 ### Installation
 

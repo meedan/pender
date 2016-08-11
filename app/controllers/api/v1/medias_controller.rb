@@ -78,11 +78,10 @@ module Api
         av = ActionView::Base.new(Rails.root.join('app', 'views'))
         template = locals = nil
         data = @media.as_json
-        oembed = data[:oembed]
 
-        if oembed && oembed['html']
-          locals = { html: oembed['html'].html_safe }
-          template = 'oembed'
+        if !data['html'].blank?
+          locals = { html: data['html'].html_safe }
+          template = 'custom'
         else
           locals = { data: data }
           template = 'index'

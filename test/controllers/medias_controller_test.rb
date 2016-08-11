@@ -113,4 +113,11 @@ class MediasControllerTest < ActionController::TestCase
     Twitter::REST::Client.any_instance.unstub(:user)
     Twitter::Error::TooManyRequests.any_instance.unstub(:rate_limit)
   end
+
+  test "should render custom HTML if provided by parser" do
+    get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html
+    assert_response :success
+    assert_match /twitter-tweet/, response.body
+    assert_no_match /pender-title/, response.body
+  end
 end
