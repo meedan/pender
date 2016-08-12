@@ -9,14 +9,20 @@ module MediaTwitterItem
     Media.declare('twitter_item', [URL])
   end
 
+  def within_twitter_api_limit
+    begin
+      yield
+    rescue Twitter::Error::TooManyRequests => e
+      raise Pender::ApiLimitReached.new(e.rate_limit.reset_in)
+    end
+  end
+
   def data_from_twitter_item
     parts = self.url.match(URL)
     user, id = parts[2], parts[3]
 
-    begin
+    within_twitter_api_limit do
       self.data.merge!(self.twitter_client.status(id).as_json)
-    rescue Twitter::Error::TooManyRequests => e
-      raise Pender::ApiLimitReached.new(e.rate_limit.reset_in)
     end
 
     self.data.merge!({

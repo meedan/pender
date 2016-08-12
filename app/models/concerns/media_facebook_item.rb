@@ -90,7 +90,7 @@ module MediaFacebookItem
   def get_facebook_html
     html = ''
     # We need to hack the user agent, otherwise Facebook will return a "unsupported browser" page
-    open(@url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1', 'Accept-Language' => 'en') do |f|
+    open(@url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1', 'Accept-Language' => 'en', 'Cookie' => self.set_cookies) do |f|
       html = f.read
     end
     Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
@@ -100,12 +100,12 @@ module MediaFacebookItem
     content = doc.at_css('div.userContent') || doc.at_css('span.hasCaption')
     text = content.nil? ? doc.at_css('meta[name=description]').attr('content') : content.inner_html.gsub(/<[^>]+>/, '')
     self.data['text'] = text.to_s.gsub('See Translation', ' ')
-    user_name = doc.to_s.match(/To see more from <b>([^<]+)<\/b> on Facebook/)
+    user_name = doc.to_s.match(/ownerName:"([^"]+)"/)
     self.data['user_name'] = user_name.nil? ? 'Not Identified' : user_name[1]
   end
 
   def html_for_facebook_post
-    html = '<script>
+    '<script>
     window.fbAsyncInit = function() {
       FB.init({
         xfbml      : true,

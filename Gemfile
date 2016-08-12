@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-gem 'rails', '4.2.6'
+gem 'rails', '4.2.7'
 gem 'sqlite3'
 group :development, :test do
   gem 'byebug'
