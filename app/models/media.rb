@@ -36,6 +36,7 @@ class Media
   include MediaYoutubeProfile
   include MediaTwitterProfile
   include MediaTwitterItem
+  include MediaFacebookItem
   include MediaFacebookProfile
   include MediaOembedItem
 

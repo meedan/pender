@@ -301,4 +301,141 @@ class MediaTest < ActiveSupport::TestCase
     end
     Twitter::REST::Client.any_instance.unstub(:status)
   end
+
+  test "should create Facebook post from page post URL" do
+    m = create_media url: 'https://www.facebook.com/teste637621352/posts/1028416870556238'
+    d = m.as_json
+    assert_equal '749262715138323_1028416870556238', d['uuid']
+    assert_equal "This post is only to test.\n\nEsto es una publicación para testar solamente.", d['text']
+    assert_equal '749262715138323', d['user_uuid']
+    assert_equal 'Teste', d['user_name']
+    assert_equal 0, d['media_count']
+    assert_equal '1028416870556238', d['object_id']
+    assert_equal '18/11/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+  end
+
+  test "should create Facebook post from page photo URL" do
+    m = create_media url: 'https://www.facebook.com/teste637621352/photos/a.754851877912740.1073741826.749262715138323/896869113711015/?type=3'
+    d = m.as_json
+    assert_equal '749262715138323_896869113711015', d['uuid']
+    assert_equal 'This post should be fetched.', d['text']
+    assert_equal '749262715138323', d['user_uuid']
+    assert_equal 'Teste', d['user_name']
+    assert_equal 1, d['media_count']
+    assert_equal '896869113711015', d['object_id']
+    assert_equal '09/03/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+  end
+
+  test "should create Facebook post from page photo URL 2" do
+    m = create_media url: 'https://www.facebook.com/photo.php?fbid=1028424567222135&set=a.1028424563888802.1073741827.749262715138323&type=3'
+    d = m.as_json
+    assert_equal '749262715138323_1028424567222135', d['uuid']
+    assert_equal 'Teste updated their profile picture.', d['text']
+    assert_equal '749262715138323', d['user_uuid']
+    assert_equal 'Teste', d['user_name']
+    assert_equal 1, d['media_count']
+    assert_equal '1028424567222135', d['object_id']
+    assert_equal '18/11/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+  end
+
+  test "should create Facebook post from page photos URL" do
+    m = create_media url: 'https://www.facebook.com/teste637621352/posts/1028795030518422'
+    d = m.as_json
+    assert_equal '749262715138323_1028795030518422', d['uuid']
+    assert_equal 'This is just a test with many photos.', d['text']
+    assert_equal '749262715138323', d['user_uuid']
+    assert_equal 'Teste', d['user_name']
+    assert_equal 2, d['media_count']
+    assert_equal '1028795030518422', d['object_id']
+    assert_equal '18/11/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+  end
+
+  test "should create Facebook post from user photos URL" do
+    m = create_media url: 'https://www.facebook.com/nanabhay/posts/10156130657385246?pnref=story'
+    d = m.as_json
+    assert_equal '735450245_10156130657385246', d['uuid']
+    assert_equal 'Such a great evening with friends last night. Sultan Sooud Al-Qassemi has an amazing collecting of modern Arab art. It was a visual tour of the history of the region over the last century.', d['text'].strip
+    assert_equal '735450245', d['user_uuid']
+    assert_equal 'Mohamed Nanabhay', d['user_name']
+    assert_equal 4, d['media_count']
+    assert_equal '10156130657385246', d['object_id']
+    assert_equal '27/10/2015', d['published'].strftime("%d/%m/%Y")
+  end
+
+  test "should create Facebook post from user photo URL 2" do
+    m = create_media url: 'https://www.facebook.com/photo.php?fbid=10153433748389837&set=a.428764099836.214715.616304836&type=3&permPage=1'
+    d = m.as_json
+    assert_equal '616304836_10153433748389837', d['uuid']
+    assert_equal '', d['text']
+    assert_equal '616304836', d['user_uuid']
+    assert_equal 'Fabio Akita', d['user_name']
+    assert_equal 1, d['media_count']
+    assert_equal '10153433748389837', d['object_id']
+    assert_equal '30/06/2015', d['published'].strftime("%d/%m/%Y")
+  end
+
+  test "should create Facebook post from user photo URL 3" do
+    m = create_media url: 'https://www.facebook.com/photo.php?fbid=10153721619504837&set=p.10153721619504837&type=3'
+    d = m.as_json
+    assert_equal '10153721619504837_10153721619504837', d['uuid']
+    assert_equal '10153721619504837', d['user_uuid']
+    assert_equal 'Fabio Akita', d['user_name']
+    assert_equal 1, d['media_count']
+    assert_equal '10153721619504837', d['object_id']
+    assert_match /^Confraternizando com a galera de Teresina/, d['text']
+  end
+
+  tests = YAML.load_file(File.join(Rails.root, 'test', 'data', 'fbposts.yml'))
+  tests.each do |url, text|
+    test "should get text from Facebook user post from URL '#{url}'" do
+      m = create_media url: url
+      assert_equal text, m.as_json['text'].gsub(/\s+/, ' ').strip
+    end
+  end
+
+  test "should create Facebook post with picture and photos" do
+    m = create_media url: 'https://www.facebook.com/teste637621352/posts/1028795030518422'
+    d = m.as_json
+    assert_match /^https/, d['picture']
+    assert_kind_of Array, d['photos']
+    assert_equal 2, d['media_count']
+    assert_equal 1, d['photos'].size
+
+    m = create_media url: 'https://www.facebook.com/teste637621352/posts/1035783969819528'
+    d = m.as_json
+    assert_match /^https/, d['picture']
+    assert_kind_of Array, d['photos']
+    assert_equal 0, d['media_count']
+    assert_equal 0, d['photos'].size
+
+    m = create_media url: 'https://www.facebook.com/johnwlai/posts/10101205465813840?pnref=story'
+    d = m.as_json
+    assert_match /^https/, d['picture']
+    assert_kind_of Array, d['photos']
+    assert_equal 2, d['media_count']
+    assert_equal 0, d['photos'].size
+  end
+
+  test "should create Facebook post from Arabic user" do
+    m = create_media url: 'https://www.facebook.com/ahlam.alialshamsi/posts/108561999277346?pnref=story'
+    d = m.as_json
+    assert_equal '100003706393630_108561999277346', d['uuid']
+    assert_equal '100003706393630', d['user_uuid']
+    assert_equal 'Ahlam Ali Al Shāmsi', d['user_name']
+    assert_equal 0, d['media_count']
+    assert_equal '108561999277346', d['object_id']
+    assert_equal 'أنا مواد رافعة الآن الأموال اللازمة لمشروع مؤسسة خيرية، ودعم المحتاجين في غرب أفريقيا مساعدتي لبناء مكانا أفضل للأطفال في أفريقيا', d['text']
+  end
+
+  test "should create Facebook post from mobile URL" do
+    m = create_media url: 'https://m.facebook.com/photo.php?fbid=10153433748389837&set=a.428764099836.214715.616304836&type=3&permPage=1'
+    d = m.as_json
+    assert_equal '616304836_10153433748389837', d['uuid']
+    assert_equal '', d['text']
+    assert_equal '616304836', d['user_uuid']
+    assert_equal 'Fabio Akita', d['user_name']
+    assert_equal 1, d['media_count']
+    assert_equal '10153433748389837', d['object_id']
+    assert_equal '30/06/2015', d['published'].strftime("%d/%m/%Y")
+  end
 end
