@@ -105,7 +105,23 @@ module MediaFacebookItem
   end
 
   def html_for_facebook_post
-    '<iframe src="https://www.facebook.com/plugins/post.php?href=' + self.url + '&width=500&show_text=true&appId=' + CONFIG['facebook_app_id'].to_s + '&height=290" width="500" height="290" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true"></iframe>'
+    html = '<script>
+    window.fbAsyncInit = function() {
+      FB.init({
+        xfbml      : true,
+        version    : "v2.6"
+      });
+      FB.Canvas.setAutoGrow();
+    }; 
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/sdk.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, "script", "facebook-jssdk"));
+    </script>
+    <div class="fb-post" data-href="' + self.url + '"></div>'
   end
 
   # First method
