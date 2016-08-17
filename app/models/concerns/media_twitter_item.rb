@@ -31,7 +31,8 @@ module MediaTwitterItem
       description: self.data['text'],
       picture: self.data['user']['profile_image_url_https'].gsub('_normal', ''),
       published_at: self.data['created_at'],
-      html: html_for_twitter_item
+      html: html_for_twitter_item,
+      author_url: 'https://twitter.com/' + user 
     })
   end
 

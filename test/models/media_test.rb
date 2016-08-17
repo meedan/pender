@@ -438,4 +438,16 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '10153433748389837', d['object_id']
     assert_equal '30/06/2015', d['published'].strftime("%d/%m/%Y")
   end
+
+  test "should return author_url for Twitter post" do
+    m = create_media url: 'https://twitter.com/TheConfMalmo_AR/status/765474989277638657'
+    d = m.as_json
+    assert_equal 'https://twitter.com/TheConfMalmo_AR', d['author_url']
+  end
+
+  test "should return author_url for Facebook post" do
+    m = create_media url: 'https://m.facebook.com/photo.php?fbid=10153433748389837&set=a.428764099836.214715.616304836&type=3&permPage=1'
+    d = m.as_json
+    assert_equal 'http://facebook.com/616304836', d['author_url']
+  end
 end

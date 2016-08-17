@@ -137,7 +137,8 @@ module MediaFacebookItem
       description: self.data['text'],
       picture: self.data['picture'] || self.data['photos'].first,
       published_at: self.data['published'],
-      html: self.html_for_facebook_post
+      html: self.html_for_facebook_post,
+      author_url: 'http://facebook.com/' + self.data['user_uuid']
     })
   end
 end
