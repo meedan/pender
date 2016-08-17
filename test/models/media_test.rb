@@ -56,10 +56,10 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse Facebook user profile with identifier" do
-    m = create_media url: 'https://www.facebook.com/akitaonrails'
+    m = create_media url: 'https://www.facebook.com/xico.sa'
     data = m.as_json
-    assert_equal 'Fabio Akita', data['title']
-    assert_equal 'akitaonrails', data['username']
+    assert_equal 'Xico Sá', data['title']
+    assert_equal 'xico.sa', data['username']
     assert_equal 'facebook', data['provider']
     assert_equal 'user', data['subtype']
     assert_not_nil data['description']
@@ -363,26 +363,26 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should create Facebook post from user photo URL 2" do
-    m = create_media url: 'https://www.facebook.com/photo.php?fbid=10153433748389837&set=a.428764099836.214715.616304836&type=3&permPage=1'
+    m = create_media url: 'https://www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3&theater'
     d = m.as_json
-    assert_equal '616304836_10153433748389837', d['uuid']
+    assert_equal '100000497329098_1195161923843707', d['uuid']
     assert_equal '', d['text']
-    assert_equal '616304836', d['user_uuid']
-    assert_equal 'Fabio Akita', d['user_name']
+    assert_equal '100000497329098', d['user_uuid']
+    assert_equal 'Kiko Loureiro', d['user_name']
     assert_equal 1, d['media_count']
-    assert_equal '10153433748389837', d['object_id']
-    assert_equal '30/06/2015', d['published'].strftime("%d/%m/%Y")
+    assert_equal '1195161923843707', d['object_id']
+    assert_equal '01/11/2015', d['published'].strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from user photo URL 3" do
-    m = create_media url: 'https://www.facebook.com/photo.php?fbid=10153721619504837&set=p.10153721619504837&type=3'
+    m = create_media url: 'https://www.facebook.com/photo.php?fbid=10155150801660195&set=p.10155150801660195&type=1&theater'
     d = m.as_json
-    assert_equal '10153721619504837_10153721619504837', d['uuid']
-    assert_equal '10153721619504837', d['user_uuid']
-    assert_equal 'Fabio Akita', d['user_name']
+    assert_equal '10155150801660195_10155150801660195', d['uuid']
+    assert_equal '10155150801660195', d['user_uuid']
+    assert_equal 'David Marcus', d['user_name']
     assert_equal 1, d['media_count']
-    assert_equal '10153721619504837', d['object_id']
-    assert_match /^Confraternizando com a galera de Teresina/, d['text']
+    assert_equal '10155150801660195', d['object_id']
+    assert_match /always working on ways to make Messenger more useful/, d['text']
   end
 
   tests = YAML.load_file(File.join(Rails.root, 'test', 'data', 'fbposts.yml'))
@@ -428,15 +428,15 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should create Facebook post from mobile URL" do
-    m = create_media url: 'https://m.facebook.com/photo.php?fbid=10153433748389837&set=a.428764099836.214715.616304836&type=3&permPage=1'
+    m = create_media url: 'https://m.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3&theater'
     d = m.as_json
-    assert_equal '616304836_10153433748389837', d['uuid']
+    assert_equal '100000497329098_1195161923843707', d['uuid']
     assert_equal '', d['text']
-    assert_equal '616304836', d['user_uuid']
-    assert_equal 'Fabio Akita', d['user_name']
+    assert_equal '100000497329098', d['user_uuid']
+    assert_equal 'Kiko Loureiro', d['user_name']
     assert_equal 1, d['media_count']
-    assert_equal '10153433748389837', d['object_id']
-    assert_equal '30/06/2015', d['published'].strftime("%d/%m/%Y")
+    assert_equal '1195161923843707', d['object_id']
+    assert_equal '01/11/2015', d['published'].strftime("%d/%m/%Y")
   end
 
   test "should return author_url for Twitter post" do
@@ -446,8 +446,8 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should return author_url for Facebook post" do
-    m = create_media url: 'https://m.facebook.com/photo.php?fbid=10153433748389837&set=a.428764099836.214715.616304836&type=3&permPage=1'
+    m = create_media url: 'https://www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3&theater'
     d = m.as_json
-    assert_equal 'http://facebook.com/616304836', d['author_url']
+    assert_equal 'http://facebook.com/100000497329098', d['author_url']
   end
 end
