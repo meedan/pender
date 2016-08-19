@@ -23,7 +23,8 @@ module MediaOembedItem
       description: data[:oembed]['title'],
       title: data[:oembed]['title'],
       picture: '',
-      html: data[:oembed]['html']
+      html: data[:oembed]['html'],
+      author_url: data[:oembed]['author_url']
     })
   end
 
