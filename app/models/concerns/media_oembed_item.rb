@@ -45,7 +45,7 @@ module MediaOembedItem
 
       unless url.match(/^https/).nil?
         http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        # http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
 
       request = self.oembed_create_request(uri)
