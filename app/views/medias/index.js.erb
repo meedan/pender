@@ -5,115 +5,120 @@
 (function() {
   'use strict';
 
-  var scripts = document.getElementsByTagName('SCRIPT'),
-      placeholder = null,
-      url = '<%= @caller.gsub('medias.js', 'medias.html') %>',
-      str = '<%= @caller %>',
-      regex = new RegExp(str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"));
+  var id = 'pender-iframe-<%= @id %>';
 
-  for (var i = 0; i < scripts.length; i++) {
-    if ((regex.test(scripts[i].getAttribute('src'))) && scripts[i].parentNode.tagName != 'HEAD') {
-      placeholder = scripts[i];
-      var css = placeholder.getAttribute('data-custom-css');
-      if (css) {
-        url += '#css=' + css;
+  if (document.getElementById(id) === null) {
+
+    var scripts = document.getElementsByTagName('SCRIPT'),
+        placeholder = null,
+        url = '<%= @caller.gsub('medias.js', 'medias.html') %>',
+        str = '<%= @caller %>',
+        regex = new RegExp(str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"));
+
+    for (var i = 0; i < scripts.length; i++) {
+      if ((regex.test(scripts[i].getAttribute('src'))) && scripts[i].parentNode.tagName != 'HEAD') {
+        placeholder = scripts[i];
+        var css = placeholder.getAttribute('data-custom-css');
+        if (css) {
+          url += '#css=' + css;
+        }
       }
     }
-  }
 
-  // If the caller script cannot be found, try to find a placeholder
+    // If the caller script cannot be found, try to find a placeholder
 
-  var blockquote = document.getElementById('pender-placeholder-<%= @id %>');
-  if (!placeholder) {
+    var blockquote = document.getElementById('pender-placeholder-<%= @id %>');
+    if (!placeholder) {
+      if (blockquote) {
+        placeholder = blockquote;
+      }
+      else {
+        return;
+      }
+    }
+
+    var frame = document.createElement('iframe'),
+        attrs = {
+          src: url,
+          width: '100%',
+          frameborder: 0,
+          scrolling: 'no',
+          id: id,
+          seamless: ''
+        };
+    for (var attr in attrs) {
+      frame.setAttribute(attr, attrs[attr]);
+    }
+    frame.innerHTML = 'Your browser does not support iframes';
+    
+    placeholder.parentNode.insertBefore(frame, placeholder.nextSibling);
+
     if (blockquote) {
-      placeholder = blockquote;
+      blockquote.parentNode.removeChild(blockquote);
+    }
+
+    var messageCallback = function(e) {
+      if (e && e.data && typeof e.data === 'string') {
+        var data   = e.data.split(';'),
+            type   = data[0];
+
+        switch (type) {
+          // Height changed
+          case 'setHeight':
+            var title = data[1],
+                height = data[2],
+                iframe = document.getElementById('pender-iframe-' + title);
+            if (iframe != undefined) iframe.style.height = height + 'px';
+            break;
+        }
+      }
+    };
+
+    var isVisible = function(el) {
+      return (el.offsetHeight > 0 || el.offsetWidth > 0 || el.offsetTop > 0 || el.offsetLeft > 0);
+    };
+
+    var resizeOrScrollCallback = function(e) {
+      var frame = document.getElementById('pender-iframe-<%= @id %>'),
+          f = frame.getBoundingClientRect(),
+          h = window.innerHeight || document.documentElement.clientHeight,
+          w = window.innerWidth || document.documentElement.clientWidth;
+      if (isVisible(frame)) frame.contentWindow.postMessage(['lazyLoad', h, w, f.top, f.left, f.bottom, f.right].join(';'), '*');
+    };
+
+    // If the embed is not visible, watch for its visiblity
+    var frameVisible = false;
+    var checkFrameVisibility = function() {
+      var frame = document.getElementById('pender-iframe-<%= @id %>');
+      if (frame) {
+        var visible = isVisible(frame);
+        if (visible != frameVisible) {
+          frameVisible = visible;
+          resizeOrScrollCallback();
+        }
+      }
+      setTimeout(checkFrameVisibility, 100);
+    };
+    setTimeout(checkFrameVisibility, 1000);
+
+    var all = document.getElementsByTagName("*");
+    if (!window.addEventListener) {
+      window.attachEvent('onmessage', messageCallback);
+      window.attachEvent('onscroll', resizeOrScrollCallback);
+      window.attachEvent('onresize', resizeOrScrollCallback);
+      window.attachEvent('onload', resizeOrScrollCallback);
+      for (var i=0; i < all.length; i++) {
+        all[i].attachEvent('onscroll', resizeOrScrollCallback);
+      }
     }
     else {
-      return;
-    }
-  }
-
-  var frame = document.createElement('iframe'),
-      attrs = {
-        src: url,
-        width: '100%',
-        frameborder: 0,
-        scrolling: 'no',
-        id: 'pender-iframe-<%= @id %>',
-        seamless: ''
-      };
-  for (var attr in attrs) {
-    frame.setAttribute(attr, attrs[attr]);
-  }
-  frame.innerHTML = 'Your browser does not support iframes';
-  
-  placeholder.parentNode.insertBefore(frame, placeholder.nextSibling);
-
-  if (blockquote) {
-    blockquote.parentNode.removeChild(blockquote);
-  }
-
-  var messageCallback = function(e) {
-    if (e && e.data && typeof e.data === 'string') {
-      var data   = e.data.split(';'),
-          type   = data[0];
-
-      switch (type) {
-        // Height changed
-        case 'setHeight':
-          var title = data[1],
-              height = data[2],
-              iframe = document.getElementById('pender-iframe-' + title);
-          if (iframe != undefined) iframe.style.height = height + 'px';
-          break;
+      window.addEventListener('message', messageCallback, false);
+      window.addEventListener('scroll', resizeOrScrollCallback, false);
+      window.addEventListener('resize', resizeOrScrollCallback, false);
+      window.addEventListener('load', resizeOrScrollCallback, false);
+      for (var i=0; i < all.length; i++) {
+        all[i].addEventListener('scroll', resizeOrScrollCallback, false);
       }
-    }
-  };
-
-  var isVisible = function(el) {
-    return (el.offsetHeight > 0 || el.offsetWidth > 0 || el.offsetTop > 0 || el.offsetLeft > 0);
-  };
-
-  var resizeOrScrollCallback = function(e) {
-    var frame = document.getElementById('pender-iframe-<%= @id %>'),
-        f = frame.getBoundingClientRect(),
-        h = window.innerHeight || document.documentElement.clientHeight,
-        w = window.innerWidth || document.documentElement.clientWidth;
-    if (isVisible(frame)) frame.contentWindow.postMessage(['lazyLoad', h, w, f.top, f.left, f.bottom, f.right].join(';'), '*');
-  };
-
-  // If the embed is not visible, watch for its visiblity
-  var frameVisible = false;
-  var checkFrameVisibility = function() {
-    var frame = document.getElementById('pender-iframe-<%= @id %>');
-    if (frame) {
-      var visible = isVisible(frame);
-      if (visible != frameVisible) {
-        frameVisible = visible;
-        resizeOrScrollCallback();
-      }
-    }
-    setTimeout(checkFrameVisibility, 100);
-  };
-  setTimeout(checkFrameVisibility, 1000);
-
-  var all = document.getElementsByTagName("*");
-  if (!window.addEventListener) {
-    window.attachEvent('onmessage', messageCallback);
-    window.attachEvent('onscroll', resizeOrScrollCallback);
-    window.attachEvent('onresize', resizeOrScrollCallback);
-    window.attachEvent('onload', resizeOrScrollCallback);
-    for (var i=0; i < all.length; i++) {
-      all[i].attachEvent('onscroll', resizeOrScrollCallback);
-    }
-  }
-  else {
-    window.addEventListener('message', messageCallback, false);
-    window.addEventListener('scroll', resizeOrScrollCallback, false);
-    window.addEventListener('resize', resizeOrScrollCallback, false);
-    window.addEventListener('load', resizeOrScrollCallback, false);
-    for (var i=0; i < all.length; i++) {
-      all[i].addEventListener('scroll', resizeOrScrollCallback, false);
     }
   }
 }());
