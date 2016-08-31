@@ -38,6 +38,8 @@ class Media
   include MediaTwitterItem
   include MediaFacebookItem
   include MediaFacebookProfile
+  include MediaInstagramItem
+  include MediaInstagramProfile
   include MediaOembedItem
 
   def as_oembed(original_url, maxwidth, maxheight)
@@ -124,7 +126,11 @@ class Media
     http.use_ssl = true unless self.url.match(/^https/).nil?
     request = Net::HTTP::Get.new(uri.request_uri)
     request['Cookie'] = self.set_cookies
-    http.request(request)
+    response = nil
+    Retryable.retryable(tries: 3, sleep: 1) do
+      response = http.request(request)
+    end
+    response
   end
 
   def set_cookies

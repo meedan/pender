@@ -11,6 +11,8 @@ A parsing and rendering service.
 * Facebook profiles (users and pages)
 * Twitter posts
 * Facebook posts (from pages and users)
+* Instagram posts
+* Instagram profiles
 * Any link with an oEmbed endpoint
 
 ### Installation

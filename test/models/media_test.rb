@@ -450,4 +450,20 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'http://facebook.com/100000497329098', d['author_url']
   end
+
+  test "should parse Instagram link" do
+    m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
+    d = m.as_json
+    assert_equal 'megadeth', d['username']
+    assert_equal 'item', d['type']
+  end
+
+  test "should parse Instagram profile" do
+    m = create_media url: 'https://www.instagram.com/megadeth'
+    d = m.as_json
+    assert_equal 'megadeth', d['username']
+    assert_equal 'profile', d['type']
+    assert_equal 'megadeth', d['title']
+    assert_match /^http/, d['picture']
+  end
 end

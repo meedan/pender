@@ -29,3 +29,4 @@ gem 'ids_please', git: 'https://github.com/meedan/ids_please', branch: 'master',
 gem 'unicorn', group: :production
 gem 'open_uri_redirections'
 gem 'postrank-uri'
+gem 'retryable'
