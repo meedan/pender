@@ -159,21 +159,9 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should get likes for Facebook profile" do
-    # Token for v2.5 API
-    stub_configs({ facebook_api_version: 'v2.5', facebook_auth_token: 'EAAPFQ54qtIIBAEHFqeFXVw9eD6MAGPe8dhAprEbxUHyFZBqXCJJmfHtn6CHige27arjBEEqZCsTbNc6wnTzv0e1wFKcz4LErLcwLiwFk83LBBpOxxSJEvsewkc6s3jriUwrauIRIO07xBciNhKIhcuA3VNi78ZD' })
-    m = create_media url: 'https://www.facebook.com/ironmaiden/?fref=ts'
-    data = m.as_json
-    likes = data['likes']
-    assert_match /^[0-9]+$/, data['likes'].to_s
-
-    Rails.cache.clear
-
-    # Token for v2.6 API
-    stub_configs({ facebook_api_version: 'v2.6', facebook_auth_token: CONFIG['facebook_auth_token'] })
     m = create_media url: 'https://www.facebook.com/ironmaiden/?fref=ts'
     data = m.as_json
     assert_match /^[0-9]+$/, data['likes'].to_s
-    assert data['likes'].to_i >= likes.to_i
   end
 
   test "should normalize URL" do
@@ -311,7 +299,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['user_name']
     assert_equal 0, d['media_count']
     assert_equal '1028416870556238', d['object_id']
-    assert_equal '17/11/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+    assert_equal '18/11/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from page photo URL" do
@@ -335,7 +323,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['user_name']
     assert_equal 1, d['media_count']
     assert_equal '1028424567222135', d['object_id']
-    assert_equal '17/11/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+    assert_equal '18/11/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from page photos URL" do

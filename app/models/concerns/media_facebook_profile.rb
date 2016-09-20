@@ -21,7 +21,6 @@ module MediaFacebookProfile
       is_verified languages           locale         location      middle_name  name_format          political
       quotes      relationship_status religion       sports        updated_time verified             website
     )
-    fields << 'fan_count' if CONFIG['facebook_api_version'].to_s === 'v2.6'
     fields
   end
 
@@ -30,11 +29,11 @@ module MediaFacebookProfile
       id                  about            awards         bio              birthday             built                 can_checkin
       category            category_list    checkins       company_overview contact_address      context               country_page_likes
       cover               current_location description    display_subtext  emails               founded               general_info
-      general_manager     genre            hometown       hours            is_community_page    is_permanently_closed is_published
+      general_manager     genre            hometown       hours            is_community_page    photos                is_published
       is_unclaimed        is_verified      keywords       leadgen_tos_accepted link             location              picture
       name                network          new_like_count parent_page      personal_info        phone                 press_contact
       talking_about_count username         voip_info      website          were_here_count      written_by            events
-      insights            likes            locations      photos
+      likes               locations
     )
     fields << 'fan_count' if CONFIG['facebook_api_version'].to_s === 'v2.6'
     fields
@@ -71,9 +70,7 @@ module MediaFacebookProfile
   end
 
   def get_facebook_likes
-    if self.data['likes'].to_s.match(/^[0-9]+$/).nil?
-      self.data['likes'] = self.data['fan_count']
-    end
+    self.data['likes'] = self.data['fan_count'] if self.data['likes'].to_s.match(/^[0-9]+$/).nil?
   end
 
   def facebook_picture
