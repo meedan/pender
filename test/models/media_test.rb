@@ -262,7 +262,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse numeric Facebook profile" do
-    m = create_media url: 'https://facebook.com/150101502089286'
+    m = create_media url: 'https://facebook.com/100013581666047'
     data = m.as_json
     assert_equal 'José Silva', data['title']
   end

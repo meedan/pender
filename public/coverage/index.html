@@ -14,7 +14,7 @@
       <img src="./assets/0.10.0/loading.gif" alt="loading"/>
     </div>
     <div id="wrapper" style="display:none;">
-      <div class="timestamp">Generated <abbr class="timeago" title="2016-09-20T16:12:57-03:00">2016-09-20T16:12:57-03:00</abbr></div>
+      <div class="timestamp">Generated <abbr class="timeago" title="2016-09-20T20:32:39-03:00">2016-09-20T20:32:39-03:00</abbr></div>
       <ul class="group_tabs"></ul>
 
       <div id="content">
@@ -25,7 +25,7 @@
      covered at
      <span class="covered_strength">
        <span class="green">
-         18.9
+         18.81
        </span>
     </span> hits/line)
   </h2>
@@ -117,7 +117,7 @@
         <td>16</td>
         <td>16</td>
         <td>0</td>
-        <td>4.8</td>
+        <td>4.9</td>
       </tr>
       
       <tr>
@@ -137,7 +137,7 @@
         <td>53</td>
         <td>53</td>
         <td>0</td>
-        <td>8.2</td>
+        <td>7.9</td>
       </tr>
       
       <tr>
@@ -207,7 +207,7 @@
         <td>86</td>
         <td>86</td>
         <td>0</td>
-        <td>67.2</td>
+        <td>66.8</td>
       </tr>
       
       <tr>
@@ -350,7 +350,7 @@
      covered at
      <span class="covered_strength">
        <span class="green">
-         20.46
+         20.34
        </span>
     </span> hits/line)
   </h2>
@@ -382,7 +382,7 @@
         <td>16</td>
         <td>16</td>
         <td>0</td>
-        <td>4.8</td>
+        <td>4.9</td>
       </tr>
       
       <tr>
@@ -402,7 +402,7 @@
         <td>53</td>
         <td>53</td>
         <td>0</td>
-        <td>8.2</td>
+        <td>7.9</td>
       </tr>
       
       <tr>
@@ -472,7 +472,7 @@
         <td>86</td>
         <td>86</td>
         <td>0</td>
-        <td>67.2</td>
+        <td>66.8</td>
       </tr>
       
     </tbody>
@@ -2342,8 +2342,8 @@
           <code class="ruby">  def self.applications</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="12">
-          <span class="hits">1</span>
+        <li class="covered" data-hits="2" data-linenumber="12">
+          <span class="hits">2</span>
           
           <code class="ruby">    [nil]</code>
         </li>
@@ -3518,8 +3518,8 @@
           <code class="ruby">  def facebook_page_fields</code>
         </li>
       
-        <li class="covered" data-hits="8" data-linenumber="28">
-          <span class="hits">8</span>
+        <li class="covered" data-hits="9" data-linenumber="28">
+          <span class="hits">9</span>
           
           <code class="ruby">    fields = %w(</code>
         </li>
@@ -3578,14 +3578,14 @@
           <code class="ruby">    )</code>
         </li>
       
-        <li class="covered" data-hits="8" data-linenumber="38">
-          <span class="hits">8</span>
+        <li class="covered" data-hits="9" data-linenumber="38">
+          <span class="hits">9</span>
           
           <code class="ruby">    fields &lt;&lt; &#39;fan_count&#39; if CONFIG[&#39;facebook_api_version&#39;].to_s === &#39;v2.6&#39;</code>
         </li>
       
-        <li class="covered" data-hits="8" data-linenumber="39">
-          <span class="hits">8</span>
+        <li class="covered" data-hits="9" data-linenumber="39">
+          <span class="hits">9</span>
           
           <code class="ruby">    fields</code>
         </li>
@@ -3674,8 +3674,8 @@
           <code class="ruby">      data = client.get_object(id, { fields: self.facebook_user_fields }, { method: &#39;post&#39; })</code>
         </li>
       
-        <li class="covered" data-hits="5" data-linenumber="54">
-          <span class="hits">5</span>
+        <li class="covered" data-hits="4" data-linenumber="54">
+          <span class="hits">4</span>
           
           <code class="ruby">      data[&#39;subtype&#39;] = &#39;user&#39;</code>
         </li>
@@ -3692,8 +3692,8 @@
           <code class="ruby">    rescue</code>
         </li>
       
-        <li class="covered" data-hits="8" data-linenumber="57">
-          <span class="hits">8</span>
+        <li class="covered" data-hits="9" data-linenumber="57">
+          <span class="hits">9</span>
           
           <code class="ruby">      data = client.get_object(id, { fields: self.facebook_page_fields }, { method: &#39;post&#39; })</code>
         </li>
@@ -3710,14 +3710,14 @@
           <code class="ruby">    end</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="60">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="60">
+          <span class="hits">11</span>
           
           <code class="ruby">    data[&#39;published_at&#39;] = &#39;&#39;</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="61">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="61">
+          <span class="hits">11</span>
           
           <code class="ruby">    data</code>
         </li>
@@ -3746,26 +3746,26 @@
           <code class="ruby">    self.data.merge! self.get_data_from_facebook</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="66">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="66">
+          <span class="hits">11</span>
           
           <code class="ruby">    self.data[:username] = self.get_facebook_username</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="67">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="67">
+          <span class="hits">11</span>
           
           <code class="ruby">    description = self.data[&#39;bio&#39;] || self.data[&#39;about&#39;] || &#39;&#39;</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="68">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="68">
+          <span class="hits">11</span>
           
           <code class="ruby">    self.data.merge!({ title: self.data[&#39;name&#39;], description: description, picture: self.facebook_picture })</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="69">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="69">
+          <span class="hits">11</span>
           
           <code class="ruby">    self.get_facebook_likes</code>
         </li>
@@ -3788,8 +3788,8 @@
           <code class="ruby">  def get_facebook_likes</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="73">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="73">
+          <span class="hits">11</span>
           
           <code class="ruby">    self.data[&#39;likes&#39;] = self.data[&#39;fan_count&#39;] if self.data[&#39;likes&#39;].to_s.match(/^[0-9]+$/).nil?</code>
         </li>
@@ -3812,26 +3812,26 @@
           <code class="ruby">  def facebook_picture</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="77">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="77">
+          <span class="hits">11</span>
           
           <code class="ruby">    data = self.data</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="78">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="78">
+          <span class="hits">11</span>
           
           <code class="ruby">    picture = &#39;&#39;</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="79">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="79">
+          <span class="hits">11</span>
           
           <code class="ruby">    if data[&#39;picture&#39;] &amp;&amp; data[&#39;picture&#39;][&#39;data&#39;] &amp;&amp; data[&#39;picture&#39;][&#39;data&#39;][&#39;url&#39;]</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="80">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="80">
+          <span class="hits">11</span>
           
           <code class="ruby">      picture = data[&#39;picture&#39;][&#39;data&#39;][&#39;url&#39;]</code>
         </li>
@@ -3842,8 +3842,8 @@
           <code class="ruby">    end</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="82">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="82">
+          <span class="hits">11</span>
           
           <code class="ruby">    picture</code>
         </li>
@@ -3866,26 +3866,26 @@
           <code class="ruby">  def get_facebook_username</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="86">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="86">
+          <span class="hits">11</span>
           
           <code class="ruby">    match = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+)/)</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="87">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="87">
+          <span class="hits">11</span>
           
           <code class="ruby">    match = self.url.match(/^https?:\/\/([^\.]+\.)?facebook\.com\/people\/([^\/\?]+)/) if match.nil?</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="88">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="88">
+          <span class="hits">11</span>
           
           <code class="ruby">    username = match[2]</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="89">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="89">
+          <span class="hits">11</span>
           
           <code class="ruby">    if username === &#39;pages&#39;</code>
         </li>
@@ -3902,8 +3902,8 @@
           <code class="ruby">    elsif username === &#39;profile.php&#39;</code>
         </li>
       
-        <li class="covered" data-hits="2" data-linenumber="92">
-          <span class="hits">2</span>
+        <li class="covered" data-hits="1" data-linenumber="92">
+          <span class="hits">1</span>
           
           <code class="ruby">      username = self.data[&#39;name&#39;].tr(&#39; &#39;, &#39;-&#39;)</code>
         </li>
@@ -3914,8 +3914,8 @@
           <code class="ruby">    end</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="94">
-          <span class="hits">12</span>
+        <li class="covered" data-hits="11" data-linenumber="94">
+          <span class="hits">11</span>
           
           <code class="ruby">    username</code>
         </li>
@@ -6350,8 +6350,8 @@
           <code class="ruby">        favicon: &quot;http://www.google.com/s2/favicons?domain_url=#{self.url}&quot; </code>
         </li>
       
-        <li class="covered" data-hits="53" data-linenumber="32">
-          <span class="hits">53</span>
+        <li class="covered" data-hits="52" data-linenumber="32">
+          <span class="hits">52</span>
           
           <code class="ruby">      }).with_indifferent_access</code>
         </li>
@@ -6668,14 +6668,14 @@
           <code class="ruby">          self.send(&quot;data_from_#{type}&quot;)</code>
         </li>
       
-        <li class="covered" data-hits="53" data-linenumber="85">
-          <span class="hits">53</span>
+        <li class="covered" data-hits="52" data-linenumber="85">
+          <span class="hits">52</span>
           
           <code class="ruby">          parsed = true</code>
         </li>
       
-        <li class="covered" data-hits="53" data-linenumber="86">
-          <span class="hits">53</span>
+        <li class="covered" data-hits="52" data-linenumber="86">
+          <span class="hits">52</span>
           
           <code class="ruby">          break</code>
         </li>
@@ -6692,8 +6692,8 @@
           <code class="ruby">      end</code>
         </li>
       
-        <li class="covered" data-hits="233" data-linenumber="89">
-          <span class="hits">233</span>
+        <li class="covered" data-hits="232" data-linenumber="89">
+          <span class="hits">232</span>
           
           <code class="ruby">      break if parsed</code>
         </li>
@@ -6782,32 +6782,32 @@
           <code class="ruby">    while attempts &lt; 5 &amp;&amp; %w(301 302).include?(code) &amp;&amp; !path.include?(self.url)</code>
         </li>
       
-        <li class="covered" data-hits="108" data-linenumber="104">
-          <span class="hits">108</span>
+        <li class="covered" data-hits="107" data-linenumber="104">
+          <span class="hits">107</span>
           
           <code class="ruby">      attempts += 1</code>
         </li>
       
-        <li class="covered" data-hits="108" data-linenumber="105">
-          <span class="hits">108</span>
+        <li class="covered" data-hits="107" data-linenumber="105">
+          <span class="hits">107</span>
           
           <code class="ruby">      path &lt;&lt; self.url</code>
         </li>
       
-        <li class="covered" data-hits="108" data-linenumber="106">
-          <span class="hits">108</span>
+        <li class="covered" data-hits="107" data-linenumber="106">
+          <span class="hits">107</span>
           
           <code class="ruby">      response = self.request_media_url</code>
         </li>
       
-        <li class="covered" data-hits="107" data-linenumber="107">
-          <span class="hits">107</span>
+        <li class="covered" data-hits="106" data-linenumber="107">
+          <span class="hits">106</span>
           
           <code class="ruby">      code = response.code</code>
         </li>
       
-        <li class="covered" data-hits="107" data-linenumber="108">
-          <span class="hits">107</span>
+        <li class="covered" data-hits="106" data-linenumber="108">
+          <span class="hits">106</span>
           
           <code class="ruby">      self.set_url_from_location(response, path)</code>
         </li>
@@ -6836,20 +6836,20 @@
           <code class="ruby">  def set_url_from_location(response, path)</code>
         </li>
       
-        <li class="covered" data-hits="107" data-linenumber="113">
-          <span class="hits">107</span>
+        <li class="covered" data-hits="106" data-linenumber="113">
+          <span class="hits">106</span>
           
           <code class="ruby">    if %w(301 302).include?(response.code)</code>
         </li>
       
-        <li class="covered" data-hits="25" data-linenumber="114">
-          <span class="hits">25</span>
+        <li class="covered" data-hits="24" data-linenumber="114">
+          <span class="hits">24</span>
           
           <code class="ruby">      self.url = response.header[&#39;location&#39;]</code>
         </li>
       
-        <li class="covered" data-hits="25" data-linenumber="115">
-          <span class="hits">25</span>
+        <li class="covered" data-hits="24" data-linenumber="115">
+          <span class="hits">24</span>
           
           <code class="ruby">      if self.url =~ /^\//</code>
         </li>
@@ -6896,56 +6896,56 @@
           <code class="ruby">  def request_media_url</code>
         </li>
       
-        <li class="covered" data-hits="121" data-linenumber="123">
-          <span class="hits">121</span>
+        <li class="covered" data-hits="120" data-linenumber="123">
+          <span class="hits">120</span>
           
           <code class="ruby">    uri = URI.parse(URI.encode(self.url))</code>
         </li>
       
-        <li class="covered" data-hits="121" data-linenumber="124">
-          <span class="hits">121</span>
+        <li class="covered" data-hits="120" data-linenumber="124">
+          <span class="hits">120</span>
           
           <code class="ruby">    http = Net::HTTP.new(uri.host, uri.port)</code>
         </li>
       
-        <li class="covered" data-hits="121" data-linenumber="125">
-          <span class="hits">121</span>
+        <li class="covered" data-hits="120" data-linenumber="125">
+          <span class="hits">120</span>
           
           <code class="ruby">    http.read_timeout = 30</code>
         </li>
       
-        <li class="covered" data-hits="121" data-linenumber="126">
-          <span class="hits">121</span>
+        <li class="covered" data-hits="120" data-linenumber="126">
+          <span class="hits">120</span>
           
           <code class="ruby">    http.use_ssl = true unless self.url.match(/^https/).nil?</code>
         </li>
       
-        <li class="covered" data-hits="121" data-linenumber="127">
-          <span class="hits">121</span>
+        <li class="covered" data-hits="120" data-linenumber="127">
+          <span class="hits">120</span>
           
           <code class="ruby">    request = Net::HTTP::Get.new(uri.request_uri)</code>
         </li>
       
-        <li class="covered" data-hits="121" data-linenumber="128">
-          <span class="hits">121</span>
+        <li class="covered" data-hits="120" data-linenumber="128">
+          <span class="hits">120</span>
           
           <code class="ruby">    request[&#39;Cookie&#39;] = self.set_cookies</code>
         </li>
       
-        <li class="covered" data-hits="121" data-linenumber="129">
-          <span class="hits">121</span>
+        <li class="covered" data-hits="120" data-linenumber="129">
+          <span class="hits">120</span>
           
           <code class="ruby">    response = nil</code>
         </li>
       
-        <li class="covered" data-hits="121" data-linenumber="130">
-          <span class="hits">121</span>
+        <li class="covered" data-hits="120" data-linenumber="130">
+          <span class="hits">120</span>
           
           <code class="ruby">    Retryable.retryable(tries: 3, sleep: 1) do</code>
         </li>
       
-        <li class="covered" data-hits="121" data-linenumber="131">
-          <span class="hits">121</span>
+        <li class="covered" data-hits="120" data-linenumber="131">
+          <span class="hits">120</span>
           
           <code class="ruby">      response = http.request(request)</code>
         </li>
@@ -6956,8 +6956,8 @@
           <code class="ruby">    end</code>
         </li>
       
-        <li class="covered" data-hits="120" data-linenumber="133">
-          <span class="hits">120</span>
+        <li class="covered" data-hits="119" data-linenumber="133">
+          <span class="hits">119</span>
           
           <code class="ruby">    response</code>
         </li>
@@ -6980,20 +6980,20 @@
           <code class="ruby">  def set_cookies</code>
         </li>
       
-        <li class="covered" data-hits="134" data-linenumber="137">
-          <span class="hits">134</span>
+        <li class="covered" data-hits="133" data-linenumber="137">
+          <span class="hits">133</span>
           
           <code class="ruby">    cookies = []</code>
         </li>
       
-        <li class="covered" data-hits="134" data-linenumber="138">
-          <span class="hits">134</span>
+        <li class="covered" data-hits="133" data-linenumber="138">
+          <span class="hits">133</span>
           
           <code class="ruby">    CONFIG[&#39;cookies&#39;].each do |k, v|</code>
         </li>
       
-        <li class="covered" data-hits="1072" data-linenumber="139">
-          <span class="hits">1072</span>
+        <li class="covered" data-hits="1064" data-linenumber="139">
+          <span class="hits">1064</span>
           
           <code class="ruby">      cookies &lt;&lt; &quot;#{k}=#{v}&quot;</code>
         </li>
@@ -7004,8 +7004,8 @@
           <code class="ruby">    end</code>
         </li>
       
-        <li class="covered" data-hits="134" data-linenumber="141">
-          <span class="hits">134</span>
+        <li class="covered" data-hits="133" data-linenumber="141">
+          <span class="hits">133</span>
           
           <code class="ruby">    cookies.join(&#39;; &#39;)</code>
         </li>
