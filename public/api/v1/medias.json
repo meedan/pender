@@ -17,6 +17,13 @@
               "type": "string",
               "description": "URL to be parsed/rendered",
               "required": true
+            },
+            {
+              "paramType": "query",
+              "name": "refresh",
+              "type": "integer",
+              "description": "Force a refresh from the URL instead of the cache",
+              "required": false
             }
           ],
           "responseMessages": [

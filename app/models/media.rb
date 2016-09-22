@@ -2,7 +2,7 @@ class Media
   include ActiveModel::Validations
   include ActiveModel::Conversion
   extend ActiveModel::Naming
-  
+
   attr_accessor :url, :provider, :type, :data
 
   TYPES = {}
@@ -20,15 +20,15 @@ class Media
     TYPES[type] = patterns
   end
 
-  def as_json(_options = {})
-    Rails.cache.fetch(self.get_id) do
+  def as_json(options = {})
+    Rails.cache.fetch(self.get_id, options) do
       self.parse
       self.data.merge({
         url: self.url,
         provider: self.provider,
         type: self.type,
         parsed_at: Time.now,
-        favicon: "http://www.google.com/s2/favicons?domain_url=#{self.url}" 
+        favicon: "http://www.google.com/s2/favicons?domain_url=#{self.url}",
       }).with_indifferent_access
     end
   end
@@ -42,8 +42,8 @@ class Media
   include MediaInstagramProfile
   include MediaOembedItem
 
-  def as_oembed(original_url, maxwidth, maxheight)
-    data = self.as_json
+  def as_oembed(original_url, maxwidth, maxheight, options = {})
+    data = self.as_json(options)
     oembed = "#{data['provider']}_as_oembed"
     self.respond_to?(oembed)? self.send(oembed, original_url, maxwidth, maxheight) : self.default_oembed(original_url, maxwidth, maxheight)
   end
@@ -65,7 +65,7 @@ class Media
       provider_url: 'http://' + URI.parse(data['url']).host,
       thumbnail_url: data['picture'],
       html: "<iframe src=\"#{src}\" width=\"#{maxwidth}\" height=\"#{maxheight}\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>",
-      width: maxwidth, 
+      width: maxwidth,
       height: maxheight
     }.with_indifferent_access
   end
@@ -99,7 +99,7 @@ class Media
     attempts = 0
     code = '301'
     path = []
-    
+
     while attempts < 5 && %w(301 302).include?(code) && !path.include?(self.url)
       attempts += 1
       path << self.url

@@ -6,12 +6,13 @@ module Api
     class MediasController < Api::V1::BaseApiController
       include MediasDoc
       include MediasHelper
-      
+
       skip_before_filter :authenticate_from_token!, if: proc { request.format.html? || request.format.js? || request.format.oembed? }
       after_action :allow_iframe, only: :index
 
       def index
         @url = params[:url]
+        @refresh = params[:refresh] == '1'
         (render_parameters_missing and return) if @url.blank?
         @id = Digest::MD5.hexdigest(@url)
         render_timeout { @media = Media.new(url: @url) } and return
@@ -32,10 +33,10 @@ module Api
       def render_as_json
         @request = request
         begin
-          render_timeout { render_success('media', @media.as_json.merge({ embed_tag: embed_url })) and return }
+          render_timeout { render_success('media', @media.as_json({ force: @refresh }).merge({ embed_tag: embed_url })) and return }
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
-        rescue 
+        rescue
           render_error 'Could not parse this media', 'UNKNOWN'
         end
       end
@@ -53,9 +54,7 @@ module Api
 
       def render_as_html
         begin
-          @cache = true
           unless File.exist?(cache_path)
-            @cache = false
             save_cache
           end
           render text: File.read(cache_path), status: 200
@@ -70,14 +69,14 @@ module Api
       end
 
       def render_as_oembed
-        json = @media.as_oembed(request.original_url, params[:maxwidth], params[:maxheight])
+        json = @media.as_oembed(request.original_url, params[:maxwidth], params[:maxheight], { force: @refresh })
         render json: json, status: 200
       end
 
       def save_cache
         av = ActionView::Base.new(Rails.root.join('app', 'views'))
         template = locals = nil
-        data = @media.as_json
+        data = @media.as_json({ force: @refresh })
 
         if !data['html'].blank?
           locals = { html: data['html'].html_safe }
