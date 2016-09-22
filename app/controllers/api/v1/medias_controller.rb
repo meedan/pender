@@ -54,7 +54,12 @@ module Api
 
       def render_as_html
         begin
+          # HACK: @cache is never used by the logic - just by the tests
+          # "should create cache file if does not exist" and
+          # "should read from cache file if exists" to ensure caching works.
+          @cache = true
           unless File.exist?(cache_path)
+            @cache = false
             save_cache
           end
           render text: File.read(cache_path), status: 200

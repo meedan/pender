@@ -359,6 +359,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Kiko Loureiro', d['user_name']
     assert_equal 1, d['media_count']
     assert_equal '1195161923843707', d['object_id']
+    # FIXME: This publishing date can be different for FB users who are in a different timezone.
     assert_equal '01/11/2015', d['published'].strftime("%d/%m/%Y")
   end
 
@@ -424,6 +425,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Kiko Loureiro', d['user_name']
     assert_equal 1, d['media_count']
     assert_equal '1195161923843707', d['object_id']
+    # FIXME: This publishing date can be different for FB users who are in a different timezone.
     assert_equal '01/11/2015', d['published'].strftime("%d/%m/%Y")
   end
 
