@@ -1,4 +1,5 @@
-require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
+require_relative '../test_helper'
+require 'time'
 
 class MediasControllerTest < ActionController::TestCase
   def setup
@@ -26,6 +27,26 @@ class MediasControllerTest < ActionController::TestCase
   test "should be able to fetch HTML without token" do
     get :index, url: 'http://twitter.com/meedan', format: :html
     assert_response :success
+  end
+
+  test "should ask to refresh cache" do
+    authenticate_with_token
+    get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json
+    first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
+    sleep 1
+    get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json
+    second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
+    assert second_parsed_at > first_parsed_at
+  end
+
+  test "should not ask to refresh cache" do
+    authenticate_with_token
+    get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '0', format: :json
+    first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
+    sleep 1
+    get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :json
+    second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
+    assert_equal first_parsed_at, second_parsed_at
   end
 
   test "should show error message if Twitter user does not exist" do
@@ -104,7 +125,7 @@ class MediasControllerTest < ActionController::TestCase
   test "should return API limit reached error" do
     Twitter::REST::Client.any_instance.stubs(:user).raises(Twitter::Error::TooManyRequests)
     Twitter::Error::TooManyRequests.any_instance.stubs(:rate_limit).returns(OpenStruct.new(reset_in: 123))
-    
+
     authenticate_with_token
     get :index, url: 'http://twitter.com/caiosba', format: :json
     assert_response 429
