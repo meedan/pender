@@ -101,18 +101,10 @@ class MediasControllerTest < ActionController::TestCase
     assert_not_nil response.body
   end
 
-  test "should create cache file if does not exist" do
+  test "should create cache file" do
+    Media.any_instance.expects(:as_json).once.returns({})
     get :index, url: 'http://twitter.com/caiosba', format: :html
-    assert !assigns(:cache)
     get :index, url: 'http://twitter.com/caiosba', format: :html
-    assert assigns(:cache)
-  end
-
-  test "should read from cache file if exists" do
-    get :index, url: 'https://meedan.checkdesk.org/en/report/2161', format: :html
-    assert !assigns(:cache)
-    get :index, url: 'https://meedan.checkdesk.org/en/report/2161', format: :html
-    assert assigns(:cache)
   end
 
   test "should return timeout error" do
