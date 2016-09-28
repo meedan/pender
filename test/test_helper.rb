@@ -42,6 +42,7 @@ class ActiveSupport::TestCase
     WebMock.allow_net_connect!
     Time.unstub(:now)
     Media.any_instance.unstub(:parse)
+    Media.any_instance.unstub(:as_json)
     CONFIG.unstub(:[])
   end
 
