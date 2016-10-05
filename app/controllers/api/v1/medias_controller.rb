@@ -14,6 +14,7 @@ module Api
         @url = params[:url]
         @refresh = params[:refresh] == '1'
         (render_parameters_missing and return) if @url.blank?
+        (render_url_invalid and return) unless valid_url?
         @id = Digest::MD5.hexdigest(@url)
         render_timeout { @media = Media.new(url: @url) } and return
         respond_to do |format|
@@ -97,6 +98,17 @@ module Api
         dir = File.join('public', 'cache', Rails.env)
         FileUtils.mkdir_p(dir) unless File.exist?(dir)
         File.join(dir, "#{name}.html")
+      end
+
+      def valid_url?
+        begin
+          uri = URI.parse(@url)
+          return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
+          Net::HTTP.get_response(uri)
+        rescue URI::InvalidURIError, SocketError => e
+          Rails.logger.warn "Could not access url: #{e.message}"
+          return false
+        end
       end
     end
   end
