@@ -30,3 +30,4 @@ gem 'unicorn', group: :production
 gem 'open_uri_redirections'
 gem 'postrank-uri'
 gem 'retryable'
+gem 'puma'

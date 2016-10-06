@@ -142,6 +142,7 @@ GEM
     protected_attributes (1.1.3)
       activemodel (>= 4.0.1, < 5.0)
     public_suffix (1.1.3)
+    puma (3.6.0)
     rack (1.6.4)
     rack-test (0.6.3)
       rack (>= 1.0)
@@ -272,6 +273,7 @@ DEPENDENCIES
   open_uri_redirections
   postrank-uri
   protected_attributes
+  puma
   railroady
   rails (= 4.2.7.1)
   responders
