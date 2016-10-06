@@ -22,10 +22,10 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse YouTube channel" do
-    m = create_media url: 'https://www.youtube.com/channel/UCQDZiehIRKS6o9AlX1g8lSw'
+    m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
     data = m.as_json
-    assert_equal 'Documentarios em Portugues', data['title']
-    assert_equal 'DocumentariosemPortugues', data['username']
+    assert_equal 'Iron Maiden', data['title']
+    assert_equal 'IronMaiden', data['username']
     assert_equal 'channel', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
@@ -148,10 +148,10 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse YouTube channel with slash" do
-    m = create_media url: 'https://www.youtube.com/channel/UCQDZiehIRKS6o9AlX1g8lSw/'
+    m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ/'
     data = m.as_json
-    assert_equal 'Documentarios em Portugues', data['title']
-    assert_equal 'DocumentariosemPortugues', data['username']
+    assert_equal 'Iron Maiden', data['title']
+    assert_equal 'IronMaiden', data['username']
     assert_equal 'channel', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
