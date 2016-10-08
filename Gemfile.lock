@@ -105,6 +105,8 @@ GEM
       faraday
       multi_json (>= 1.3.0)
     logstash-event (1.2.02)
+    logstash-logger (0.19.2)
+      logstash-event (~> 1.2)
     logstasher (1.0.1)
       activerecord (>= 4.0)
       activesupport (>= 4.0)
@@ -268,6 +270,7 @@ DEPENDENCIES
   gem-licenses
   ids_please!
   koala
+  logstash-logger
   logstasher
   mocha
   open_uri_redirections
@@ -290,4 +293,4 @@ DEPENDENCIES
   yt (~> 0.25.5)
 
 BUNDLED WITH
-   1.12.5
+   1.13.1
