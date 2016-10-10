@@ -18,3 +18,5 @@ tmp/restart.txt
 /.project
 public/cache
 config/config.yml.travis
+tmp/restart.txt
+tmp/puma-*

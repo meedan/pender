@@ -133,4 +133,19 @@ class MediasControllerTest < ActionController::TestCase
     assert_match /twitter-tweet/, response.body
     assert_no_match /pender-title/, response.body
   end
+
+  test "should show error message if is not a url" do
+    authenticate_with_token
+    get :index, url: 'not-valid', format: :json
+    assert_response 400
+    assert_equal 'The URL is not valid', JSON.parse(@response.body)['data']['message']
+  end
+
+  test "should show error message if url not found" do
+    authenticate_with_token
+    get :index, url: 'http://not-valid', format: :json
+    assert_response 400
+    assert_match /The URL is not valid/, JSON.parse(@response.body)['data']['message']
+  end
+
 end
