@@ -456,4 +456,10 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'megadeth', d['title']
     assert_match /^http/, d['picture']
   end
+
+  test "should remove line breaks from Twitter item title" do
+    m = create_media url: 'https://twitter.com/realDonaldTrump/status/785148463868735488'
+    d = m.as_json
+    assert_equal 'LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary: https://t.co/n05rul4Ycw', d['title']
+  end
 end
