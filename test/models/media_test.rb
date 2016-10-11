@@ -499,4 +499,15 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
   end
 
+  test "should parse Facebook event url" do
+    m = create_media url: 'https://www.facebook.com/events/1090503577698748'
+    d = m.as_json
+    assert_equal 'Nancy Ajram in Stella Di Mare Music Festival on Facebook', d['title']
+    assert_equal 'Nancy Ajram will be performing in Stella Di Mare, September 13th, 2016 in Egypt. For tickets and information please contact 19565.', d['description']
+    assert_equal '25432690933', d['user_uuid']
+    assert_equal '1090503577698748', d['object_id']
+    assert_match /1090503577698748/, d['picture']
+    assert_not_nil d['published_at']
+  end
+
 end
