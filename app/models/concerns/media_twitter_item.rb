@@ -27,7 +27,7 @@ module MediaTwitterItem
 
     self.data.merge!({
       username: user,
-      title: self.data['text'],
+      title: self.data['text'].gsub(/\s+/, ' '),
       description: self.data['text'],
       picture: self.data['user']['profile_image_url_https'].gsub('_normal', ''),
       published_at: self.data['created_at'],
