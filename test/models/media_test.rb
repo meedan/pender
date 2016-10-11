@@ -499,6 +499,17 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
   end
 
+  test "should parse Facebook video url from a page 2" do
+    m = create_media url: 'https://www.facebook.com/democrats/videos/10154268929856943'
+    d = m.as_json
+    assert_equal 'Democratic Party on Facebook', d['title']
+    assert_match /On National Voter Registration Day/, d['description']
+    assert_equal 'item', d['type']
+    assert_equal ['https://video.xx.fbcdn.net/v/t42.1790-2/14526134_1805008069714560_2855451716176838656_n.mp4?efg=eyJybHIiOjMwMCwicmxhIjo1MTIsInZlbmNvZGVfdGFnIjoic3ZlX3NkIn0%3D&rl=300&vabr=163&oh=a5f8eee52a5f4dc9410c9a037d43ec1e&oe=5800076B'], d['videos']
+    assert_not_nil d['picture']
+    assert_not_nil d['published_at']
+  end
+
   test "should parse Facebook event url" do
     m = create_media url: 'https://www.facebook.com/events/1090503577698748'
     d = m.as_json
