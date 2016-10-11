@@ -462,4 +462,41 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary: https://t.co/n05rul4Ycw', d['title']
   end
+
+  test "should parse Facebook photo post url" do
+    m = create_media url: 'https://www.facebook.com/quoted.pictures/photos/a.128828073875334.28784.128791873878954/1096134023811396/?type=3&theater'
+    d = m.as_json
+    assert_equal 'New Quoted Pictures Everyday on Facebook', d['title']
+    assert_equal 'New Quoted Pictures Everyday added a new photo.', d['description']
+  end
+
+  test "should parse Facebook photo post within an album url" do
+    m = create_media url: 'https://www.facebook.com/ESCAPE.Egypt/photos/ms.c.eJxNk8d1QzEMBDvyQw79N2ZyaeD7osMIwAZKLGTUViod1qU~;DCBNHcpl8gfMKeR8bz2gH6ABlHRuuHYM6AdywPkEsH~;gqAjxqLAKJtQGZFxw7CzIa6zdF8j1EZJjXRgTzAP43XBa4HfFa1REA2nXugScCi3wN7FZpF5BPtaVDEBqwPNR60O9Lsi0nbDrw3KyaPCVZfqAYiWmZO13YwvSbtygCWeKleh9KEVajW8FfZz32qcUrNgA5wfkA4Xfh004x46d9gdckQt2xR74biSOegwIcoB9OW~_oVIxKML0JWYC0XHvDkdZy0oY5bgjvBAPwdBpRuKE7kZDNGtnTLoCObBYqJJ4Ky5FF1kfh75Gnyl~;Qxqsv.bps.a.1204090389632094.1073742218.423930480981426/1204094906298309/?type=3&theater'
+    d = m.as_json
+    assert_equal 'Escape', d['title']
+    assert_match /Join our Escapes to the colorful places in Egypt that give you a unique experience/, d['description']
+    assert_not_nil d['picture']
+    assert_not_nil d['published_at']
+  end
+
+  test "should parse Facebook pure text post url" do
+    m = create_media url: 'https://www.facebook.com/dina.samak/posts/10153679232246949?pnref=story.unseen-section'
+    d = m.as_json
+    assert_equal 'Dina Samak on Facebook', d['title']
+    assert_not_nil d['description']
+    assert_not_nil d['picture']
+    assert_not_nil d['published_at']
+  end
+
+  test "should parse Facebook video url from a page" do
+    m = create_media url: 'https://www.facebook.com/144585402276277/videos/1127489833985824'
+    d = m.as_json
+    assert_equal 'Trent Aric - Meteorologist on Facebook', d['title']
+    assert_match /MATTHEW YOU ARE DRUNK...GO HOME!/, d['description']
+    assert_equal 'item', d['type']
+    assert_equal ['https://video.xx.fbcdn.net/v/t42.1790-2/14611887_638161409698155_4235661386849452032_n.mp4?efg=eyJybHIiOjcyMywicmxhIjo1MTIsInZlbmNvZGVfdGFnIjoic3ZlX3NkIn0%3D&rl=723&vabr=402&oh=e0ba22969b24574041e024b289abe393&oe=57FED691'], d['videos']
+    assert_not_nil d['picture']
+    assert_not_nil d['published_at']
+  end
+
 end

@@ -5,7 +5,8 @@ module MediaFacebookItem
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/posts\/(?<id>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/photos\/a\.([0-9]+)\.([0-9]+)\.([0-9]+)\/([0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo.php\?fbid=(?<id>[0-9]+)&set=a\.([0-9]+)\.([0-9]+)\.([0-9]+).*/,
-    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo.php\?fbid=(?<id>[0-9]+)&set=p\.([0-9]+).*/
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo.php\?fbid=(?<id>[0-9]+)&set=p\.([0-9]+).*/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/(?<id>[0-9]+).*/
   ]
 
   included do
@@ -52,7 +53,7 @@ module MediaFacebookItem
   end
 
   def parse_from_facebook_api
-    object = self.get_object_from_facebook('id', 'message', 'created_time', 'from', 'type', 'story', 'full_picture')
+    object = self.get_object_from_facebook('id', 'message', 'created_time', 'from', 'type', 'story', 'full_picture', 'source')
     if object.nil?
       false
     else
@@ -74,6 +75,7 @@ module MediaFacebookItem
     picture = object['full_picture']
     self.data['photos'] = picture.blank? ? [] : [picture]
     self.data['media_count'] = media_count
+    self.data['videos'] = [object['source']] if object['type'] === 'video'
   end
 
   def parse_from_facebook_html
