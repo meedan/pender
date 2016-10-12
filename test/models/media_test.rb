@@ -528,4 +528,14 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
   end
 
+  test "should parse album post with a permalink" do
+    m = create_media url: 'https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406'
+    d = m.as_json
+    assert_equal 'Mariano Rajoy Brey on Facebook', d['title']
+    assert_equal 'item', d['type']
+    assert_equal '10154534111016407', d['object_id']
+    assert_match /54212446406/, d['picture']
+    assert_not_nil d['published_at']
+  end
+
 end
