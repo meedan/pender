@@ -494,7 +494,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Trent Aric - Meteorologist on Facebook', d['title']
     assert_match /MATTHEW YOU ARE DRUNK...GO HOME!/, d['description']
     assert_equal 'item', d['type']
-    assert_equal ['https://video.xx.fbcdn.net/v/t42.1790-2/14611887_638161409698155_4235661386849452032_n.mp4?efg=eyJybHIiOjcyMywicmxhIjo1MTIsInZlbmNvZGVfdGFnIjoic3ZlX3NkIn0%3D&rl=723&vabr=402&oh=e0ba22969b24574041e024b289abe393&oe=57FED691'], d['videos']
     assert_not_nil d['picture']
     assert_not_nil d['published_at']
   end
@@ -505,7 +504,15 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Democratic Party on Facebook', d['title']
     assert_match /On National Voter Registration Day/, d['description']
     assert_equal 'item', d['type']
-    assert_equal ['https://video.xx.fbcdn.net/v/t42.1790-2/14526134_1805008069714560_2855451716176838656_n.mp4?efg=eyJybHIiOjMwMCwicmxhIjo1MTIsInZlbmNvZGVfdGFnIjoic3ZlX3NkIn0%3D&rl=300&vabr=163&oh=a5f8eee52a5f4dc9410c9a037d43ec1e&oe=5800076B'], d['videos']
+    assert_not_nil d['picture']
+    assert_not_nil d['published_at']
+  end
+
+  test "should parse Facebook video url from a profile" do
+    m = create_media url: 'https://www.facebook.com/edwinscott143/videos/vb.737361619/10154242961741620/?type=2&theater'
+    d = m.as_json
+    assert_equal 'Eddie Scott on Facebook', d['title']
+    assert_equal 'item', d['type']
     assert_not_nil d['picture']
     assert_not_nil d['published_at']
   end
