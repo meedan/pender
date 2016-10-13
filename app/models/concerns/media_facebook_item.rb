@@ -70,7 +70,7 @@ module MediaFacebookItem
   def parse_from_facebook_api
     fields = ['id', 'type']
     fields += if self.url.match(EVENT_URL).nil?
-      ['message', 'created_time', 'from', 'story', 'full_picture', 'source']
+      ['message', 'created_time', 'from', 'story', 'full_picture', 'source', 'link']
     else
       ['owner', 'updated_time', 'description', 'name']
     end
@@ -90,14 +90,26 @@ module MediaFacebookItem
   end
 
   def parse_facebook_media(object)
+    if object['type'] === 'link'
+      external_gif = parse_gif_from_external_link(object)
+    end
     media_count = 0
-    media_count = 1 if object['type'] === 'photo'
+    media_count = 1 if object['type'] === 'photo' || external_gif
     story = object['story'].to_s.match(/.* added ([0-9]+) new photos.*/)
     media_count = story[1].to_i unless story.nil?
-    picture = object['full_picture']
+    picture = external_gif || object['full_picture']
     self.data['photos'] = picture.blank? ? [] : [picture]
     self.data['media_count'] = media_count
     self.data['videos'] = [object['source']] if object['type'] === 'video'
+  end
+
+  def parse_gif_from_external_link(object)
+    if object['link'].match(/^https?:\/\/([^\.]+\.)?(giphy\.com|gph\.is)\/.*/)
+      self.data['link'] = object['link']
+      uri = URI.parse(object['full_picture'])
+      params = CGI.parse(uri.query)
+      params['url'].first
+    end
   end
 
   def parse_from_facebook_html

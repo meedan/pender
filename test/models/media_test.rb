@@ -539,4 +539,14 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
   end
 
+  test "should parse Facebook gif photo url" do
+    m = create_media url: 'https://www.facebook.com/quoted.pictures/posts/1095740107184121'
+    d = m.as_json
+    assert_equal 'New Quoted Pictures Everyday on Facebook', d['title']
+    assert_not_nil d['description']
+    assert_match /^https?:\/\/([^\.]+\.)?(giphy\.com|gph\.is)\/.*/, d['link']
+    assert_match /.*giphy.gif$/, d['photos'].first
+    assert_equal 1, d['media_count']
+  end
+
 end
