@@ -68,17 +68,11 @@ module MediaFacebookItem
   end
 
   def parse_from_facebook_api
-    fields = ['id', 'type']
-    fields += if self.url.match(EVENT_URL).nil?
-      ['message', 'created_time', 'from', 'story', 'full_picture', 'source', 'link']
-    else
-      ['owner', 'updated_time', 'description', 'name']
-    end
-    object = self.get_object_from_facebook(fields)
+    object = self.get_object_from_facebook(api_fields)
     if object.nil?
       false
     else
-      self.data['text'] = object['message'] || object['story'] || object['description'] || ''
+      self.data['text'] = get_text_from_object(object)
       self.data['published'] = object['created_time'] || object['updated_time']
       self.data['user_name'] = object['name'] || object['from']['name']
       self.data['user_uuid'] = object['owner']['id'] unless self.url.match(EVENT_URL).nil?
@@ -89,10 +83,22 @@ module MediaFacebookItem
     end
   end
 
-  def parse_facebook_media(object)
-    if object['type'] === 'link'
-      external_gif = parse_gif_from_external_link(object)
+  def api_fields
+    fields = ['id', 'type']
+    if self.url.match(EVENT_URL).nil?
+      fields += ['message', 'created_time', 'from', 'story', 'full_picture', 'link']
+    else
+      fields += ['owner', 'updated_time', 'description', 'name']
     end
+    fields
+  end
+
+  def get_text_from_object(object)
+    object['message'] || object['story'] || object['description'] || ''
+  end
+
+  def parse_facebook_media(object)
+    external_gif = parse_gif_from_external_link(object)
     media_count = 0
     media_count = 1 if object['type'] === 'photo' || external_gif
     story = object['story'].to_s.match(/.* added ([0-9]+) new photos.*/)
@@ -100,10 +106,10 @@ module MediaFacebookItem
     picture = external_gif || object['full_picture']
     self.data['photos'] = picture.blank? ? [] : [picture]
     self.data['media_count'] = media_count
-    self.data['videos'] = [object['source']] if object['type'] === 'video'
   end
 
   def parse_gif_from_external_link(object)
+    return unless object['type'] === 'link'
     if object['link'].match(/^https?:\/\/([^\.]+\.)?(giphy\.com|gph\.is)\/.*/)
       self.data['link'] = object['link']
       uri = URI.parse(object['full_picture'])
