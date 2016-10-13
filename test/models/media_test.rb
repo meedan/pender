@@ -462,4 +462,91 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary: https://t.co/n05rul4Ycw', d['title']
   end
+
+  test "should parse Facebook photo post url" do
+    m = create_media url: 'https://www.facebook.com/quoted.pictures/photos/a.128828073875334.28784.128791873878954/1096134023811396/?type=3&theater'
+    d = m.as_json
+    assert_equal 'New Quoted Pictures Everyday on Facebook', d['title']
+    assert_equal 'New Quoted Pictures Everyday added a new photo.', d['description']
+  end
+
+  test "should parse Facebook photo post within an album url" do
+    m = create_media url: 'https://www.facebook.com/ESCAPE.Egypt/photos/ms.c.eJxNk8d1QzEMBDvyQw79N2ZyaeD7osMIwAZKLGTUViod1qU~;DCBNHcpl8gfMKeR8bz2gH6ABlHRuuHYM6AdywPkEsH~;gqAjxqLAKJtQGZFxw7CzIa6zdF8j1EZJjXRgTzAP43XBa4HfFa1REA2nXugScCi3wN7FZpF5BPtaVDEBqwPNR60O9Lsi0nbDrw3KyaPCVZfqAYiWmZO13YwvSbtygCWeKleh9KEVajW8FfZz32qcUrNgA5wfkA4Xfh004x46d9gdckQt2xR74biSOegwIcoB9OW~_oVIxKML0JWYC0XHvDkdZy0oY5bgjvBAPwdBpRuKE7kZDNGtnTLoCObBYqJJ4Ky5FF1kfh75Gnyl~;Qxqsv.bps.a.1204090389632094.1073742218.423930480981426/1204094906298309/?type=3&theater'
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'Escape on Facebook', d['title']
+    assert_equal 'Escape added a new photo.', d['description']
+    assert_match /423930480981426/, d['picture']
+    assert_equal '1204094906298309', d['object_id']
+  end
+
+  test "should parse Facebook pure text post url" do
+    m = create_media url: 'https://www.facebook.com/dina.samak/posts/10153679232246949?pnref=story.unseen-section'
+    d = m.as_json
+    assert_equal 'Dina Samak on Facebook', d['title']
+    assert_not_nil d['description']
+    assert_not_nil d['picture']
+    assert_not_nil d['published_at']
+  end
+
+  test "should parse Facebook video url from a page" do
+    m = create_media url: 'https://www.facebook.com/144585402276277/videos/1127489833985824'
+    d = m.as_json
+    assert_equal 'Trent Aric - Meteorologist on Facebook', d['title']
+    assert_match /MATTHEW YOU ARE DRUNK...GO HOME!/, d['description']
+    assert_equal 'item', d['type']
+    assert_not_nil d['picture']
+    assert_not_nil d['published_at']
+  end
+
+  test "should parse Facebook video url from a page 2" do
+    m = create_media url: 'https://www.facebook.com/democrats/videos/10154268929856943'
+    d = m.as_json
+    assert_equal 'Democratic Party on Facebook', d['title']
+    assert_match /On National Voter Registration Day/, d['description']
+    assert_equal 'item', d['type']
+    assert_not_nil d['picture']
+    assert_not_nil d['published_at']
+  end
+
+  test "should parse Facebook video url from a profile" do
+    m = create_media url: 'https://www.facebook.com/edwinscott143/videos/vb.737361619/10154242961741620/?type=2&theater'
+    d = m.as_json
+    assert_equal 'Eddie Scott on Facebook', d['title']
+    assert_equal 'item', d['type']
+    assert_not_nil d['picture']
+    assert_not_nil d['published_at']
+  end
+
+  test "should parse Facebook event url" do
+    m = create_media url: 'https://www.facebook.com/events/1090503577698748'
+    d = m.as_json
+    assert_equal 'Nancy Ajram in Stella Di Mare Music Festival on Facebook', d['title']
+    assert_equal 'Nancy Ajram will be performing in Stella Di Mare, September 13th, 2016 in Egypt. For tickets and information please contact 19565.', d['description']
+    assert_equal '25432690933', d['user_uuid']
+    assert_equal '1090503577698748', d['object_id']
+    assert_match /1090503577698748/, d['picture']
+    assert_not_nil d['published_at']
+  end
+
+  test "should parse album post with a permalink" do
+    m = create_media url: 'https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406'
+    d = m.as_json
+    assert_equal 'Mariano Rajoy Brey on Facebook', d['title']
+    assert_equal 'item', d['type']
+    assert_equal '10154534111016407', d['object_id']
+    assert_match /54212446406/, d['picture']
+    assert_not_nil d['published_at']
+  end
+
+  test "should parse Facebook gif photo url" do
+    m = create_media url: 'https://www.facebook.com/quoted.pictures/posts/1095740107184121'
+    d = m.as_json
+    assert_equal 'New Quoted Pictures Everyday on Facebook', d['title']
+    assert_not_nil d['description']
+    assert_match /^https?:\/\/([^\.]+\.)?(giphy\.com|gph\.is)\/.*/, d['link']
+    assert_match /.*giphy.gif$/, d['photos'].first
+    assert_equal 1, d['media_count']
+  end
+
 end

@@ -1,11 +1,17 @@
 module MediaFacebookItem
   extend ActiveSupport::Concern
 
+  EVENT_URL =  /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>[0-9]+).*/
+
   URLS = [
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/posts\/(?<id>[0-9]+).*/,
-    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/photos\/a\.([0-9]+)\.([0-9]+)\.([0-9]+)\/([0-9]+).*/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/photos\/.*a\.([0-9]+)\.([0-9]+)\.([0-9]+)\/([0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo.php\?fbid=(?<id>[0-9]+)&set=a\.([0-9]+)\.([0-9]+)\.([0-9]+).*/,
-    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo.php\?fbid=(?<id>[0-9]+)&set=p\.([0-9]+).*/
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo.php\?fbid=(?<id>[0-9]+)&set=p\.([0-9]+).*/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/(?<id>[0-9]+).*/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/vb\.([0-9]+)\/(?<id>[0-9]+).*/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/permalink.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
+    EVENT_URL
   ]
 
   included do
@@ -16,10 +22,16 @@ module MediaFacebookItem
     self.url = self.url.gsub(/:\/\/m\.facebook\./, '://www.facebook.')
     self.get_facebook_post_id_from_url
     self.get_facebook_user_id_from_url
-    self.data['uuid'] = self.data['user_uuid'] + '_' + self.data['object_id']
+    if self.url.match(EVENT_URL).nil?
+      self.data['uuid'] = self.data['user_uuid'] + '_' + self.data['object_id']
+    else
+      self.data['uuid'] = self.data['object_id']
+      self.data['picture'] = 'https://graph.facebook.com/' + self.data['object_id'] + '/picture'
+    end
   end
 
   def get_facebook_user_id_from_url
+    return unless self.url.match(EVENT_URL).nil?
     user_id = IdsPlease.new(self.url).grab[:facebook].first.network_id
     if user_id.blank?
       uri = URI.parse(self.url)
@@ -37,6 +49,10 @@ module MediaFacebookItem
       params = CGI.parse(uri.query)
       id = params['fbid'].first
     end
+    if id === 'permalink.php'
+      params = CGI.parse(uri.query)
+      id = params['story_fbid'].first
+    end
     self.data['object_id'] = id
   end
 
@@ -52,13 +68,14 @@ module MediaFacebookItem
   end
 
   def parse_from_facebook_api
-    object = self.get_object_from_facebook('id', 'message', 'created_time', 'from', 'type', 'story', 'full_picture')
+    object = self.get_object_from_facebook(api_fields)
     if object.nil?
       false
     else
-      self.data['text'] = object['message'] || object['story'] || ''
-      self.data['published'] = object['created_time']
-      self.data['user_name'] = object['from']['name']
+      self.data['text'] = get_text_from_object(object)
+      self.data['published'] = object['created_time'] || object['updated_time']
+      self.data['user_name'] = object['name'] || object['from']['name']
+      self.data['user_uuid'] = object['owner']['id'] unless self.url.match(EVENT_URL).nil?
 
       self.parse_facebook_media(object)
 
@@ -66,14 +83,39 @@ module MediaFacebookItem
     end
   end
 
+  def api_fields
+    fields = ['id', 'type']
+    if self.url.match(EVENT_URL).nil?
+      fields += ['message', 'created_time', 'from', 'story', 'full_picture', 'link']
+    else
+      fields += ['owner', 'updated_time', 'description', 'name']
+    end
+    fields
+  end
+
+  def get_text_from_object(object)
+    object['message'] || object['story'] || object['description'] || ''
+  end
+
   def parse_facebook_media(object)
+    external_gif = parse_gif_from_external_link(object)
     media_count = 0
-    media_count = 1 if object['type'] === 'photo'
+    media_count = 1 if object['type'] === 'photo' || external_gif
     story = object['story'].to_s.match(/.* added ([0-9]+) new photos.*/)
     media_count = story[1].to_i unless story.nil?
-    picture = object['full_picture']
+    picture = external_gif || object['full_picture']
     self.data['photos'] = picture.blank? ? [] : [picture]
     self.data['media_count'] = media_count
+  end
+
+  def parse_gif_from_external_link(object)
+    return unless object['type'] === 'link'
+    if object['link'].match(/^https?:\/\/([^\.]+\.)?(giphy\.com|gph\.is)\/.*/)
+      self.data['link'] = object['link']
+      uri = URI.parse(object['full_picture'])
+      params = CGI.parse(uri.query)
+      params['url'].first
+    end
   end
 
   def parse_from_facebook_html
@@ -135,7 +177,7 @@ module MediaFacebookItem
     self.data.merge!({
       username: self.data['user_name'],
       title: self.data['user_name'] + ' on Facebook',
-      description: self.data['text'],
+      description: self.data['text'] || self.data['description'],
       picture: self.data['picture'] || self.data['photos'].first,
       published_at: self.data['published'],
       html: self.html_for_facebook_post,
