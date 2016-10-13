@@ -473,10 +473,11 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Facebook photo post within an album url" do
     m = create_media url: 'https://www.facebook.com/ESCAPE.Egypt/photos/ms.c.eJxNk8d1QzEMBDvyQw79N2ZyaeD7osMIwAZKLGTUViod1qU~;DCBNHcpl8gfMKeR8bz2gH6ABlHRuuHYM6AdywPkEsH~;gqAjxqLAKJtQGZFxw7CzIa6zdF8j1EZJjXRgTzAP43XBa4HfFa1REA2nXugScCi3wN7FZpF5BPtaVDEBqwPNR60O9Lsi0nbDrw3KyaPCVZfqAYiWmZO13YwvSbtygCWeKleh9KEVajW8FfZz32qcUrNgA5wfkA4Xfh004x46d9gdckQt2xR74biSOegwIcoB9OW~_oVIxKML0JWYC0XHvDkdZy0oY5bgjvBAPwdBpRuKE7kZDNGtnTLoCObBYqJJ4Ky5FF1kfh75Gnyl~;Qxqsv.bps.a.1204090389632094.1073742218.423930480981426/1204094906298309/?type=3&theater'
     d = m.as_json
-    assert_equal 'Escape', d['title']
-    assert_match /Join our Escapes to the colorful places in Egypt that give you a unique experience/, d['description']
-    assert_not_nil d['picture']
-    assert_not_nil d['published_at']
+    assert_equal 'item', d['type']
+    assert_equal 'Escape on Facebook', d['title']
+    assert_equal 'Escape added a new photo.', d['description']
+    assert_match /423930480981426/, d['picture']
+    assert_equal '1204094906298309', d['object_id']
   end
 
   test "should parse Facebook pure text post url" do
