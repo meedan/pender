@@ -104,14 +104,13 @@ GEM
       addressable
       faraday
       multi_json (>= 1.3.0)
+    lograge (0.4.1)
+      actionpack (>= 4, < 5.1)
+      activesupport (>= 4, < 5.1)
+      railties (>= 4, < 5.1)
     logstash-event (1.2.02)
     logstash-logger (0.19.2)
       logstash-event (~> 1.2)
-    logstasher (1.0.1)
-      activerecord (>= 4.0)
-      activesupport (>= 4.0)
-      logstash-event (~> 1.2.0)
-      request_store
     loofah (2.0.3)
       nokogiri (>= 1.5.9)
     macaddr (1.7.1)
@@ -175,7 +174,6 @@ GEM
       thor (>= 0.18.1, < 2.0)
     raindrops (0.17.0)
     rake (11.2.2)
-    request_store (1.3.1)
     responders (2.2.0)
       railties (>= 4.2.0, < 5.1)
     retryable (2.0.3)
@@ -270,8 +268,9 @@ DEPENDENCIES
   gem-licenses
   ids_please!
   koala
+  lograge
+  logstash-event
   logstash-logger
-  logstasher
   mocha
   open_uri_redirections
   postrank-uri
