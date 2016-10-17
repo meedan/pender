@@ -549,4 +549,36 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 1, d['media_count']
   end
 
+  test "should parse twitter metatags" do
+    m = create_media url: 'https://www.flickr.com/photos/bees/2341623661'
+    d = m.as_json
+    assert_equal 'ZB8T0193', d['title']
+    assert_match /Explore .* photos on Flickr!/, d['description']
+    assert_equal '', d['published_at']
+    assert_equal 'https://c2.staticflickr.com/4/3123/2341623661_7c99f48bbf_b.jpg', d['picture']
+    assert_equal 'https://www.flickr.com/photos/bees/', d['author_url']
+  end
+
+  test "should parse opengraph metatags" do
+    m = create_media url: 'http://hacktoon.com/nerdson/2016/poker-planning'
+    d = m.as_json
+    assert_equal 'Poker planning - Hacktoon!', d['title']
+    assert_equal 'Programming comics and digital culture', d['description']
+    assert_equal '', d['published_at']
+    assert_equal 'Karlisson M. Bezerra', d['username']
+    assert_equal 'http://hacktoon.com/static/img/facebook-image.png', d['picture']
+    assert_equal '', d['author_url']
+  end
+
+  test "should parse meta tags as fallback" do
+    m = create_media url: 'https://xkcd.com/1479'
+    d = m.as_json
+    assert_equal 'xkcd: Troubleshooting', d['title']
+    assert_equal 'xkcd: Troubleshooting', d['description']
+    assert_equal '', d['published_at']
+    assert_equal '', d['username']
+    #assert_equal 'screenshot', d['picture']
+    assert_equal '', d['author_url']
+  end
+
 end
