@@ -581,4 +581,15 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['author_url']
   end
 
+  test "should parse meta tags as fallback 2" do
+    m = create_media url: 'http://ca.ios.ba/'
+    d = m.as_json
+    assert_equal 'CaioSBA', d['title']
+    assert_equal 'Personal website of Caio Sacramento de Britto Almeida', d['description']
+    assert_equal '', d['published_at']
+    assert_equal '', d['username']
+    #assert_equal 'screenshot', d['picture']
+    assert_equal '', d['author_url']
+  end
+
 end
