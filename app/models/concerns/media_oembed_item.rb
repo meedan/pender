@@ -1,16 +1,7 @@
 module MediaOembedItem
   extend ActiveSupport::Concern
 
-  included do
-    Media.declare('oembed_item', [/^.*$/])
-  end
-
-  def get_oembed_url
-    require 'open-uri'
-    options = { allow_redirections: :safe } 
-    credentials = self.oembed_get_http_auth(URI.parse(self.url))
-    options[:http_basic_authentication] = credentials
-    doc = Nokogiri::HTML(open(self.url, options))
+  def get_oembed_url(doc)
     tag = doc.at_css('link[type="application/json+oembed"]')
     tag.nil? ? '' : tag.attribute('href').to_s
   end
@@ -28,8 +19,8 @@ module MediaOembedItem
     })
   end
 
-  def data_from_oembed_item
-    oembed_url = self.get_oembed_url
+  def data_from_oembed_item(doc)
+    oembed_url = self.get_oembed_url(doc)
     response = self.oembed_get_data_from_url(oembed_url)
     if !response.nil? && response.code == '200'
       self.data[:oembed] = JSON.parse(response.body)
@@ -60,20 +51,9 @@ module MediaOembedItem
 
   def oembed_create_request(uri)
     request = Net::HTTP::Get.new(uri.request_uri)
-    credentials = self.oembed_get_http_auth(uri)
+    credentials = self.page_get_http_auth(uri)
     request.basic_auth(credentials.first, credentials.last) unless credentials.blank?
     request
-  end
-
-  def oembed_get_http_auth(uri)
-    credentials = nil
-    unless CONFIG['hosts'].nil?
-      config = CONFIG['hosts'][uri.host]
-      unless config.nil?
-        credentials = config['http_auth'].split(':')
-      end
-    end
-    credentials
   end
 
   def oembed_as_oembed(_original_url, _maxwidth, _maxheight)

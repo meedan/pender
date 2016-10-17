@@ -40,6 +40,7 @@ class Media
   include MediaFacebookProfile
   include MediaInstagramItem
   include MediaInstagramProfile
+  include MediaPageItem
   include MediaOembedItem
 
   def as_oembed(original_url, maxwidth, maxheight, options = {})
