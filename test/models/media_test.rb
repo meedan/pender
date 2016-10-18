@@ -577,8 +577,11 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'xkcd: Troubleshooting', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
-    #assert_equal 'screenshot', d['picture']
     assert_equal 'http://xkcd.com', d['author_url']
+
+    path = File.join(Rails.root, 'public', 'screenshots', 'http-xkcd-com-1479.png')
+    assert File.exists?(path)
+    assert_equal CONFIG['pender_host'] + '/screenshots/http-xkcd-com-1479.png', d['picture']
   end
 
   test "should parse meta tags as fallback 2" do
@@ -588,8 +591,11 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Personal website of Caio Sacramento de Britto Almeida', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
-    #assert_equal 'screenshot', d['picture']
     assert_equal 'http://ca.ios.ba', d['author_url']
+
+    path = File.join(Rails.root, 'public', 'screenshots', 'http-ca-ios-ba.png')
+    assert File.exists?(path)
+    assert_equal CONFIG['pender_host'] + '/screenshots/http-ca-ios-ba.png', d['picture']
   end
 
 end
