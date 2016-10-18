@@ -567,7 +567,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal 'Karlisson M. Bezerra', d['username']
     assert_equal 'http://hacktoon.com/static/img/facebook-image.png', d['picture']
-    assert_equal '', d['author_url']
+    assert_equal 'http://hacktoon.com', d['author_url']
   end
 
   test "should parse meta tags as fallback" do
@@ -578,7 +578,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     #assert_equal 'screenshot', d['picture']
-    assert_equal '', d['author_url']
+    assert_equal 'http://xkcd.com', d['author_url']
   end
 
   test "should parse meta tags as fallback 2" do
@@ -589,7 +589,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     #assert_equal 'screenshot', d['picture']
-    assert_equal '', d['author_url']
+    assert_equal 'http://ca.ios.ba', d['author_url']
   end
 
 end

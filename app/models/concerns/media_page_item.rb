@@ -10,7 +10,6 @@ module MediaPageItem
   end
 
   def get_page_html
-    require 'open-uri'
     options = { allow_redirections: :safe }
     credentials = self.page_get_http_auth(URI.parse(self.url))
     options[:http_basic_authentication] = credentials
@@ -50,8 +49,11 @@ module MediaPageItem
     data[:title] ||= doc.at_css("title").content || ''
     data[:description] ||= data[:title]
     data[:username] ||= ''
-    data[:author_url] = ''
     data[:published_at] = ''
+
+    uri = URI.parse(self.url)
+    data[:author_url] = "#{uri.scheme}://#{uri.host}"
+
     data
   end
 
