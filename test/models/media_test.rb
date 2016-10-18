@@ -235,8 +235,10 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should follow redirection of relative paths" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
     assert_nothing_raised do
-      m = create_media url: 'http://www.almasryalyoum.com/node/517699'
+      m = create_media url: 'http://www.almasryalyoum.com/node/517699', request: request
       data = m.as_json
       assert_equal 'http://www.almasryalyoum.com/editor/details/968', data['url']
     end
