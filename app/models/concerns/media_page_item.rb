@@ -80,10 +80,11 @@ module MediaPageItem
   end
 
   def generate_screenshot
+    base_url = self.request.base_url
     path = self.url.parameterize + '.png'
     output_file = File.join(Rails.root, 'public', 'screenshots', path)
     fetcher = Smartshot::Screenshot.new(window_size: [800, 600])
     fetcher.take_screenshot! url: self.url, output: output_file
-    URI.join(CONFIG['pender_host'], 'screenshots/', path).to_s
+    URI.join(base_url, 'screenshots/', path).to_s
   end
 end

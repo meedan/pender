@@ -16,7 +16,7 @@ module Api
         (render_parameters_missing and return) if @url.blank?
         (render_url_invalid and return) unless valid_url?
         @id = Digest::MD5.hexdigest(@url)
-        render_timeout { @media = Media.new(url: @url) } and return
+        render_timeout { @media = Media.new(url: @url, request: request) } and return
         respond_to do |format|
           format.html   { render_as_html   }
           format.js     { render_as_js     }

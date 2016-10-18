@@ -3,7 +3,7 @@ class Media
   include ActiveModel::Conversion
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data
+  attr_accessor :url, :provider, :type, :data, :request
 
   TYPES = {}
 

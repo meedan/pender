@@ -571,7 +571,9 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse meta tags as fallback" do
-    m = create_media url: 'https://xkcd.com/1479'
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'https://xkcd.com/1479', request: request
     d = m.as_json
     assert_equal 'xkcd: Troubleshooting', d['title']
     assert_equal 'xkcd: Troubleshooting', d['description']
@@ -581,11 +583,13 @@ class MediaTest < ActiveSupport::TestCase
 
     path = File.join(Rails.root, 'public', 'screenshots', 'http-xkcd-com-1479.png')
     assert File.exists?(path)
-    assert_equal CONFIG['pender_host'] + '/screenshots/http-xkcd-com-1479.png', d['picture']
+    assert_match /http:\/\/localhost\/screenshots\/http-xkcd-com-1479.png$/, d['picture']
   end
 
   test "should parse meta tags as fallback 2" do
-    m = create_media url: 'http://ca.ios.ba/'
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'http://ca.ios.ba/', request: request
     d = m.as_json
     assert_equal 'CaioSBA', d['title']
     assert_equal 'Personal website of Caio Sacramento de Britto Almeida', d['description']
@@ -595,7 +599,7 @@ class MediaTest < ActiveSupport::TestCase
 
     path = File.join(Rails.root, 'public', 'screenshots', 'http-ca-ios-ba.png')
     assert File.exists?(path)
-    assert_equal CONFIG['pender_host'] + '/screenshots/http-ca-ios-ba.png', d['picture']
+    assert_match /http:\/\/localhost\/screenshots\/http-ca-ios-ba.png$/, d['picture']
   end
 
 end
