@@ -33,3 +33,4 @@ gem 'open_uri_redirections'
 gem 'postrank-uri'
 gem 'retryable'
 gem 'puma'
+gem "smartshot"
