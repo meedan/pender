@@ -235,8 +235,10 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should follow redirection of relative paths" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
     assert_nothing_raised do
-      m = create_media url: 'http://www.almasryalyoum.com/node/517699'
+      m = create_media url: 'http://www.almasryalyoum.com/node/517699', request: request
       data = m.as_json
       assert_equal 'http://www.almasryalyoum.com/editor/details/968', data['url']
     end
@@ -567,29 +569,39 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal 'Karlisson M. Bezerra', d['username']
     assert_equal 'http://hacktoon.com/static/img/facebook-image.png', d['picture']
-    assert_equal '', d['author_url']
+    assert_equal 'http://hacktoon.com', d['author_url']
   end
 
   test "should parse meta tags as fallback" do
-    m = create_media url: 'https://xkcd.com/1479'
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'https://xkcd.com/1479', request: request
     d = m.as_json
     assert_equal 'xkcd: Troubleshooting', d['title']
     assert_equal 'xkcd: Troubleshooting', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
-    #assert_equal 'screenshot', d['picture']
-    assert_equal '', d['author_url']
+    assert_equal 'http://xkcd.com', d['author_url']
+
+    path = File.join(Rails.root, 'public', 'screenshots', 'http-xkcd-com-1479.png')
+    assert File.exists?(path)
+    assert_match /http:\/\/localhost\/screenshots\/http-xkcd-com-1479.png$/, d['picture']
   end
 
   test "should parse meta tags as fallback 2" do
-    m = create_media url: 'http://ca.ios.ba/'
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'http://ca.ios.ba/', request: request
     d = m.as_json
     assert_equal 'CaioSBA', d['title']
     assert_equal 'Personal website of Caio Sacramento de Britto Almeida', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
-    #assert_equal 'screenshot', d['picture']
-    assert_equal '', d['author_url']
+    assert_equal 'http://ca.ios.ba', d['author_url']
+
+    path = File.join(Rails.root, 'public', 'screenshots', 'http-ca-ios-ba.png')
+    assert File.exists?(path)
+    assert_match /http:\/\/localhost\/screenshots\/http-ca-ios-ba.png$/, d['picture']
   end
 
 end
