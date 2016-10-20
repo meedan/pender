@@ -4,9 +4,11 @@
 FROM meedan/ruby
 MAINTAINER sysops@meedan.com
 
-ENV DEPLOYUSER pender
-ENV DEPLOYDIR /app/pender
-ENV RAILS_ENV production
+ENV DEPLOYUSER=pender \
+    DEPLOYDIR=/app/pender \
+    RAILS_ENV=production \
+    PRODUCT=pender \
+    APP=pender
 
 # runtime binaries
 USER root
@@ -49,8 +51,6 @@ RUN ln -s ${DEPLOYDIR}/shared/cache/json ${DEPLOYDIR}/current/tmp/cache \
  && ln -s ${DEPLOYDIR}/shared/cache/html ${DEPLOYDIR}/current/public/cache \
  && /opt/bin/find_and_link_config_files.sh ${DEPLOYDIR}/current
 
- 
- 
 # runtime config
 USER root
 EXPOSE 80
