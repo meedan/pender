@@ -20,19 +20,10 @@ module MediaInstagramProfile
   end
 
   def data_from_instagram_html
-    doc = self.get_instagram_html
     data = {}
     %w(image title description).each do |meta|
-      data[meta] = doc.at_css("meta[property='og:#{meta}']").attr('content')
+      data[meta] = self.doc.at_css("meta[property='og:#{meta}']").attr('content')
     end
     data
-  end
-
-  def get_instagram_html
-    html = ''
-    open(@url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1', 'Accept-Language' => 'en') do |f|
-      html = f.read
-    end
-    Nokogiri::HTML html
   end
 end 

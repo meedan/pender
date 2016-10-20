@@ -119,9 +119,8 @@ module MediaFacebookItem
   end
 
   def parse_from_facebook_html
-    doc = self.get_facebook_html
-    self.get_facebook_text_from_html(doc)
-    text = doc.to_s.gsub(/<[^>]+>/, '')
+    self.get_facebook_text_from_html
+    text = self.doc.to_s.gsub(/<[^>]+>/, '')
     media = text.match(/added ([0-9]+) new photos/)
     self.data['media_count'] = media.nil? ? 0 : media[1].to_i
     time = doc.at_css('span.timestampContent')
@@ -129,21 +128,12 @@ module MediaFacebookItem
     self.data['photos'] = []
   end
 
-  def get_facebook_html
-    html = ''
-    # We need to hack the user agent, otherwise Facebook will return a "unsupported browser" page
-    open(@url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1', 'Accept-Language' => 'en', 'Cookie' => self.set_cookies) do |f|
-      html = f.read
-    end
-    Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
-  end
-
-  def get_facebook_text_from_html(doc)
-    content = doc.at_css('div.userContent') || doc.at_css('span.hasCaption')
-    f = File.open('/tmp/bli', 'w+'); f.puts(doc.to_s); f.close
-    text = content.nil? ? doc.at_css('meta[name=description]').attr('content') : content.inner_html.gsub(/<[^>]+>/, '')
+  def get_facebook_text_from_html
+    content = self.doc.at_css('div.userContent') || self.doc.at_css('span.hasCaption')
+    f = File.open('/tmp/bli', 'w+'); f.puts(self.doc.to_s); f.close
+    text = content.nil? ? self.doc.at_css('meta[name=description]').attr('content') : content.inner_html.gsub(/<[^>]+>/, '')
     self.data['text'] = text.to_s.gsub('See Translation', ' ')
-    user_name = doc.to_s.match(/ownerName:"([^"]+)"/)
+    user_name = self.doc.to_s.match(/ownerName:"([^"]+)"/)
     self.data['user_name'] = user_name.nil? ? 'Not Identified' : user_name[1]
   end
 

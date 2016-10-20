@@ -93,7 +93,6 @@ class Media
 
   def get_canonical_url
     self.doc = self.get_html
-
     tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")
     self.url = tag.attr('content') || tag.attr('href') if tag
   end
@@ -151,10 +150,19 @@ class Media
   end
 
   def get_html
+    encoded_uri = URI.encode(self.url)
     options = { allow_redirections: :safe }
-    credentials = self.get_http_auth(URI.parse(self.url))
+    credentials = self.get_http_auth(URI.parse(encoded_uri))
     options[:http_basic_authentication] = credentials
-    Nokogiri::HTML(open(self.url, options))
+    options['User-Agent'] = 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1'
+    options['Accept-Language'] = 'en'
+    options['Cookie'] = self.set_cookies
+    accept_language = 'en'
+    html = ''
+    open(encoded_uri, options) do |f|
+      html = f.read
+    end
+    Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
   end
 
   def get_http_auth(uri)
