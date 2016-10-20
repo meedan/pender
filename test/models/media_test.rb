@@ -655,4 +655,22 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['picture']
   end
 
+  test "should get canonical URL parsed from html tags" do
+    media1 = create_media url: 'https://twitter.com/lila_engel/status/783423627383504896?ref_src=twsrc%5Etfw'
+    media2 = create_media url: 'https://twitter.com/lila_engel/status/783423627383504896'
+    assert_equal media1.url, media2.url
+  end
+
+  test "should get canonical URL parsed from html tags 2" do
+    media1 = create_media url: 'https://www.instagram.com/p/BK4YliEAatH/?taken-by=anxiaostudio'
+    media2 = create_media url: 'https://www.instagram.com/p/BK4YliEAatH/'
+    assert_equal media1.url, media2.url
+  end
+
+  test "should get canonical URL parsed from html tags 3" do
+    media1 = create_media url: 'http://mulher30.com.br/2016/08/bom-dia-2.html'
+    media2 = create_media url: 'http://mulher30.com.br/?p=6704&fake=123'
+    assert_equal media1.url, media2.url
+  end
+
 end

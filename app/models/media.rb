@@ -3,7 +3,7 @@ class Media
   include ActiveModel::Conversion
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data, :request
+  attr_accessor :url, :provider, :type, :data, :request, :doc
 
   TYPES = {}
 
@@ -12,7 +12,7 @@ class Media
       send("#{name}=", value)
     end
     self.follow_redirections
-    self.normalize_url
+    self.normalize_url unless self.get_canonical_url
     self.data = {}.with_indifferent_access
   end
 
@@ -91,6 +91,13 @@ class Media
     end
   end
 
+  def get_canonical_url
+    self.doc = self.get_html
+
+    tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")
+    self.url = tag.attr('content') || tag.attr('href') if tag
+  end
+
   def normalize_url
     self.url = PostRank::URI.normalize(self.url).to_s
   end
@@ -142,4 +149,23 @@ class Media
     end
     cookies.join('; ')
   end
+
+  def get_html
+    options = { allow_redirections: :safe }
+    credentials = self.get_http_auth(URI.parse(self.url))
+    options[:http_basic_authentication] = credentials
+    Nokogiri::HTML(open(self.url, options))
+  end
+
+  def get_http_auth(uri)
+    credentials = nil
+    unless CONFIG['hosts'].nil?
+      config = CONFIG['hosts'][uri.host]
+      unless config.nil?
+        credentials = config['http_auth'].split(':')
+      end
+    end
+    credentials
+  end
+
 end

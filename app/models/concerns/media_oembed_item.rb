@@ -1,8 +1,8 @@
 module MediaOembedItem
   extend ActiveSupport::Concern
 
-  def get_oembed_url(doc)
-    tag = doc.at_css('link[type="application/json+oembed"]')
+  def get_oembed_url
+    tag = self.doc.at_css('link[type="application/json+oembed"]')
     tag.nil? ? '' : tag.attribute('href').to_s
   end
 
@@ -19,8 +19,8 @@ module MediaOembedItem
     })
   end
 
-  def data_from_oembed_item(doc)
-    oembed_url = self.get_oembed_url(doc)
+  def data_from_oembed_item
+    oembed_url = self.get_oembed_url
     response = self.oembed_get_data_from_url(oembed_url)
     if !response.nil? && response.code == '200'
       self.data[:oembed] = JSON.parse(response.body)
@@ -51,7 +51,7 @@ module MediaOembedItem
 
   def oembed_create_request(uri)
     request = Net::HTTP::Get.new(uri.request_uri)
-    credentials = self.page_get_http_auth(uri)
+    credentials = self.get_http_auth(uri)
     request.basic_auth(credentials.first, credentials.last) unless credentials.blank?
     request
   end
