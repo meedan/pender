@@ -604,4 +604,41 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /http:\/\/localhost\/screenshots\/http-ca-ios-ba.png$/, d['picture']
   end
 
+  test "should parse Facebook photo on page album" do
+    m = create_media url: 'https://www.facebook.com/southchinamorningpost/videos/vb.355665009819/10154584426664820/?type=2&theater'
+    d = m.as_json
+    assert_equal 'South China Morning Post SCMP on Facebook', d['title']
+    assert_match /SCMP #FacebookLive/, d['description']
+    assert_equal 'South China Morning Post SCMP', d['username']
+    assert_match /355665009819/, d['picture']
+    assert_equal 'http://facebook.com/355665009819', d['author_url']
+    assert_not_nil d['published_at']
+  end
+
+  test "should parse meta tags" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'http://www.nytimes.com/2016/10/06/technology/mailchimp-and-the-un-silicon-valley-way-to-make-it-as-a-start-up.html', request: request
+    d = m.as_json
+    assert_equal 'MailChimp and the Un-Silicon Valley Way to Make It as a Start-Up', d['title']
+    assert_match /No venture capital, no Bay Area presence, no crazy burn rate/, d['description']
+    assert_equal '', d['published_at']
+    assert_equal 'http://www.nytimes.com/by/farhad-manjoo', d['username']
+    assert_equal 'http://www.nytimes.com', d['author_url']
+    assert_not_nil d['picture']
+  end
+
+  test "should parse meta tags 2" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'https://meedan.com/en/check/', request: request
+    d = m.as_json
+    assert_equal 'Meedan', d['title']
+    assert_match /team of designers, technologists and journalists/, d['description']
+    assert_equal '', d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'https://meedan.com', d['author_url']
+    assert_not_nil d['picture']
+  end
+
 end

@@ -23,7 +23,7 @@ module MediaPageItem
     doc = self.get_page_html
     data = {}
     %w(basic oembed opengraph twitter).each do |meta|
-      data.merge!(self.send("get_#{meta}_metadata", doc))
+      data.merge!(self.send("get_#{meta}_metadata", doc)) { |_key, v1, v2| v2.blank? ? v1 : v2 }
     end
     data
   end
