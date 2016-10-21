@@ -615,17 +615,19 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
   end
 
-  test "should parse meta tags" do
-    request = 'http://localhost'
-    request.expects(:base_url).returns('http://localhost')
-    m = create_media url: 'http://www.nytimes.com/2016/10/06/technology/mailchimp-and-the-un-silicon-valley-way-to-make-it-as-a-start-up.html', request: request
+  test "should not overwrite metatags with nil" do
+    m = create_media url: 'https://meedan.checkdesk.org/node/2161'
+    m.expects(:get_opengraph_metadata).returns({author_url: nil})
+    m.expects(:get_twitter_metadata).returns({author_url: nil})
+    m.expects(:get_oembed_metadata).returns({})
+    m.expects(:get_basic_metadata).returns({description: "", title: "Meedan Checkdesk", username: "Tom", published_at: "", author_url: "https://meedan.checkdesk.org", picture: ''})
     d = m.as_json
-    assert_equal 'MailChimp and the Un-Silicon Valley Way to Make It as a Start-Up', d['title']
-    assert_match /No venture capital, no Bay Area presence, no crazy burn rate/, d['description']
-    assert_equal '', d['published_at']
-    assert_equal 'http://www.nytimes.com/by/farhad-manjoo', d['username']
-    assert_equal 'http://www.nytimes.com', d['author_url']
+    assert_equal 'Meedan Checkdesk', d['title']
+    assert_equal 'Tom', d['username']
+    assert_not_nil d['description']
     assert_not_nil d['picture']
+    assert_not_nil d['published_at']
+    assert_equal 'https://meedan.checkdesk.org', d['author_url']
   end
 
   test "should parse meta tags 2" do
