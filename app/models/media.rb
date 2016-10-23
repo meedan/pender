@@ -92,9 +92,11 @@ class Media
   end
 
   def get_canonical_url
-    self.doc = self.get_html
-    tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")
-    self.url = tag.attr('content') || tag.attr('href') if tag
+    self.doc = self.get_html(html_options)
+    if self.doc
+      tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")
+      self.url = tag.attr('content') || tag.attr('href') if tag
+    end
   end
 
   def normalize_url
@@ -149,7 +151,22 @@ class Media
     cookies.join('; ')
   end
 
-  def get_html
+  def get_html(header_options = {})
+    encoded_uri = URI.encode(self.url)
+    html = ''
+    begin
+      open(encoded_uri, header_options) do |f|
+        f.binmode
+        html = f.read
+      end
+      doc = Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
+    rescue OpenURI::HTTPError => e
+      return nil
+    end
+    doc
+  end
+
+  def html_options
     encoded_uri = URI.encode(self.url)
     options = { allow_redirections: :safe }
     credentials = self.get_http_auth(URI.parse(encoded_uri))
@@ -157,12 +174,7 @@ class Media
     options['User-Agent'] = 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1'
     options['Accept-Language'] = 'en'
     options['Cookie'] = self.set_cookies
-    accept_language = 'en'
-    html = ''
-    open(encoded_uri, options) do |f|
-      html = f.read
-    end
-    Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
+    options
   end
 
   def get_http_auth(uri)

@@ -119,11 +119,13 @@ module MediaFacebookItem
   end
 
   def parse_from_facebook_html
+    self.doc = self.get_html(html_options)
     self.get_facebook_text_from_html
     text = self.doc.to_s.gsub(/<[^>]+>/, '')
+
     media = text.match(/added ([0-9]+) new photos/)
     self.data['media_count'] = media.nil? ? 0 : media[1].to_i
-    time = doc.at_css('span.timestampContent')
+    time = self.doc.at_css('span.timestampContent')
     self.data['published'] = Time.parse(time.inner_html) unless time.nil?
     self.data['photos'] = []
   end
