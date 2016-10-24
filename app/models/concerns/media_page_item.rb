@@ -8,8 +8,8 @@ module MediaPageItem
   def data_from_page_item
     self.doc ||= self.get_html
     self.data = self.page_get_data_from_url
-    unless self.data[:picture]
-      self.data[:picture] = generate_screenshot
+    if self.data[:picture].blank?
+      generate_screenshot
     end
   end
 
@@ -46,8 +46,9 @@ module MediaPageItem
     data[:description] ||= data[:title]
     data[:username] ||= ''
     data[:published_at] = ''
+    data[:picture] = ''
 
-    uri = URI.parse(self.url)
+    uri = URI.parse(URI.encode(self.url))
     data[:author_url] = "#{uri.scheme}://#{uri.host}"
     data
   end
@@ -66,7 +67,8 @@ module MediaPageItem
     path = self.url.parameterize + '.png'
     output_file = File.join(Rails.root, 'public', 'screenshots', path)
     fetcher = Smartshot::Screenshot.new(window_size: [800, 600])
-    fetcher.take_screenshot! url: self.url, output: output_file, wait_for_element: ['body'], sleep: 10, frames_path: []
-    URI.join(base_url, 'screenshots/', path).to_s
+    if fetcher.take_screenshot! url: self.url, output: output_file, wait_for_element: ['body'], sleep: 10, frames_path: []
+      data[:picture] = URI.join(base_url, 'screenshots/', path).to_s
+    end
   end
 end
