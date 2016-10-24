@@ -160,7 +160,7 @@ class Media
         html = f.read
       end
       doc = Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
-    rescue OpenURI::HTTPError => e
+    rescue OpenURI::HTTPError
       return nil
     end
     doc
