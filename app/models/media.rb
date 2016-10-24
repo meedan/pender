@@ -96,6 +96,7 @@ class Media
   end
 
   def follow_redirections
+    self.url = self.url.strip
     self.url = 'http://' + self.url unless self.url =~ /^https?:/
     attempts = 0
     code = '301'
