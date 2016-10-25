@@ -3,7 +3,7 @@ class Media
   include ActiveModel::Conversion
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data, :request
+  attr_accessor :url, :provider, :type, :data, :request, :doc
 
   TYPES = {}
 
@@ -12,7 +12,7 @@ class Media
       send("#{name}=", value)
     end
     self.follow_redirections
-    self.normalize_url
+    self.normalize_url unless self.get_canonical_url
     self.data = {}.with_indifferent_access
   end
 
@@ -91,6 +91,14 @@ class Media
     end
   end
 
+  def get_canonical_url
+    self.doc = self.get_html(html_options)
+    if self.doc
+      tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")
+      self.url = tag.attr('content') || tag.attr('href') if tag
+    end
+  end
+
   def normalize_url
     self.url = PostRank::URI.normalize(self.url).to_s
   end
@@ -142,4 +150,42 @@ class Media
     end
     cookies.join('; ')
   end
+
+  def get_html(header_options = {})
+    encoded_uri = URI.encode(self.url)
+    html = ''
+    begin
+      open(encoded_uri, header_options) do |f|
+        f.binmode
+        html = f.read
+      end
+      doc = Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
+    rescue OpenURI::HTTPError
+      return nil
+    end
+    doc
+  end
+
+  def html_options
+    encoded_uri = URI.encode(self.url)
+    options = { allow_redirections: :safe }
+    credentials = self.get_http_auth(URI.parse(encoded_uri))
+    options[:http_basic_authentication] = credentials
+    options['User-Agent'] = 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1'
+    options['Accept-Language'] = 'en'
+    options['Cookie'] = self.set_cookies
+    options
+  end
+
+  def get_http_auth(uri)
+    credentials = nil
+    unless CONFIG['hosts'].nil?
+      config = CONFIG['hosts'][uri.host]
+      unless config.nil?
+        credentials = config['http_auth'].split(':')
+      end
+    end
+    credentials
+  end
+
 end

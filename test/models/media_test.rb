@@ -25,8 +25,8 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
     data = m.as_json
     assert_equal 'Iron Maiden', data['title']
-    assert_equal 'IronMaiden', data['username']
-    assert_equal 'channel', data['subtype']
+    assert_equal 'ironmaiden', data['username']
+    assert_equal 'user', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
@@ -109,7 +109,7 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_oembed("http://pender.org/medias.html?url=#{url}", 300, 150)
     assert_equal 'Meedan', data['title']
     assert_equal 'Meedan', data['author_name']
-    assert_equal url, data['author_url']
+    assert_equal 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
     assert_equal 'facebook', data['provider_name']
     assert_equal 'http://www.facebook.com', data['provider_url']
     assert_equal 300, data['width']
@@ -151,8 +151,8 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ/'
     data = m.as_json
     assert_equal 'Iron Maiden', data['title']
-    assert_equal 'IronMaiden', data['username']
-    assert_equal 'channel', data['subtype']
+    assert_equal 'ironmaiden', data['username']
+    assert_equal 'user', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
@@ -189,7 +189,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should not normalize URL" do
     urls = %w(
-      https://meedan.com/en
+      http://meedan.com/en/
       http://ios.ba/
       http://ca.ios.ba/?foo=bar
     )
@@ -240,7 +240,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nothing_raised do
       m = create_media url: 'http://www.almasryalyoum.com/node/517699', request: request
       data = m.as_json
-      assert_equal 'http://www.almasryalyoum.com/editor/details/968', data['url']
+      assert_match /http:\/\/www.almasryalyoum.com\/editor\/details\/968/, data['url']
     end
   end
 
@@ -639,7 +639,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /team of designers, technologists and journalists/, d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
-    assert_equal 'https://meedan.com', d['author_url']
+    assert_equal 'http://meedan.com/en/check/', m.url
+    assert_equal 'http://meedan.com', d['author_url']
     assert_not_nil d['picture']
   end
 
@@ -653,6 +654,24 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'anxiaostudio', d['username']
     assert_equal 'https://twitter.com/anxiaostudio', d['author_url']
     assert_not_nil d['picture']
+  end
+
+  test "should get canonical URL parsed from html tags" do
+    media1 = create_media url: 'https://twitter.com/lila_engel/status/783423627383504896?ref_src=twsrc%5Etfw'
+    media2 = create_media url: 'https://twitter.com/lila_engel/status/783423627383504896'
+    assert_equal media1.url, media2.url
+  end
+
+  test "should get canonical URL parsed from html tags 2" do
+    media1 = create_media url: 'https://www.instagram.com/p/BK4YliEAatH/?taken-by=anxiaostudio'
+    media2 = create_media url: 'https://www.instagram.com/p/BK4YliEAatH/'
+    assert_equal media1.url, media2.url
+  end
+
+  test "should get canonical URL parsed from html tags 3" do
+    media1 = create_media url: 'http://mulher30.com.br/2016/08/bom-dia-2.html'
+    media2 = create_media url: 'http://mulher30.com.br/?p=6704&fake=123'
+    assert_equal media1.url, media2.url
   end
 
 end

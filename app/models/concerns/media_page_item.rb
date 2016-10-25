@@ -6,50 +6,43 @@ module MediaPageItem
   end
 
   def data_from_page_item
+    self.doc ||= self.get_html
     self.data = self.page_get_data_from_url
     unless self.data[:picture]
       self.data[:picture] = generate_screenshot
     end
   end
 
-  def get_page_html
-    options = { allow_redirections: :safe }
-    credentials = self.page_get_http_auth(URI.parse(self.url))
-    options[:http_basic_authentication] = credentials
-    Nokogiri::HTML(open(self.url, options))
-  end
-
   def page_get_data_from_url
-    doc = self.get_page_html
     data = {}
     %w(basic oembed opengraph twitter).each do |meta|
-      data.merge!(self.send("get_#{meta}_metadata", doc)) { |_key, v1, v2| v2.blank? ? v1 : v2 }
+      data.merge!(self.send("get_#{meta}_metadata")) { |_key, v1, v2| v2.blank? ? v1 : v2 }
     end
     data
   end
 
-  def get_twitter_metadata(doc)
+  def get_twitter_metadata
     metatags = { title: 'twitter:title', picture: 'twitter:image', description: 'twitter:description', username: 'twitter:creator' }
-    data = get_html_metadata(doc, 'property', metatags)
+    data = get_html_metadata('property', metatags)
     data['author_url'] = 'https://twitter.com/' + twitter_data['username'] if data['username']
     data
   end
 
-  def get_opengraph_metadata(doc)
+  def get_opengraph_metadata
     metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time' }
-    get_html_metadata(doc, 'property', metatags)
+    get_html_metadata('property', metatags)
   end
 
-  def get_oembed_metadata(doc)
-    data = self.data_from_oembed_item(doc)
+  def get_oembed_metadata
+    data = self.data_from_oembed_item
     self.provider = 'oembed' if data
     data || {}
   end
 
-  def get_basic_metadata(doc)
+  def get_basic_metadata
     metatags = { title: 'title',  description: 'description', username: 'author' }
-    data = get_html_metadata(doc, 'name', metatags)
-    data[:title] ||= doc.at_css("title").content || ''
+    data = get_html_metadata('name', metatags)
+    data[:title] ||= self.doc.at_css("title").content || ''
     data[:description] ||= data[:title]
     data[:username] ||= ''
     data[:published_at] = ''
@@ -59,24 +52,13 @@ module MediaPageItem
     data
   end
 
-  def get_html_metadata(doc, attr, metatags)
+  def get_html_metadata(attr, metatags)
     data = {}
     metatags.each do |key, value|
-      metatag = doc.at_css("meta[#{attr}='#{value}']")
+      metatag = self.doc.at_css("meta[#{attr}='#{value}']")
       data[key] = metatag.attr('content') if metatag
     end
     data
-  end
-
-  def page_get_http_auth(uri)
-    credentials = nil
-    unless CONFIG['hosts'].nil?
-      config = CONFIG['hosts'][uri.host]
-      unless config.nil?
-        credentials = config['http_auth'].split(':')
-      end
-    end
-    credentials
   end
 
   def generate_screenshot
@@ -84,7 +66,7 @@ module MediaPageItem
     path = self.url.parameterize + '.png'
     output_file = File.join(Rails.root, 'public', 'screenshots', path)
     fetcher = Smartshot::Screenshot.new(window_size: [800, 600])
-    fetcher.take_screenshot! url: self.url, output: output_file
+    fetcher.take_screenshot! url: self.url, output: output_file, wait_for_element: ['body'], sleep: 10, frames_path: []
     URI.join(base_url, 'screenshots/', path).to_s
   end
 end
