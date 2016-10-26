@@ -95,7 +95,14 @@ class Media
     self.doc = self.get_html(html_options)
     if self.doc
       tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")
-      self.url = tag.attr('content') || tag.attr('href') if tag
+      if tag
+        canonical_url = tag.attr('content') || tag.attr('href')
+        if canonical_url && canonical_url != self.url
+          self.url = absolute_url(canonical_url)
+          self.doc = self.get_html(html_options)
+        end
+        return true
+      end
     end
   end
 
@@ -188,4 +195,8 @@ class Media
     credentials
   end
 
+  def absolute_url(path = '')
+    return self.url if path.blank?
+    path =~ /^https?:/ ? path : self.url.gsub(/\/$/, '') + path
+  end
 end

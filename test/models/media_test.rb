@@ -710,4 +710,16 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['picture']
   end
 
+  test "should get relative canonical URL parsed from html tags" do
+    m = create_media url: 'http://meedan.com'
+    d = m.as_json
+    assert_equal 'https://meedan.com/en/', m.url
+    assert_equal 'Meedan', d['title']
+    assert_match /team of designers, technologists and journalists/, d['description']
+    assert_equal '', d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'https://meedan.com', d['author_url']
+    assert_equal 'http://meedan.com/images/logos/meedan-logo-600@2x.png', d['picture']
+  end
+
 end
