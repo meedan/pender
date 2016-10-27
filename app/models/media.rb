@@ -49,6 +49,14 @@ class Media
     self.respond_to?(oembed)? self.send(oembed, original_url, maxwidth, maxheight) : self.default_oembed(original_url, maxwidth, maxheight)
   end
 
+  def minimal_data
+    data = {}
+    %w(published_at username title description picture author_url).each do |field|
+      data[field] = ''
+    end
+    data
+  end
+
   protected
 
   def default_oembed(original_url, maxwidth, maxheight)
@@ -76,7 +84,7 @@ class Media
   end
 
   def parse
-    self.data = {}
+    self.data = minimal_data
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|

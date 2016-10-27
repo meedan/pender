@@ -14,7 +14,8 @@ module MediaPageItem
   end
 
   def page_get_data_from_url
-    data = {}
+    raise 'Could not parse this media' if self.doc.blank?
+    data = self.data
     %w(basic oembed opengraph twitter).each do |meta|
       data.merge!(self.send("get_#{meta}_metadata")) { |_key, v1, v2| v2.blank? ? v1 : v2 }
     end

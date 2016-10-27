@@ -49,16 +49,55 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal first_parsed_at, second_parsed_at
   end
 
-  test "should show error message if Twitter user does not exist" do
+  test "should return error message on hash if url does not exist" do
     authenticate_with_token
     get :index, url: 'https://twitter.com/caiosba32153623', format: :json
-    assert_response 400
-    assert_equal 'Could not parse this media', JSON.parse(@response.body)['data']['message']
+    assert_response 200
+    data = JSON.parse(@response.body)['data']
+    assert_equal 'User not found.', data['error']['message']
+    assert_equal 'UNKNOWN', data['error']['code']
   end
 
-  test "should return HTML error" do
+  test "should return error message on hash if url does not exist 2" do
+    authenticate_with_token
+    get :index, url: 'https://www.facebook.com/blah_blah', format: :json
+    assert_response 200
+    data = JSON.parse(@response.body)['data']
+    assert_not_nil data['error']['message']
+    assert_equal 'UNKNOWN', data['error']['code']
+  end
+
+  test "should return error message on hash if url does not exist 3" do
+    authenticate_with_token
+    get :index, url: 'https://www.instagram.com/blih_blih/', format: :json
+    assert_response 200
+    data = JSON.parse(@response.body)['data']
+    assert_match /Could not parse/, data['error']['message']
+    assert_equal 'UNKNOWN', data['error']['code']
+  end
+
+  test "should return error message on hash if url does not exist 4" do
+    authenticate_with_token
+    get :index, url: 'https://www.instagram.com/p/blih_blih/', format: :json
+    assert_response 200
+    data = JSON.parse(@response.body)['data']
+    assert_match /unexpected token at/, data['error']['message']
+    assert_equal 'UNKNOWN', data['error']['code']
+  end
+
+  test "should return error message on hash if url does not exist 5" do
+    authenticate_with_token
+    get :index, url: 'http://foo.com/blah_blah', format: :json
+    assert_response 200
+    data = JSON.parse(@response.body)['data']
+    assert_equal 'Could not parse this media', data['error']['message']
+    assert_equal 'UNKNOWN', data['error']['code']
+  end
+
+  test "should return message with HTML error" do
     get :index, url: 'https://www.facebook.com/non-sense-stuff-892173891273', format: :html
-    assert_response 400
+    assert_response 200
+    assert_match /Could not parse this media/, response.body
   end
 
   test "should be able to fetch JS without token" do

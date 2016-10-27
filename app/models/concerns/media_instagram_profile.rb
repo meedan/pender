@@ -20,6 +20,7 @@ module MediaInstagramProfile
   end
 
   def data_from_instagram_html
+    raise 'Could not parse this media' if self.doc.blank?
     data = {}
     %w(image title description).each do |meta|
       data[meta] = self.doc.at_css("meta[property='og:#{meta}']").attr('content')
