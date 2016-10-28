@@ -57,8 +57,8 @@ module Api
             save_cache
           end
           render text: File.read(cache_path), status: 200
-        rescue Exception => e
-          render html: "Could not parse this media '#{e.message}'"
+        rescue
+          render html: 'Could not parse this media'
         end
       end
 

@@ -699,7 +699,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should not store the picture address if it was not taken" do
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
-    Smartshot::Screenshot.any_instance.expects(:take_screenshot!).returns(false)
+    Smartshot::Screenshot.any_instance.stubs(:take_screenshot!).returns(false)
     m = create_media url: 'http://xkcd.com/448/', request: request
     d = m.as_json
     assert_equal 'xkcd: Good Morning', d['title']
@@ -708,6 +708,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['username']
     assert_equal 'http://xkcd.com', d['author_url']
     assert_equal '', d['picture']
+    Smartshot::Screenshot.any_instance.unstub(:take_screenshot!)
   end
 
   test "should get relative canonical URL parsed from html tags" do

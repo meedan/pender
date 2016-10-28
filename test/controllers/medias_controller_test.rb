@@ -141,11 +141,12 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return message with HTML error 2" do
-    File.stubs(:read).raises(Exception)
+    File.stubs(:read).raises
     get :index, url: 'http://foo.com/blah_blah', format: :html
     assert_response 200
 
     assert_match /Could not parse this media/, response.body
+    File.unstub(:read)
   end
 
   test "should be able to fetch JS without token" do
