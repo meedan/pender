@@ -35,9 +35,10 @@ module MediaFacebookItem
     user_id = IdsPlease.new(self.url).grab[:facebook].first.network_id
     if user_id.blank?
       uri = URI.parse(self.url)
-      params = CGI.parse(uri.query)
-      user_id = params['set'].first.split('.').last
+      params = CGI.parse(uri.query.to_s)
+      user_id = params['set'].first.split('.').last unless params['set'].blank?
     end
+    raise 'Could not parse this media' unless user_id
     self.data['user_uuid'] = user_id
     self.data['picture'] = 'https://graph.facebook.com/' + user_id + '/picture'
   end
@@ -161,19 +162,21 @@ module MediaFacebookItem
 
   # First method
   def data_from_facebook_item
-    self.parse_facebook_uuid
-    self.parse_from_facebook_html unless self.parse_from_facebook_api
-    self.data['text'].strip!
-    self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
+    handle_exceptions(RuntimeError) do
+      self.parse_facebook_uuid
+      self.parse_from_facebook_html unless self.parse_from_facebook_api
+      self.data['text'].strip!
+      self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
 
-    self.data.merge!({
-      username: self.data['user_name'],
-      title: self.data['user_name'] + ' on Facebook',
-      description: self.data['text'] || self.data['description'],
-      picture: self.data['picture'] || self.data['photos'].first,
-      published_at: self.data['published'],
-      html: self.html_for_facebook_post,
-      author_url: 'http://facebook.com/' + self.data['user_uuid']
-    })
+      self.data.merge!({
+        username: self.data['user_name'],
+        title: self.data['user_name'] + ' on Facebook',
+        description: self.data['text'] || self.data['description'],
+        picture: self.data['picture'] || self.data['photos'].first,
+        published_at: self.data['published'],
+        html: self.html_for_facebook_post,
+        author_url: 'http://facebook.com/' + self.data['user_uuid']
+      })
+    end
   end
 end

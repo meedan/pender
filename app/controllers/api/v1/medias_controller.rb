@@ -37,8 +37,6 @@ module Api
           render_timeout { render_success('media', @media.as_json({ force: @refresh }).merge({ embed_tag: embed_url })) and return }
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
-        rescue Exception => e
-          render_not_parseable(@media.data.merge(error: { message: e.message, code: 'UNKNOWN' }))
         end
       end
 

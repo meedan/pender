@@ -57,6 +57,16 @@ class Media
     data
   end
 
+  def handle_exceptions(exception, message_method = :message, code_method = :code)
+    begin
+      yield
+    rescue exception => error
+      code = error.respond_to?(code_method) ? error.send(code_method) : 5
+      self.data.merge!(error: { message: "#{error.class}: #{error.send(message_method)}", code: code })
+      return
+    end
+  end
+
   protected
 
   def default_oembed(original_url, maxwidth, maxheight)

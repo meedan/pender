@@ -54,8 +54,11 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://twitter.com/caiosba32153623', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_equal 'User not found.', data['error']['message']
-    assert_equal 'UNKNOWN', data['error']['code']
+    assert_equal 'Twitter::Error::NotFound: User not found.', data['error']['message']
+    assert_equal 50, data['error']['code']
+    assert_equal 'twitter', data['provider']
+    assert_equal 'profile', data['type']
+    assert_not_nil data['embed_tag']
   end
 
   test "should return error message on hash if url does not exist 2" do
@@ -63,8 +66,11 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://www.facebook.com/blah_blah', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_not_nil data['error']['message']
-    assert_equal 'UNKNOWN', data['error']['code']
+    assert_match /Koala::Facebook::ClientError: Unsupported get request/, data['error']['message']
+    assert_equal 100, data['error']['code']
+    assert_equal 'facebook', data['provider']
+    assert_equal 'profile', data['type']
+    assert_not_nil data['embed_tag']
   end
 
   test "should return error message on hash if url does not exist 3" do
@@ -72,8 +78,11 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://www.instagram.com/blih_blih/', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_match /Could not parse/, data['error']['message']
-    assert_equal 'UNKNOWN', data['error']['code']
+    assert_equal 'RuntimeError: Could not parse this media', data['error']['message']
+    assert_equal 5, data['error']['code']
+    assert_equal 'instagram', data['provider']
+    assert_equal 'profile', data['type']
+    assert_not_nil data['embed_tag']
   end
 
   test "should return error message on hash if url does not exist 4" do
@@ -81,8 +90,11 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://www.instagram.com/p/blih_blih/', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_match /unexpected token at/, data['error']['message']
-    assert_equal 'UNKNOWN', data['error']['code']
+    assert_equal 'RuntimeError: Net::HTTPNotFound: Not Found', data['error']['message']
+    assert_equal 5, data['error']['code']
+    assert_equal 'instagram', data['provider']
+    assert_equal 'item', data['type']
+    assert_not_nil data['embed_tag']
   end
 
   test "should return error message on hash if url does not exist 5" do
@@ -90,13 +102,49 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'http://foo.com/blah_blah', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_equal 'Could not parse this media', data['error']['message']
-    assert_equal 'UNKNOWN', data['error']['code']
+    assert_equal 'RuntimeError: Could not parse this media', data['error']['message']
+    assert_equal 5, data['error']['code']
+    assert_equal 'page', data['provider']
+    assert_equal 'item', data['type']
+    assert_not_nil data['embed_tag']
+  end
+
+  test "should return error message on hash if url does not exist 6" do
+    authenticate_with_token
+    get :index, url: 'https://twitter.com/caiosba/status/0000000000000', format: :json
+    assert_response 200
+    data = JSON.parse(@response.body)['data']
+    assert_equal 'Twitter::Error::NotFound: No data available for specified ID.', data['error']['message']
+    assert_equal 8, data['error']['code']
+    assert_equal 'twitter', data['provider']
+    assert_equal 'item', data['type']
+    assert_not_nil data['embed_tag']
+  end
+
+  test "should return error message on hash if url does not exist 7" do
+    authenticate_with_token
+    get :index, url: 'https://www.facebook.com/ahlam.alialshamsi/posts/000000000000000', format: :json
+    assert_response 200
+    data = JSON.parse(@response.body)['data']
+    assert_match /RuntimeError: Could not parse this media/, data['error']['message']
+    assert_equal 5, data['error']['code']
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
+    assert_not_nil data['embed_tag']
   end
 
   test "should return message with HTML error" do
     get :index, url: 'https://www.facebook.com/non-sense-stuff-892173891273', format: :html
     assert_response 200
+
+    assert_match /Koala::Facebook::ClientError: Unsupported get request/, response.body
+  end
+
+  test "should return message with HTML error 2" do
+    File.stubs(:read).raises(Exception)
+    get :index, url: 'http://foo.com/blah_blah', format: :html
+    assert_response 200
+
     assert_match /Could not parse this media/, response.body
   end
 

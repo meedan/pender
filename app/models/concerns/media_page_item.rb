@@ -7,7 +7,11 @@ module MediaPageItem
 
   def data_from_page_item
     self.doc ||= self.get_html
-    self.data = self.page_get_data_from_url
+
+    handle_exceptions(RuntimeError) do
+      self.data = self.page_get_data_from_url
+    end
+
     if self.data[:picture].blank?
       generate_screenshot
     end
