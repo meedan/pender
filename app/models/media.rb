@@ -23,13 +23,7 @@ class Media
   def as_json(options = {})
     Rails.cache.fetch(self.get_id, options) do
       self.parse
-      self.data.merge({
-        url: self.url,
-        provider: self.provider,
-        type: self.type,
-        parsed_at: Time.now,
-        favicon: "http://www.google.com/s2/favicons?domain_url=#{self.url}"
-      }).with_indifferent_access
+      self.data.merge(required_fields).with_indifferent_access
     end
   end
 
@@ -54,7 +48,17 @@ class Media
     %w(published_at username title description picture author_url).each do |field|
       data[field] = ''
     end
-    data
+    data.merge(required_fields).with_indifferent_access
+  end
+
+  def required_fields
+    {
+      url: self.url,
+      provider: self.provider || 'page',
+      type: self.type || 'item',
+      parsed_at: Time.now,
+      favicon: "http://www.google.com/s2/favicons?domain_url=#{self.url}"
+    }
   end
 
   def handle_exceptions(exception, message_method = :message, code_method = :code)
