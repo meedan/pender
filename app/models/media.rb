@@ -113,17 +113,18 @@ class Media
     self.doc = self.get_html(html_options)
     if self.doc
       tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")
-      return true if get_parsed_url(tag)
+      get_parsed_url(tag) unless tag.blank?
     end
   end
 
-  def get_parsed_url(tag = '')
-    return if tag.blank?
+  def get_parsed_url(tag)
     canonical_url = tag.attr('content') || tag.attr('href')
+    return false if canonical_url.blank?
     if canonical_url && canonical_url != self.url
       self.url = absolute_url(canonical_url)
       self.doc = self.get_html(html_options)
     end
+    true
   end
 
   def normalize_url

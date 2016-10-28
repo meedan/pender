@@ -133,6 +133,17 @@ class MediasControllerTest < ActionController::TestCase
     assert_not_nil data['embed_tag']
   end
 
+  test "should return error message on hash if url does not exist 8" do
+    Media.any_instance.stubs(:as_json).raises(RuntimeError)
+    authenticate_with_token
+    get :index, url: 'http://foo.com/blah_blah', format: :json
+    assert_response 200
+    data = JSON.parse(@response.body)['data']
+    assert_equal 'RuntimeError', data['error']['message']
+    assert_equal 'UNKNOWN', data['error']['code']
+    Media.any_instance.unstub(:as_json)
+  end
+
   test "should return message with HTML error" do
     get :index, url: 'https://www.facebook.com/non-sense-stuff-892173891273', format: :html
     assert_response 200
