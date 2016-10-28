@@ -19,7 +19,7 @@ module MediaTwitterProfile
   def data_from_twitter_profile
     username = self.data[:username] = self.get_twitter_username
 
-    within_twitter_api_limit do
+    handle_twitter_exceptions do
       self.data.merge!(self.twitter_client.user(username).as_json)
     end
 

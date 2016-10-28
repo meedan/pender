@@ -620,7 +620,7 @@ class MediaTest < ActiveSupport::TestCase
     m.expects(:get_opengraph_metadata).returns({author_url: nil})
     m.expects(:get_twitter_metadata).returns({author_url: nil})
     m.expects(:get_oembed_metadata).returns({})
-    m.expects(:get_basic_metadata).returns({description: "", title: "Meedan Checkdesk", username: "Tom", published_at: "", author_url: "https://meedan.checkdesk.org", picture: ''})
+    m.expects(:get_basic_metadata).returns({description: "", title: "Meedan Checkdesk", username: "Tom", published_at: "", author_url: "https://meedan.checkdesk.org", picture: 'meedan.png'})
     d = m.as_json
     assert_equal 'Meedan Checkdesk', d['title']
     assert_equal 'Tom', d['username']
@@ -672,6 +672,55 @@ class MediaTest < ActiveSupport::TestCase
     media1 = create_media url: 'http://mulher30.com.br/2016/08/bom-dia-2.html'
     media2 = create_media url: 'http://mulher30.com.br/?p=6704&fake=123'
     assert_equal media1.url, media2.url
+  end
+
+  test "should return success to any valid link" do
+    m = create_media url: 'https://www.reddit.com/r/Art/comments/58a8kp/emotions_language_youngjoo_namgung_ai_livesurface/'
+    d = m.as_json
+    assert_match /emotion's language, Youngjoo Namgung/, d['title']
+    assert_match /.* points and .* comments so far on reddit/, d['description']
+    assert_equal '', d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'https://www.reddit.com', d['author_url']
+    assert_match /https:\/\/i.redditmedia.com\/Y5ijHvqlYPzBHOAxWEf4PgcXQWwo2JSLeF7gZ5ZXl5E.png/, d['picture']
+  end
+
+  test "should return success to any valid link 2" do
+    m = create_media url: 'http://www.youm7.com/story/2016/7/6/بالصور-مياه-الشرب-بالإسماعيلية-تواصل-عملها-لحل-مشكلة-طفح-الصرف/2790125'
+    d = m.as_json
+    assert_equal 'بالصور.. مياه الشرب بالإسماعيلية تواصل عملها لحل مشكلة طفح الصرف ببعض الشوارع - اليوم السابع', d['title']
+    assert_match /واصلت غرفة عمليات شركة/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'http://www.youm7.com', d['author_url']
+    assert_equal 'http://img.youm7.com/large/72016619556415g.jpg', d['picture']
+  end
+
+  test "should not store the picture address if it was not taken" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    Smartshot::Screenshot.any_instance.stubs(:take_screenshot!).returns(false)
+    m = create_media url: 'http://xkcd.com/448/', request: request
+    d = m.as_json
+    assert_equal 'xkcd: Good Morning', d['title']
+    assert_equal 'xkcd: Good Morning', d['description']
+    assert_equal '', d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'http://xkcd.com', d['author_url']
+    assert_equal '', d['picture']
+    Smartshot::Screenshot.any_instance.unstub(:take_screenshot!)
+  end
+
+  test "should get relative canonical URL parsed from html tags" do
+    m = create_media url: 'http://meedan.com'
+    d = m.as_json
+    assert_equal 'https://meedan.com/en/', m.url
+    assert_equal 'Meedan', d['title']
+    assert_match /team of designers, technologists and journalists/, d['description']
+    assert_equal '', d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'https://meedan.com', d['author_url']
+    assert_equal 'http://meedan.com/images/logos/meedan-logo-600@2x.png', d['picture']
   end
 
 end

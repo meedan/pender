@@ -37,13 +37,13 @@ module Api
           render_timeout { render_success('media', @media.as_json({ force: @refresh }).merge({ embed_tag: embed_url })) and return }
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
-        rescue
-          render_error 'Could not parse this media', 'UNKNOWN'
+        rescue StandardError => e
+          render_not_parseable(@media.data.merge(error: { message: e.message, code: 'UNKNOWN' }))
         end
       end
 
       def render_timeout
-        timeout = CONFIG['timeout'] || 10
+        timeout = CONFIG['timeout'] || 20
         begin
           Timeout::timeout(timeout) { yield }
           return false
@@ -60,7 +60,7 @@ module Api
           end
           render text: File.read(cache_path), status: 200
         rescue
-          render html: 'Could not parse this media', status: 400
+          render html: 'Could not parse this media'
         end
       end
 
