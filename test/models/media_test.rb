@@ -723,4 +723,20 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'http://meedan.com/images/logos/meedan-logo-600@2x.png', d['picture']
   end
 
+  test "should get canonical URL parsed from facebook html" do
+    media1 = create_media url: 'https://www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3&theater'
+    media2 = create_media url: 'https://www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3'
+    media1.as_json
+    media2.as_json
+    assert_equal media2.url, media1.url
+  end
+
+  test "should get canonical URL parsed from facebook html when it is relative" do
+    media1 = create_media url: 'https://www.facebook.com/dina.samak/posts/10153679232246949?pnref=story.unseen-section'
+    media2 = create_media url: 'https://www.facebook.com/dina.samak/posts/10153679232246949'
+    media1.as_json
+    media2.as_json
+    assert_equal media2.url, media1.url
+  end
+
 end
