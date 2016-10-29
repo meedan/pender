@@ -99,7 +99,9 @@ module Api
       # end
 
       def render_not_parseable(data)
-        render json: { data: data }
+        json = { type: 'media' }
+        json[:data] = data
+        render json: json, status: 200
       end
 
       def render_url_invalid
