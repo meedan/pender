@@ -8,7 +8,8 @@ ENV DEPLOYUSER=pender \
     DEPLOYDIR=/app/pender \
     RAILS_ENV=production \
     PRODUCT=pender \
-    APP=pender
+    APP=pender \
+    TERM=xterm
 
 # runtime binaries
 USER root
@@ -20,6 +21,14 @@ COPY ./production/nginx.conf /etc/nginx/sites-available/pender
 RUN ln -s /etc/nginx/sites-available/pender /etc/nginx/sites-enabled/pender \
  && rm /etc/nginx/sites-enabled/default
 
+# phantomjs
+WORKDIR /
+RUN curl -sL -o phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2 
+RUN tar --wildcards -xvjf phantomjs.tar.bz2 phantomjs-*/bin/phantomjs \
+    && mv phantomjs-*/bin/phantomjs /usr/local/bin/phantomjs \
+    && chmod 755 /usr/local/bin/phantomjs \
+    && rm -rf phantomjs.tar.bz2 phantomjs*
+    
 # pender user
 RUN useradd ${DEPLOYUSER} -s /bin/bash -m
 
