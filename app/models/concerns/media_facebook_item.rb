@@ -137,6 +137,9 @@ module MediaFacebookItem
     text = content.nil? ? self.doc.at_css('meta[name=description]').attr('content') : content.inner_html.gsub(/<[^>]+>/, '')
     self.data['text'] = text.to_s.gsub('See Translation', ' ')
     user_name = self.doc.to_s.match(/ownerName:"([^"]+)"/)
+    permalink = self.doc.to_s.match(/permalink:"([^"]+)"/)
+
+    self.url = absolute_url(permalink[1])
     self.data['user_name'] = user_name.nil? ? 'Not Identified' : user_name[1]
   end
 

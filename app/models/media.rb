@@ -220,8 +220,13 @@ class Media
     credentials
   end
 
+  def top_url(url)
+    uri = URI.parse(URI.encode(url))
+    "#{uri.scheme}://#{uri.host}"
+  end
+
   def absolute_url(path = '')
     return self.url if path.blank?
-    path =~ /^https?:/ ? path : self.url.gsub(/\/$/, '') + path
+    path =~ /^https?:/ ? path : self.top_url(self.url) + path
   end
 end

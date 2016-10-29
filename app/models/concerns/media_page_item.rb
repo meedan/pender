@@ -53,8 +53,7 @@ module MediaPageItem
     data[:published_at] = ''
     data[:picture] = ''
 
-    uri = URI.parse(URI.encode(self.url))
-    data[:author_url] = "#{uri.scheme}://#{uri.host}"
+    data[:author_url] = top_url(self.url)
     data
   end
 
