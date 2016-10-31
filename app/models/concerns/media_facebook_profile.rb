@@ -62,7 +62,10 @@ module MediaFacebookProfile
   end
 
   def data_from_facebook_profile
-    self.data.merge! self.get_data_from_facebook
+    handle_exceptions(Koala::Facebook::ClientError, :fb_error_message, :fb_error_code) do
+      self.data.merge! self.get_data_from_facebook
+    end
+
     self.data[:username] = self.get_facebook_username
     description = self.data['bio'] || self.data['about'] || ''
     self.data.merge!({ title: self.data['name'], description: description, picture: self.facebook_picture })

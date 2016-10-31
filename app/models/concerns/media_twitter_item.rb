@@ -9,11 +9,14 @@ module MediaTwitterItem
     Media.declare('twitter_item', [URL])
   end
 
-  def within_twitter_api_limit
+  def handle_twitter_exceptions
     begin
       yield
     rescue Twitter::Error::TooManyRequests => e
       raise Pender::ApiLimitReached.new(e.rate_limit.reset_in)
+    rescue Twitter::Error => error
+      self.data.merge!(error: { message: "#{error.class}: #{error.message}", code: error.code })
+      return
     end
   end
 
@@ -21,19 +24,18 @@ module MediaTwitterItem
     parts = self.url.match(URL)
     user, id = parts[2], parts[3]
 
-    within_twitter_api_limit do
+    handle_twitter_exceptions do
       self.data.merge!(self.twitter_client.status(id).as_json)
+      self.data.merge!({
+        username: user,
+        title: self.data['text'].gsub(/\s+/, ' '),
+        description: self.data['text'],
+        picture: self.data['user']['profile_image_url_https'].gsub('_normal', ''),
+        published_at: self.data['created_at'],
+        html: html_for_twitter_item,
+        author_url: 'https://twitter.com/' + user
+      })
     end
-
-    self.data.merge!({
-      username: user,
-      title: self.data['text'].gsub(/\s+/, ' '),
-      description: self.data['text'],
-      picture: self.data['user']['profile_image_url_https'].gsub('_normal', ''),
-      published_at: self.data['created_at'],
-      html: html_for_twitter_item,
-      author_url: 'https://twitter.com/' + user 
-    })
   end
 
   def html_for_twitter_item

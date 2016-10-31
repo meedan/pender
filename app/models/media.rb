@@ -23,13 +23,7 @@ class Media
   def as_json(options = {})
     Rails.cache.fetch(self.get_id, options) do
       self.parse
-      self.data.merge({
-        url: self.url,
-        provider: self.provider,
-        type: self.type,
-        parsed_at: Time.now,
-        favicon: "http://www.google.com/s2/favicons?domain_url=#{self.url}"
-      }).with_indifferent_access
+      self.data.merge(required_fields).with_indifferent_access
     end
   end
 
@@ -47,6 +41,34 @@ class Media
     data = self.as_json(options)
     oembed = "#{data['provider']}_as_oembed"
     self.respond_to?(oembed)? self.send(oembed, original_url, maxwidth, maxheight) : self.default_oembed(original_url, maxwidth, maxheight)
+  end
+
+  def minimal_data
+    data = {}
+    %w(published_at username title description picture author_url).each do |field|
+      data[field] = ''
+    end
+    data.merge(required_fields).with_indifferent_access
+  end
+
+  def required_fields
+    {
+      url: self.url,
+      provider: self.provider || 'page',
+      type: self.type || 'item',
+      parsed_at: Time.now,
+      favicon: "http://www.google.com/s2/favicons?domain_url=#{self.url}"
+    }
+  end
+
+  def handle_exceptions(exception, message_method = :message, code_method = :code)
+    begin
+      yield
+    rescue exception => error
+      code = error.respond_to?(code_method) ? error.send(code_method) : 5
+      self.data.merge!(error: { message: "#{error.class}: #{error.send(message_method)}", code: code })
+      return
+    end
   end
 
   protected
@@ -76,7 +98,7 @@ class Media
   end
 
   def parse
-    self.data = {}
+    self.data = minimal_data
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|
@@ -95,8 +117,18 @@ class Media
     self.doc = self.get_html(html_options)
     if self.doc
       tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")
-      self.url = tag.attr('content') || tag.attr('href') if tag
+      get_parsed_url(tag) unless tag.blank?
     end
+  end
+
+  def get_parsed_url(tag)
+    canonical_url = tag.attr('content') || tag.attr('href')
+    return false if canonical_url.blank?
+    if canonical_url && canonical_url != self.url
+      self.url = absolute_url(canonical_url)
+      self.doc = self.get_html(html_options)
+    end
+    true
   end
 
   def normalize_url
@@ -188,4 +220,13 @@ class Media
     credentials
   end
 
+  def top_url(url)
+    uri = URI.parse(URI.encode(url))
+    "#{uri.scheme}://#{uri.host}"
+  end
+
+  def absolute_url(path = '')
+    return self.url if path.blank?
+    path =~ /^https?:/ ? path : self.top_url(self.url) + path
+  end
 end
