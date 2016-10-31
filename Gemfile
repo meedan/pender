@@ -25,7 +25,6 @@ gem 'sass-rails'
 gem 'twitter'
 gem 'koala'
 gem 'ids_please', git: 'https://github.com/meedan/ids_please', branch: 'master', ref: '31b9e0'
-gem 'unicorn', group: :production
 gem 'open_uri_redirections'
 gem 'postrank-uri'
 gem 'retryable'
