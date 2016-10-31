@@ -77,6 +77,7 @@ module MediaFacebookItem
       self.data['published'] = object['created_time'] || object['updated_time']
       self.data['user_name'] = object['name'] || object['from']['name']
       self.data['user_uuid'] = object['owner']['id'] unless self.url.match(EVENT_URL).nil?
+      self.url = object['link'] if object['type'] === 'video'
 
       self.parse_facebook_media(object)
 
