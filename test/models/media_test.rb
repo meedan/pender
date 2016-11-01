@@ -740,11 +740,15 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should get canonical URL from facebook object" do
-    media1 = create_media url: 'https://www.facebook.com/democrats/posts/10154268929856943/'
-    media2 = create_media url: 'https://www.facebook.com/democrats/videos/10154268929856943/'
-    media1.as_json
-    media2.as_json
-    assert_equal media2.url, media1.url
+    expected = 'https://www.facebook.com/democrats/videos/10154268929856943'
+    variations = %w(
+      https://www.facebook.com/democrats/videos/10154268929856943/
+      https://www.facebook.com/democrats/posts/10154268929856943/
+    )
+    variations.each do |url|
+      media = Media.new(url: url)
+      media.as_json
+      assert_equal expected, media.url
+    end
   end
-
 end

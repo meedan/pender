@@ -77,7 +77,10 @@ module MediaFacebookItem
       self.data['published'] = object['created_time'] || object['updated_time']
       self.data['user_name'] = object['name'] || object['from']['name']
       self.data['user_uuid'] = object['owner']['id'] unless self.url.match(EVENT_URL).nil?
-      self.url = object['link'] if object['type'] === 'video'
+      if object['type'] === 'video'
+        self.url = object['link']
+        normalize_url
+      end
 
       self.parse_facebook_media(object)
 
@@ -140,7 +143,7 @@ module MediaFacebookItem
     user_name = self.doc.to_s.match(/ownerName:"([^"]+)"/)
     permalink = self.doc.to_s.match(/permalink:"([^"]+)"/)
 
-    self.url = absolute_url(permalink[1])
+    self.url = absolute_url(permalink[1]) if permalink
     self.data['user_name'] = user_name.nil? ? 'Not Identified' : user_name[1]
   end
 
