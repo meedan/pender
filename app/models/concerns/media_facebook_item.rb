@@ -77,10 +77,7 @@ module MediaFacebookItem
       self.data['published'] = object['created_time'] || object['updated_time']
       self.data['user_name'] = object['name'] || object['from']['name']
       self.data['user_uuid'] = object['owner']['id'] unless self.url.match(EVENT_URL).nil?
-      if object['type'] === 'video'
-        self.url = object['link']
-        normalize_url
-      end
+      get_url_from_object(object)
 
       self.parse_facebook_media(object)
 
@@ -100,6 +97,12 @@ module MediaFacebookItem
 
   def get_text_from_object(object)
     object['message'] || object['story'] || object['description'] || ''
+  end
+
+  def get_url_from_object(object)
+    return unless object['type'] === 'video' || object['type'] === 'photo'
+    self.url = object['link']
+    normalize_url
   end
 
   def parse_facebook_media(object)
