@@ -77,7 +77,7 @@ module MediaFacebookItem
       self.data['published'] = object['created_time'] || object['updated_time']
       self.data['user_name'] = object['name'] || object['from']['name']
       self.data['user_uuid'] = object['owner']['id'] unless self.url.match(EVENT_URL).nil?
-      if object['type'] === 'video'
+      if object['type'] === 'video' || object['type'] === 'photo'
         self.url = object['link']
         normalize_url
       end

@@ -751,4 +751,19 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal expected, media.url
     end
   end
+
+  test "should get canonical URL from facebook object 2" do
+    expected = 'https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3'
+    variations = %w(
+      https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406
+      https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407/?type=3
+      https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3
+    )
+    variations.each do |url|
+      media = Media.new(url: url)
+      media.as_json
+      assert_equal expected, media.url
+    end
+  end
+
 end
