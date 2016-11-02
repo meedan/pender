@@ -88,7 +88,7 @@ module MediaFacebookItem
   def api_fields
     fields = ['id', 'type']
     if self.url.match(EVENT_URL).nil?
-      fields += ['message', 'created_time', 'from', 'story', 'full_picture', 'link']
+      fields += ['message', 'created_time', 'from', 'story', 'full_picture', 'link', 'permalink_url']
     else
       fields += ['owner', 'updated_time', 'description', 'name']
     end
@@ -100,8 +100,9 @@ module MediaFacebookItem
   end
 
   def get_url_from_object(object)
-    return unless object['type'] === 'video' || object['type'] === 'photo'
-    self.url = object['link']
+    return unless ['video', 'photo', 'status'].include?(object['type'])
+    self.url = object['link'] if object['type'] === 'video' || object['type'] === 'photo'
+    self.url = object['permalink_url'] if object['type'] == 'status'
     normalize_url
   end
 

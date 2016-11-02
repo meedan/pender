@@ -739,6 +739,14 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal media2.url, media1.url
   end
 
+  test "should get canonical URL parsed from facebook html when it is a page" do
+    media1 = create_media url: 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479?pnref=story.unseen-section'
+    media2 = create_media url: 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479'
+    media1.as_json
+    media2.as_json
+    assert_equal media2.url, media1.url
+  end
+
   test "should get canonical URL from facebook object" do
     expected = 'https://www.facebook.com/democrats/videos/10154268929856943'
     variations = %w(
