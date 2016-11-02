@@ -774,4 +774,27 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
+  test "should parse facebook url with a photo album AAA" do
+    expected = {
+      url: 'https://www.facebook.com/Classic.mou/photos/a.136991166478555.1073741828.136985363145802/613639175480416?type=3',
+      title: 'Classic on Facebook',
+      description: 'Classic added a new photo.',
+      username: 'Classic',
+      author_url: 'http://facebook.com/136985363145802',
+      picture: 'https://graph.facebook.com/136985363145802/picture'
+    }.with_indifferent_access
+
+    variations = %w(
+      https://www.facebook.com/Classic.mou/photos/pcb.613639338813733/613639175480416/?type=3&theater
+      https://www.facebook.com/Classic.mou/photos/pcb.613639338813733/613639175480416/
+    )
+    variations.each do |url|
+      media = Media.new(url: url)
+      data = media.as_json
+      expected.each do |key, value|
+        assert_equal value, data[key]
+      end
+    end
+  end
+
 end
