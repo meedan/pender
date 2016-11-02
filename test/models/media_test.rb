@@ -774,7 +774,7 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
-  test "should parse facebook url with a photo album AAA" do
+  test "should parse facebook url with a photo album" do
     expected = {
       url: 'https://www.facebook.com/Classic.mou/photos/a.136991166478555.1073741828.136985363145802/613639175480416?type=3',
       title: 'Classic on Facebook',
