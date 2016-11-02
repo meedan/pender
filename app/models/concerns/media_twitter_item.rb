@@ -3,7 +3,7 @@ require 'pender_exceptions'
 module MediaTwitterItem
   extend ActiveSupport::Concern
 
-  URL = /^https?:\/\/([^\.]+\.)?twitter\.com\/([^\/]+)\/status\/([0-9]+).*/
+  URL = /^https?:\/\/([^\.]+\.)?twitter\.com\/((%23|#)!\/)?(?<user>[^\/]+)\/status\/(?<id>[0-9]+).*/
 
   included do
     Media.declare('twitter_item', [URL])
@@ -21,9 +21,9 @@ module MediaTwitterItem
   end
 
   def data_from_twitter_item
+    self.url = self.url.gsub(/(%23|#)!\//, '')
     parts = self.url.match(URL)
-    user, id = parts[2], parts[3]
-
+    user, id = parts['user'], parts['id']
     handle_twitter_exceptions do
       self.data.merge!(self.twitter_client.status(id).as_json)
       self.data.merge!({

@@ -797,4 +797,17 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
+  test "should parse tweet url with special chars" do
+    m = create_media url: 'http://twitter.com/#!/salmaeldaly/status/45532711472992256'
+    data = m.as_json
+    assert_equal 'https://twitter.com/salmaeldaly/status/45532711472992256', m.url
+    assert_equal ['twitter', 'item'], [m.provider, m.type]
+    assert_equal 'وعشان نبقى على بياض أنا مش موافقة على فكرة الاعتصام اللي في التحرير، بس دة حقهم وأنا بدافع عن حقهم الشرعي، بغض النظر عن اختلافي معهم', data['title']
+    assert_equal data['title'], data['description']
+    assert_not_nil data['published_at']
+    assert_equal 'salmaeldaly', data['username']
+    assert_equal 'https://twitter.com/salmaeldaly', data['author_url']
+    assert_not_nil data['picture']
+  end
+
 end
