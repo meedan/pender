@@ -145,7 +145,12 @@ module MediaFacebookItem
   def get_facebook_text_from_html
     content = self.doc.at_css('div.userContent') || self.doc.at_css('span.hasCaption')
     f = File.open('/tmp/bli', 'w+'); f.puts(self.doc.to_s); f.close
-    text = content.nil? ? self.doc.at_css('meta[name=description]').attr('content') : content.inner_html.gsub(/<[^>]+>/, '')
+    if content.nil?
+      meta_description = self.doc.at_css('meta[name=description]')
+      text = meta_description ? meta_description.attr('content') : ''
+    else
+      text = content.inner_html.gsub(/<[^>]+>/, '')
+    end
     self.data['text'] = text.to_s.gsub('See Translation', ' ')
     user_name = self.doc.to_s.match(/ownerName:"([^"]+)"/)
     permalink = self.doc.to_s.match(/permalink:"([^"]+)"/)
@@ -187,7 +192,7 @@ module MediaFacebookItem
         title: self.data['user_name'] + ' on Facebook',
         description: self.data['text'] || self.data['description'],
         picture: self.data['picture'] || self.data['photos'].first,
-        published_at: self.data['published'],
+        published_at: self.data['published'] || '',
         html: self.html_for_facebook_post,
         author_url: 'http://facebook.com/' + self.data['user_uuid']
       })
