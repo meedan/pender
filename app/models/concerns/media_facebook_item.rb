@@ -13,6 +13,7 @@ module MediaFacebookItem
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/vb\.([0-9]+)\/(?<id>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/permalink.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/story.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/livemap(\/.*)?/,
     EVENT_URL
   ]
 
@@ -28,7 +29,7 @@ module MediaFacebookItem
       self.data['uuid'] = self.data['user_uuid'] + '_' + self.data['object_id']
     else
       self.data['uuid'] = self.data['object_id']
-      self.data['picture'] = 'https://graph.facebook.com/' + self.data['object_id'] + '/picture'
+      get_facebook_picture(self.data['object_id'])
     end
   end
 
@@ -41,9 +42,8 @@ module MediaFacebookItem
       user_id = params['set'].first.split('.').last unless params['set'].blank?
       user_id ||= params['id'].first.match(/([0-9]+).*/)[1] unless params['id'].blank?
     end
-    raise 'Could not parse this media' unless user_id
-    self.data['user_uuid'] = user_id
-    self.data['picture'] = 'https://graph.facebook.com/' + user_id + '/picture'
+    self.data['user_uuid'] = user_id || ''
+    get_facebook_picture(user_id)
   end
 
   def get_facebook_post_id_from_url
@@ -57,6 +57,7 @@ module MediaFacebookItem
       params = CGI.parse(uri.query)
       id = params['story_fbid'].first
     end
+    id = '' if id === 'livemap'
     self.data['object_id'] = id
   end
 
@@ -107,6 +108,11 @@ module MediaFacebookItem
     self.url = object['link'] if object['type'] === 'video' || object['type'] === 'photo'
     self.url = object['permalink_url'] if object['type'] == 'status'
     normalize_url
+  end
+
+  def get_facebook_picture(id)
+    return if id.blank?
+    self.data['picture'] = 'https://graph.facebook.com/' + id + '/picture'
   end
 
   def parse_facebook_media(object)

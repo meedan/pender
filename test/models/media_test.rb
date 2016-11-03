@@ -846,4 +846,18 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://graph.facebook.com/1600067986874704/picture', data['picture']
   end
 
+  test "should parse Facebook livemap" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'https://www.facebook.com/livemap/#@37.777053833008,-122.41587829590001,4z', request: request
+    data = m.as_json
+    assert_equal 'https://www.facebook.com/livemap/', m.url
+    assert_equal 'Not Identified on Facebook', data['title']
+    assert_equal 'Explore live videos from around the world.', data['description']
+    assert_not_nil data['published_at']
+    assert_equal 'Not Identified', data['username']
+    assert_equal 'http://facebook.com/', data['author_url']
+    assert_equal '', data['picture']
+  end
+
 end
