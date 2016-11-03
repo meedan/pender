@@ -810,4 +810,16 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['picture']
   end
 
+  test "should parse Facebook live post from mobile URL" do
+    m = create_media url: 'https://m.facebook.com/story.php?story_fbid=10154584426664820&id=355665009819%C2%ACif_t=live_video%C2%ACif_id=1476846578702256&ref=bookmarks'
+    data = m.as_json
+    assert_equal 'https://www.facebook.com/southchinamorningpost/videos/10154584426664820', m.url
+    assert_equal 'South China Morning Post SCMP on Facebook', data['title']
+    assert_match /SCMP #FacebookLive amid chaotic scenes in #HongKong Legco/, data['description']
+    assert_not_nil data['published_at']
+    assert_equal 'South China Morning Post SCMP', data['username']
+    assert_equal 'http://facebook.com/355665009819', data['author_url']
+    assert_equal 'https://graph.facebook.com/355665009819/picture', data['picture']
+  end
+
 end

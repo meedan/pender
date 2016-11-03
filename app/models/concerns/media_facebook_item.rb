@@ -12,6 +12,7 @@ module MediaFacebookItem
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/(?<id>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/vb\.([0-9]+)\/(?<id>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/permalink.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/story.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
     EVENT_URL
   ]
 
@@ -38,6 +39,7 @@ module MediaFacebookItem
       uri = URI.parse(self.url)
       params = CGI.parse(uri.query.to_s)
       user_id = params['set'].first.split('.').last unless params['set'].blank?
+      user_id ||= params['id'].first.match(/([0-9]+).*/)[1] unless params['id'].blank?
     end
     raise 'Could not parse this media' unless user_id
     self.data['user_uuid'] = user_id
@@ -51,7 +53,7 @@ module MediaFacebookItem
       params = CGI.parse(uri.query)
       id = params['fbid'].first
     end
-    if id === 'permalink.php'
+    if id === 'permalink.php' || id === 'story.php'
       params = CGI.parse(uri.query)
       id = params['story_fbid'].first
     end
