@@ -822,6 +822,18 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://graph.facebook.com/355665009819/picture', data['picture']
   end
 
+  test "should parse Facebook live post" do
+    m = create_media url: 'https://www.facebook.com/cbcnews/videos/10154783484119604/'
+    data = m.as_json
+    assert_equal 'https://www.facebook.com/cbcnews/videos/10154783484119604', m.url
+    assert_equal 'CBC News on Facebook', data['title']
+    assert_equal 'Live now: This is the National for Monday, Oct. 31, 2016.', data['description']
+    assert_not_nil data['published_at']
+    assert_equal 'CBC News', data['username']
+    assert_equal 'http://facebook.com/5823419603', data['author_url']
+    assert_equal 'https://graph.facebook.com/5823419603/picture', data['picture']
+  end
+
   test "should parse Facebook removed live post" do
     m = create_media url: 'https://www.facebook.com/LiveNationTV/videos/1817191221829045/'
     data = m.as_json
