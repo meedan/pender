@@ -121,13 +121,11 @@ class MediasControllerTest < ActionController::TestCase
     assert_not_nil data['embed_tag']
   end
 
-  test "should return error message on hash if url does not exist 7" do
+  test "should parse facebook url when url does not exist 7" do
     authenticate_with_token
     get :index, url: 'https://www.facebook.com/ahlam.alialshamsi/posts/000000000000000', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_match /RuntimeError: Could not parse this media/, data['error']['message']
-    assert_equal 5, data['error']['code']
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
     assert_not_nil data['embed_tag']

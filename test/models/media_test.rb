@@ -822,4 +822,42 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://graph.facebook.com/355665009819/picture', data['picture']
   end
 
+  test "should parse Facebook live post" do
+    m = create_media url: 'https://www.facebook.com/cbcnews/videos/10154783484119604/'
+    data = m.as_json
+    assert_equal 'https://www.facebook.com/cbcnews/videos/10154783484119604', m.url
+    assert_equal 'CBC News on Facebook', data['title']
+    assert_equal 'Live now: This is the National for Monday, Oct. 31, 2016.', data['description']
+    assert_not_nil data['published_at']
+    assert_equal 'CBC News', data['username']
+    assert_equal 'http://facebook.com/5823419603', data['author_url']
+    assert_equal 'https://graph.facebook.com/5823419603/picture', data['picture']
+  end
+
+  test "should parse Facebook removed live post" do
+    m = create_media url: 'https://www.facebook.com/LiveNationTV/videos/1817191221829045/'
+    data = m.as_json
+    assert_equal 'https://www.facebook.com/LiveNationTV/videos/1817191221829045', m.url
+    assert_equal 'Not Identified on Facebook', data['title']
+    assert_equal '', data['description']
+    assert_equal '', data['published_at']
+    assert_equal 'Not Identified', data['username']
+    assert_equal 'http://facebook.com/1600067986874704', data['author_url']
+    assert_equal 'https://graph.facebook.com/1600067986874704/picture', data['picture']
+  end
+
+  test "should parse Facebook livemap" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'https://www.facebook.com/livemap/#@37.777053833008,-122.41587829590001,4z', request: request
+    data = m.as_json
+    assert_equal 'https://www.facebook.com/livemap/', m.url
+    assert_equal 'Not Identified on Facebook', data['title']
+    assert_equal 'Explore live videos from around the world.', data['description']
+    assert_not_nil data['published_at']
+    assert_equal 'Not Identified', data['username']
+    assert_equal 'http://facebook.com/', data['author_url']
+    assert_equal '', data['picture']
+  end
+
 end

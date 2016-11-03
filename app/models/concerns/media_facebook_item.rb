@@ -13,6 +13,7 @@ module MediaFacebookItem
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/vb\.([0-9]+)\/(?<id>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/permalink.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/story.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/livemap(\/.*)?/,
     EVENT_URL
   ]
 
@@ -28,7 +29,7 @@ module MediaFacebookItem
       self.data['uuid'] = self.data['user_uuid'] + '_' + self.data['object_id']
     else
       self.data['uuid'] = self.data['object_id']
-      self.data['picture'] = 'https://graph.facebook.com/' + self.data['object_id'] + '/picture'
+      get_facebook_picture(self.data['object_id'])
     end
   end
 
@@ -41,9 +42,8 @@ module MediaFacebookItem
       user_id = params['set'].first.split('.').last unless params['set'].blank?
       user_id ||= params['id'].first.match(/([0-9]+).*/)[1] unless params['id'].blank?
     end
-    raise 'Could not parse this media' unless user_id
-    self.data['user_uuid'] = user_id
-    self.data['picture'] = 'https://graph.facebook.com/' + user_id + '/picture'
+    self.data['user_uuid'] = user_id || ''
+    get_facebook_picture(user_id)
   end
 
   def get_facebook_post_id_from_url
@@ -57,6 +57,7 @@ module MediaFacebookItem
       params = CGI.parse(uri.query)
       id = params['story_fbid'].first
     end
+    id = '' if id === 'livemap'
     self.data['object_id'] = id
   end
 
@@ -109,6 +110,11 @@ module MediaFacebookItem
     normalize_url
   end
 
+  def get_facebook_picture(id)
+    return if id.blank?
+    self.data['picture'] = 'https://graph.facebook.com/' + id + '/picture'
+  end
+
   def parse_facebook_media(object)
     external_gif = parse_gif_from_external_link(object)
     media_count = 0
@@ -145,7 +151,12 @@ module MediaFacebookItem
   def get_facebook_text_from_html
     content = self.doc.at_css('div.userContent') || self.doc.at_css('span.hasCaption')
     f = File.open('/tmp/bli', 'w+'); f.puts(self.doc.to_s); f.close
-    text = content.nil? ? self.doc.at_css('meta[name=description]').attr('content') : content.inner_html.gsub(/<[^>]+>/, '')
+    if content.nil?
+      meta_description = self.doc.at_css('meta[name=description]')
+      text = meta_description ? meta_description.attr('content') : ''
+    else
+      text = content.inner_html.gsub(/<[^>]+>/, '')
+    end
     self.data['text'] = text.to_s.gsub('See Translation', ' ')
     user_name = self.doc.to_s.match(/ownerName:"([^"]+)"/)
     permalink = self.doc.to_s.match(/permalink:"([^"]+)"/)
@@ -187,7 +198,7 @@ module MediaFacebookItem
         title: self.data['user_name'] + ' on Facebook',
         description: self.data['text'] || self.data['description'],
         picture: self.data['picture'] || self.data['photos'].first,
-        published_at: self.data['published'],
+        published_at: self.data['published'] || '',
         html: self.html_for_facebook_post,
         author_url: 'http://facebook.com/' + self.data['user_uuid']
       })
