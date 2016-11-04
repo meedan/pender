@@ -860,4 +860,28 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', data['picture']
   end
 
+  test "should parse Facebook event post" do
+    m = create_media url: 'https://www.facebook.com/events/364677040588691/permalink/376287682760960/?ref=1&action_history=null'
+    data = m.as_json
+    assert_equal 'https://www.facebook.com/zawyacinema/photos/gm.376287682760960/1184539554945737?type=3', m.url
+    assert_equal 'Zawya on Facebook', data['title']
+    assert_match /توضيح عن عرض فيلم الحرّيف/, data['description']
+    assert_not_nil data['published_at']
+    assert_equal 'Zawya', data['username']
+    assert_match /#{data['user_uuid']}/, data['author_url']
+    assert_match /#{data['user_uuid']}/, data['picture']
+  end
+
+  test "should parse Facebook event post 2" do
+    m = create_media url: 'https://www.facebook.com/events/364677040588691/permalink/379973812392347/?ref=1&action_history=null'
+    data = m.as_json
+    assert_equal 'https://www.facebook.com/events/364677040588691/permalink/379973812392347', m.url
+    assert_equal 'Hema Elsyaad on Facebook', data['title']
+    assert_equal 'مفيش حاجة قريب ل ا. داواد عبدالسيد ؟!!', data['description']
+    assert_not_nil data['published_at']
+    assert_equal 'Hema Elsyaad', data['username']
+    assert_match /#{data['user_uuid']}/, data['author_url']
+    assert_match /#{data['user_uuid']}/, data['picture']
+  end
+
 end

@@ -1,7 +1,7 @@
 module MediaFacebookItem
   extend ActiveSupport::Concern
 
-  EVENT_URL =  /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>[0-9]+).*/
+  EVENT_URL = /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>[0-9]+)(?!.*permalink\/)/
 
   URLS = [
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/posts\/(?<id>[0-9]+).*/,
@@ -14,6 +14,7 @@ module MediaFacebookItem
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/permalink.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/story.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/livemap(\/.*)?/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>[0-9]+)\/permalink\/([0-9]+).*/,
     EVENT_URL
   ]
 
@@ -26,7 +27,7 @@ module MediaFacebookItem
     self.get_facebook_post_id_from_url
     self.get_facebook_user_id_from_url
     if self.url.match(EVENT_URL).nil?
-      self.data['uuid'] = self.data['user_uuid'] + '_' + self.data['object_id']
+      self.data['uuid'] = [self.data['user_uuid'], self.data['object_id']].reject(&:empty?).join('_')
     else
       self.data['uuid'] = self.data['object_id']
       get_facebook_picture(self.data['object_id'])
@@ -80,7 +81,12 @@ module MediaFacebookItem
       self.data['text'] = get_text_from_object(object)
       self.data['published'] = object['created_time'] || object['updated_time']
       self.data['user_name'] = object['name'] || object['from']['name']
-      self.data['user_uuid'] = object['owner']['id'] unless self.url.match(EVENT_URL).nil?
+      if self.url.match(EVENT_URL).nil?
+        self.data['user_uuid'] = object['from']['id'] if self.data['user_uuid'].blank?
+        get_facebook_picture(self.data['user_uuid'])
+      else
+        self.data['user_uuid'] = object['owner']['id']
+      end
       get_url_from_object(object)
 
       self.parse_facebook_media(object)
