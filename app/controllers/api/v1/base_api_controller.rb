@@ -63,8 +63,10 @@ module Api
       def render_error(message, code, status = 400)
         render json: { type: 'error',
                        data: {
-                         message: message,
-                         code: LapisConstants::ErrorCodes::const_get(code)
+                         error: {
+                           message: message,
+                           code: LapisConstants::ErrorCodes::const_get(code)
+                         }
                        }
                      },
                      status: status

@@ -165,7 +165,7 @@ class Media
     uri = URI.parse(URI.encode(self.url))
     http = Net::HTTP.new(uri.host, uri.port)
     http.read_timeout = 30
-    http.use_ssl = true unless self.url.match(/^https/).nil?
+    http.use_ssl = true if uri.scheme == 'https'
     request = Net::HTTP::Get.new(uri.request_uri)
     request['Cookie'] = self.set_cookies
     response = nil

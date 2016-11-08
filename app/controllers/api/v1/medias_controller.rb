@@ -38,7 +38,7 @@ module Api
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
         rescue StandardError => e
-          render_not_parseable(@media.data.merge(error: { message: e.message, code: 'UNKNOWN' }))
+          render_not_parseable(@media.data.merge(error: { message: e.message, code: 'UNKNOWN' }).merge({ embed_tag: embed_url }))
         end
       end
 
@@ -47,8 +47,8 @@ module Api
         begin
           Timeout::timeout(timeout) { yield }
           return false
-        rescue Timeout::Error
-          render_error('Timeout', 'TIMEOUT', 408)
+        rescue Timeout::Error => e
+          render_not_parseable({error: { message: "#{e.class}: #{e.message}", code: LapisConstants::ErrorCodes::const_get('TIMEOUT') }})
           return true
         end
       end
@@ -105,7 +105,7 @@ module Api
           uri = URI.parse(@url)
           return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
           Net::HTTP.get_response(uri)
-        rescue URI::InvalidURIError, SocketError => e
+        rescue URI::InvalidURIError, SocketError, Errno::ECONNRESET => e
           Rails.logger.warn "Could not access url: #{e.message}"
           return false
         end
