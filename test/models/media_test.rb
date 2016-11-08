@@ -884,4 +884,17 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /#{data['user_uuid']}/, data['picture']
   end
 
+  test "should parse url without body" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'http://asdfasdf.com/', request: request
+    data = m.as_json
+    assert_equal 'http://asdfasdf.com/', m.url
+    assert_equal '', data['title']
+    assert_equal '', data['description']
+    assert_equal '', data['published_at']
+    assert_equal '', data['username']
+    assert_equal 'http://asdfasdf.com', data['author_url']
+    assert_equal '', data['picture']
+  end
 end

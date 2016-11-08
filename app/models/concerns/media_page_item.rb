@@ -10,10 +10,9 @@ module MediaPageItem
 
     handle_exceptions(RuntimeError) do
       self.data = self.page_get_data_from_url
-    end
-
-    if self.data[:picture].blank?
-      generate_screenshot
+      if self.data[:picture].blank?
+        generate_screenshot
+      end
     end
   end
 
@@ -47,7 +46,8 @@ module MediaPageItem
   def get_basic_metadata
     metatags = { title: 'title',  description: 'description', username: 'author' }
     data = get_html_metadata('name', metatags)
-    data[:title] ||= self.doc.at_css("title").content || ''
+    title = self.doc.at_css('title')
+    data[:title] ||= title ? title.content : ''
     data[:description] ||= data[:title]
     data[:username] ||= ''
     data[:published_at] = ''

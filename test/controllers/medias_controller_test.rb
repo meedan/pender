@@ -208,7 +208,7 @@ class MediasControllerTest < ActionController::TestCase
     stub_configs({ 'timeout' => 0.001 })
     authenticate_with_token
     get :index, url: 'http://twitter.com/caiosba', format: :json
-    assert_response 408
+    assert_response 200
   end
 
   test "should return API limit reached error" do
@@ -218,7 +218,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     get :index, url: 'http://twitter.com/caiosba', format: :json
     assert_response 429
-    assert_equal 123, JSON.parse(@response.body)['data']['message']
+    assert_equal 123, JSON.parse(@response.body)['data']['error']['message']
 
     Twitter::REST::Client.any_instance.unstub(:user)
     Twitter::Error::TooManyRequests.any_instance.unstub(:rate_limit)
@@ -235,14 +235,41 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     get :index, url: 'not-valid', format: :json
     assert_response 400
-    assert_equal 'The URL is not valid', JSON.parse(@response.body)['data']['message']
+    assert_equal 'The URL is not valid', JSON.parse(@response.body)['data']['error']['message']
   end
 
   test "should show error message if url not found" do
     authenticate_with_token
     get :index, url: 'http://not-valid', format: :json
     assert_response 400
-    assert_match /The URL is not valid/, JSON.parse(@response.body)['data']['message']
+    assert_match /The URL is not valid/, JSON.parse(@response.body)['data']['error']['message']
+  end
+
+  test "should show error message if url valid but cannot parse it" do
+    authenticate_with_token
+    get :index, url: 'http://asdfasdf.com', format: :json
+    assert_response 200
+    data = JSON.parse(@response.body)['data']
+    assert_equal 'Timeout::Error: execution expired', data['error']['message']
+    assert_equal 10, data['error']['code']
+  end
+
+  test "should show error message if url valid but inexistent 2" do
+    authenticate_with_token
+    get :index, url: 'http://www.yahii.co', format: :json
+    assert_response 400
+    data = JSON.parse(@response.body)['data']
+    assert_equal 'The URL is not valid', data['error']['message']
+    assert_equal 4, data['error']['code']
+  end
+
+  test "should show error message if url valid but inexistent with ssl" do
+    authenticate_with_token
+    get :index, url: 'https://asdfasdf.com', format: :json
+    assert_response 400
+    data = JSON.parse(@response.body)['data']
+    assert_equal 'The URL is not valid', data['error']['message']
+    assert_equal 4, data['error']['code']
   end
 
 end
