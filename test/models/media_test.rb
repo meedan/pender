@@ -884,4 +884,27 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /#{data['user_uuid']}/, data['picture']
   end
 
+  test "should parse url with arabic chars" do
+    m = create_media url: 'http://www.aljazeera.net/news/arabic/2016/10/19/تحذيرات-أممية-من-احتمال-نزوح-مليون-مدني-من-الموصل'
+    d = m.as_json
+    assert_equal 'تحذيرات أممية من احتمال نزوح مليون مدني من الموصل', d['title']
+    assert_equal 'عبرت الأمم المتحدة عن قلقها البالغ على سلامة 1.5 مليون شخص بالموصل، محذرة من احتمال نزوح مليون منهم، وقالت إن أكثر من 900 نازح فروا إلى سوريا بأول موجة نزوح.', d['description']
+    assert_equal '', d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'http://www.aljazeera.net', d['author_url']
+    assert_equal 'http://www.aljazeera.net/file/GetImageCustom/f1dbce3b-5a2f-4edb-89c5-43e6ba6810c6/1200/630', d['picture']
+  end
+
+  test "should parse url with already encoded chars" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'http://www.aljazeera.net/news/arabic/2016/10/19/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1%D8%A7%D8%AA-%D8%A3%D9%85%D9%85%D9%8A%D8%A9-%D9%85%D9%86-%D8%A7%D8%AD%D8%AA%D9%85%D8%A7%D9%84-%D9%86%D8%B2%D9%88%D8%AD-%D9%85%D9%84%D9%8A%D9%88%D9%86-%D9%85%D8%AF%D9%86%D9%8A-%D9%85%D9%86-%D8%A7%D9%84%D9%85%D9%88%D8%B5%D9%84'
+    d = m.as_json
+    assert_equal 'تحذيرات أممية من احتمال نزوح مليون مدني من الموصل', d['title']
+    assert_equal 'عبرت الأمم المتحدة عن قلقها البالغ على سلامة 1.5 مليون شخص بالموصل، محذرة من احتمال نزوح مليون منهم، وقالت إن أكثر من 900 نازح فروا إلى سوريا بأول موجة نزوح.', d['description']
+    assert_equal '', d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'http://www.aljazeera.net', d['author_url']
+    assert_equal 'http://www.aljazeera.net/file/GetImageCustom/f1dbce3b-5a2f-4edb-89c5-43e6ba6810c6/1200/630', d['picture']
+  end
 end

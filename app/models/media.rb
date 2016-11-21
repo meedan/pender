@@ -114,6 +114,7 @@ class Media
   end
 
   def get_canonical_url
+    self.url = URI.decode self.url
     self.doc = self.get_html(html_options)
     if self.doc
       tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")
