@@ -138,7 +138,7 @@ class Media
 
   def follow_redirections
     self.url = self.url.strip
-    self.url = 'http://' + self.url unless self.url =~ /^https?:/
+    self.url = self.add_scheme(self.url)
     attempts = 0
     code = '301'
     path = []
@@ -150,6 +150,11 @@ class Media
       code = response.code
       self.set_url_from_location(response, path)
     end
+  end
+
+  def add_scheme(url)
+    return url if url =~ /^https?:/
+    'http://' + url
   end
 
   def set_url_from_location(response, path)
