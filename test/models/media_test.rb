@@ -183,8 +183,9 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal expected, media.url
     end
 
-    media = Media.new(url: 'http://ca.ios.ba/a%c2/%7Euser?a=b')
-    assert_equal 'http://ca.ios.ba/a%C2/~user?a=b', media.url
+    media = Media.new(url: 'http://ca.ios.ba/a%c3%82/%7Euser?a=b')
+    assert_equal 'http://ca.ios.ba/a%C3%82/~user?a=b', media.url
+
   end
 
   test "should not normalize URL" do
@@ -882,6 +883,76 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Hema Elsyaad', data['username']
     assert_match /#{data['user_uuid']}/, data['author_url']
     assert_match /#{data['user_uuid']}/, data['picture']
+  end
+
+  test "should parse url with arabic chars" do
+    m = create_media url: 'http://www.aljazeera.net/news/arabic/2016/10/19/تحذيرات-أممية-من-احتمال-نزوح-مليون-مدني-من-الموصل'
+    d = m.as_json
+    assert_equal 'تحذيرات أممية من احتمال نزوح مليون مدني من الموصل', d['title']
+    assert_equal 'عبرت الأمم المتحدة عن قلقها البالغ على سلامة 1.5 مليون شخص بالموصل، محذرة من احتمال نزوح مليون منهم، وقالت إن أكثر من 900 نازح فروا إلى سوريا بأول موجة نزوح.', d['description']
+    assert_equal '', d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'http://www.aljazeera.net', d['author_url']
+    assert_equal 'http://www.aljazeera.net/file/GetImageCustom/f1dbce3b-5a2f-4edb-89c5-43e6ba6810c6/1200/630', d['picture']
+  end
+
+  test "should parse url with already encoded chars" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'http://www.aljazeera.net/news/arabic/2016/10/19/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1%D8%A7%D8%AA-%D8%A3%D9%85%D9%85%D9%8A%D8%A9-%D9%85%D9%86-%D8%A7%D8%AD%D8%AA%D9%85%D8%A7%D9%84-%D9%86%D8%B2%D9%88%D8%AD-%D9%85%D9%84%D9%8A%D9%88%D9%86-%D9%85%D8%AF%D9%86%D9%8A-%D9%85%D9%86-%D8%A7%D9%84%D9%85%D9%88%D8%B5%D9%84'
+    d = m.as_json
+    assert_equal 'تحذيرات أممية من احتمال نزوح مليون مدني من الموصل', d['title']
+    assert_equal 'عبرت الأمم المتحدة عن قلقها البالغ على سلامة 1.5 مليون شخص بالموصل، محذرة من احتمال نزوح مليون منهم، وقالت إن أكثر من 900 نازح فروا إلى سوريا بأول موجة نزوح.', d['description']
+    assert_equal '', d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'http://www.aljazeera.net', d['author_url']
+    assert_equal 'http://www.aljazeera.net/file/GetImageCustom/f1dbce3b-5a2f-4edb-89c5-43e6ba6810c6/1200/630', d['picture']
+  end
+
+  test "should parse url 1" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'http://www.theatlantic.com/magazine/archive/2016/11/war-goes-viral/501125/', request: request
+    d = m.as_json
+    assert_equal 'War Goes Viral', d['title']
+    assert_equal 'How social media is being weaponized across the world', d['description']
+    assert_equal '', d['published_at']
+    assert_equal 'Emerson T. Brooking and P. W. Singer', d['username']
+    assert_equal 'http://www.theatlantic.com', d['author_url']
+    assert_equal 'https://cdn.theatlantic.com/assets/media/img/2016/10/WEL_Singer_SocialWar_opener_ALT/facebook.jpg?1475683228', d['picture']
+  end
+
+  test "should parse url 2" do
+    m = create_media url: 'https://www.theguardian.com/politics/2016/oct/19/larry-sanders-on-brother-bernie-and-why-tony-blair-was-destructive'
+    d = m.as_json
+    assert_equal 'Larry Sanders on brother Bernie and why Tony Blair was ‘destructive’', d['title']
+    assert_match /The Green party candidate, who is fighting the byelection in David Cameron’s old seat/, d['description']
+    assert_match /2016-10/, d['published_at']
+    assert_equal 'https://www.theguardian.com/profile/zoewilliams', d['username']
+    assert_equal 'http://www.theguardian.com', d['author_url']
+    assert_equal 'https://i.guim.co.uk/img/media/d43d8d320520d7f287adab71fd3a1d337baf7516/0_945_3850_2310/master/3850.jpg?w=1200&h=630&q=55&auto=format&usm=12&fit=crop&bm=normal&ba=bottom%2Cleft&blend64=aHR0cHM6Ly91cGxvYWRzLmd1aW0uY28udWsvMjAxNi8wNS8yNS9vdmVybGF5LWxvZ28tMTIwMC05MF9vcHQucG5n&s=44fa061433f4b73d6cd2c02951b8cc66', d['picture']
+  end
+
+  test "should parse url 3" do
+    m = create_media url: 'https://almanassa.com/ar/story/3164'
+    d = m.as_json
+    assert_equal 'تسلسل زمني| تحرير الموصل: أسئلة الصراع الإقليمي تنتظر الإجابة.. أو الانفجار', d['title']
+    assert_match /مرت الأيام التي تلت محاولة اغتيال العبادي/, d['description']
+    assert_equal '', d['published_at']
+    assert_equal 'ميس رمضاني', d['username']
+    assert_equal 'https://almanassa.com/ar/user/970', d['author_url']
+    assert_match /\/\/almanassa.com\/sites\/almanassa.com\/files\/irq_367110792_1469895703-bicubic\.jpg/, d['picture']
+  end
+
+  test "should parse url 4" do
+    m = create_media url: 'https://www.facebook.com/rania.zaki/videos/vb.582140607/10157619398885608/?type=2&theater'
+    d = m.as_json
+    assert_equal 'Rania Zaki on Facebook', d['title']
+    assert_match /We made a thank you video for the people who sponsored Seif and Waleed's 5K charity run/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'Rania Zaki', d['username']
+    assert_equal 'http://facebook.com/582140607', d['author_url']
+    assert_equal 'https://graph.facebook.com/582140607/picture', d['picture']
   end
 
 end
