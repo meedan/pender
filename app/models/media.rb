@@ -85,7 +85,7 @@ class Media
       author_name: data['username'],
       author_url: (data['type'] === 'profile' ? data['url'] : ''),
       provider_name: data['provider'],
-      provider_url: 'http://' + URI.parse(data['url']).host,
+      provider_url: 'http://' + parse_url(data['url']).host,
       thumbnail_url: data['picture'],
       html: "<iframe src=\"#{src}\" width=\"#{maxwidth}\" height=\"#{maxheight}\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>",
       width: maxwidth,
@@ -114,7 +114,6 @@ class Media
   end
 
   def get_canonical_url
-    self.url = URI.decode self.url
     self.doc = self.get_html(html_options)
     if self.doc
       tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")
@@ -137,8 +136,7 @@ class Media
   end
 
   def follow_redirections
-    self.url = self.url.strip
-    self.url = self.add_scheme(self.url)
+    self.url = self.add_scheme(URI.decode(self.url.strip))
     attempts = 0
     code = '301'
     path = []
@@ -168,7 +166,8 @@ class Media
   end
 
   def request_media_url
-    uri = URI.parse(URI.encode(self.url))
+    uri = parse_url(self.url)
+
     http = Net::HTTP.new(uri.host, uri.port)
     http.read_timeout = 30
     http.use_ssl = true unless self.url.match(/^https/).nil?
@@ -190,10 +189,9 @@ class Media
   end
 
   def get_html(header_options = {})
-    encoded_uri = URI.encode(self.url)
     html = ''
     begin
-      open(encoded_uri, header_options) do |f|
+      open(parse_url(self.url), header_options) do |f|
         f.binmode
         html = f.read
       end
@@ -205,9 +203,8 @@ class Media
   end
 
   def html_options
-    encoded_uri = URI.encode(self.url)
     options = { allow_redirections: :safe }
-    credentials = self.get_http_auth(URI.parse(encoded_uri))
+    credentials = self.get_http_auth(parse_url(self.url))
     options[:http_basic_authentication] = credentials
     options['User-Agent'] = 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1'
     options['Accept-Language'] = 'en'
@@ -227,12 +224,16 @@ class Media
   end
 
   def top_url(url)
-    uri = URI.parse(URI.encode(url))
+    uri = parse_url(url)
     "#{uri.scheme}://#{uri.host}"
   end
 
   def absolute_url(path = '')
     return self.url if path.blank?
     path =~ /^https?:/ ? path : self.top_url(self.url) + path
+  end
+
+  def parse_url(url)
+    URI.parse(URI.encode(url))
   end
 end

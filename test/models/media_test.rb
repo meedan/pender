@@ -183,8 +183,9 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal expected, media.url
     end
 
-    media = Media.new(url: 'http://ca.ios.ba/a%c2/%7Euser?a=b')
-    assert_equal 'http://ca.ios.ba/a%C2/~user?a=b', media.url
+    media = Media.new(url: 'http://ca.ios.ba/a%c3%82/%7Euser?a=b')
+    assert_equal 'http://ca.ios.ba/a%C3%82/~user?a=b', media.url
+
   end
 
   test "should not normalize URL" do
