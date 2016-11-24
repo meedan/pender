@@ -955,4 +955,37 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://graph.facebook.com/582140607/picture', d['picture']
   end
 
+  test "should parse bridge url" do
+    m = create_media url: 'https://speakbridge.io/medias/embed/us-presidential-candidates-2016/us-presidential-candidates-2016-general/3143'
+    d = m.as_json
+    assert_equal 'Translation of @moniierjb: At this debate, Donald and Hillary...', d['title']
+    assert_equal 'Translation of @moniierjb: At this debate, Donald and Hillary resemble old tamale-selling women hitting each other with sandals.', d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'Jose Olivares', d['username']
+    assert_equal 'https://twitter.com/intent/user?user_id=1634599530', d['author_url']
+    assert_equal 'https://speakbridge.io/medias/embed/us-presidential-candidates-2016/us-presidential-candidates-2016-general/3143.png', d['picture']
+  end
+
+  test "should parse bridge url 2" do
+    m = create_media url: 'https://speakbridge.io/medias/embed/us-presidential-candidates-2016/us-presidential-candidates-2016-general/3190'
+    d = m.as_json
+    assert_equal 'Translation of @Ma7moudH: Both candidates #Clinton and #Trump have...', d['title']
+    assert_equal 'Translation of @Ma7moudH: Both candidates #Clinton and #Trump have the same vision for the Middle East, for them we are either Oil resources or extremists who need to be terminated.', d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'Abir Kopty', d['username']
+    assert_equal 'https://twitter.com/intent/user?user_id=49568059', d['author_url']
+    assert_equal 'https://speakbridge.io/medias/embed/us-presidential-candidates-2016/us-presidential-candidates-2016-general/3190.png', d['picture']
+  end
+
+  test "should parse bridge url 3" do
+    m = create_media url: 'https://speakbridge.io/medias/embed/rightscon-en-espanol/RightsCon/2089'
+    d = m.as_json
+    assert_equal 'Translation of @rightscon: Hey #RightsCon, gracias por un...', d['title']
+    assert_match /Translation of @rightscon: Hey #RightsCon, gracias por un impresionante día 2! Deseando más convos gran mañana/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'Overthinkingly', d['username']
+    assert_equal 'https://twitter.com/intent/user?user_id=17047202', d['author_url']
+    assert_equal 'https://speakbridge.io/medias/embed/rightscon-en-espanol/RightsCon/2089.png', d['picture']
+  end
+
 end

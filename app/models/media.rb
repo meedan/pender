@@ -34,6 +34,7 @@ class Media
   include MediaFacebookProfile
   include MediaInstagramItem
   include MediaInstagramProfile
+  include MediaBridgeItem
   include MediaPageItem
   include MediaOembedItem
 
