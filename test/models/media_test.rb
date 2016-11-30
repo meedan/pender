@@ -988,4 +988,26 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://speakbridge.io/medias/embed/rightscon-en-espanol/RightsCon/2089.png', d['picture']
   end
 
+  test "should parse bridge url 4" do
+    m = create_media url: 'https://speakbridge.io/medias/embed/milestone/M43/b156f9891c399ebab21dbdbf22987a8f723dadbb'
+    d = m.as_json
+    assert_equal 'Translation of @traveler_for_life:', d['title']
+    assert_equal 'Translation of @traveler_for_life:', d['description']
+    assert_not_nil d['published_at']
+    assert_equal '', d['username']
+    assert_equal '', d['author_url']
+    assert_equal 'https://speakbridge.io/medias/embed/milestone/M43/b156f9891c399ebab21dbdbf22987a8f723dadbb.png', d['picture']
+  end
+
+  test "should parse bridge url 5" do
+    m = create_media url: 'https://speakbridge.io/medias/embed/milestone/M29/1bfdfb37e84960622cb9e94a66b7f6b4ab079591'
+    d = m.as_json
+    assert_equal 'Translation of @zlaya_tetka: *ммм?) это лучший кебаб, что я ела в...', d['title']
+    assert_match /Translation of @zlaya_tetka: \*ммм\?\) это лучший кебаб, что я ела в своей жизни;\) #наТифлис/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'Aleksandre Jashia', d['username']
+    assert_equal 'https://www.linkedin.com/in/aleksandrejashia', d['author_url']
+    assert_equal 'https://speakbridge.io/medias/embed/milestone/M29/1bfdfb37e84960622cb9e94a66b7f6b4ab079591.png', d['picture']
+  end
+
 end
