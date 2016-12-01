@@ -49,6 +49,32 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal first_parsed_at, second_parsed_at
   end
 
+  test "should ask to refresh cache with html format" do
+    authenticate_with_token
+    url = 'https://speakbridge.io/medias/embed/milestone/M43/b156f9891c399ebab21dbdbf22987a8f723dadbb'
+    get :index, url: url, refresh: '1', format: :html
+    name = Digest::MD5.hexdigest(url)
+    cache_file = File.join('public', 'cache', Rails.env, "#{name}.html" )
+    first_parsed_at = File.mtime(cache_file)
+    sleep 1
+    get :index, url: url, refresh: '1', format: :html
+    second_parsed_at = File.mtime(cache_file)
+    assert second_parsed_at > first_parsed_at
+  end
+
+  test "should not ask to refresh cache with html format" do
+    authenticate_with_token
+    url = 'https://speakbridge.io/medias/embed/milestone/M29/13727e6b7f821b3b2773e260636166fd8111cca0'
+    name = Digest::MD5.hexdigest(url)
+    cache_file = File.join('public', 'cache', Rails.env, "#{name}.html" )
+    get :index, url: url, refresh: '0', format: :html
+    first_parsed_at = File.mtime(cache_file)
+    sleep 1
+    get :index, url: url, format: :html
+    second_parsed_at = File.mtime(cache_file)
+    assert_equal first_parsed_at, second_parsed_at
+  end
+
   test "should return error message on hash if url does not exist" do
     authenticate_with_token
     get :index, url: 'https://twitter.com/caiosba32153623', format: :json

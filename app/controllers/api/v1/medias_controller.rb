@@ -18,11 +18,14 @@ module Api
         @id = Digest::MD5.hexdigest(@url)
         render_timeout { @media = Media.new(url: @url, request: request) } and return
         respond_to do |format|
-          format.html   { render_as_html   }
-          format.js     { render_as_js     }
-          format.json   { render_as_json   }
-          format.oembed { render_as_oembed }
+          list_formats.each do |f|
+            format.send(f) { send("render_as_#{f}") }
+          end
         end
+      end
+
+      def list_formats
+        %w(html js json oembed)
       end
 
       private
@@ -55,7 +58,7 @@ module Api
 
       def render_as_html
         begin
-          unless File.exist?(cache_path)
+          if @refresh || !File.exist?(cache_path)
             save_cache
           end
           render text: File.read(cache_path), status: 200
