@@ -930,7 +930,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /2016-10/, d['published_at']
     assert_equal 'https://www.theguardian.com/profile/zoewilliams', d['username']
     assert_equal 'http://www.theguardian.com', d['author_url']
-    assert_equal 'https://i.guim.co.uk/img/media/d43d8d320520d7f287adab71fd3a1d337baf7516/0_945_3850_2310/master/3850.jpg?w=1200&h=630&q=55&auto=format&usm=12&fit=crop&bm=normal&ba=bottom%2Cleft&blend64=aHR0cHM6Ly91cGxvYWRzLmd1aW0uY28udWsvMjAxNi8wNS8yNS9vdmVybGF5LWxvZ28tMTIwMC05MF9vcHQucG5n&s=44fa061433f4b73d6cd2c02951b8cc66', d['picture']
+    assert_match /https:\/\/i.guim.co.uk\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, d['picture']
   end
 
   test "should parse url 3" do
