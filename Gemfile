@@ -7,6 +7,7 @@ end
 group :development do
   gem 'web-console', '~> 2.0'
 end
+gem 'logstash-logger'
 gem 'webmock'
 gem 'mocha'
 gem 'simplecov', require: false, group: :test
