@@ -930,7 +930,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /2016-10/, d['published_at']
     assert_equal 'https://www.theguardian.com/profile/zoewilliams', d['username']
     assert_equal 'http://www.theguardian.com', d['author_url']
-    assert_equal 'https://i.guim.co.uk/img/media/d43d8d320520d7f287adab71fd3a1d337baf7516/0_945_3850_2310/master/3850.jpg?w=1200&h=630&q=55&auto=format&usm=12&fit=crop&bm=normal&ba=bottom%2Cleft&blend64=aHR0cHM6Ly91cGxvYWRzLmd1aW0uY28udWsvMjAxNi8wNS8yNS9vdmVybGF5LWxvZ28tMTIwMC05MF9vcHQucG5n&s=44fa061433f4b73d6cd2c02951b8cc66', d['picture']
+    assert_match /^https:\/\/i.guim.co.uk\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, d['picture']
   end
 
   test "should parse url 3" do
@@ -953,6 +953,39 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Rania Zaki', d['username']
     assert_equal 'http://facebook.com/582140607', d['author_url']
     assert_equal 'https://graph.facebook.com/582140607/picture', d['picture']
+  end
+
+  test "should parse instagram url" do
+    m = create_media url: 'https://www.instagram.com/p/BOAKFhxjZ6E/?taken-by=fitspooration'
+    d = m.as_json
+    assert_match /Can we just take a moment because my dog is the cutest/, d['title']
+    assert_match /Can we just take a moment because my dog is the cutest/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'fitspooration', d['username']
+    assert_equal 'https://www.instagram.com/fitspooration', d['author_url']
+    assert_match /\/15538323_591798291026223_1893210524536012800_n.jpg/, d['picture']
+  end
+
+  test "should parse instagram url 2" do
+    m = create_media url: 'https://www.instagram.com/p/BNWbMXeBEX7/?taken-by=primataschool'
+    d = m.as_json
+    assert_match /if I were a man\(human\). I would eat tasty food/, d['title']
+    assert_match /if I were a man\(human\). I would eat tasty food/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'primataschool', d['username']
+    assert_equal 'https://www.instagram.com/primataschool', d['author_url']
+    assert_match /\/15034883_1916389278582031_6989142891427790848_n.jpg/, d['picture']
+  end
+
+  test "should parse tweet url 2" do
+    m = create_media url: 'https://twitter.com/berezaagames/status/803706270762971136'
+    d = m.as_json
+    assert_match /of these top creators is 17-year-old Andrew Bereza/, d['title']
+    assert_match /of these top creators is 17-year-old Andrew Bereza/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'berezaagames', d['username']
+    assert_equal 'https://twitter.com/berezaagames', d['author_url']
+    assert_equal 'https://pbs.twimg.com/profile_images/798264839353167874/o0Y7AK4k.jpg', d['picture']
   end
 
 end
