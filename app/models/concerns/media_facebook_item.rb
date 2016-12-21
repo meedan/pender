@@ -15,6 +15,7 @@ module MediaFacebookItem
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/story.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/livemap(\/.*)?/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>[0-9]+)\/permalink\/([0-9]+).*/,
+    /^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+).*$/,
     EVENT_URL
   ]
 
@@ -198,7 +199,6 @@ module MediaFacebookItem
       self.parse_from_facebook_html unless self.parse_from_facebook_api
       self.data['text'].strip!
       self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
-
       self.data.merge!({
         username: self.data['user_name'],
         title: self.data['user_name'] + ' on Facebook',

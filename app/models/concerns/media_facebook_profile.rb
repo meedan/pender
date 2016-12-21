@@ -4,9 +4,9 @@ module MediaFacebookProfile
   included do
     Media.declare('facebook_profile',
       [
-        /^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+).*$/,
         /^https?:\/\/([^\.]+\.)?facebook\.com\/(pages|people)\/([^\/]+)\/([^\/\?]+).*$/,
-        /^https?:\/\/(www\.)?facebook\.com\/profile\.php\?id=([0-9]+).*$/
+        /^https?:\/\/(www\.)?facebook\.com\/profile\.php\?id=([0-9]+).*$/,
+        /^https?:\/\/([^\.]+\.)?facebook\.com\/(?!(permalink\.php|story\.php|photo\.php|livemap))([^\/\?]+)\/?(\?.*)*$/
       ]
     )
   end
