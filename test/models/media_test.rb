@@ -1063,4 +1063,50 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_match /^http/, d['author_picture']
   end
+
+  test "should parse yahoo site 1" do
+    m = create_media url: 'https://br.yahoo.com/'
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'page', d['provider']
+    assert_equal 'Yahoo', d['title']
+    assert_match /Yahoo/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'http://br.yahoo.com', d['author_url']
+    assert_not_nil d['picture']
+  end
+
+  test "should parse yahoo site 2" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'https://ca.yahoo.com/', request: request
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'page', d['provider']
+    assert_equal 'Yahoo', d['title']
+    assert_match /Yahoo/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'https://ca.yahoo.com', d['author_url']
+    assert_not_nil d['picture']
+    assert_nil d['error']
+  end
+
+  test "should parse yahoo site 3" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'https://www.yahoo.com/', request: request
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'page', d['provider']
+    assert_equal 'Yahoo', d['title']
+    assert_not_nil d['description']
+    assert_not_nil d['published_at']
+    assert_equal '', d['username']
+    assert_not_nil d['author_url']
+    assert_not_nil d['picture']
+    assert_nil d['error']
+  end
+
 end
