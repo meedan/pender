@@ -47,13 +47,20 @@ Other applications can communicate with this service (and test this communicatio
 
 ### API
 
-#### GET /api/medias
+To make requests to the API, you must set a request header with the value of the configuration option `authorization_header` - by default, this is `X-Pender-Token`. The value of that header should be the API key that you have generated using `bundle exec rake lapis:api_keys:create`, or any API key that was given to you.
 
-Get parseable data for a given URL, that can be a post or a profile, from different providers
+#### GET /api/medias.format
+
+Get parseable data for a given URL, that can be a post or a profile, from different providers. `format` can be one of the following, see responses below:
+- `html`
+- `js`
+- `oembed`
+- `json`
 
 **Parameters**
 
 * `url`: URL to be parsed/rendered _(required)_
+* `refresh`: boolean to indicate that Pender should re-fetch and re-parse the URL if it already exists in its cache _(optional)_
 
 **Response**
 
@@ -61,9 +68,9 @@ Get parseable data for a given URL, that can be a post or a profile, from differ
 
 A card-representation of the URL, like the ones below:
 
-![YouTube](screenshots/youtube.png?raw=true "YouTube") 
-![Facebook](screenshots/facebook.png?raw=true "Facebook") 
-![Twitter](screenshots/twitter.png?raw=true "Twitter") 
+![YouTube](screenshots/youtube.png?raw=true "YouTube")
+![Facebook](screenshots/facebook.png?raw=true "Facebook")
+![Twitter](screenshots/twitter.png?raw=true "Twitter")
 
 **JavaScript**
 
@@ -198,7 +205,7 @@ module Media<Provider><Type>
     # Optional method
     # Define a custom oEmbed structure for this provider
   end
-end 
+end
 ```
 
 ### Credits
