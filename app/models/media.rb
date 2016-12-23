@@ -201,7 +201,7 @@ class Media
     rescue OpenURI::HTTPError
       return nil
     rescue Zlib::DataError
-      self.get_html(html_options.merge('Accept-Encoding' => 'plain'))
+      self.get_html(html_options.merge('Accept-Encoding' => 'identity'))
     end
     doc
   end
@@ -237,7 +237,7 @@ class Media
     if path =~ /^https?:/
       path
     elsif path =~ /^\/\//
-      self.parse_url(self.url).scheme + path
+      "#{self.parse_url(self.url).scheme}:#{path}"
     else
       self.top_url(self.url) + path
     end

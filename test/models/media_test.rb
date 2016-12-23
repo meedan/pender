@@ -1109,4 +1109,19 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil d['error']
   end
 
+  test "should return absolute url" do
+    m = create_media url: 'https://www.test.com'
+    paths = {
+      nil => m.url,
+      '' => m.url,
+      'http://www.test.bli' => 'http://www.test.bli',
+      '//www.test.bli' => 'https://www.test.bli',
+      '/example' => 'https://www.test.com/example'
+    }
+    paths.each do |path, expected|
+      returned = m.send(:absolute_url, path)
+      assert_equal expected, returned
+    end
+  end
+
 end
