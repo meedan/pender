@@ -1010,4 +1010,28 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://speakbridge.io/medias/embed/milestone/M29/1bfdfb37e84960622cb9e94a66b7f6b4ab079591.png', d['picture']
   end
 
+  test "should parse facebook url without identified pattern as item" do
+    m = create_media url: 'https://www.facebook.com/Bimbo.Memories/photos/pb.235404669918505.-2207520000.1481570271./1051597428299221/?type=3&theater'
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'Bimbo Memories on Facebook', d['title']
+    assert_not_nil d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'Bimbo Memories', d['username']
+    assert_equal 'http://facebook.com/235404669918505', d['author_url']
+    assert_equal 'https://graph.facebook.com/235404669918505/picture', d['picture']
+  end
+
+  test "should parse facebook url without identified pattern as item 2" do
+    m = create_media url: 'https://www.facebook.com/Classic.mou/photos/pb.136985363145802.-2207520000.1481570401./640132509497749/?type=3&theater'
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'Classic on Facebook', d['title']
+    assert_match /سعاد/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'Classic', d['username']
+    assert_equal 'http://facebook.com/136985363145802', d['author_url']
+    assert_equal 'https://graph.facebook.com/136985363145802/picture', d['picture']
+  end
+
 end
