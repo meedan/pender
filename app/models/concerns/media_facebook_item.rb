@@ -119,7 +119,7 @@ module MediaFacebookItem
 
   def get_facebook_picture(id)
     return if id.blank?
-    self.data['picture'] = 'https://graph.facebook.com/' + id + '/picture'
+    self.data['picture'] = self.data['author_picture'] = 'https://graph.facebook.com/' + id + '/picture'
   end
 
   def parse_facebook_media(object)

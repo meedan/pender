@@ -46,7 +46,7 @@ class Media
 
   def minimal_data
     data = {}
-    %w(published_at username title description picture author_url).each do |field|
+    %w(published_at username title description picture author_url author_picture).each do |field|
       data[field] = ''
     end
     data.merge(required_fields).with_indifferent_access

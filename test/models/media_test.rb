@@ -1034,4 +1034,33 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://graph.facebook.com/136985363145802/picture', d['picture']
   end
 
+  test "should return author picture" do
+    m = create_media url: 'http://github.com'
+    d = m.as_json
+    assert_equal '', d['author_picture']
+  end
+
+  test "should return Facebook author picture" do
+    m = create_media url: 'https://www.facebook.com/ironmaiden/photos/a.406269382050.189128.172685102050/10154015223857051/?type=3&theater'
+    d = m.as_json
+    assert_match /^http/, d['author_picture']
+  end
+
+  test "should return Twitter author picture" do
+    m = create_media url: 'https://twitter.com/meedan/status/773947372527288320'
+    d = m.as_json
+    assert_match /^http/, d['author_picture']
+  end
+
+  test "should return Instagram author picture" do
+    m = create_media url: 'https://www.instagram.com/p/BOXV2-7BPAu'
+    d = m.as_json
+    assert_match /^http/, d['author_picture']
+  end
+
+  test "should return YouTube author picture" do
+    m = create_media url: 'https://www.youtube.com/watch?v=mtLxD7r4BZQ'
+    d = m.as_json
+    assert_match '', d['author_picture']
+  end
 end
