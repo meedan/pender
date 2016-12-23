@@ -3,11 +3,10 @@
 cd ${DEPLOYDIR}/shared
 
 # these  are runtime volumes, linked to from ${DEPLOYDIR}/current/
-chown -R ${DEPLOYUSER}:www-data ${DEPLOYDIR}/shared/cache
-chmod -R 775 ${DEPLOYDIR}/shared/cache
-
-chown -R ${DEPLOYUSER}:www-data ${DEPLOYDIR}/shared/db
-chmod -R 775 ${DEPLOYDIR}/shared/db
+for DIR in cache db cookies; do
+  chown -R ${DEPLOYUSER}:www-data ${DEPLOYDIR}/shared/${DIR}
+  chmod -R 775 ${DEPLOYDIR}/shared/${DIR}
+done
 
 cd -
 
@@ -23,4 +22,4 @@ echo "--- STARTUP COMPLETE ---"
 tail -f ${DEPLOYDIR}/current/log/production.log &
 
 # normal startup
-nginx 
+nginx
