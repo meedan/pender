@@ -1,5 +1,5 @@
 # Login on Facebook and store the cookie
-COOKIES_PATH='/tmp/fbcookies'
+COOKIES_PATH = CONFIG['facebook_cookies_filepath'] || '/tmp/fbcookies'
 
 unless File.exists?(COOKIES_PATH)
   username = CONFIG['facebook_user'].to_s.gsub('+', '%2B')
