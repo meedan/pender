@@ -1061,6 +1061,6 @@ class MediaTest < ActiveSupport::TestCase
   test "should return YouTube author picture" do
     m = create_media url: 'https://www.youtube.com/watch?v=mtLxD7r4BZQ'
     d = m.as_json
-    assert_match '', d['author_picture']
+    assert_match /^http/, d['author_picture']
   end
 end

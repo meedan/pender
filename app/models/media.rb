@@ -28,6 +28,7 @@ class Media
   end
 
   include MediaYoutubeProfile
+  include MediaYoutubeItem
   include MediaTwitterProfile
   include MediaTwitterItem
   include MediaFacebookProfile
