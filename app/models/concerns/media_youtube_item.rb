@@ -2,7 +2,6 @@ module MediaYoutubeItem
   extend ActiveSupport::Concern
 
   included do
-    # https://www.youtube.com/watch?v=601yfqd3DwM&feature=youtu.be
     Media.declare('youtube_item', [/^https?:\/\/(www\.)?youtube\.com\/watch\?v=([^&]+)/])
   end
 
