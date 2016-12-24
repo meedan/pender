@@ -435,7 +435,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should return author_url for Twitter post" do
     m = create_media url: 'https://twitter.com/TheConfMalmo_AR/status/765474989277638657'
     d = m.as_json
-    assert_equal 'https://twitter.com/TheConfMalmo_AR', d['author_url']
+    assert_equal 'https://twitter.com/theconfmalmo_ar', d['author_url']
   end
 
   test "should return author_url for Facebook post" do

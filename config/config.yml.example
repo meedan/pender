@@ -10,6 +10,7 @@ development: &default
   facebook_api_version: 'v2.6'
   facebook_user:
   facebook_password:
+  facebook_cookies_filepath: '/tmp/fbcookies'
   facebook_app_id:
   timeout: 5 # In seconds
   hosts:
