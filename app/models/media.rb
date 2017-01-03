@@ -237,7 +237,7 @@ class Media
     if path =~ /^https?:/
       path
     elsif path =~ /^\/\//
-      "#{self.parse_url(self.url).scheme}:#{path}"
+      self.parse_url(self.url).scheme + ':' + path
     else
       self.top_url(self.url) + path
     end
