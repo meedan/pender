@@ -209,6 +209,19 @@ module Media<Provider><Type>
 end
 ```
 
+### Profiling
+
+It's possible to profile Pender in order to look for bottlenecks, slownesses, performance issues, etc. To profile a Rails application it is vital to run it using production like settings (cache classes, cache view lookups, etc.). Otherwise, Rail's dependency loading code will overwhelm any time spent in the application itself. The best way to do this is create a new Rails environment. So, follow the steps below:
+
+* Make sure you have a `profile` environment setup on `config/config.yml` and `config/database.yml`
+* Run `bundle exec rake db:migrate RAILS_ENV=profile` (only needed at the first time)
+* Create an API key for the profile environment: `bundle exec rake lapis:api_keys:create RAILS_ENV=profile`
+* Start the server in profile mode: `bundle exec rails s -e profile -p 3005`
+* Make a request you want to profile using the key you created before: `curl -XGET -H 'X-Pender-Token: <API key>' 'http://localhost:3005/api/medias.json?url=https://twitter.com/meedan/status/773947372527288320'`
+* Check the results at `tmp/profile`
+
+_Everytime you make a new request, the results on tmp/profile are overwritten_
+
 ### Credits
 
 Meedan (hello@meedan.com)

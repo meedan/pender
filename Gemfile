@@ -7,6 +7,9 @@ end
 group :development do
   gem 'web-console', '~> 2.0'
 end
+group :profile do
+  gem 'ruby-prof'
+end
 gem 'logstash-logger'
 gem 'webmock'
 gem 'mocha'

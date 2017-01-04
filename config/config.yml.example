@@ -24,3 +24,6 @@ test:
 
 production:
   <<: *default
+
+profile:
+  <<: *default
