@@ -12,11 +12,16 @@ module Api
 
       def index
         @url = params[:url]
-        @refresh = params[:refresh] == '1'
         (render_parameters_missing and return) if @url.blank?
-        (render_url_invalid and return) unless valid_url?
+        
+        @refresh = params[:refresh] == '1'
         @id = Digest::MD5.hexdigest(@url)
-        render_timeout { @media = Media.new(url: @url, request: request) } and return
+        
+        render_timeout do
+          (render_url_invalid and return) unless valid_url?
+          @media = Media.new(url: @url, request: request)
+        end and return
+        
         respond_to do |format|
           list_formats.each do |f|
             format.send(f) { send("render_as_#{f}") }
@@ -51,8 +56,7 @@ module Api
           Timeout::timeout(timeout) { yield }
           return false
         rescue Timeout::Error
-          render_error('Timeout', 'TIMEOUT', 408)
-          return true
+          render_error('Timeout', 'TIMEOUT', 408) and return true
         end
       end
 

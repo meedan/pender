@@ -271,4 +271,14 @@ class MediasControllerTest < ActionController::TestCase
     assert_match /The URL is not valid/, JSON.parse(@response.body)['data']['message']
   end
 
+  test "should respect timeout" do
+    url = 'http://ca.ios.ba/files/others/test.php' # This link has a sleep(10) function
+    stub_configs({ 'timeout' => 2 })
+    authenticate_with_token
+    start = Time.now.to_i
+    get :index, url: url, format: :json
+    time = Time.now.to_i - start
+    assert time < 3, "Expected it to take less than 3 seconds, but took #{time} seconds"
+    assert_response 408
+  end
 end
