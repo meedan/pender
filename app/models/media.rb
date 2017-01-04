@@ -200,6 +200,8 @@ class Media
       doc = Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
     rescue OpenURI::HTTPError
       return nil
+    rescue Zlib::DataError
+      self.get_html(html_options.merge('Accept-Encoding' => 'identity'))
     end
     doc
   end
@@ -232,7 +234,13 @@ class Media
 
   def absolute_url(path = '')
     return self.url if path.blank?
-    path =~ /^https?:/ ? path : self.top_url(self.url) + path
+    if path =~ /^https?:/
+      path
+    elsif path =~ /^\/\//
+      self.parse_url(self.url).scheme + ':' + path
+    else
+      self.top_url(self.url) + path
+    end
   end
 
   def parse_url(url)
