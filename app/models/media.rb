@@ -73,6 +73,17 @@ class Media
     end
   end
 
+  def self.validate_url(url)
+    begin
+      uri = URI.parse(url)
+      return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
+      Net::HTTP.get_response(uri)
+    rescue URI::InvalidURIError, SocketError => e
+      Rails.logger.warn "Could not access url: #{e.message}"
+      return false
+    end
+  end
+
   protected
 
   def default_oembed(original_url, maxwidth, maxheight)

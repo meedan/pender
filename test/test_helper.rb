@@ -62,4 +62,16 @@ class ActiveSupport::TestCase
       CONFIG.stubs(:[]).with(k.to_s).returns(v)
     end
   end
+
+  def with_time(operation = '')
+    return if @provider.blank? and @type.blank?
+    output = File.join(Rails.root, 'tmp', 'performance.csv')
+    results = File.open(output, 'a+')
+    start = Time.now
+    yield if block_given?
+    duration = (Time.now - start) * 1000.0
+    puts "       real_time: #{duration}ms"
+    results.puts(["#{@provider} #{@type}: #{operation}", duration.to_s.gsub('.', ',')].join(';'))
+    results.close
+  end
 end

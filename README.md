@@ -222,6 +222,8 @@ It's possible to profile Pender in order to look for bottlenecks, slownesses, pe
 
 _Everytime you make a new request, the results on tmp/profile are overwritten_
 
+We can also run performance tests. It calculates the amount of time taken to validate, instantiate and parse a link for each of the supported types/providers. In order to do that, run: `bundle exec rake test:performance`. It will generate a CSV at `tmp/performance.csv`, so that you can compare the time take for each provider.
+
 ### Credits
 
 Meedan (hello@meedan.com)
