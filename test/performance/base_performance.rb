@@ -14,11 +14,11 @@ class BasePerformance < ActionDispatch::PerformanceTest
   end
 
   def teardown
-    tmp = File.join(Rails.root, 'tmp')
+    tmp = File.join(Rails.root, 'tmp', 'cache')
     if File.exists?(tmp)
       Rails.cache.clear
     else
-      FileUtils.mkdir(tmp)
+      FileUtils.mkdir_p(tmp)
     end
   end
 
