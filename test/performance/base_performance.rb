@@ -14,7 +14,12 @@ class BasePerformance < ActionDispatch::PerformanceTest
   end
 
   def teardown
-    Rails.cache.clear
+    tmp = File.join(Rails.root, 'tmp')
+    if File.exists?(tmp)
+      Rails.cache.clear
+    else
+      FileUtils.mkdir(tmp)
+    end
   end
 
   def test_1_validate_link
