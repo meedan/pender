@@ -77,7 +77,7 @@ class Media
     begin
       uri = URI.parse(url)
       return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
-      Media.request_uri(uri)
+      Media.request_uri(uri, 'Head')
     rescue URI::InvalidURIError, SocketError => e
       Rails.logger.warn "Could not access url: #{e.message}"
       return false
@@ -182,16 +182,16 @@ class Media
     uri = parse_url(self.url)
     response = nil
     Retryable.retryable(tries: 3, sleep: 1) do
-      response = Media.request_uri(uri)
+      response = Media.request_uri(uri, 'Head')
     end
     response
   end
 
-  def self.request_uri(uri)
+  def self.request_uri(uri, verb = 'Get')
     http = Net::HTTP.new(uri.host, uri.port)
     http.read_timeout = 30
     http.use_ssl = uri.scheme == 'https'
-    request = Net::HTTP::Head.new(uri.request_uri)
+    request = "Net::HTTP::#{verb}".constantize.new(uri.request_uri)
     request['Cookie'] = Media.set_cookies
     http.request(request)
   end
