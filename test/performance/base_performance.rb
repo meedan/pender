@@ -23,17 +23,14 @@ class BasePerformance < ActionDispatch::PerformanceTest
   end
 
   def test_1_validate_link
-    with_time('Validation') { Media.validate_url(@url) unless @url.blank? }
-    puts
+    with_time('validate') { Media.validate_url(@url) unless @url.blank? }
   end
 
   def test_2_instantiate_link
-    with_time('Instantiation') { @@media = Media.new(url: @url) unless @url.blank? }
-    puts
+    with_time('instantiate') { @@media = Media.new(url: @url) unless @url.blank? }
   end
 
   def test_3_parse_link
-    with_time('Parsing') { @@media.send(:parse) unless @url.blank? }
-    puts "        title: #{@@media.data['title']}"
+    with_time('parse') { @@media.send(:parse) unless @url.blank? }
   end
 end

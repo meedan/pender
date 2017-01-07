@@ -7,11 +7,7 @@ namespace :test do
     
     Dir["#{File.join(Rails.root, 'test', 'performance')}/**/*.rb"].each do |file|
       next if file =~ /base_performance\.rb$/
-      puts
-      puts `ruby #{file} 2>&1 | grep 'Test#' -A 3 | grep -v Base`
+      puts `ruby #{file} 2>&1 | grep 'Time to ' | sed 's/[\.E]//g'`
     end
-    
-    puts
-    puts "Check the results at #{output}"
   end
 end
