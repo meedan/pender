@@ -71,7 +71,6 @@ class ActiveSupport::TestCase
     yield if block_given?
     duration = (Time.now - start) * 1000.0
     data = ["Time to #{operation} a #{@provider} #{@type}", duration.to_s.gsub('.', ',')]
-    puts data.join(': ') + 'ms'
     results.puts(data.join(';'))
     results.close
   end

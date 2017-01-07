@@ -7,6 +7,8 @@ before_script:
 - cp config/initializers/secret_token.rb.example config/initializers/secret_token.rb
 - RAILS_ENV=test bundle exec rake db:migrate
 script: bundle exec rake test:coverage
+after_script:
+- cat tmp/performance.csv | sed 's/;/: /g'
 rvm:
 - 2.3.1
 addons:
