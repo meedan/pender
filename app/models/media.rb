@@ -77,7 +77,7 @@ class Media
     begin
       uri = URI.parse(url)
       return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
-      Net::HTTP.start(uri.host, uri.port) { |http| http.head(uri.path) }
+      Media.request_uri(uri)
     rescue URI::InvalidURIError, SocketError => e
       Rails.logger.warn "Could not access url: #{e.message}"
       return false
@@ -180,20 +180,23 @@ class Media
 
   def request_media_url
     uri = parse_url(self.url)
-
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.read_timeout = 30
-    http.use_ssl = true unless self.url.match(/^https/).nil?
-    request = Net::HTTP::Head.new(uri.request_uri)
-    request['Cookie'] = self.set_cookies
     response = nil
     Retryable.retryable(tries: 3, sleep: 1) do
-      response = http.request(request)
+      response = Media.request_uri(uri)
     end
     response
   end
 
-  def set_cookies
+  def self.request_uri(uri)
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.read_timeout = 30
+    http.use_ssl = uri.scheme == 'https'
+    request = Net::HTTP::Head.new(uri.request_uri)
+    request['Cookie'] = Media.set_cookies
+    http.request(request)
+  end
+
+  def self.set_cookies
     cookies = []
     CONFIG['cookies'].each do |k, v|
       cookies << "#{k}=#{v}"
@@ -223,7 +226,7 @@ class Media
     options[:http_basic_authentication] = credentials
     options['User-Agent'] = 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1'
     options['Accept-Language'] = 'en'
-    options['Cookie'] = self.set_cookies
+    options['Cookie'] = Media.set_cookies
     options
   end
 
