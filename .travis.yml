@@ -8,7 +8,7 @@ before_script:
 - RAILS_ENV=test bundle exec rake db:migrate
 script: bundle exec rake test:coverage
 after_script:
-- cat tmp/performance.csv | sed 's/;/: /g'
+- cat tmp/performance.csv | sed "s/;/: /g"
 rvm:
 - 2.3.1
 addons:
