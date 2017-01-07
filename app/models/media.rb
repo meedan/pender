@@ -77,7 +77,7 @@ class Media
     begin
       uri = URI.parse(url)
       return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
-      Net::HTTP.start(uri.host, uri.port) { http.head(uri.path) }
+      Net::HTTP.start(uri.host, uri.port) { |http| http.head(uri.path) }
     rescue URI::InvalidURIError, SocketError => e
       Rails.logger.warn "Could not access url: #{e.message}"
       return false
