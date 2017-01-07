@@ -1124,4 +1124,10 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
+  test "should redirect Facebook URL" do
+    m = create_media url: 'https://www.facebook.com/profile.php?id=100001147915899'
+    d = m.as_json
+    assert_equal 'caiosba', d['username']
+    assert_equal 'https://www.facebook.com/caiosba', d['url']
+  end
 end
