@@ -1148,7 +1148,6 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse facebook page item 2" do
     m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/pb.456182634511888.-2207520000.1484079948./928269767303170/?type=3&theater'
     d = m.as_json
-    puts d
     assert_equal 'item', d['type']
     assert_equal 'facebook', d['provider']
     assert_equal 'Nostalgia on Facebook', d['title']
