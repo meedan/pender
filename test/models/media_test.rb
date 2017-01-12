@@ -762,7 +762,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should get canonical URL from facebook object 2" do
-    expected = 'https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3'
+    expected = 'https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406'
     variations = %w(
       https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406
       https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407/?type=3
@@ -770,7 +770,7 @@ class MediaTest < ActiveSupport::TestCase
     )
     variations.each do |url|
       media = Media.new(url: url)
-      media.as_json
+      media.as_json({ force: 1 })
       assert_equal expected, media.url
     end
   end
@@ -864,7 +864,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Facebook event post" do
     m = create_media url: 'https://www.facebook.com/events/364677040588691/permalink/376287682760960/?ref=1&action_history=null'
     data = m.as_json
-    assert_equal 'https://www.facebook.com/zawyacinema/photos/gm.376287682760960/1184539554945737?type=3', m.url
+    assert_equal 'https://www.facebook.com/events/364677040588691/permalink/376287682760960', m.url
     assert_equal 'Zawya on Facebook', data['title']
     assert_match /توضيح عن عرض فيلم الحرّيف/, data['description']
     assert_not_nil data['published_at']
@@ -1159,4 +1159,15 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil d['error']
   end
 
+  test "should set url with the permalink_url returned by facebook api" do
+    m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
+    d = m.as_json
+    assert_equal 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718?type=3', m.url
+  end
+
+  test "should set url with the permalink_url returned by facebook api 2" do
+    m = create_media url: 'https://www.facebook.com/nostalgia.y/posts/942167695913377'
+    d = m.as_json
+    assert_equal 'https://www.facebook.com/nostalgia.y/posts/942167695913377', m.url
+  end
 end

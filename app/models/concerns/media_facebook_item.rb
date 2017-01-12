@@ -112,8 +112,8 @@ module MediaFacebookItem
 
   def get_url_from_object(object)
     return unless ['video', 'photo', 'status'].include?(object['type'])
-    self.url = object['link'] if object['type'] === 'video' || object['type'] === 'photo'
-    self.url = object['permalink_url'] if object['type'] == 'status'
+    self.url = object['link'] if object['type'] === 'video'
+    self.url = object['permalink_url'] if object['type'] == 'status' || object['type'] === 'photo'
     normalize_url
   end
 
