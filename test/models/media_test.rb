@@ -1130,4 +1130,34 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'caiosba', d['username']
     assert_equal 'https://www.facebook.com/caiosba', d['url']
   end
+
+  test "should parse facebook page item" do
+    m = create_media url: 'https://www.facebook.com/Eltnheda/posts/665592823644859'
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'facebook', d['provider']
+    assert_equal 'El-tnheda - التنهّيدة on Facebook', d['title']
+    assert_match /كان هيحصل إيه/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'El-tnheda - التنهّيدة', d['username']
+    assert_equal 'http://facebook.com/604927369711405', d['author_url']
+    assert_equal 'https://graph.facebook.com/604927369711405/picture', d['picture']
+    assert_nil d['error']
+  end
+
+  test "should parse facebook page item 2" do
+    m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/pb.456182634511888.-2207520000.1484079948./928269767303170/?type=3&theater'
+    d = m.as_json
+    puts d
+    assert_equal 'item', d['type']
+    assert_equal 'facebook', d['provider']
+    assert_equal 'Nostalgia on Facebook', d['title']
+    assert_match /مين قالك تسكن فى حاراتنا/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'Nostalgia', d['username']
+    assert_equal 'http://facebook.com/456182634511888', d['author_url']
+    assert_equal 'https://graph.facebook.com/456182634511888/picture', d['picture']
+    assert_nil d['error']
+  end
+
 end
