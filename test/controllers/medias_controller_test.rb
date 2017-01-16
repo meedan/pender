@@ -281,4 +281,35 @@ class MediasControllerTest < ActionController::TestCase
     assert time < 3, "Expected it to take less than 3 seconds, but took #{time} seconds"
     assert_response 408
   end
+
+  test "should not try to clear upstream cache when generating cache for the first time" do
+    CcDeville.any_instance.expects(:clear_cache).never
+    get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html
+    CcDeville.any_instance.unstub(:clear_cache)
+  end
+
+  test "should not try to clear upstream cache when not asking to" do
+    CcDeville.any_instance.expects(:clear_cache).never
+    get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html
+    get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html
+    CcDeville.any_instance.unstub(:clear_cache)
+  end
+
+  test "should try to clear upstream cache when asking to" do
+    url = 'https://twitter.com/caiosba/status/742779467521773568'
+    encurl = CGI.escape(url)
+    CcDeville.any_instance.expects(:clear_cache).with('http://test.host/api/medias.html?url=' + encurl).once
+    CcDeville.any_instance.expects(:clear_cache).with('http://test.host/api/medias.html?refresh=1&url=' + encurl).once
+    get :index, url: url, format: :html
+    get :index, url: url, format: :html, refresh: '1'
+    CcDeville.any_instance.unstub(:clear_cache)
+  end
+
+  test "should not try to clear upstream cache when there are no configs" do
+    stub_configs({ 'cc_deville_token' => '', 'cc_deville_host' => '', 'cc_deville_httpauth' => '' }) do
+      CcDeville.any_instance.expects(:clear_cache).never
+      get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html, refresh: '1'
+    end
+    CcDeville.any_instance.unstub(:clear_cache)
+  end
 end

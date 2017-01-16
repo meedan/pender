@@ -1,5 +1,6 @@
 require 'timeout'
 require 'pender_exceptions'
+require 'cc_deville'
 
 module Api
   module V1
@@ -98,6 +99,7 @@ module Api
         ActionView::Base.send :include, MediasHelper
         content = av.render(template: "medias/#{template}.html.erb", layout: 'layouts/application.html.erb')
         File.atomic_write(cache_path) { |file| file.write(content) }
+        clear_upstream_cache if @refresh
       end
 
       def cache_path
@@ -109,6 +111,16 @@ module Api
 
       def valid_url?
         Media.validate_url(@url)
+      end
+
+      def clear_upstream_cache
+        if CONFIG['cc_deville_host'].present? && CONFIG['cc_deville_token'].present? && CONFIG['cc_deville_httpauth'].present?
+          url = request.original_url
+          cc = CcDeville.new(CONFIG['cc_deville_host'], CONFIG['cc_deville_token'], CONFIG['cc_deville_httpauth'])
+          cc.clear_cache(url)
+          url_no_refresh = url.gsub(/&?refresh=1&?/, '')
+          cc.clear_cache(url_no_refresh) if url != url_no_refresh
+        end
       end
     end
   end

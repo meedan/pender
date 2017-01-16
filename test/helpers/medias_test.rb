@@ -18,4 +18,8 @@ class MediasHelperTest < ActionView::TestCase
     assert_equal '<script src="http://foo.bar/api/medias.js?url=https://speakbridge.io/medias/embed/milestone/M43/b156f9891c399ebab21dbdbf22987a8f723dadbb" type="text/javascript"></script>', embed_url
   end
 
+  test "should get embed URL with refresh" do
+    @request.path = '/api/medias.html?url=http://twitter.com/meedan&refresh=1'
+    assert_equal '<script src="http://foo.bar/api/medias.js?refresh=1&url=http://twitter.com/meedan" type="text/javascript"></script>', embed_url
+  end
 end
