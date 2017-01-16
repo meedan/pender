@@ -114,7 +114,7 @@ module Api
       end
 
       def clear_upstream_cache
-        if CONFIG['cc_deville_host'].present? && CONFIG['cc_deville_token'].present? && CONFIG['cc_deville_httpauth'].present?
+        if CONFIG['cc_deville_host'].present? && CONFIG['cc_deville_token'].present?
           url = request.original_url
           cc = CcDeville.new(CONFIG['cc_deville_host'], CONFIG['cc_deville_token'], CONFIG['cc_deville_httpauth'])
           cc.clear_cache(url)
