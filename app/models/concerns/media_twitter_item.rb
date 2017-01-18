@@ -30,12 +30,17 @@ module MediaTwitterItem
         username: user,
         title: self.data['text'].gsub(/\s+/, ' '),
         description: self.data['text'],
-        picture: self.data['user']['profile_image_url_https'].gsub('_normal', ''),
+        picture: self.twitter_item_picture,
+        author_picture: self.twitter_item_picture,
         published_at: self.data['created_at'],
         html: html_for_twitter_item,
         author_url: 'https://twitter.com/' + user
       })
     end
+  end
+
+  def twitter_item_picture
+    self.data['user']['profile_image_url_https'].gsub('_normal', '')
   end
 
   def html_for_twitter_item

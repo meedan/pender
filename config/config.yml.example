@@ -13,6 +13,9 @@ development: &default
   facebook_cookies_filepath: '/tmp/fbcookies'
   facebook_app_id:
   timeout: 5 # In seconds
+  cc_deville_host:
+  cc_deville_token:
+  cc_deville_httpauth: 'username:password'
   hosts:
     one.host:
       http_auth: username:password
@@ -23,4 +26,7 @@ test:
   <<: *default
 
 production:
+  <<: *default
+
+profile:
   <<: *default

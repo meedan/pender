@@ -28,6 +28,7 @@ class Media
   end
 
   include MediaYoutubeProfile
+  include MediaYoutubeItem
   include MediaTwitterProfile
   include MediaTwitterItem
   include MediaFacebookProfile
@@ -46,7 +47,7 @@ class Media
 
   def minimal_data
     data = {}
-    %w(published_at username title description picture author_url).each do |field|
+    %w(published_at username title description picture author_url author_picture).each do |field|
       data[field] = ''
     end
     data.merge(required_fields).with_indifferent_access
@@ -69,6 +70,17 @@ class Media
       code = error.respond_to?(code_method) ? error.send(code_method) : 5
       self.data.merge!(error: { message: "#{error.class}: #{error.send(message_method)}", code: code })
       return
+    end
+  end
+
+  def self.validate_url(url)
+    begin
+      uri = URI.parse(url)
+      return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
+      Media.request_uri(uri, 'Head')
+    rescue URI::InvalidURIError, SocketError => e
+      Rails.logger.warn "Could not access url: #{e.message}"
+      return false
     end
   end
 
@@ -168,20 +180,23 @@ class Media
 
   def request_media_url
     uri = parse_url(self.url)
-
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.read_timeout = 30
-    http.use_ssl = true unless self.url.match(/^https/).nil?
-    request = Net::HTTP::Get.new(uri.request_uri)
-    request['Cookie'] = self.set_cookies
     response = nil
     Retryable.retryable(tries: 3, sleep: 1) do
-      response = http.request(request)
+      response = Media.request_uri(uri, 'Head')
     end
     response
   end
 
-  def set_cookies
+  def self.request_uri(uri, verb = 'Get')
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.read_timeout = 30
+    http.use_ssl = uri.scheme == 'https'
+    request = "Net::HTTP::#{verb}".constantize.new(uri.request_uri)
+    request['Cookie'] = Media.set_cookies
+    http.request(request)
+  end
+
+  def self.set_cookies
     cookies = []
     CONFIG['cookies'].each do |k, v|
       cookies << "#{k}=#{v}"
@@ -199,6 +214,8 @@ class Media
       doc = Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
     rescue OpenURI::HTTPError
       return nil
+    rescue Zlib::DataError
+      self.get_html(html_options.merge('Accept-Encoding' => 'identity'))
     end
     doc
   end
@@ -209,7 +226,7 @@ class Media
     options[:http_basic_authentication] = credentials
     options['User-Agent'] = 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1'
     options['Accept-Language'] = 'en'
-    options['Cookie'] = self.set_cookies
+    options['Cookie'] = Media.set_cookies
     options
   end
 
@@ -231,7 +248,13 @@ class Media
 
   def absolute_url(path = '')
     return self.url if path.blank?
-    path =~ /^https?:/ ? path : self.top_url(self.url) + path
+    if path =~ /^https?:/
+      path
+    elsif path =~ /^\/\//
+      self.parse_url(self.url).scheme + ':' + path
+    else
+      self.top_url(self.url) + path
+    end
   end
 
   def parse_url(url)

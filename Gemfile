@@ -7,6 +7,9 @@ end
 group :development do
   gem 'web-console', '~> 2.0'
 end
+group :profile do
+  gem 'ruby-prof', '0.15.9'
+end
 gem 'logstash-logger'
 gem 'webmock'
 gem 'mocha'
@@ -32,3 +35,4 @@ gem 'retryable'
 gem 'puma'
 gem 'smartshot'
 gem 'rack-cors', :require => 'rack/cors'
+gem 'rails-perftest'

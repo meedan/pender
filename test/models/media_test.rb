@@ -254,11 +254,11 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Facebook user profile using user token" do
     m = create_media url: 'https://facebook.com/1061897617191825'
     data = m.as_json
+    assert_equal 'https://www.facebook.com/caiosba', data['url']
     assert_equal 'Caio Sacramento', data['title']
     assert_equal 'caiosba', data['username']
     assert_equal 'facebook', data['provider']
     assert_equal 'user', data['subtype']
-    assert_equal 'https://www.facebook.com/caiosba', data['url']
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
@@ -435,7 +435,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should return author_url for Twitter post" do
     m = create_media url: 'https://twitter.com/TheConfMalmo_AR/status/765474989277638657'
     d = m.as_json
-    assert_equal 'https://twitter.com/TheConfMalmo_AR', d['author_url']
+    assert_equal 'https://twitter.com/theconfmalmo_ar', d['author_url']
   end
 
   test "should return author_url for Facebook post" do
@@ -762,7 +762,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should get canonical URL from facebook object 2" do
-    expected = 'https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3'
+    expected = 'https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406'
     variations = %w(
       https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406
       https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407/?type=3
@@ -770,7 +770,7 @@ class MediaTest < ActiveSupport::TestCase
     )
     variations.each do |url|
       media = Media.new(url: url)
-      media.as_json
+      media.as_json({ force: 1 })
       assert_equal expected, media.url
     end
   end
@@ -864,7 +864,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Facebook event post" do
     m = create_media url: 'https://www.facebook.com/events/364677040588691/permalink/376287682760960/?ref=1&action_history=null'
     data = m.as_json
-    assert_equal 'https://www.facebook.com/zawyacinema/photos/gm.376287682760960/1184539554945737?type=3', m.url
+    assert_equal 'https://www.facebook.com/events/364677040588691/permalink/376287682760960', m.url
     assert_equal 'Zawya on Facebook', data['title']
     assert_match /توضيح عن عرض فيلم الحرّيف/, data['description']
     assert_not_nil data['published_at']
@@ -1034,4 +1034,140 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://graph.facebook.com/136985363145802/picture', d['picture']
   end
 
+  test "should return author picture" do
+    m = create_media url: 'http://github.com'
+    d = m.as_json
+    assert_equal '', d['author_picture']
+  end
+
+  test "should return Facebook author picture" do
+    m = create_media url: 'https://www.facebook.com/ironmaiden/photos/a.406269382050.189128.172685102050/10154015223857051/?type=3&theater'
+    d = m.as_json
+    assert_match /^http/, d['author_picture']
+  end
+
+  test "should return Twitter author picture" do
+    m = create_media url: 'https://twitter.com/meedan/status/773947372527288320'
+    d = m.as_json
+    assert_match /^http/, d['author_picture']
+  end
+
+  test "should return Instagram author picture" do
+    m = create_media url: 'https://www.instagram.com/p/BOXV2-7BPAu'
+    d = m.as_json
+    assert_match /^http/, d['author_picture']
+  end
+
+  test "should return YouTube author picture" do
+    m = create_media url: 'https://www.youtube.com/watch?v=mtLxD7r4BZQ'
+    d = m.as_json
+    assert_match /^http/, d['author_picture']
+  end
+
+  test "should parse yahoo site 1" do
+    m = create_media url: 'https://br.yahoo.com/'
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'page', d['provider']
+    assert_equal 'Yahoo', d['title']
+    assert_match /Yahoo/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'http://br.yahoo.com', d['author_url']
+    assert_not_nil d['picture']
+  end
+
+  test "should parse yahoo site 2" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'https://ca.yahoo.com/', request: request
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'page', d['provider']
+    assert_equal 'Yahoo', d['title']
+    assert_match /Yahoo/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'https://ca.yahoo.com', d['author_url']
+    assert_not_nil d['picture']
+    assert_nil d['error']
+  end
+
+  test "should parse yahoo site 3" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'https://www.yahoo.com/', request: request
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'page', d['provider']
+    assert_equal 'Yahoo', d['title']
+    assert_not_nil d['description']
+    assert_not_nil d['published_at']
+    assert_equal '', d['username']
+    assert_not_nil d['author_url']
+    assert_not_nil d['picture']
+    assert_nil d['error']
+  end
+
+  test "should return absolute url" do
+    m = create_media url: 'https://www.test.com'
+    paths = {
+      nil => m.url,
+      '' => m.url,
+      'http://www.test.bli' => 'http://www.test.bli',
+      '//www.test.bli' => 'https://www.test.bli',
+      '/example' => 'https://www.test.com/example'
+    }
+    paths.each do |path, expected|
+      returned = m.send(:absolute_url, path)
+      assert_equal expected, returned
+    end
+  end
+
+  test "should redirect Facebook URL" do
+    m = create_media url: 'https://www.facebook.com/profile.php?id=100001147915899'
+    d = m.as_json
+    assert_equal 'caiosba', d['username']
+    assert_equal 'https://www.facebook.com/caiosba', d['url']
+  end
+
+  test "should parse facebook page item" do
+    m = create_media url: 'https://www.facebook.com/Eltnheda/posts/665592823644859'
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'facebook', d['provider']
+    assert_equal 'El-tnheda - التنهّيدة on Facebook', d['title']
+    assert_match /كان هيحصل إيه/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'El-tnheda - التنهّيدة', d['username']
+    assert_equal 'http://facebook.com/604927369711405', d['author_url']
+    assert_equal 'https://graph.facebook.com/604927369711405/picture', d['picture']
+    assert_nil d['error']
+  end
+
+  test "should parse facebook page item 2" do
+    m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/pb.456182634511888.-2207520000.1484079948./928269767303170/?type=3&theater'
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'facebook', d['provider']
+    assert_equal 'Nostalgia on Facebook', d['title']
+    assert_match /مين قالك تسكن فى حاراتنا/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'Nostalgia', d['username']
+    assert_equal 'http://facebook.com/456182634511888', d['author_url']
+    assert_equal 'https://graph.facebook.com/456182634511888/picture', d['picture']
+    assert_nil d['error']
+  end
+
+  test "should set url with the permalink_url returned by facebook api" do
+    m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
+    d = m.as_json
+    assert_equal 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718?type=3', m.url
+  end
+
+  test "should set url with the permalink_url returned by facebook api 2" do
+    m = create_media url: 'https://www.facebook.com/nostalgia.y/posts/942167695913377'
+    d = m.as_json
+    assert_equal 'https://www.facebook.com/nostalgia.y/posts/942167695913377', m.url
+  end
 end

@@ -13,7 +13,7 @@ module MediaOembedItem
       username: data[:oembed]['author_name'],
       description: data[:oembed]['title'],
       title: data[:oembed]['title'],
-      picture: '',
+      picture: data[:oembed]['thumbnail_url'].to_s,
       html: data[:oembed]['html'],
       author_url: data[:oembed]['author_url']
     })

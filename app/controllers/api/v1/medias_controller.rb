@@ -1,5 +1,6 @@
 require 'timeout'
 require 'pender_exceptions'
+require 'cc_deville'
 
 module Api
   module V1
@@ -12,11 +13,16 @@ module Api
 
       def index
         @url = params[:url]
-        @refresh = params[:refresh] == '1'
         (render_parameters_missing and return) if @url.blank?
-        (render_url_invalid and return) unless valid_url?
+        
+        @refresh = params[:refresh] == '1'
         @id = Digest::MD5.hexdigest(@url)
-        render_timeout { @media = Media.new(url: @url, request: request) } and return
+        
+        render_timeout do
+          (render_url_invalid and return) unless valid_url?
+          @media = Media.new(url: @url, request: request)
+        end and return
+        
         respond_to do |format|
           list_formats.each do |f|
             format.send(f) { send("render_as_#{f}") }
@@ -51,8 +57,7 @@ module Api
           Timeout::timeout(timeout) { yield }
           return false
         rescue Timeout::Error
-          render_error('Timeout', 'TIMEOUT', 408)
-          return true
+          render_error('Timeout', 'TIMEOUT', 408) and return true
         end
       end
 
@@ -94,6 +99,7 @@ module Api
         ActionView::Base.send :include, MediasHelper
         content = av.render(template: "medias/#{template}.html.erb", layout: 'layouts/application.html.erb')
         File.atomic_write(cache_path) { |file| file.write(content) }
+        clear_upstream_cache if @refresh
       end
 
       def cache_path
@@ -104,13 +110,16 @@ module Api
       end
 
       def valid_url?
-        begin
-          uri = URI.parse(@url)
-          return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
-          Net::HTTP.get_response(uri)
-        rescue URI::InvalidURIError, SocketError => e
-          Rails.logger.warn "Could not access url: #{e.message}"
-          return false
+        Media.validate_url(@url)
+      end
+
+      def clear_upstream_cache
+        if CONFIG['cc_deville_host'].present? && CONFIG['cc_deville_token'].present?
+          url = request.original_url
+          cc = CcDeville.new(CONFIG['cc_deville_host'], CONFIG['cc_deville_token'], CONFIG['cc_deville_httpauth'])
+          cc.clear_cache(url)
+          url_no_refresh = url.gsub(/&?refresh=1&?/, '')
+          cc.clear_cache(url_no_refresh) if url != url_no_refresh
         end
       end
     end

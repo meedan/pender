@@ -112,14 +112,14 @@ module MediaFacebookItem
 
   def get_url_from_object(object)
     return unless ['video', 'photo', 'status'].include?(object['type'])
-    self.url = object['link'] if object['type'] === 'video' || object['type'] === 'photo'
-    self.url = object['permalink_url'] if object['type'] == 'status'
+    self.url = object['link'] if object['type'] === 'video'
+    self.url = object['permalink_url'] if object['type'] == 'status' || object['type'] === 'photo'
     normalize_url
   end
 
   def get_facebook_picture(id)
     return if id.blank?
-    self.data['picture'] = 'https://graph.facebook.com/' + id + '/picture'
+    self.data['picture'] = self.data['author_picture'] = 'https://graph.facebook.com/' + id + '/picture'
   end
 
   def parse_facebook_media(object)

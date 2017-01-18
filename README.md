@@ -10,9 +10,10 @@ A parsing and rendering service.
 ### Current support
 
 * Twitter profiles
-* YouTube profiles (users and channels)
-* Facebook profiles (users and pages)
 * Twitter posts
+* YouTube profiles (users and channels)
+* YouTube videos
+* Facebook profiles (users and pages)
 * Facebook posts (from pages and users)
 * Instagram posts
 * Instagram profiles
@@ -185,7 +186,7 @@ There are rake tasks for a few tasks (besides Rails' default ones). Run them thi
 * Add a new file at `app/models/concerns/media_<provider>_<type>` (example... `provider` could be `facebook` and type could be `post` or `profile`)
 * Include the class in `app/models/media.rb`
 * It should return at least `published_at`, `username`, `title`, `description` and `picture`
-* If `type` is `item`, it should also return the `author_url`
+* If `type` is `item`, it should also return the `author_url` and `author_picture`
 * The skeleton should look like this:
 
 ```ruby
@@ -207,6 +208,22 @@ module Media<Provider><Type>
   end
 end
 ```
+
+### Profiling
+
+It's possible to profile Pender in order to look for bottlenecks, slownesses, performance issues, etc. To profile a Rails application it is vital to run it using production like settings (cache classes, cache view lookups, etc.). Otherwise, Rail's dependency loading code will overwhelm any time spent in the application itself. The best way to do this is create a new Rails environment. So, follow the steps below:
+
+* Copy `config/environments/profile.rb.example` to `config/environments/profile.rb`
+* Make sure you have a `profile` environment setup on `config/config.yml` and `config/database.yml`
+* Run `bundle exec rake db:migrate RAILS_ENV=profile` (only needed at the first time)
+* Create an API key for the profile environment: `bundle exec rake lapis:api_keys:create RAILS_ENV=profile`
+* Start the server in profile mode: `bundle exec rails s -e profile -p 3005`
+* Make a request you want to profile using the key you created before: `curl -XGET -H 'X-Pender-Token: <API key>' 'http://localhost:3005/api/medias.json?url=https://twitter.com/meedan/status/773947372527288320'`
+* Check the results at `tmp/profile`
+
+_Everytime you make a new request, the results on tmp/profile are overwritten_
+
+We can also run performance tests. It calculates the amount of time taken to validate, instantiate and parse a link for each of the supported types/providers. In order to do that, run: `bundle exec rake test:performance`. It will generate a CSV at `tmp/performance.csv`, so that you can compare the time take for each provider.
 
 ### Credits
 

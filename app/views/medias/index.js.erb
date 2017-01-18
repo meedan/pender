@@ -11,8 +11,8 @@
 
     var scripts = document.getElementsByTagName('SCRIPT'),
         placeholder = null,
-        url = '<%= @caller.gsub('medias.js', 'medias.html') %>',
-        str = '<%= @caller %>',
+        url = '<%= convert_url_to_format(@caller, 'html').html_safe %>',
+        str = '<%= @caller.html_safe %>',
         regex = new RegExp(str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"));
 
     for (var i = 0; i < scripts.length; i++) {
