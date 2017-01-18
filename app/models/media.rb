@@ -88,6 +88,15 @@ class Media
     end
   end
 
+  def get_html_metadata(attr, metatags)
+    data = {}
+    metatags.each do |key, value|
+      metatag = self.doc.at_css("meta[#{attr}='#{value}']")
+      data[key] = metatag.attr('content') if metatag
+    end
+    data
+  end
+
   protected
 
   def default_oembed(original_url, maxwidth, maxheight)

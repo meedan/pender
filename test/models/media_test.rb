@@ -1315,4 +1315,22 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /:\/\/dl\.dropbox.com/, d['html']
     assert_nil d['error']
   end
+
+  test "should parse dropbox image url 2" do
+    m = create_media url: 'https://dl.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg'
+    d = m.as_json
+    puts d
+    assert_equal 'https://dl.dropboxusercontent.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', m.url
+    assert_equal 'item', d['type']
+    assert_equal 'dropbox', d['provider']
+    assert_equal 'b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', d['title']
+    assert_equal 'Shared with Dropbox', d['description']
+    assert_not_nil d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'https://www.dropbox.com', d['author_url']
+    assert_not_nil d['picture']
+    assert_match /:\/\/dl\.dropbox.com/, d['html']
+    assert_nil d['error']
+  end
+
 end
