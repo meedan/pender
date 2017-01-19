@@ -616,7 +616,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse Facebook photo on page album" do
-    m = create_media url: 'https://www.facebook.com/southchinamorningpost/videos/vb.355665009819/10154584426664820/?type=2&theater'
+    m = create_media url: 'https://www.facebook.com/scmp/videos/vb.355665009819/10154584426664820/?type=2&theater'
     d = m.as_json
     assert_equal 'South China Morning Post SCMP on Facebook', d['title']
     assert_match /SCMP #FacebookLive/, d['description']
@@ -1286,7 +1286,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse dropbox video url" do
     m = create_media url: 'https://www.dropbox.com/s/2k0gocce8ry2xcx/videoplayback155.mp4?dl=0'
     d = m.as_json
-    assert_equal 'https://dl.dropbox.com/s/2k0gocce8ry2xcx/videoplayback155.mp4?dl=0', m.url
+    assert_equal 'https://www.dropbox.com/s/2k0gocce8ry2xcx/videoplayback155.mp4?dl=0', m.url
     assert_equal 'item', d['type']
     assert_equal 'dropbox', d['provider']
     assert_equal 'videoplayback155.mp4', d['title']
@@ -1302,7 +1302,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse dropbox image url" do
     m = create_media url: 'https://www.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg'
     d = m.as_json
-    assert_equal 'https://dl.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg',
+    assert_equal 'https://www.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg',
     m.url
     assert_equal 'item', d['type']
     assert_equal 'dropbox', d['provider']
@@ -1319,7 +1319,6 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse dropbox image url 2" do
     m = create_media url: 'https://dl.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg'
     d = m.as_json
-    puts d
     assert_equal 'https://dl.dropboxusercontent.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', m.url
     assert_equal 'item', d['type']
     assert_equal 'dropbox', d['provider']
@@ -1327,9 +1326,9 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Shared with Dropbox', d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
-    assert_equal 'https://www.dropbox.com', d['author_url']
+    assert_equal 'https://dl.dropboxusercontent.com', d['author_url']
     assert_not_nil d['picture']
-    assert_match /:\/\/dl\.dropbox.com/, d['html']
+    assert_match /:\/\/dl\.dropboxusercontent.com/, d['html']
     assert_nil d['error']
   end
 
