@@ -60,7 +60,7 @@ module MediaFacebookItem
       id = params['story_fbid'].first
     end
     id = '' if id === 'livemap'
-    self.data['object_id'] = id
+    self.data['object_id'] = id.sub(/:0$/, '')
   end
 
   def get_object_from_facebook(*fields)

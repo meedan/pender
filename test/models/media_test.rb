@@ -1170,4 +1170,20 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'https://www.facebook.com/nostalgia.y/posts/942167695913377', m.url
   end
+
+  test "should parse facebook url with colon mark" do
+    m = create_media url: 'https://www.facebook.com/Classic.mou/posts/666508790193454:0'
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'facebook', d['provider']
+    assert_equal '136985363145802_666508790193454', d['uuid']
+    assert_equal 'Classic on Facebook', d['title']
+    assert_match /إليزابيث تايلو/, d['description']
+    assert_not_nil d['published_at']
+    assert_equal 'Classic', d['username']
+    assert_equal 'http://facebook.com/136985363145802', d['author_url']
+    assert_equal 'https://graph.facebook.com/136985363145802/picture', d['picture']
+    assert_equal 'https://www.facebook.com/Classic.mou/posts/666508790193454:0', m.url
+  end
+
 end
