@@ -582,11 +582,11 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'xkcd: Troubleshooting', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
-    assert_equal 'http://xkcd.com', d['author_url']
+    assert_equal 'https://xkcd.com', d['author_url']
 
-    path = File.join(Rails.root, 'public', 'screenshots', 'http-xkcd-com-1479.png')
+    path = File.join(Rails.root, 'public', 'screenshots', 'https-xkcd-com-1479.png')
     assert File.exists?(path)
-    assert_match /http:\/\/localhost\/screenshots\/http-xkcd-com-1479.png$/, d['picture']
+    assert_match /http:\/\/localhost\/screenshots\/https-xkcd-com-1479.png$/, d['picture']
   end
 
   test "should parse meta tags as fallback 2" do
@@ -707,7 +707,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'xkcd: Good Morning', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
-    assert_equal 'http://xkcd.com', d['author_url']
+    assert_equal 'https://xkcd.com', d['author_url']
     assert_equal '', d['picture']
     Smartshot::Screenshot.any_instance.unstub(:take_screenshot!)
   end
@@ -814,7 +814,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Facebook live post from mobile URL" do
     m = create_media url: 'https://m.facebook.com/story.php?story_fbid=10154584426664820&id=355665009819%C2%ACif_t=live_video%C2%ACif_id=1476846578702256&ref=bookmarks'
     data = m.as_json
-    assert_equal 'https://www.facebook.com/southchinamorningpost/videos/10154584426664820', m.url
+    assert_equal 'https://www.facebook.com/scmp/videos/10154584426664820', m.url
     assert_equal 'South China Morning Post SCMP on Facebook', data['title']
     assert_match /SCMP #FacebookLive amid chaotic scenes in #HongKong Legco/, data['description']
     assert_not_nil data['published_at']
@@ -941,7 +941,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal 'ميس رمضاني', d['username']
     assert_equal 'https://almanassa.com/ar/user/970', d['author_url']
-    assert_match /\/\/almanassa.com\/sites\/almanassa.com\/files\/irq_367110792_1469895703-bicubic\.jpg/, d['picture']
+    assert_match /\/\/almanassa.com\/sites\/default\/files\/irq_367110792_1469895703-bicubic\.jpg/, d['picture']
   end
 
   test "should parse url 4" do
@@ -1085,10 +1085,10 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'item', d['type']
     assert_equal 'page', d['provider']
     assert_equal 'Yahoo', d['title']
-    assert_match /Yahoo/, d['description']
+    assert_not_nil d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
-    assert_equal 'https://ca.yahoo.com', d['author_url']
+    assert_equal 'http://ca.yahoo.com', d['author_url']
     assert_not_nil d['picture']
     assert_nil d['error']
   end
