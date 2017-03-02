@@ -1188,4 +1188,36 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.facebook.com/Classic.mou/posts/666508790193454:0', m.url
   end
 
+  test "should parse pages when the scheme is missing on oembed url" do
+    url = 'https://www.hongkongfp.com/2017/03/01/hearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers/'
+    m = create_media url: url
+    m.expects(:get_oembed_url).returns('//www.hongkongfp.com/2017/03/01/hearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers')
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal 'page', data['provider']
+    assert_match /Hong Kong Free Press/, data['title']
+    assert_match /Hong Kong/, data['description']
+    assert_not_nil data['published_at']
+    assert_equal 'https://www.facebook.com/AFPnewsenglish?fref=ts', data['username']
+    assert_equal 'https://www.hongkongfp.com', data['author_url']
+    assert_not_nil data['picture']
+    assert_nil data['error']
+  end
+
+  test "should handle exception when raises some error when get oembed data" do
+    url = 'https://www.hongkongfp.com/2017/03/01/hearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers/'
+    m = create_media url: url
+    m.expects(:get_oembed_url).raises(StandardError)
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal 'page', data['provider']
+    assert_match /Hong Kong Free Press/, data['title']
+    assert_match /Hong Kong/, data['description']
+    assert_not_nil data['published_at']
+    assert_equal 'https://www.facebook.com/AFPnewsenglish?fref=ts', data['username']
+    assert_equal 'https://www.hongkongfp.com', data['author_url']
+    assert_not_nil data['picture']
+    assert_match /StandardError/, data['error']['message']
+  end
+
 end

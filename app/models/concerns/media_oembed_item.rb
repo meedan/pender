@@ -20,18 +20,20 @@ module MediaOembedItem
   end
 
   def data_from_oembed_item
-    oembed_url = self.get_oembed_url
-    response = self.oembed_get_data_from_url(oembed_url)
-    if !response.nil? && response.code == '200'
-      self.data[:oembed] = JSON.parse(response.body)
-      self.post_process_oembed_data
+    handle_exceptions(StandardError) do
+      oembed_url = self.get_oembed_url
+      response = self.oembed_get_data_from_url(oembed_url)
+      if !response.nil? && response.code == '200'
+        self.data[:oembed] = JSON.parse(response.body)
+        self.post_process_oembed_data
+      end
     end
   end
 
   def oembed_get_data_from_url(url)
     response = nil
     unless url.blank?
-      uri = URI.parse(url)
+      uri = URI.parse(self.absolute_url(url))
       http = Net::HTTP.new(uri.host, uri.port)
 
       unless url.match(/^https/).nil?
