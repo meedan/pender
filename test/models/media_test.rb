@@ -302,7 +302,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['user_name']
     assert_equal 0, d['media_count']
     assert_equal '1028416870556238', d['object_id']
-    assert_equal '18/11/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+    assert_equal '18/11/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from page photo URL" do
@@ -314,7 +314,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['user_name']
     assert_equal 1, d['media_count']
     assert_equal '896869113711015', d['object_id']
-    assert_equal '09/03/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+    assert_equal '09/03/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from page photo URL 2" do
@@ -326,7 +326,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['user_name']
     assert_equal 1, d['media_count']
     assert_equal '1028424567222135', d['object_id']
-    assert_equal '18/11/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+    assert_equal '18/11/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from page photos URL" do
@@ -338,7 +338,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['user_name']
     assert_equal 2, d['media_count']
     assert_equal '1028795030518422', d['object_id']
-    assert_equal '18/11/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+    assert_equal '18/11/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from user photos URL" do
@@ -350,7 +350,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Mohamed Nanabhay', d['user_name']
     assert_equal 4, d['media_count']
     assert_equal '10156130657385246', d['object_id']
-    assert_equal '27/10/2015', d['published'].strftime("%d/%m/%Y")
+    assert_equal '27/10/2015', d['published_at'].strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from user photo URL 2" do
@@ -363,7 +363,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 1, d['media_count']
     assert_equal '1195161923843707', d['object_id']
     # FIXME: This publishing date can be different for FB users who are in a different timezone.
-    assert_equal '01/11/2015', d['published'].strftime("%d/%m/%Y")
+    assert_equal '01/11/2015', d['published_at'].strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from user photo URL 3" do
@@ -429,7 +429,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 1, d['media_count']
     assert_equal '1195161923843707', d['object_id']
     # FIXME: This publishing date can be different for FB users who are in a different timezone.
-    assert_equal '01/11/2015', d['published'].strftime("%d/%m/%Y")
+    assert_equal '01/11/2015', d['published_at'].strftime("%d/%m/%Y")
   end
 
   test "should return author_url for Twitter post" do

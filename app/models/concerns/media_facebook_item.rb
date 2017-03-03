@@ -80,7 +80,7 @@ module MediaFacebookItem
       false
     else
       self.data['text'] = get_text_from_object(object)
-      self.data['published'] = object['created_time'] || object['updated_time']
+      self.data['published_at'] = object['created_time'] || object['updated_time']
       self.data['user_name'] = object['name'] || object['from']['name']
       if self.url.match(EVENT_URL).nil?
         self.data['user_uuid'] = object['from']['id'] if self.data['user_uuid'].blank?
@@ -151,7 +151,7 @@ module MediaFacebookItem
     media = text.match(/added ([0-9]+) new photos/)
     self.data['media_count'] = media.nil? ? 0 : media[1].to_i
     time = self.doc.at_css('span.timestampContent')
-    self.data['published'] = Time.parse(time.inner_html) unless time.nil?
+    self.data['published_at'] = Time.parse(time.inner_html) unless time.nil?
     self.data['photos'] = []
   end
 
@@ -209,7 +209,6 @@ module MediaFacebookItem
         title: self.data['user_name'] + ' on Facebook',
         description: self.data['text'] || self.data['description'],
         picture: self.data['picture'] || self.data['photos'].first,
-        published_at: self.data['published'] || '',
         html: self.html_for_facebook_post,
         author_url: 'http://facebook.com/' + self.data['user_uuid']
       })
