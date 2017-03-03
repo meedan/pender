@@ -1230,4 +1230,25 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:open)
   end
 
+  test "should parse Facebook post from user profile and get username and name" do
+    m = create_media url: 'https://www.facebook.com/nanabhay/posts/10156130657385246'
+    data = m.as_json
+    assert_equal 'Mohamed Nanabhay', data['user_name']
+    assert_equal 'nanabhay', data['username']
+  end
+
+  test "should parse Facebook post from page and get username and name" do
+    m = create_media url: 'https://www.facebook.com/ironmaiden/photos/a.406269382050.189128.172685102050/10154015223857051/?type=3&theater'
+    data = m.as_json
+    assert_equal 'Iron Maiden', data['user_name']
+    assert_equal 'ironmaiden', data['username']
+  end
+
+  test "should parse Instagram post from page and get username and name" do
+    m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
+    d = m.as_json
+    assert_equal 'megadeth', d['username']
+    assert_equal 'Megadeth', d['author_name']
+  end
+
 end

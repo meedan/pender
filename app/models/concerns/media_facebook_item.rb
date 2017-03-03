@@ -192,6 +192,11 @@ module MediaFacebookItem
     <div class="fb-post" data-href="' + self.url + '"></div>'
   end
 
+  def get_facebook_slug_from_html
+    username = self.doc.to_s.match(/"username":"([^"]+)"/) || self.doc.to_s.match(/entity:{url:"https:\/\/www\.facebook\.com\/([^"]+)",id:#{self.data['user_uuid']}/)
+    self.data['username'] = username[1] unless username.nil?
+  end
+
   # First method
   def data_from_facebook_item
     handle_exceptions(RuntimeError) do
@@ -200,7 +205,7 @@ module MediaFacebookItem
       self.data['text'].strip!
       self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
       self.data.merge!({
-        username: self.data['user_name'],
+        username: self.get_facebook_slug_from_html || self.data['user_name'],
         title: self.data['user_name'] + ' on Facebook',
         description: self.data['text'] || self.data['description'],
         picture: self.data['picture'] || self.data['photos'].first,
