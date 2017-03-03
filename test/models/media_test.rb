@@ -780,7 +780,8 @@ class MediaTest < ActiveSupport::TestCase
       url: 'https://www.facebook.com/Classic.mou/photos/a.136991166478555.1073741828.136985363145802/613639175480416?type=3',
       title: 'Classic on Facebook',
       description: 'Classic added a new photo.',
-      username: 'Classic',
+      username: 'Classic.mou',
+      user_name: 'Classic',
       author_url: 'http://facebook.com/136985363145802',
       picture: 'https://graph.facebook.com/136985363145802/picture'
     }.with_indifferent_access
@@ -950,7 +951,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Rania Zaki on Facebook', d['title']
     assert_match /We made a thank you video for the people who sponsored Seif and Waleed's 5K charity run/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'Rania Zaki', d['username']
+    assert_equal 'rania.zaki', d['username']
+    assert_equal 'Rania Zaki', d['user_name']
     assert_equal 'http://facebook.com/582140607', d['author_url']
     assert_equal 'https://graph.facebook.com/582140607/picture', d['picture']
   end
@@ -1017,7 +1019,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Bimbo Memories on Facebook', d['title']
     assert_not_nil d['description']
     assert_not_nil d['published_at']
-    assert_equal 'Bimbo Memories', d['username']
+    assert_equal 'Bimbo Memories', d['user_name']
+    assert_equal 'Bimbo.Memories', d['username']
     assert_equal 'http://facebook.com/235404669918505', d['author_url']
     assert_equal 'https://graph.facebook.com/235404669918505/picture', d['picture']
   end
@@ -1029,7 +1032,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Classic on Facebook', d['title']
     assert_match /سعاد/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'Classic', d['username']
+    assert_equal 'Classic', d['user_name']
+    assert_equal 'Classic.mou', d['username']
     assert_equal 'http://facebook.com/136985363145802', d['author_url']
     assert_equal 'https://graph.facebook.com/136985363145802/picture', d['picture']
   end
@@ -1141,7 +1145,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'El-tnheda - التنهّيدة on Facebook', d['title']
     assert_match /كان هيحصل إيه/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'El-tnheda - التنهّيدة', d['username']
+    assert_equal 'El-tnheda - التنهّيدة', d['user_name']
+    assert_equal 'Eltnheda', d['username']
     assert_equal 'http://facebook.com/604927369711405', d['author_url']
     assert_equal 'https://graph.facebook.com/604927369711405/picture', d['picture']
     assert_nil d['error']
@@ -1155,7 +1160,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Nostalgia on Facebook', d['title']
     assert_match /مين قالك تسكن فى حاراتنا/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'Nostalgia', d['username']
+    assert_equal 'nostalgia.y', d['username']
+    assert_equal 'Nostalgia', d['user_name']
     assert_equal 'http://facebook.com/456182634511888', d['author_url']
     assert_equal 'https://graph.facebook.com/456182634511888/picture', d['picture']
     assert_nil d['error']
@@ -1182,7 +1188,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Classic on Facebook', d['title']
     assert_match /إليزابيث تايلو/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'Classic', d['username']
+    assert_equal 'Classic.mou', d['username']
+    assert_equal 'Classic', d['user_name']
     assert_equal 'http://facebook.com/136985363145802', d['author_url']
     assert_equal 'https://graph.facebook.com/136985363145802/picture', d['picture']
     assert_equal 'https://www.facebook.com/Classic.mou/posts/666508790193454:0', m.url
