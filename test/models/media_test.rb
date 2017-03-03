@@ -1195,8 +1195,8 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'page', data['provider']
-    assert_match /Hong Kong Free Press/, data['title']
-    assert_match /Hong Kong/, data['description']
+    assert_match(/Hong Kong Free Press/, data['title'])
+    assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
     assert_equal 'https://www.facebook.com/AFPnewsenglish?fref=ts', data['username']
     assert_equal 'https://www.hongkongfp.com', data['author_url']
@@ -1211,13 +1211,23 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'page', data['provider']
-    assert_match /Hong Kong Free Press/, data['title']
-    assert_match /Hong Kong/, data['description']
+    assert_match(/Hong Kong Free Press/, data['title'])
+    assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
     assert_equal 'https://www.facebook.com/AFPnewsenglish?fref=ts', data['username']
     assert_equal 'https://www.hongkongfp.com', data['author_url']
     assert_not_nil data['picture']
-    assert_match /StandardError/, data['error']['message']
+    assert_match(/StandardError/, data['error']['message'])
+  end
+
+  test "should handle zlib error when opening a url" do
+    m = create_media url: 'https://ca.yahoo.com'
+    parsed_url = m.send(:parse_url, m.url)
+    header_options = m.send(:html_options)
+    Media.any_instance.expects(:open).with(parsed_url, header_options).raises(Zlib::DataError)
+    Media.any_instance.expects(:open).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
+    m.send(:get_html, m.send(:html_options))
+    Media.any_instance.unstub(:open)
   end
 
 end
