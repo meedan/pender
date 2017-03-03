@@ -132,6 +132,7 @@ GEM
     multi_json (1.12.1)
     multipart-post (2.0.0)
     naught (1.1.0)
+    newrelic_rpm (3.18.1.330)
     nokogiri (1.6.8)
       mini_portile2 (~> 2.1.0)
       pkg-config (~> 1.1.7)
@@ -284,6 +285,7 @@ DEPENDENCIES
   koala
   logstash-logger
   mocha
+  newrelic_rpm
   open_uri_redirections
   postrank-uri
   protected_attributes
