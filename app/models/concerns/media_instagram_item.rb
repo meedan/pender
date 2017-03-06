@@ -18,6 +18,7 @@ module MediaInstagramItem
         description: data['title'],
         picture: data['thumbnail_url'],
         author_picture: data['media']['owner']['profile_pic_url'],
+        author_name: data['media']['owner']['full_name'],
         published_at: self.get_instagram_datetime
       })
     end
