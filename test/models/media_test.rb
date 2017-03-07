@@ -302,7 +302,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['user_name']
     assert_equal 0, d['media_count']
     assert_equal '1028416870556238', d['object_id']
-    assert_equal '18/11/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+    assert_equal '18/11/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from page photo URL" do
@@ -314,7 +314,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['user_name']
     assert_equal 1, d['media_count']
     assert_equal '896869113711015', d['object_id']
-    assert_equal '09/03/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+    assert_equal '09/03/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from page photo URL 2" do
@@ -326,7 +326,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['user_name']
     assert_equal 1, d['media_count']
     assert_equal '1028424567222135', d['object_id']
-    assert_equal '18/11/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+    assert_equal '18/11/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from page photos URL" do
@@ -338,7 +338,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['user_name']
     assert_equal 2, d['media_count']
     assert_equal '1028795030518422', d['object_id']
-    assert_equal '18/11/2015', Time.parse(d['published']).strftime("%d/%m/%Y")
+    assert_equal '18/11/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from user photos URL" do
@@ -350,7 +350,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Mohamed Nanabhay', d['user_name']
     assert_equal 4, d['media_count']
     assert_equal '10156130657385246', d['object_id']
-    assert_equal '27/10/2015', d['published'].strftime("%d/%m/%Y")
+    assert_equal '27/10/2015', d['published_at'].strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from user photo URL 2" do
@@ -363,7 +363,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 1, d['media_count']
     assert_equal '1195161923843707', d['object_id']
     # FIXME: This publishing date can be different for FB users who are in a different timezone.
-    assert_equal '01/11/2015', d['published'].strftime("%d/%m/%Y")
+    assert_equal '01/11/2015', d['published_at'].strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from user photo URL 3" do
@@ -429,7 +429,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 1, d['media_count']
     assert_equal '1195161923843707', d['object_id']
     # FIXME: This publishing date can be different for FB users who are in a different timezone.
-    assert_equal '01/11/2015', d['published'].strftime("%d/%m/%Y")
+    assert_equal '01/11/2015', d['published_at'].strftime("%d/%m/%Y")
   end
 
   test "should return author_url for Twitter post" do
@@ -780,7 +780,8 @@ class MediaTest < ActiveSupport::TestCase
       url: 'https://www.facebook.com/Classic.mou/photos/a.136991166478555.1073741828.136985363145802/613639175480416?type=3',
       title: 'Classic on Facebook',
       description: 'Classic added a new photo.',
-      username: 'Classic',
+      username: 'Classic.mou',
+      user_name: 'Classic',
       author_url: 'http://facebook.com/136985363145802',
       picture: 'https://graph.facebook.com/136985363145802/picture'
     }.with_indifferent_access
@@ -950,7 +951,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Rania Zaki on Facebook', d['title']
     assert_match /We made a thank you video for the people who sponsored Seif and Waleed's 5K charity run/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'Rania Zaki', d['username']
+    assert_equal 'rania.zaki', d['username']
+    assert_equal 'Rania Zaki', d['user_name']
     assert_equal 'http://facebook.com/582140607', d['author_url']
     assert_equal 'https://graph.facebook.com/582140607/picture', d['picture']
   end
@@ -1017,7 +1019,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Bimbo Memories on Facebook', d['title']
     assert_not_nil d['description']
     assert_not_nil d['published_at']
-    assert_equal 'Bimbo Memories', d['username']
+    assert_equal 'Bimbo Memories', d['user_name']
+    assert_equal 'Bimbo.Memories', d['username']
     assert_equal 'http://facebook.com/235404669918505', d['author_url']
     assert_equal 'https://graph.facebook.com/235404669918505/picture', d['picture']
   end
@@ -1029,7 +1032,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Classic on Facebook', d['title']
     assert_match /سعاد/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'Classic', d['username']
+    assert_equal 'Classic', d['user_name']
+    assert_equal 'Classic.mou', d['username']
     assert_equal 'http://facebook.com/136985363145802', d['author_url']
     assert_equal 'https://graph.facebook.com/136985363145802/picture', d['picture']
   end
@@ -1141,7 +1145,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'El-tnheda - التنهّيدة on Facebook', d['title']
     assert_match /كان هيحصل إيه/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'El-tnheda - التنهّيدة', d['username']
+    assert_equal 'El-tnheda - التنهّيدة', d['user_name']
+    assert_equal 'Eltnheda', d['username']
     assert_equal 'http://facebook.com/604927369711405', d['author_url']
     assert_equal 'https://graph.facebook.com/604927369711405/picture', d['picture']
     assert_nil d['error']
@@ -1155,7 +1160,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Nostalgia on Facebook', d['title']
     assert_match /مين قالك تسكن فى حاراتنا/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'Nostalgia', d['username']
+    assert_equal 'nostalgia.y', d['username']
+    assert_equal 'Nostalgia', d['user_name']
     assert_equal 'http://facebook.com/456182634511888', d['author_url']
     assert_equal 'https://graph.facebook.com/456182634511888/picture', d['picture']
     assert_nil d['error']
@@ -1182,7 +1188,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Classic on Facebook', d['title']
     assert_match /إليزابيث تايلو/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'Classic', d['username']
+    assert_equal 'Classic.mou', d['username']
+    assert_equal 'Classic', d['user_name']
     assert_equal 'http://facebook.com/136985363145802', d['author_url']
     assert_equal 'https://graph.facebook.com/136985363145802/picture', d['picture']
     assert_equal 'https://www.facebook.com/Classic.mou/posts/666508790193454:0', m.url
@@ -1228,6 +1235,27 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.expects(:open).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
     m.send(:get_html, m.send(:html_options))
     Media.any_instance.unstub(:open)
+  end
+
+  test "should parse Facebook post from user profile and get username and name" do
+    m = create_media url: 'https://www.facebook.com/nanabhay/posts/10156130657385246'
+    data = m.as_json
+    assert_equal 'Mohamed Nanabhay', data['user_name']
+    assert_equal 'nanabhay', data['username']
+  end
+
+  test "should parse Facebook post from page and get username and name" do
+    m = create_media url: 'https://www.facebook.com/ironmaiden/photos/a.406269382050.189128.172685102050/10154015223857051/?type=3&theater'
+    data = m.as_json
+    assert_equal 'Iron Maiden', data['user_name']
+    assert_equal 'ironmaiden', data['username']
+  end
+
+  test "should parse Instagram post from page and get username and name" do
+    m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
+    d = m.as_json
+    assert_equal 'megadeth', d['username']
+    assert_equal 'Megadeth', d['author_name']
   end
 
 end

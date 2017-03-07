@@ -80,7 +80,7 @@ module MediaFacebookItem
       false
     else
       self.data['text'] = get_text_from_object(object)
-      self.data['published'] = object['created_time'] || object['updated_time']
+      self.data['published_at'] = object['created_time'] || object['updated_time']
       self.data['user_name'] = object['name'] || object['from']['name']
       if self.url.match(EVENT_URL).nil?
         self.data['user_uuid'] = object['from']['id'] if self.data['user_uuid'].blank?
@@ -151,7 +151,7 @@ module MediaFacebookItem
     media = text.match(/added ([0-9]+) new photos/)
     self.data['media_count'] = media.nil? ? 0 : media[1].to_i
     time = self.doc.at_css('span.timestampContent')
-    self.data['published'] = Time.parse(time.inner_html) unless time.nil?
+    self.data['published_at'] = Time.parse(time.inner_html) unless time.nil?
     self.data['photos'] = []
   end
 
@@ -192,6 +192,11 @@ module MediaFacebookItem
     <div class="fb-post" data-href="' + self.url + '"></div>'
   end
 
+  def get_facebook_slug_from_html
+    username = self.doc.to_s.match(/"username":"([^"]+)"/) || self.doc.to_s.match(/entity:{url:"https:\/\/www\.facebook\.com\/([^"]+)",id:#{self.data['user_uuid']}/)
+    self.data['username'] = username[1] unless username.nil?
+  end
+
   # First method
   def data_from_facebook_item
     handle_exceptions(RuntimeError) do
@@ -200,11 +205,10 @@ module MediaFacebookItem
       self.data['text'].strip!
       self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
       self.data.merge!({
-        username: self.data['user_name'],
+        username: self.get_facebook_slug_from_html || self.data['user_name'],
         title: self.data['user_name'] + ' on Facebook',
         description: self.data['text'] || self.data['description'],
         picture: self.data['picture'] || self.data['photos'].first,
-        published_at: self.data['published'] || '',
         html: self.html_for_facebook_post,
         author_url: 'http://facebook.com/' + self.data['user_uuid']
       })
