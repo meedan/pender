@@ -562,6 +562,16 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.flickr.com/photos/bees/', d['author_url']
   end
 
+  test "should parse twitter metatags 2" do
+    m = create_media url: 'https://www.hongkongfp.com/2017/03/08/top-officials-suing-defamation-may-give-perception-bullying-says-chief-exec-candidate-woo/'
+    d = m.as_json
+    assert_match(/Hong Kong Free Press/, d['title'])
+    assert_equal 'https://www.hongkongfp.com/wp-content/uploads/2017/03/2017-03-06_11-45-23.jpg', d['picture']
+    assert_match(/Chief executive candidate Woo Kw-hing/, d['description'])
+    assert_equal '@krislc', d['username']
+    assert_equal 'https://twitter.com/@krislc', d['author_url']
+  end
+
   test "should parse opengraph metatags" do
     m = create_media url: 'http://hacktoon.com/nerdson/2016/poker-planning'
     d = m.as_json
@@ -929,8 +939,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Larry Sanders on brother Bernie and why Tony Blair was ‘destructive’', d['title']
     assert_match /The Green party candidate, who is fighting the byelection in David Cameron’s old seat/, d['description']
     assert_match /2016-10/, d['published_at']
-    assert_equal 'https://www.theguardian.com/profile/zoewilliams', d['username']
-    assert_equal 'http://www.theguardian.com', d['author_url']
+    assert_equal '@zoesqwilliams', d['username']
+    assert_equal 'https://twitter.com/@zoesqwilliams', d['author_url']
     assert_match /https:\/\/i.guim.co.uk\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, d['picture']
   end
 
@@ -1205,8 +1215,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_match(/Hong Kong Free Press/, data['title'])
     assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
-    assert_equal 'https://www.facebook.com/AFPnewsenglish?fref=ts', data['username']
-    assert_equal 'https://www.hongkongfp.com', data['author_url']
+    assert_equal '@AFP', data['username']
+    assert_equal 'https://twitter.com/@AFP', data['author_url']
     assert_not_nil data['picture']
     assert_nil data['error']
   end
@@ -1221,8 +1231,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_match(/Hong Kong Free Press/, data['title'])
     assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
-    assert_equal 'https://www.facebook.com/AFPnewsenglish?fref=ts', data['username']
-    assert_equal 'https://www.hongkongfp.com', data['author_url']
+    assert_equal '@AFP', data['username']
+    assert_equal 'https://twitter.com/@AFP', data['author_url']
     assert_not_nil data['picture']
     assert_match(/StandardError/, data['error']['message'])
   end
