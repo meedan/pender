@@ -11,4 +11,8 @@ module MediasHelper
     end
     url
   end
+
+  def timeout_value
+    CONFIG['timeout'] || 20
+  end
 end

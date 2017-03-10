@@ -52,21 +52,26 @@ module Api
       end
 
       def render_timeout(must_render)
-        timeout = CONFIG['timeout'] || 20
         data = Rails.cache.read(@id)
         if !data.nil? && !@refresh
-          (render_media(data) and return true) if must_render
+          render_timeout_media(data, must_render) and return true
           return false
         end
         
         begin
-          Timeout::timeout(timeout) { yield }
+          Timeout::timeout(timeout_value) { yield }
         rescue Timeout::Error
           data = get_timeout_data
-          (render_media(data) and return true) if must_render
+          render_timeout_media(data, must_render) and return true
         end
           
         return false
+      end
+
+      def render_timeout_media(data, must_render)
+        return false unless must_render
+        render_media(data)
+        return true
       end
 
       def render_media(data)
