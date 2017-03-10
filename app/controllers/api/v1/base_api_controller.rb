@@ -98,12 +98,6 @@ module Api
       #   render_error 'This object was deleted', 'ID_NOT_FOUND', 410
       # end
 
-      def render_not_parseable(data)
-        json = { type: 'media' }
-        json[:data] = data
-        render json: json, status: 200
-      end
-
       def render_url_invalid
         render_error 'The URL is not valid', 'INVALID_VALUE'
       end

@@ -18,7 +18,7 @@ module Api
         @refresh = params[:refresh] == '1'
         @id = Digest::MD5.hexdigest(@url)
         
-        render_timeout do
+        render_timeout(false) do
           (render_url_invalid and return) unless valid_url?
           @media = Media.new(url: @url, request: request)
         end and return
@@ -43,27 +43,36 @@ module Api
       def render_as_json
         @request = request
         begin
-          render_timeout { render_success('media', @media.as_json({ force: @refresh }).merge({ embed_tag: embed_url })) and return }
+          render_timeout(true) { render_media(@media.as_json({ force: @refresh })) and return }
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
         rescue StandardError => e
-          render_not_parseable(@media.data.merge(error: { message: e.message, code: 'UNKNOWN' }))
+          render_media(@media.data.merge(error: { message: e.message, code: 'UNKNOWN' }))
         end
       end
 
-      def render_timeout
+      def render_timeout(must_render)
         timeout = CONFIG['timeout'] || 20
-        data = Rails.cache.read(Digest::MD5.hexdigest(@url))
-        
-        if data.nil? || @refresh
-          begin
-            Timeout::timeout(timeout) { yield }
-            return false
-          rescue Timeout::Error
-            data = get_timeout_data
-            render_not_parseable(data.merge(error: { message: 'Timeout', code: 'TIMEOUT' })) and return true
-          end
+        data = Rails.cache.read(@id)
+        if !data.nil? && !@refresh
+          (render_media(data) and return true) if must_render
+          return false
         end
+        
+        begin
+          Timeout::timeout(timeout) { yield }
+        rescue Timeout::Error
+          data = get_timeout_data
+          (render_media(data) and return true) if must_render
+        end
+          
+        return false
+      end
+
+      def render_media(data)
+        json = { type: 'media' }
+        json[:data] = data.merge({ embed_tag: embed_url(request) })
+        render json: json, status: 200
       end
 
       def render_as_html
@@ -90,7 +99,8 @@ module Api
       def save_cache
         av = ActionView::Base.new(Rails.root.join('app', 'views'))
         template = locals = nil
-        data = @media.as_json({ force: @refresh })
+        cache = Rails.cache.read(@id)
+        data = cache && !@refresh ? cache : @media.as_json({ force: @refresh })
 
         if !data['html'].blank?
           locals = { html: data['html'].html_safe }
@@ -130,7 +140,8 @@ module Api
 
       def get_timeout_data
         data = @media.nil? ? Media.minimal_data(OpenStruct.new(url: @url)) : @media.data
-        Rails.cache.write(Digest::MD5.hexdigest(@url), data)
+        data = data.merge(error: { message: 'Timeout', code: 'TIMEOUT' })
+        Rails.cache.write(@id, data)
         data
       end
     end
