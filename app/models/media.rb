@@ -23,7 +23,7 @@ class Media
   def as_json(options = {})
     Rails.cache.fetch(self.get_id, options) do
       self.parse
-      self.data.merge(Media.required_fields(self)).with_indifferent_access
+      self.data.merge(required_fields).with_indifferent_access
     end
   end
 
@@ -45,23 +45,21 @@ class Media
     self.respond_to?(oembed)? self.send(oembed, original_url, maxwidth, maxheight) : self.default_oembed(original_url, maxwidth, maxheight)
   end
 
-  def self.minimal_data(instance)
+  def minimal_data
     data = {}
     %w(published_at username title description picture author_url author_picture).each do |field|
       data[field] = ''
     end
-    data.merge(Media.required_fields(instance)).with_indifferent_access
+    data.merge(required_fields).with_indifferent_access
   end
 
-  def self.required_fields(instance = nil)
-    provider = instance.respond_to?(:provider) ? instance.provider : 'page'
-    type = instance.respond_to?(:type) ? instance.type : 'item'
+  def required_fields
     {
-      url: instance.url,
-      provider: provider || 'page',
-      type: type || 'item',
+      url: self.url,
+      provider: self.provider || 'page',
+      type: self.type || 'item',
       parsed_at: Time.now,
-      favicon: "http://www.google.com/s2/favicons?domain_url=#{instance.url}"
+      favicon: "http://www.google.com/s2/favicons?domain_url=#{self.url}"
     }
   end
 
@@ -113,7 +111,7 @@ class Media
   end
 
   def parse
-    self.data = Media.minimal_data(self)
+    self.data = minimal_data
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|

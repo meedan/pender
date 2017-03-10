@@ -53,16 +53,11 @@ module Api
 
       def render_timeout
         timeout = CONFIG['timeout'] || 20
-        data = Rails.cache.read(Digest::MD5.hexdigest(@url))
-        
-        if data.nil? || @refresh
-          begin
-            Timeout::timeout(timeout) { yield }
-            return false
-          rescue Timeout::Error
-            data = get_timeout_data
-            render_not_parseable(data.merge(error: { message: 'Timeout', code: 'TIMEOUT' })) and return true
-          end
+        begin
+          Timeout::timeout(timeout) { yield }
+          return false
+        rescue Timeout::Error
+          render_error('Timeout', 'TIMEOUT', 408) and return true
         end
       end
 
@@ -126,12 +121,6 @@ module Api
           url_no_refresh = url.gsub(/&?refresh=1&?/, '')
           cc.clear_cache(url_no_refresh) if url != url_no_refresh
         end
-      end
-
-      def get_timeout_data
-        data = @media.nil? ? Media.minimal_data(OpenStruct.new(url: @url)) : @media.data
-        Rails.cache.write(Digest::MD5.hexdigest(@url), data)
-        data
       end
     end
   end

@@ -234,8 +234,7 @@ class MediasControllerTest < ActionController::TestCase
     stub_configs({ 'timeout' => 0.001 })
     authenticate_with_token
     get :index, url: 'http://twitter.com/caiosba', format: :json
-    assert_response 200
-    assert_equal 'Timeout', JSON.parse(@response.body)['data']['error']['message']
+    assert_response 408
   end
 
   test "should return API limit reached error" do
@@ -280,8 +279,7 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: url, format: :json
     time = Time.now.to_i - start
     assert time < 3, "Expected it to take less than 3 seconds, but took #{time} seconds"
-    assert_equal 'Timeout', JSON.parse(@response.body)['data']['error']['message']
-    assert_response 200
+    assert_response 408
   end
 
   test "should not try to clear upstream cache when generating cache for the first time" do
