@@ -53,11 +53,19 @@ module Api
 
       def render_timeout
         timeout = CONFIG['timeout'] || 20
-        begin
-          Timeout::timeout(timeout) { yield }
+        data = Rails.cache.fetch(Digest::MD5.hexdigest(@url), { force: @refresh }) do
+          d = nil
+          begin
+            Timeout::timeout(timeout) { yield }
+          rescue Timeout::Error
+            d = @media.nil? ? Media.minimal_data(OpenStruct.new(url: @url)) : @media.data
+          end
+          d
+        end
+        if data.nil?
           return false
-        rescue Timeout::Error
-          render_error('Timeout', 'TIMEOUT', 408) and return true
+        else
+          render_not_parseable(data.merge(error: { message: 'Timeout', code: 'TIMEOUT' })) and return true
         end
       end
 
