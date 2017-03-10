@@ -53,15 +53,18 @@ module Api
 
       def render_timeout
         timeout = CONFIG['timeout'] || 20
-        data = Rails.cache.fetch(Digest::MD5.hexdigest(@url), { force: @refresh }) do
-          d = nil
+        key = Digest::MD5.hexdigest(@url)
+        data = Rails.cache.read(key)
+        
+        if data.nil? || @refresh
           begin
             Timeout::timeout(timeout) { yield }
           rescue Timeout::Error
-            d = @media.nil? ? Media.minimal_data(OpenStruct.new(url: @url)) : @media.data
+            data = @media.nil? ? Media.minimal_data(OpenStruct.new(url: @url)) : @media.data
+            Rails.cache.write(key, data)
           end
-          d
         end
+        
         if data.nil?
           return false
         else
