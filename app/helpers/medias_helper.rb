@@ -1,6 +1,6 @@
 module MediasHelper
-  def embed_url
-    src = convert_url_to_format(@request.original_url, 'js')
+  def embed_url(request = @request)
+    src = convert_url_to_format(request.original_url, 'js')
     "<script src=\"#{src}\" type=\"text/javascript\"></script>".html_safe
   end
 
