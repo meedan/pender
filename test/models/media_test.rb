@@ -650,8 +650,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /team of designers, technologists and journalists/, d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
-    assert_equal 'http://meedan.com/en/check/', m.url
-    assert_equal 'http://meedan.com', d['author_url']
+    assert_equal 'https://meedan.com/en/check/', m.url
+    assert_equal 'https://meedan.com', d['author_url']
     assert_not_nil d['picture']
   end
 

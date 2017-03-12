@@ -271,7 +271,7 @@ class Media
       uri = URI.parse(self.url)
       begin
         Media.request_uri(uri, 'Head')
-      rescue URI::InvalidURIError, Net::OpenTimeout, SocketError, OpenSSL::SSL::SSLError
+      rescue
         self.url.gsub!(/^https:/i, 'http:')
       end
     end
