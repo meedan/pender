@@ -241,7 +241,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nothing_raised do
       m = create_media url: 'http://www.almasryalyoum.com/node/517699', request: request
       data = m.as_json
-      assert_match /http:\/\/www.almasryalyoum.com\/editor\/details\/968/, data['url']
+      assert_match /https:\/\/www.almasryalyoum.com\/editor\/details\/968/, data['url']
     end
   end
 
@@ -929,7 +929,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'How social media is being weaponized across the world', d['description']
     assert_equal '', d['published_at']
     assert_equal 'Emerson T. Brooking and P. W. Singer', d['username']
-    assert_equal 'http://www.theatlantic.com', d['author_url']
+    assert_equal 'https://www.theatlantic.com', d['author_url']
     assert_equal 'https://cdn.theatlantic.com/assets/media/img/2016/10/WEL_Singer_SocialWar_opener_ALT/facebook.jpg?1475683228', d['picture']
   end
 
