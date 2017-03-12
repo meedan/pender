@@ -21,6 +21,7 @@ class CcDevilleTest < ActiveSupport::TestCase
     old_expiration_time = Time.parse(cf['expires'])
 
     @cc.clear_cache(url)
+    sleep 1
 
     status = @cc.get_status(url)
     cf = status['data']['caches'].last
