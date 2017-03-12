@@ -265,15 +265,15 @@ class Media
   end
 
   def try_https
-    uri = URI.parse(self.url)
-    unless (uri.kind_of?(URI::HTTPS))
-      self.url.gsub!(/^http:/i, 'https:')
+    begin
       uri = URI.parse(self.url)
-      begin
+      unless (uri.kind_of?(URI::HTTPS))
+        self.url.gsub!(/^http:/i, 'https:')
+        uri = URI.parse(self.url)
         Media.request_uri(uri, 'Head')
-      rescue
-        self.url.gsub!(/^https:/i, 'http:')
       end
+    rescue
+      self.url.gsub!(/^https:/i, 'http:')
     end
   end
 end

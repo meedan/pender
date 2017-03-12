@@ -190,7 +190,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should not normalize URL" do
     urls = %w(
-      http://meedan.com/en/
+      https://meedan.com/en/
       http://ios.ba/
       http://ca.ios.ba/?foo=bar
     )
@@ -1089,7 +1089,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /Yahoo/, d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
-    assert_equal 'http://br.yahoo.com', d['author_url']
+    assert_equal 'https://br.yahoo.com', d['author_url']
     assert_not_nil d['picture']
   end
 
@@ -1104,7 +1104,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
-    assert_equal 'http://ca.yahoo.com', d['author_url']
+    assert_equal 'https://ca.yahoo.com', d['author_url']
     assert_not_nil d['picture']
     assert_nil d['error']
   end
