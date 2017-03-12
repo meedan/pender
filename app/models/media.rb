@@ -13,6 +13,7 @@ class Media
     end
     self.follow_redirections
     self.normalize_url unless self.get_canonical_url
+    self.try_https
     self.data = {}.with_indifferent_access
   end
 
@@ -191,7 +192,7 @@ class Media
 
   def self.request_uri(uri, verb = 'Get')
     http = Net::HTTP.new(uri.host, uri.port)
-    http.read_timeout = 30
+    http.read_timeout = CONFIG['timeout'] || 30
     http.use_ssl = uri.scheme == 'https'
     request = "Net::HTTP::#{verb}".constantize.new(uri.request_uri)
     request['Cookie'] = Media.set_cookies
@@ -261,5 +262,18 @@ class Media
 
   def parse_url(url)
     URI.parse(URI.encode(url))
+  end
+
+  def try_https
+    uri = URI.parse(self.url)
+    unless (uri.kind_of?(URI::HTTPS))
+      self.url.gsub!(/^http:/i, 'https:')
+      uri = URI.parse(self.url)
+      begin
+        Media.request_uri(uri, 'Head')
+      rescue URI::InvalidURIError, Net::OpenTimeout, SocketError, OpenSSL::SSL::SSLError
+        self.url.gsub!(/^https:/i, 'http:')
+      end
+    end
   end
 end

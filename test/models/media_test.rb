@@ -1268,4 +1268,18 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Megadeth', d['author_name']
   end
 
+  test "should redirect to HTTPS if available and not already HTTPS" do
+    m = create_media url: 'http://ironmaiden.com'
+    assert_equal 'https://ironmaiden.com/', m.url
+  end
+
+  test "should not redirect to HTTPS if available and already HTTPS" do
+    m = create_media url: 'https://ironmaiden.com'
+    assert_equal 'https://ironmaiden.com/', m.url
+  end
+
+  test "should not redirect to HTTPS if not available" do
+    m = create_media url: 'http://fox.usa-radio.com'
+    assert_equal 'http://fox.usa-radio.com', m.url
+  end
 end

@@ -107,7 +107,7 @@ module Api
         cache = Rails.cache.read(@id)
         data = cache && !@refresh ? cache : @media.as_json({ force: @refresh })
 
-        if !data['html'].blank?
+        if !data['html'].blank? && data['url'] =~ /^https:/
           locals = { html: data['html'].html_safe }
           template = 'custom'
         else
