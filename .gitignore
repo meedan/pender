@@ -24,3 +24,4 @@ tmp/puma-*
 tmp/profile
 tmp/performance*
 config/environments/profile.rb
+config/sidekiq.yml

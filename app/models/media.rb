@@ -62,7 +62,7 @@ class Media
       provider: provider || 'page',
       type: type || 'item',
       parsed_at: Time.now,
-      favicon: "http://www.google.com/s2/favicons?domain_url=#{instance.url}"
+      favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url}"
     }
   end
 
