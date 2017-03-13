@@ -707,7 +707,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'http://img.youm7.com/large/72016619556415g.jpg', d['picture']
   end
 
-  test "should not store the picture address if it was not taken" do
+  test "should store the picture address" do
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     Smartshot::Screenshot.any_instance.stubs(:take_screenshot!).returns(false)
@@ -718,7 +718,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
-    assert_equal '', d['picture']
+    assert_equal 'http://localhost/screenshots/https-xkcd-com-448.png', d['picture']
     Smartshot::Screenshot.any_instance.unstub(:take_screenshot!)
   end
 
