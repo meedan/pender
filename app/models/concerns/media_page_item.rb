@@ -73,7 +73,9 @@ module MediaPageItem
     filename = url.parameterize + '.png'
     base_url = self.request.base_url
     picture = URI.join(base_url, 'screenshots/', filename).to_s
-    FileUtils.ln_s File.join(Rails.root, 'public', 'pending_picture.png'), File.join(Rails.root, 'public', 'screenshots', filename)
+    path = File.join(Rails.root, 'public', 'screenshots', filename)
+    FileUtils.rm_f path
+    FileUtils.ln_s File.join(Rails.root, 'public', 'pending_picture.png'), path 
     data[:picture] = picture
     ScreenshotWorker.perform_async(url)
   end

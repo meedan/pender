@@ -1,6 +1,4 @@
-require_relative 'test_helper'
+require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
+
 class ScreenshotWorkerTest < MiniTest::Unit::TestCase
-  def test_example
-    skip "add some examples to (or delete) #{__FILE__}"
-  end
 end
