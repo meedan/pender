@@ -8,7 +8,7 @@ class ScreenshotWorker
     end
   end
 
-  def perform(url)
+  def perform(url, picture)
     filename = url.parameterize + '.png'
     tmp = url.parameterize + '-temp.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
@@ -17,6 +17,6 @@ class ScreenshotWorker
     fetcher.take_screenshot! url: url, output: output_file, wait_for_element: ['body'], sleep: 10, frames_path: []
     FileUtils.rm_f path
     File.exist?(output_file) ? FileUtils.mv(output_file, path) : FileUtils.ln_s(File.join(Rails.root, 'public', 'no_picture.png'), path)
-    self.clear_cache(url)
+    self.clear_cache(picture)
   end
 end

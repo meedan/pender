@@ -77,6 +77,6 @@ module MediaPageItem
     FileUtils.rm_f path
     FileUtils.ln_s File.join(Rails.root, 'public', 'pending_picture.png'), path 
     data[:picture] = picture
-    ScreenshotWorker.perform_async(url)
+    ScreenshotWorker.perform_async(url, picture)
   end
 end
