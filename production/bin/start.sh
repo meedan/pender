@@ -3,7 +3,7 @@
 cd ${DEPLOYDIR}/shared
 
 # these  are runtime volumes, linked to from ${DEPLOYDIR}/current/
-for DIR in cache db cookies; do
+for DIR in cache db cookies screenshots; do
   chown -R ${DEPLOYUSER}:www-data ${DEPLOYDIR}/shared/${DIR}
   chmod -R 775 ${DEPLOYDIR}/shared/${DIR}
 done
