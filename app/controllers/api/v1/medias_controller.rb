@@ -136,9 +136,9 @@ module Api
 
       def clear_upstream_cache
         url = request.original_url
-        clear_upstream_cache_for_url(url)
+        CcDeville.clear_cache_for_url(url)
         url_no_refresh = url.gsub(/&?refresh=1&?/, '')
-        clear_upstream_cache_for_url(url_no_refresh) if url != url_no_refresh
+        CcDeville.clear_cache_for_url(url_no_refresh) if url != url_no_refresh
       end
 
       def get_timeout_data
@@ -151,7 +151,7 @@ module Api
       def clear_html_cache
         FileUtils.rm_f cache_path
         url = request.original_url.gsub(/medias(\.[a-z]+)?\?/, 'medias.html?')
-        clear_upstream_cache_for_url(url)
+        CcDeville.clear_cache_for_url(url)
       end
     end
   end

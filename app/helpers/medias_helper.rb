@@ -15,11 +15,4 @@ module MediasHelper
   def timeout_value
     CONFIG['timeout'] || 20
   end
-
-  def clear_upstream_cache_for_url(url)
-    if CONFIG['cc_deville_host'].present? && CONFIG['cc_deville_token'].present?
-      cc = CcDeville.new(CONFIG['cc_deville_host'], CONFIG['cc_deville_token'], CONFIG['cc_deville_httpauth'])
-      cc.clear_cache(url)
-    end
-  end
 end
