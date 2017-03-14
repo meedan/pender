@@ -18,6 +18,9 @@ cd -
 
 echo "--- STARTUP COMPLETE ---"
 
+echo "starting sidekiq"
+su ${DEPLOYUSER} -c "bundle exec sidekiq -L log/sidekiq.log -d"
+
 # send log output to the Docker log
 tail -f ${DEPLOYDIR}/current/log/production.log &
 

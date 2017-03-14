@@ -25,3 +25,4 @@ tmp/profile
 tmp/performance*
 config/environments/profile.rb
 config/sidekiq.yml
+dump.rdb
