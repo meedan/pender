@@ -58,6 +58,7 @@ RUN mv ./latest ./pender-$(date -I) \
 # link to persisted objects and runtime config from the codebase
 RUN ln -s ${DEPLOYDIR}/shared/cache/json ${DEPLOYDIR}/current/tmp/cache \
  && ln -s ${DEPLOYDIR}/shared/cache/html ${DEPLOYDIR}/current/public/cache \
+ && ln -s ${DEPLOYDIR}/shared/screenshots ${DEPLOYDIR}/current/public/screenshots \
  && /opt/bin/find_and_link_config_files.sh ${DEPLOYDIR}/current
 
 # runtime config
