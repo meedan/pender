@@ -23,7 +23,12 @@
   </h2>
 
   <% unless @data['picture'].blank? %>
-    <img src="<%= @data['picture'] %>" alt="" class="pender-picture" />
+    <img src="<%= @data['picture'] %>" alt="" class="pender-picture" id="pender-picture" />
+    <script type="text/javascript">
+      var picture = document.getElementById('pender-picture');
+      var connector = /\?/.test(picture.src) ? '&' : '?';
+      picture.src = picture.src + connector + 'penderVersion=' + new Date().getTime();
+    </script>
   <% end %>
 
   <div class="pender-info" style="<%= 'padding-left: 0;' if @data['picture'].blank? %>">
