@@ -43,6 +43,7 @@ module Api
       def render_as_json
         @request = request
         begin
+          clear_html_cache if @refresh
           render_timeout(true) { render_media(@media.as_json({ force: @refresh })) and return }
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
@@ -148,6 +149,10 @@ module Api
         data = data.merge(error: { message: 'Timeout', code: 'TIMEOUT' })
         Rails.cache.write(@id, data)
         data
+      end
+
+      def clear_html_cache
+        FileUtils.rm_f cache_path
       end
     end
   end

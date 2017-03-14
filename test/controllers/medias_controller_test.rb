@@ -33,8 +33,13 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
+    get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html
+    name = Digest::MD5.hexdigest('https://twitter.com/caiosba/status/742779467521773568')
+    cache_file = File.join('public', 'cache', Rails.env, "#{name}.html" )
+    assert File.exist?(cache_file)
     sleep 1
     get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json
+    assert !File.exist?(cache_file)
     second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     assert second_parsed_at > first_parsed_at
   end
