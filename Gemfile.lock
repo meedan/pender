@@ -74,6 +74,7 @@ GEM
     codeclimate-test-reporter (0.6.0)
       simplecov (>= 0.7.1, < 1.0.0)
     concurrent-ruby (1.0.2)
+    connection_pool (2.2.0)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     daemons (1.2.4)
@@ -154,6 +155,8 @@ GEM
     puma (3.6.0)
     rack (1.6.4)
     rack-cors (0.4.0)
+    rack-protection (1.5.3)
+      rack
     rack-test (0.6.3)
       rack (>= 1.0)
     railroady (1.5.1)
@@ -183,6 +186,9 @@ GEM
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
     rake (11.2.2)
+    redis (3.3.1)
+    redis-namespace (1.5.2)
+      redis (~> 3.0, >= 3.0.4)
     responders (2.2.0)
       railties (>= 4.2.0, < 5.1)
     retryable (2.0.3)
@@ -204,6 +210,11 @@ GEM
       nori (~> 2.4)
       uuid (~> 2.3.7)
       wasabi (~> 3.4)
+    sidekiq (4.2.2)
+      concurrent-ruby (~> 1.0)
+      connection_pool (~> 2.2, >= 2.2.0)
+      rack-protection (~> 1.5)
+      redis (~> 3.2, >= 3.2.1)
     simple_oauth (0.3.1)
     simplecov (0.12.0)
       docile (~> 1.1.0)
@@ -294,10 +305,12 @@ DEPENDENCIES
   railroady
   rails (= 4.2.7.1)
   rails-perftest
+  redis-namespace
   responders
   retryable
   ruby-prof (= 0.15.9)
   sass-rails
+  sidekiq
   simplecov
   smartshot
   sqlite3

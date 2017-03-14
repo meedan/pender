@@ -190,7 +190,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should not normalize URL" do
     urls = %w(
-      http://meedan.com/en/
+      https://meedan.com/en/
       http://ios.ba/
       http://ca.ios.ba/?foo=bar
     )
@@ -241,7 +241,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nothing_raised do
       m = create_media url: 'http://www.almasryalyoum.com/node/517699', request: request
       data = m.as_json
-      assert_match /http:\/\/www.almasryalyoum.com\/editor\/details\/968/, data['url']
+      assert_match /https:\/\/www.almasryalyoum.com\/editor\/details\/968/, data['url']
     end
   end
 
@@ -562,6 +562,16 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.flickr.com/photos/bees/', d['author_url']
   end
 
+  test "should parse twitter metatags 2" do
+    m = create_media url: 'https://www.hongkongfp.com/2017/03/08/top-officials-suing-defamation-may-give-perception-bullying-says-chief-exec-candidate-woo/'
+    d = m.as_json
+    assert_match(/Hong Kong Free Press/, d['title'])
+    assert_equal 'https://www.hongkongfp.com/wp-content/uploads/2017/03/2017-03-06_11-45-23.jpg', d['picture']
+    assert_match(/Chief executive candidate Woo Kw-hing/, d['description'])
+    assert_equal '@krislc', d['username']
+    assert_equal 'https://twitter.com/@krislc', d['author_url']
+  end
+
   test "should parse opengraph metatags" do
     m = create_media url: 'http://hacktoon.com/nerdson/2016/poker-planning'
     d = m.as_json
@@ -640,8 +650,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /team of designers, technologists and journalists/, d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
-    assert_equal 'http://meedan.com/en/check/', m.url
-    assert_equal 'http://meedan.com', d['author_url']
+    assert_equal 'https://meedan.com/en/check/', m.url
+    assert_equal 'https://meedan.com', d['author_url']
     assert_not_nil d['picture']
   end
 
@@ -697,7 +707,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'http://img.youm7.com/large/72016619556415g.jpg', d['picture']
   end
 
-  test "should not store the picture address if it was not taken" do
+  test "should store the picture address" do
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     Smartshot::Screenshot.any_instance.stubs(:take_screenshot!).returns(false)
@@ -708,7 +718,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
-    assert_equal '', d['picture']
+    assert_equal 'http://localhost/screenshots/https-xkcd-com-448.png', d['picture']
     Smartshot::Screenshot.any_instance.unstub(:take_screenshot!)
   end
 
@@ -919,7 +929,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'How social media is being weaponized across the world', d['description']
     assert_equal '', d['published_at']
     assert_equal 'Emerson T. Brooking and P. W. Singer', d['username']
-    assert_equal 'http://www.theatlantic.com', d['author_url']
+    assert_equal 'https://www.theatlantic.com', d['author_url']
     assert_equal 'https://cdn.theatlantic.com/assets/media/img/2016/10/WEL_Singer_SocialWar_opener_ALT/facebook.jpg?1475683228', d['picture']
   end
 
@@ -929,8 +939,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Larry Sanders on brother Bernie and why Tony Blair was ‘destructive’', d['title']
     assert_match /The Green party candidate, who is fighting the byelection in David Cameron’s old seat/, d['description']
     assert_match /2016-10/, d['published_at']
-    assert_equal 'https://www.theguardian.com/profile/zoewilliams', d['username']
-    assert_equal 'http://www.theguardian.com', d['author_url']
+    assert_equal '@zoesqwilliams', d['username']
+    assert_equal 'https://twitter.com/@zoesqwilliams', d['author_url']
     assert_match /https:\/\/i.guim.co.uk\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, d['picture']
   end
 
@@ -1079,7 +1089,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /Yahoo/, d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
-    assert_equal 'http://br.yahoo.com', d['author_url']
+    assert_equal 'https://br.yahoo.com', d['author_url']
     assert_not_nil d['picture']
   end
 
@@ -1094,7 +1104,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
-    assert_equal 'http://ca.yahoo.com', d['author_url']
+    assert_equal 'https://ca.yahoo.com', d['author_url']
     assert_not_nil d['picture']
     assert_nil d['error']
   end
@@ -1205,8 +1215,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_match(/Hong Kong Free Press/, data['title'])
     assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
-    assert_equal 'https://www.facebook.com/AFPnewsenglish?fref=ts', data['username']
-    assert_equal 'https://www.hongkongfp.com', data['author_url']
+    assert_equal '@AFP', data['username']
+    assert_equal 'https://twitter.com/@AFP', data['author_url']
     assert_not_nil data['picture']
     assert_nil data['error']
   end
@@ -1221,8 +1231,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_match(/Hong Kong Free Press/, data['title'])
     assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
-    assert_equal 'https://www.facebook.com/AFPnewsenglish?fref=ts', data['username']
-    assert_equal 'https://www.hongkongfp.com', data['author_url']
+    assert_equal '@AFP', data['username']
+    assert_equal 'https://twitter.com/@AFP', data['author_url']
     assert_not_nil data['picture']
     assert_match(/StandardError/, data['error']['message'])
   end
@@ -1258,4 +1268,18 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Megadeth', d['author_name']
   end
 
+  test "should redirect to HTTPS if available and not already HTTPS" do
+    m = create_media url: 'http://ironmaiden.com'
+    assert_equal 'https://ironmaiden.com/', m.url
+  end
+
+  test "should not redirect to HTTPS if available and already HTTPS" do
+    m = create_media url: 'https://ironmaiden.com'
+    assert_equal 'https://ironmaiden.com/', m.url
+  end
+
+  test "should not redirect to HTTPS if not available" do
+    m = create_media url: 'http://fox.usa-radio.com'
+    assert_equal 'http://fox.usa-radio.com', m.url
+  end
 end

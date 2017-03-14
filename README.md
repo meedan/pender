@@ -23,7 +23,7 @@ A parsing and rendering service.
 
 #### Non-Docker-based
 
-* Configure `config/config.yml`, `config/database.yml`, `config/initializers/errbit.rb` and `config/initializers/secret_token.rb` (check the example files)
+* Configure `config/config.yml`, `config/database.yml`, `config/sidekiq.yml`, `config/initializers/errbit.rb` and `config/initializers/secret_token.rb` (check the example files)
 * Run `bundle install`
 * Run `bundle exec rake db:migrate`
 * Create an API key: `bundle exec rake lapis:api_keys:create`
