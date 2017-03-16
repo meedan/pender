@@ -284,7 +284,7 @@ class MediasControllerTest < ActionController::TestCase
     start = Time.now.to_i
     get :index, url: url, format: :json
     time = Time.now.to_i - start
-    assert time < 3, "Expected it to take less than 3 seconds, but took #{time} seconds"
+    assert time <= 3, "Expected it to take less than 3 seconds, but took #{time} seconds"
     assert_equal 'Timeout', JSON.parse(@response.body)['data']['error']['message']
     assert_response 200
   end
