@@ -319,4 +319,12 @@ class MediasControllerTest < ActionController::TestCase
     end
     CcDeville.any_instance.unstub(:clear_cache)
   end
+
+  test "should return success even if media could not be instantiated" do
+    authenticate_with_token
+    Media.expects(:new).raises(Timeout::Error)
+    get :index, url: 'http://ca.ios.ba/files/meedan/random.php', format: :json, refresh: '1'
+    Media.unstub(:new)
+    assert_response :success
+  end
 end
