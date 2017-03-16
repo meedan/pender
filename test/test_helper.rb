@@ -7,6 +7,7 @@ require 'webmock'
 require 'mocha/test_unit'
 require 'sample_data'
 require 'pender_exceptions'
+require 'sidekiq/testing'
 
 class Api::V1::TestController < Api::V1::BaseApiController
   before_filter :verify_payload!, only: [:notify]
@@ -30,6 +31,7 @@ class ActiveSupport::TestCase
   # This will run before any test
 
   def setup
+    Sidekiq::Testing.inline!
     Rails.cache.clear if File.exists?(File.join(Rails.root, 'tmp', 'cache'))
     FileUtils.rm_rf File.join(Rails.root, 'public', 'cache', 'test')
     Rails.application.reload_routes!

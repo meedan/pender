@@ -15,6 +15,8 @@ cat <<EOF
     		https://developers.facebook.com/apps/1610612792591538/dashboard/
     	Pender-Develop:
     		https://developers.facebook.com/apps/1637309523255198/dashboard/
+    	Pender-Live:
+		https://developers.facebook.com/apps/339819403048807/dashboard/
 
     get the user token from
     https://developers.facebook.com/tools/accesstoken/

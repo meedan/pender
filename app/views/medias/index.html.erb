@@ -22,10 +22,17 @@
     <span class="pender-provider"><%= @data['provider'] %></span>
   </h2>
 
-  <img src="<%= @data['picture'] %>" alt="" class="pender-picture" />
+  <% unless @data['picture'].blank? %>
+    <img src="<%= @data['picture'] %>" alt="" class="pender-picture" id="pender-picture" />
+    <script type="text/javascript">
+      var picture = document.getElementById('pender-picture');
+      var connector = /\?/.test(picture.src) ? '&' : '?';
+      picture.src = picture.src + connector + 'penderVersion=' + new Date().getTime();
+    </script>
+  <% end %>
 
-  <div class="pender-info">
-    <h1 class="pender-title"><%= @data['title'] %></h2>
+  <div class="pender-info" style="<%= 'padding-left: 0;' if @data['picture'].blank? %>">
+    <h1 class="pender-title"><%= @data['title'].blank? ? @data['url'] : @data['title'] %></h2>
     <p class="pender-description"><%= @data['description'] %></p>
     <p class="pender-more">
       <a href="#" onclick="toggleDetails()">View more information &raquo;</a>

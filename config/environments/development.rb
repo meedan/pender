@@ -41,4 +41,8 @@ Rails.application.configure do
 
   # Whitelist docker access
   config.web_console.whitelisted_ips = '172.0.0.0/8'
+  
+  # Enable the logstasher logs for the current environment
+  # config.logger = LogStashLogger.new(type: :udp, host: 'logstash', port: 5228)  
+  # config.logstash.uri = 'udp://logstash:5228'
 end

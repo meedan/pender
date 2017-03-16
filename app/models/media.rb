@@ -13,6 +13,7 @@ class Media
     end
     self.follow_redirections
     self.normalize_url unless self.get_canonical_url
+    self.try_https
     self.data = {}.with_indifferent_access
   end
 
@@ -23,7 +24,7 @@ class Media
   def as_json(options = {})
     Rails.cache.fetch(self.get_id, options) do
       self.parse
-      self.data.merge(required_fields).with_indifferent_access
+      self.data.merge(Media.required_fields(self)).with_indifferent_access
     end
   end
 
@@ -45,21 +46,23 @@ class Media
     self.respond_to?(oembed)? self.send(oembed, original_url, maxwidth, maxheight) : self.default_oembed(original_url, maxwidth, maxheight)
   end
 
-  def minimal_data
+  def self.minimal_data(instance)
     data = {}
     %w(published_at username title description picture author_url author_picture).each do |field|
       data[field] = ''
     end
-    data.merge(required_fields).with_indifferent_access
+    data.merge(Media.required_fields(instance)).with_indifferent_access
   end
 
-  def required_fields
+  def self.required_fields(instance = nil)
+    provider = instance.respond_to?(:provider) ? instance.provider : 'page'
+    type = instance.respond_to?(:type) ? instance.type : 'item'
     {
-      url: self.url,
-      provider: self.provider || 'page',
-      type: self.type || 'item',
+      url: instance.url,
+      provider: provider || 'page',
+      type: type || 'item',
       parsed_at: Time.now,
-      favicon: "http://www.google.com/s2/favicons?domain_url=#{self.url}"
+      favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url}"
     }
   end
 
@@ -111,7 +114,7 @@ class Media
   end
 
   def parse
-    self.data = minimal_data
+    self.data = Media.minimal_data(self)
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|
@@ -189,7 +192,7 @@ class Media
 
   def self.request_uri(uri, verb = 'Get')
     http = Net::HTTP.new(uri.host, uri.port)
-    http.read_timeout = 30
+    http.read_timeout = CONFIG['timeout'] || 30
     http.use_ssl = uri.scheme == 'https'
     request = "Net::HTTP::#{verb}".constantize.new(uri.request_uri)
     request['Cookie'] = Media.set_cookies
@@ -259,5 +262,18 @@ class Media
 
   def parse_url(url)
     URI.parse(URI.encode(url))
+  end
+
+  def try_https
+    begin
+      uri = URI.parse(self.url)
+      unless (uri.kind_of?(URI::HTTPS))
+        self.url.gsub!(/^http:/i, 'https:')
+        uri = URI.parse(self.url)
+        Media.request_uri(uri, 'Head')
+      end
+    rescue
+      self.url.gsub!(/^https:/i, 'http:')
+    end
   end
 end

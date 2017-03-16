@@ -33,8 +33,13 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
+    get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html
+    name = Digest::MD5.hexdigest('https://twitter.com/caiosba/status/742779467521773568')
+    cache_file = File.join('public', 'cache', Rails.env, "#{name}.html" )
+    assert File.exist?(cache_file)
     sleep 1
     get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json
+    assert !File.exist?(cache_file)
     second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     assert second_parsed_at > first_parsed_at
   end
@@ -234,7 +239,8 @@ class MediasControllerTest < ActionController::TestCase
     stub_configs({ 'timeout' => 0.001 })
     authenticate_with_token
     get :index, url: 'http://twitter.com/caiosba', format: :json
-    assert_response 408
+    assert_response 200
+    assert_equal 'Timeout', JSON.parse(@response.body)['data']['error']['message']
   end
 
   test "should return API limit reached error" do
@@ -278,8 +284,9 @@ class MediasControllerTest < ActionController::TestCase
     start = Time.now.to_i
     get :index, url: url, format: :json
     time = Time.now.to_i - start
-    assert time < 3, "Expected it to take less than 3 seconds, but took #{time} seconds"
-    assert_response 408
+    assert time <= 3, "Expected it to take less than 3 seconds, but took #{time} seconds"
+    assert_equal 'Timeout', JSON.parse(@response.body)['data']['error']['message']
+    assert_response 200
   end
 
   test "should not try to clear upstream cache when generating cache for the first time" do
@@ -311,5 +318,13 @@ class MediasControllerTest < ActionController::TestCase
       get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html, refresh: '1'
     end
     CcDeville.any_instance.unstub(:clear_cache)
+  end
+
+  test "should return success even if media could not be instantiated" do
+    authenticate_with_token
+    Media.expects(:new).raises(Timeout::Error)
+    get :index, url: 'http://ca.ios.ba/files/meedan/random.php', format: :json, refresh: '1'
+    Media.unstub(:new)
+    assert_response :success
   end
 end
