@@ -1293,9 +1293,9 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Shared with Dropbox', d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
-    assert_equal 'https://www.dropbox.com', d['author_url']
+    assert_equal '', d['author_url']
     assert_not_nil d['picture']
-    assert_match /:\/\/dl\.dropbox.com/, d['html']
+    assert_nil d['html']
     assert_nil d['error']
   end
 
@@ -1310,9 +1310,9 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Shared with Dropbox', d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
-    assert_equal 'https://www.dropbox.com', d['author_url']
+    assert_equal '', d['author_url']
     assert_not_nil d['picture']
-    assert_match /:\/\/dl\.dropbox.com/, d['html']
+    assert_nil d['html']
     assert_nil d['error']
   end
 
@@ -1326,9 +1326,9 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Shared with Dropbox', d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
-    assert_equal 'https://dl.dropboxusercontent.com', d['author_url']
+    assert_equal '', d['author_url']
     assert_not_nil d['picture']
-    assert_match /:\/\/dl\.dropboxusercontent.com/, d['html']
+    assert_nil d['html']
     assert_nil d['error']
   end
 
