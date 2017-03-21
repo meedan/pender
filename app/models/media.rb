@@ -28,17 +28,9 @@ class Media
     end
   end
 
-  include MediaYoutubeProfile
-  include MediaYoutubeItem
-  include MediaTwitterProfile
-  include MediaTwitterItem
-  include MediaFacebookProfile
-  include MediaFacebookItem
-  include MediaInstagramItem
-  include MediaInstagramProfile
-  include MediaBridgeItem
-  include MediaPageItem
-  include MediaOembedItem
+  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem].each do |concern|
+    include concern
+  end
 
   def as_oembed(original_url, maxwidth, maxheight, options = {})
     data = self.as_json(options)
@@ -85,6 +77,15 @@ class Media
       Rails.logger.warn "Could not access url: #{e.message}"
       return false
     end
+  end
+
+  def get_html_metadata(attr, metatags)
+    data = {}
+    metatags.each do |key, value|
+      metatag = self.doc.at_css("meta[#{attr}='#{value}']")
+      data[key] = metatag.attr('content') if metatag
+    end
+    data
   end
 
   protected
