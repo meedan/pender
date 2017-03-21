@@ -646,8 +646,8 @@ class MediaTest < ActiveSupport::TestCase
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'https://meedan.com/en/check/', request: request
     d = m.as_json
-    assert_equal 'Meedan', d['title']
-    assert_match /team of designers, technologists and journalists/, d['description']
+    assert_equal 'Check', d['title']
+    assert_match(/Verify digital media consistently and openly/, d['description'])
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://meedan.com/en/check/', m.url

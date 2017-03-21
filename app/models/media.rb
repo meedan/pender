@@ -28,18 +28,9 @@ class Media
     end
   end
 
-  include MediaYoutubeProfile
-  include MediaYoutubeItem
-  include MediaTwitterProfile
-  include MediaTwitterItem
-  include MediaFacebookProfile
-  include MediaFacebookItem
-  include MediaInstagramItem
-  include MediaInstagramProfile
-  include MediaBridgeItem
-  include MediaDropboxItem
-  include MediaPageItem
-  include MediaOembedItem
+  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem].each do |concern|
+    include concern
+  end
 
   def as_oembed(original_url, maxwidth, maxheight, options = {})
     data = self.as_json(options)
