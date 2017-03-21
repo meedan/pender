@@ -1332,4 +1332,20 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil d['error']
   end
 
+  test "should parse dropbox url with sh" do
+    m = create_media url: 'https://www.dropbox.com/sh/748f94925f0gesq/AAAMSoRJyhJFfkupnAU0wXuva?dl=0'
+    d = m.as_json
+    assert_equal 'https://www.dropbox.com/sh/748f94925f0gesq/AAAMSoRJyhJFfkupnAU0wXuva?dl=0', m.url
+    assert_equal 'item', d['type']
+    assert_equal 'dropbox', d['provider']
+    assert_equal 'Shared Link Metadata', d['title']
+    assert_equal 'Shared with Dropbox', d['description']
+    assert_not_nil d['published_at']
+    assert_equal '', d['username']
+    assert_equal '', d['author_url']
+    assert_not_nil d['picture']
+    assert_nil d['html']
+    assert_nil d['error']
+  end
+
 end

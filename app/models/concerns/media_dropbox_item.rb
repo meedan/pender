@@ -2,7 +2,7 @@ module MediaDropboxItem
   extend ActiveSupport::Concern
 
   URLS = [
-    /^https?:\/\/(www\.)?dropbox\.com\/s\/([^\/]+)/,
+    /^https?:\/\/(www\.)?dropbox\.com\/sh?\/([^\/]+)/,
     /^https?:\/\/(dl\.)?dropboxusercontent\.com\/s\/([^\/]+)/
   ]
 
