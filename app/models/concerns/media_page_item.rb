@@ -49,22 +49,14 @@ module MediaPageItem
   def get_basic_metadata
     metatags = { title: 'title',  description: 'description', username: 'author' }
     data = get_html_metadata('name', metatags)
-    data[:title] ||= self.doc.at_css("title").content || ''
+    title = self.doc.at_css("title")
+    data[:title] ||= title.nil? ? '' : title.content
     data[:description] ||= data[:title]
     data[:username] ||= ''
     data[:published_at] = ''
     data[:picture] = ''
 
     data[:author_url] = top_url(self.url)
-    data
-  end
-
-  def get_html_metadata(attr, metatags)
-    data = {}
-    metatags.each do |key, value|
-      metatag = self.doc.at_css("meta[#{attr}='#{value}']")
-      data[key] = metatag.attr('content') if metatag
-    end
     data
   end
 
