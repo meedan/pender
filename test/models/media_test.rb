@@ -1280,7 +1280,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should not redirect to HTTPS if not available" do
     m = create_media url: 'http://fox.usa-radio.com'
-    assert_equal 'http://fox.usa-radio.com', m.url
+    assert_equal 'http://fox.states-tv.com', m.url
   end
 
   test "should parse dropbox video url" do
