@@ -327,4 +327,11 @@ class MediasControllerTest < ActionController::TestCase
     Media.unstub(:new)
     assert_response :success
   end
+
+  test "should allow URL with non-latin characters" do
+    authenticate_with_token
+    url = 'https://martinoei.com/article/13071/林鄭月娥-居港夠廿年嗎？'
+    get :index, url: url
+    assert_response :success
+  end
 end
