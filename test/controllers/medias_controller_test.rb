@@ -177,8 +177,8 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://www.facebook.com/non-sense-stuff-892173891273', format: :html
     assert_response 200
 
-    assert_match /Koala::Facebook::ClientError: Unsupported get request/, assigns(:media).data['error']['message']
-    assert_no_match /Koala::Facebook::ClientError: Unsupported get request/, response.inspect
+    assert_match(/Koala::Facebook::ClientError: Unsupported get request/, assigns(:media).data['error']['message'])
+    assert_no_match(/Koala::Facebook::ClientError: Unsupported get request/, response.inspect)
 
   end
 
