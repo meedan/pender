@@ -34,16 +34,6 @@
   <div class="pender-info" style="<%= 'padding-left: 0;' if @data['picture'].blank? %>">
     <h1 class="pender-title"><%= @data['title'].blank? ? @data['url'] : @data['title'] %></h2>
     <p class="pender-description"><%= @data['description'] %></p>
-    <p class="pender-more">
-      <a href="#" onclick="toggleDetails()">View more information &raquo;</a>
-      <a href="<%= @data['url'] %>" target="_blank">Go to original &raquo;</a>
-      <label>Copy the embed code:</label> <input value='<%= embed_url %>' readonly />
-    </p>
+    <a class="pender-url" href="<%= @data['url'] %>" target="_blank"><%= @data['url'] %></a>
   </div>
-
-  <ul class="pender-data" id="pender-data" style="display: none;">
-    <% @data.each do |key, value| %>
-      <li><span class="pender-key"><%= key %></span> <span class="pender-value"><%= value %></span></li>
-    <% end %>
-  </ul>
 </div>
