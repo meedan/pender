@@ -59,6 +59,10 @@ module MediaFacebookItem
       params = CGI.parse(uri.query)
       id = params['story_fbid'].first
     end
+    if id === 'set'
+      params = CGI.parse(uri.query)
+      id = params['set'].first.split('.')[1]
+    end
     id = '' if id === 'livemap'
     self.data['object_id'] = id.sub(/:0$/, '')
   end
