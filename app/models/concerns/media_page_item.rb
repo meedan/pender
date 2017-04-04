@@ -51,7 +51,7 @@ module MediaPageItem
     data = get_html_metadata('name', metatags)
     title = self.doc.at_css("title")
     data[:title] ||= title.nil? ? '' : title.content
-    data[:description] ||= data[:title]
+    data[:description] ||= ''
     data[:username] ||= ''
     data[:published_at] = ''
     data[:picture] = ''
