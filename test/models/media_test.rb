@@ -589,7 +589,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://xkcd.com/1479', request: request
     d = m.as_json
     assert_equal 'xkcd: Troubleshooting', d['title']
-    assert_equal 'xkcd: Troubleshooting', d['description']
+    assert_equal '', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
@@ -714,7 +714,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'http://xkcd.com/448/', request: request
     d = m.as_json
     assert_equal 'xkcd: Good Morning', d['title']
-    assert_equal 'xkcd: Good Morning', d['description']
+    assert_equal '', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
