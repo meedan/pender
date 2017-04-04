@@ -589,7 +589,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://xkcd.com/1479', request: request
     d = m.as_json
     assert_equal 'xkcd: Troubleshooting', d['title']
-    assert_equal 'xkcd: Troubleshooting', d['description']
+    assert_equal '', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
@@ -714,7 +714,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'http://xkcd.com/448/', request: request
     d = m.as_json
     assert_equal 'xkcd: Good Morning', d['title']
-    assert_equal 'xkcd: Good Morning', d['description']
+    assert_equal '', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
@@ -1346,6 +1346,15 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['picture']
     assert_nil d['html']
     assert_nil d['error']
+  end
+
+  test "should return empty html on oembed when frame is not allowed" do
+    m = create_media url: 'https://martinoei.com/article/13371/%e9%81%b8%e6%b0%91%e7%99%bb%e8%a8%98-%e5%a4%b1%e7%ab%8a%e4%ba%8b%e4%bb%b6%e8%b6%8a%e8%a7%a3%e8%b6%8a%e4%bc%bcx%e6%aa%94%e6%a1%88'
+    data = m.as_json
+    assert_equal 'oembed', data['provider']
+    response = m.oembed_get_data_from_url(m.get_oembed_url)
+    assert_equal 'SAMEORIGIN', response.header['X-Frame-Options']
+    assert_equal '', data['html']
   end
 
 end
