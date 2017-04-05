@@ -1368,4 +1368,10 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '10154534110871407', d['object_id']
   end
 
+  test "should get all information of a truncated tweet" do
+    m = create_media url: 'https://twitter.com/bradymakesstuff/status/844240817334247425'
+    d = m.as_json
+    assert_equal 'Anti immigrant graffiti in a portajon on a residential construction site in Mtn Brook, AL. Job has about 50% Latino workers. https://t.co/bS5vI4Jq7I', d['description']
+    assert_not_nil d['entities']['media'][0]['media_url_https']
+  end
 end

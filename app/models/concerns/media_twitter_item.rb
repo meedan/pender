@@ -20,16 +20,20 @@ module MediaTwitterItem
     end
   end
 
+  def text_from_twitter_item
+    self.data['text'] || self.data['full_text'] || ''
+  end
+
   def data_from_twitter_item
     self.url = self.url.gsub(/(%23|#)!\//, '')
     parts = self.url.match(URL)
     user, id = parts['user'], parts['id']
     handle_twitter_exceptions do
-      self.data.merge!(self.twitter_client.status(id).as_json)
+      self.data.merge!(self.twitter_client.status(id, tweet_mode: 'extended').as_json)
       self.data.merge!({
         username: user,
-        title: self.data['text'].gsub(/\s+/, ' '),
-        description: self.data['text'],
+        title: self.text_from_twitter_item.gsub(/\s+/, ' '),
+        description: self.text_from_twitter_item,
         picture: self.twitter_item_picture,
         author_picture: self.twitter_item_picture,
         published_at: self.data['created_at'],
