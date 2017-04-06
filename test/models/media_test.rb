@@ -903,8 +903,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'عبرت الأمم المتحدة عن قلقها البالغ على سلامة 1.5 مليون شخص بالموصل، محذرة من احتمال نزوح مليون منهم، وقالت إن أكثر من 900 نازح فروا إلى سوريا بأول موجة نزوح.', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
-    assert_equal 'https://www.aljazeera.net', d['author_url']
-    assert_equal 'https://www.aljazeera.net/file/GetImageCustom/f1dbce3b-5a2f-4edb-89c5-43e6ba6810c6/1200/630', d['picture']
+    assert_match /^https?:\/\/www\.aljazeera\.net$/, d['author_url']
+    assert_match /^https?:\/\/www\.aljazeera\.net\/file\/GetImageCustom\/f1dbce3b-5a2f-4edb-89c5-43e6ba6810c6\/1200\/630$/, d['picture']
   end
 
   test "should parse url with already encoded chars" do
