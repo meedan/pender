@@ -589,7 +589,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://xkcd.com/1479', request: request
     d = m.as_json
     assert_equal 'xkcd: Troubleshooting', d['title']
-    assert_equal 'xkcd: Troubleshooting', d['description']
+    assert_equal '', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
@@ -714,7 +714,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'http://xkcd.com/448/', request: request
     d = m.as_json
     assert_equal 'xkcd: Good Morning', d['title']
-    assert_equal 'xkcd: Good Morning', d['description']
+    assert_equal '', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
@@ -1348,4 +1348,30 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil d['error']
   end
 
+  test "should return empty html on oembed when frame is not allowed" do
+    m = create_media url: 'https://martinoei.com/article/13371/%e9%81%b8%e6%b0%91%e7%99%bb%e8%a8%98-%e5%a4%b1%e7%ab%8a%e4%ba%8b%e4%bb%b6%e8%b6%8a%e8%a7%a3%e8%b6%8a%e4%bc%bcx%e6%aa%94%e6%a1%88'
+    data = m.as_json
+    assert_equal 'oembed', data['provider']
+    response = m.oembed_get_data_from_url(m.get_oembed_url)
+    assert_equal 'SAMEORIGIN', response.header['X-Frame-Options']
+    assert_equal '', data['html']
+  end
+
+  test "should parse Facebook post from media set" do
+    m = create_media url: 'https://www.facebook.com/media/set/?set=a.10154534110871407.1073742048.54212446406&type=3'
+    d = m.as_json
+    assert_equal '54212446406_10154534110871407', d['uuid']
+    assert_match(/En el Museo Serralves de Oporto/, d['text'])
+    assert_equal '54212446406', d['user_uuid']
+    assert_equal 'Mariano Rajoy Brey', d['user_name']
+    assert_equal 10, d['media_count']
+    assert_equal '10154534110871407', d['object_id']
+  end
+
+  test "should get all information of a truncated tweet" do
+    m = create_media url: 'https://twitter.com/bradymakesstuff/status/844240817334247425'
+    d = m.as_json
+    assert_equal 'Anti immigrant graffiti in a portajon on a residential construction site in Mtn Brook, AL. Job has about 50% Latino workers. https://t.co/bS5vI4Jq7I', d['description']
+    assert_not_nil d['entities']['media'][0]['media_url_https']
+  end
 end

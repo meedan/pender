@@ -25,6 +25,9 @@ module MediaOembedItem
       response = self.oembed_get_data_from_url(oembed_url)
       if !response.nil? && response.code == '200'
         self.data[:oembed] = JSON.parse(response.body)
+        if ['DENY', 'SAMEORIGIN'].include? response.header['X-Frame-Options']
+          self.data[:oembed][:html] = ''
+        end
         self.post_process_oembed_data
       end
     end
