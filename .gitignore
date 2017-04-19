@@ -26,3 +26,4 @@ tmp/performance*
 config/environments/profile.rb
 config/sidekiq.yml
 dump.rdb
+config/initializers/errbit.rb.travis
