@@ -65,7 +65,7 @@ module MediaFacebookProfile
     handle_exceptions(Koala::Facebook::ClientError, :fb_error_message, :fb_error_code) do
       begin
         self.data.merge! self.get_data_from_facebook
-      rescue Exception => e
+      rescue Koala::Facebook::ClientError => e
         Airbrake.notify(e) if Airbrake.configuration.api_key
         raise e
       end
