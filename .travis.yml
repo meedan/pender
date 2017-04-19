@@ -1,7 +1,7 @@
 language: ruby
 bundler_args: "--jobs 3 --retry 3 --without nothing"
 before_install:
-- openssl aes-256-cbc -K $encrypted_3fdc99ff03c0_key -iv $encrypted_3fdc99ff03c0_iv -in config/config.yml.travis.enc -out config/config.yml -d
+- openssl aes-256-cbc -K $encrypted_5482c7565cb6_key -iv $encrypted_5482c7565cb6_iv -in config/config.yml.travis.enc -out config/config.yml -d
 before_script:
 - cp config/database.yml.travis config/database.yml
 - cp config/initializers/secret_token.rb.example config/initializers/secret_token.rb

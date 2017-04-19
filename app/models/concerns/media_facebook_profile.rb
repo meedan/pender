@@ -63,7 +63,12 @@ module MediaFacebookProfile
 
   def data_from_facebook_profile
     handle_exceptions(Koala::Facebook::ClientError, :fb_error_message, :fb_error_code) do
-      self.data.merge! self.get_data_from_facebook
+      begin
+        self.data.merge! self.get_data_from_facebook
+      rescue Koala::Facebook::ClientError => e
+        Airbrake.notify(e) if Airbrake.configuration.api_key
+        raise e
+      end
     end
 
     self.data[:username] = self.get_facebook_username
