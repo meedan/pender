@@ -25,7 +25,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
     data = m.as_json
     assert_equal 'Iron Maiden', data['title']
-    assert_equal 'ironmaiden', data['username']
+    assert_equal 'IronMaiden', data['username']
     assert_equal 'user', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
