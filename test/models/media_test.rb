@@ -25,7 +25,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
     data = m.as_json
     assert_equal 'Iron Maiden', data['title']
-    assert_equal 'IronMaiden', data['username']
+    assert_equal 'ironmaiden', data['username'].downcase
     assert_equal 'user', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
@@ -916,8 +916,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'عبرت الأمم المتحدة عن قلقها البالغ على سلامة 1.5 مليون شخص بالموصل، محذرة من احتمال نزوح مليون منهم، وقالت إن أكثر من 900 نازح فروا إلى سوريا بأول موجة نزوح.', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
-    assert_equal 'http://www.aljazeera.net', d['author_url']
-    assert_equal 'http://www.aljazeera.net/file/GetImageCustom/f1dbce3b-5a2f-4edb-89c5-43e6ba6810c6/1200/630', d['picture']
+    assert_match /^https?:\/\/www\.aljazeera\.net$/, d['author_url']
+    assert_match /^https?:\/\/www\.aljazeera\.net\/file\/GetImageCustom\/f1dbce3b-5a2f-4edb-89c5-43e6ba6810c6\/1200\/630$/, d['picture']
   end
 
   test "should parse url 1" do
