@@ -16,10 +16,9 @@ gem 'mocha'
 gem 'simplecov', require: false, group: :test
 gem 'railroady'
 gem 'airbrake', '4.3.3'
-gem 'codeclimate-test-reporter', group: :test, require: nil
+gem 'codeclimate-test-reporter', '0.6.0', group: :test, require: nil
 gem 'awesome_print', require: false, group: :development
 gem 'gem-licenses'
-gem 'auto_localize', '0.1'
 gem 'thin'
 gem 'protected_attributes'
 gem 'responders'
@@ -39,3 +38,4 @@ gem 'rails-perftest'
 gem 'newrelic_rpm'
 gem 'sidekiq'
 gem 'redis-namespace'
+gem 'nokogiri', '1.7.1'
