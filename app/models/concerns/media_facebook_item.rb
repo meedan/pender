@@ -63,6 +63,10 @@ module MediaFacebookItem
       params = CGI.parse(uri.query)
       id = params['set'].first.split('.')[1]
     end
+    if id === 'photos'
+      params = CGI.parse(uri.query)
+      id = params['album_id'].first
+    end
     id = '' if id === 'livemap'
     self.data['object_id'] = id.sub(/:0$/, '')
   end
@@ -117,8 +121,13 @@ module MediaFacebookItem
 
   def get_url_from_object(object)
     return unless ['video', 'photo', 'status'].include?(object['type'])
-    self.url = object['link'] if object['type'] === 'video'
-    self.url = object['permalink_url'] if object['type'] == 'status' || object['type'] === 'photo'
+    self.url = if object['type'] === 'video'
+      object['link']
+    elsif object['type'] == 'status'
+      object['permalink_url']
+    elsif object['type'] === 'photo'
+      object['permalink_url'].match(/album\.php/) ? object['link'] : object['permalink_url']
+    end
     normalize_url
   end
 
