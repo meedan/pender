@@ -1401,4 +1401,19 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3', m.url
   end
 
+  test "should get facebook data from original_url when url fails" do
+    Media.any_instance.stubs(:url).returns('https://www.facebook.com/Mariano-Rajoy-Brey-54212446406/photos')
+    Media.any_instance.stubs(:original_url).returns('https://www.facebook.com/pg/Mariano-Rajoy-Brey-54212446406/photos/?tab=album&album_id=10154534110871407')
+    m = create_media url: 'https://www.facebook.com/pg/Mariano-Rajoy-Brey-54212446406/photos'
+    d = m.as_json
+    assert_equal '54212446406_10154534110871407', d['uuid']
+    assert_match(/En el Museo Serralves de Oporto/, d['text'])
+    assert_equal '54212446406', d['user_uuid']
+    assert_equal 'Mariano Rajoy Brey', d['user_name']
+    assert_equal 10, d['media_count']
+    assert_equal '10154534110871407', d['object_id']
+    Media.any_instance.unstub(:url)
+    Media.any_instance.unstub(:original_url)
+  end
+
 end
