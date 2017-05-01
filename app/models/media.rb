@@ -3,7 +3,7 @@ class Media
   include ActiveModel::Conversion
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data, :request, :doc
+  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url
 
   TYPES = {}
 
@@ -131,6 +131,7 @@ class Media
   end
 
   def get_canonical_url
+    self.original_url = self.url
     self.doc = self.get_html(html_options)
     if self.doc
       tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")
