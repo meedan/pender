@@ -31,9 +31,9 @@ module Api
 
       def render_uncached_media
         render_timeout(false) do
-          (render_url_invalid and return) unless valid_url?
+          (render_url_invalid and return true) unless valid_url?
           @media = Media.new(url: @url, request: request)
-        end and return
+        end and return true
         false
       end
 
