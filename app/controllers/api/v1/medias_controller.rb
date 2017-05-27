@@ -18,21 +18,28 @@ module Api
         @refresh = params[:refresh] == '1'
         @id = Digest::MD5.hexdigest(@url)
 
-        if @refresh || Rails.cache.read(@id).nil?
-          render_timeout(false) do
-            (render_url_invalid and return) unless valid_url?
-            @media = Media.new(url: @url, request: request)
-          end and return
+        (render_uncached_media and return) if @refresh || Rails.cache.read(@id).nil?
+
+        respond_to do |format|
+          list_formats.each do |f|
+            format.send(f) { send("render_as_#{f}") }
+          end
         end
-        
-        respond_to_formats
+      end
+
+      private
+
+      def render_uncached_media
+        render_timeout(false) do
+          (render_url_invalid and return) unless valid_url?
+          @media = Media.new(url: @url, request: request)
+        end and return
+        false
       end
 
       def list_formats
         %w(html js json oembed)
       end
-
-      private
 
       def allow_iframe
         response.headers.except! 'X-Frame-Options'
@@ -150,14 +157,6 @@ module Api
         FileUtils.rm_f cache_path
         url = request.original_url.gsub(/medias(\.[a-z]+)?\?/, 'medias.html?')
         CcDeville.clear_cache_for_url(url)
-      end
-
-      def respond_to_formats
-        respond_to do |format|
-          list_formats.each do |f|
-            format.send(f) { send("render_as_#{f}") }
-          end
-        end
       end
     end
   end
