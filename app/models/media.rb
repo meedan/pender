@@ -11,6 +11,7 @@ class Media
     attributes.each do |name, value|
       send("#{name}=", value)
     end
+    self.original_url = self.url
     self.follow_redirections
     self.normalize_url unless self.get_canonical_url
     self.try_https
@@ -111,7 +112,7 @@ class Media
   end
 
   def get_id
-    Digest::MD5.hexdigest(self.url)
+    Digest::MD5.hexdigest(self.original_url)
   end
 
   def parse
@@ -131,7 +132,6 @@ class Media
   end
 
   def get_canonical_url
-    self.original_url = self.url
     self.doc = self.get_html(html_options)
     if self.doc
       tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")

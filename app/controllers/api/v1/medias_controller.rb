@@ -17,11 +17,13 @@ module Api
         
         @refresh = params[:refresh] == '1'
         @id = Digest::MD5.hexdigest(@url)
-        
-        render_timeout(false) do
-          (render_url_invalid and return) unless valid_url?
-          @media = Media.new(url: @url, request: request)
-        end and return
+
+        if @refresh || Rails.cache.read(@id).nil?
+          render_timeout(false) do
+            (render_url_invalid and return) unless valid_url?
+            @media = Media.new(url: @url, request: request)
+          end and return
+        end
         
         respond_to do |format|
           list_formats.each do |f|
@@ -125,10 +127,9 @@ module Api
       end
 
       def cache_path
-        name = Digest::MD5.hexdigest(@url)
         dir = File.join('public', 'cache', Rails.env)
         FileUtils.mkdir_p(dir) unless File.exist?(dir)
-        File.join(dir, "#{name}.html")
+        File.join(dir, "#{@id}.html")
       end
 
       def valid_url?
