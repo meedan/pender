@@ -25,11 +25,7 @@ module Api
           end and return
         end
         
-        respond_to do |format|
-          list_formats.each do |f|
-            format.send(f) { send("render_as_#{f}") }
-          end
-        end
+        respond_to_formats
       end
 
       def list_formats
@@ -154,6 +150,14 @@ module Api
         FileUtils.rm_f cache_path
         url = request.original_url.gsub(/medias(\.[a-z]+)?\?/, 'medias.html?')
         CcDeville.clear_cache_for_url(url)
+      end
+
+      def respond_to_formats
+        respond_to do |format|
+          list_formats.each do |f|
+            format.send(f) { send("render_as_#{f}") }
+          end
+        end
       end
     end
   end
