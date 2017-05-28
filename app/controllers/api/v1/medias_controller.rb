@@ -62,7 +62,6 @@ module Api
         data = Rails.cache.read(@id)
         if !data.nil? && !@refresh
           render_timeout_media(data, must_render) and return true
-          return false
         end
         
         begin
