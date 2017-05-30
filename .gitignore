@@ -11,6 +11,7 @@ config/database.yml
 config/config.yml
 config/initializers/errbit.rb
 config/initializers/secret_token.rb
+config/environments/production.rb
 *.sw*
 *~
 public/assets
