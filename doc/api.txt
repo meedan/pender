@@ -1,2 +1,3 @@
-API Endpoints - Thu Oct 20 14:57:51 UTC 2016
-     1	GET  /api/medias
+API Endpoints - Wed Jun  7 20:28:54 UTC 2017
+     1	GE /api/medias
+     2	GET          /api/medias

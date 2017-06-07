@@ -336,4 +336,38 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: url
     assert_response :success
   end
+
+  test "should clear cache for multiple URLs sent as array" do
+    authenticate_with_token
+    url1 = 'http://ca.ios.ba'
+    url2 = 'https://twitter.com/caiosba/status/742779467521773568'
+    id1 = Digest::MD5.hexdigest(url1)
+    id2 = Digest::MD5.hexdigest(url2)
+    cachefile1 = File.join('public', 'cache', Rails.env, "#{id1}.html")
+    cachefile2 = File.join('public', 'cache', Rails.env, "#{id2}.html")
+    
+    assert !File.exist?(cachefile1)
+    assert !File.exist?(cachefile2)
+    assert_nil Rails.cache.read(id1)
+    assert_nil Rails.cache.read(id2)
+    
+    get :index, url: url1
+    get :index, url: url2
+    assert File.exist?(cachefile1)
+    assert File.exist?(cachefile2)
+    assert_not_nil Rails.cache.read(id1)
+    assert_not_nil Rails.cache.read(id2)
+    
+    delete :delete, url: [url1, url2], format: 'json'
+    assert_response :success
+    assert !File.exist?(cachefile1)
+    assert !File.exist?(cachefile2)
+    assert_nil Rails.cache.read(id1)
+    assert_nil Rails.cache.read(id2)
+  end
+
+  test "should not clear cache if not authenticated" do
+    delete :delete, url: 'http://test.com', format: 'json'
+    assert_response 401
+  end
 end

@@ -27,6 +27,19 @@ module Api
         end
       end
 
+      def delete
+        return unless request.format.json?
+        urls = params[:url].is_a?(Array) ? params[:url] : params[:url].split(' ')
+        urls.each do |url|
+          @id = Digest::MD5.hexdigest(url)
+          Rails.cache.delete(@id)
+          cc_url = request.domain + '/api/medias.html?url=' + url
+          CcDeville.clear_cache_for_url(cc_url)
+          FileUtils.rm_f(cache_path)
+        end
+        render json: { type: 'success' }, status: 200
+      end
+
       private
 
       def render_uncached_media

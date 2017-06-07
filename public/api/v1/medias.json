@@ -87,6 +87,44 @@
           ],
           "method": "get",
           "nickname": "Api::V1::Medias#index"
+        },
+        {
+          "summary": "Delete cache for given URL(s)",
+          "notes": "Delete cache for the URL(s) passed as parameter, you can use the HTTP verbs DELETE or PURGE",
+          "parameters": [
+            {
+              "paramType": "query",
+              "name": "url",
+              "type": "string",
+              "description": "URL(s) whose cache should be delete... can be an array of URLs, a single URL or a list of URLs separated by a space",
+              "required": true
+            }
+          ],
+          "responseMessages": [
+            {
+              "code": 200,
+              "responseModel": {
+                "query": {
+                  "url": "https://www.youtube.com/user/MeedanTube"
+                },
+                "headers": {
+                  "x-Pender-Token": "test"
+                }
+              },
+              "message": "Success"
+            },
+            {
+              "code": 401,
+              "responseModel": {
+                "query": {
+                  "url": "https://www.youtube.com/user/MeedanTube"
+                }
+              },
+              "message": "Access denied"
+            }
+          ],
+          "method": "delete",
+          "nickname": "Api::V1::Medias#delete"
         }
       ]
     }

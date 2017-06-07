@@ -165,6 +165,34 @@ An oEmbed representation of the item, e.g.:
 }
 ```
 
+#### DELETE|PURGE /api/medias
+
+Clears the cache for the URL(s) passed as parameter.
+
+**Parameters**
+
+* `url`: URL(s) to be deleted, either as an array or a string with one URL or multiple URLs separated by a space  _(required)_
+
+**Response**
+
+200: Success
+```json
+{
+  "type": "success,
+}
+```
+
+401: Access denied
+```json
+{
+  "type": "error",
+  "data": {
+    "message": "Unauthorized",
+    "code": 1
+  }
+}
+```
+
 ### Rake tasks
 
 There are rake tasks for a few tasks (besides Rails' default ones). Run them this way: `bundle exec rake <task name>`
