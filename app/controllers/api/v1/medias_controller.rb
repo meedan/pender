@@ -17,12 +17,9 @@ module Api
         
         @refresh = params[:refresh] == '1'
         @id = Digest::MD5.hexdigest(@url)
-        
-        render_timeout(false) do
-          (render_url_invalid and return) unless valid_url?
-          @media = Media.new(url: @url, request: request)
-        end and return
-        
+
+        (render_uncached_media and return) if @refresh || Rails.cache.read(@id).nil?
+
         respond_to do |format|
           list_formats.each do |f|
             format.send(f) { send("render_as_#{f}") }
@@ -30,11 +27,19 @@ module Api
         end
       end
 
+      private
+
+      def render_uncached_media
+        render_timeout(false) do
+          (render_url_invalid and return true) unless valid_url?
+          @media = Media.new(url: @url, request: request)
+        end and return true
+        false
+      end
+
       def list_formats
         %w(html js json oembed)
       end
-
-      private
 
       def allow_iframe
         response.headers.except! 'X-Frame-Options'
@@ -57,7 +62,6 @@ module Api
         data = Rails.cache.read(@id)
         if !data.nil? && !@refresh
           render_timeout_media(data, must_render) and return true
-          return false
         end
         
         begin
@@ -125,10 +129,9 @@ module Api
       end
 
       def cache_path
-        name = Digest::MD5.hexdigest(@url)
         dir = File.join('public', 'cache', Rails.env)
         FileUtils.mkdir_p(dir) unless File.exist?(dir)
-        File.join(dir, "#{name}.html")
+        File.join(dir, "#{@id}.html")
       end
 
       def valid_url?

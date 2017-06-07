@@ -40,7 +40,7 @@ module MediaFacebookItem
     user_id = IdsPlease.new(self.url).grab[:facebook].first.network_id
     if user_id.blank?
       uri = URI.parse(self.url)
-      params = CGI.parse(uri.query.to_s)
+      params = parse_uri(uri)
       user_id = params['set'].first.split('.').last unless params['set'].blank?
       user_id ||= params['id'].first.match(/([0-9]+).*/)[1] unless params['id'].blank?
     end
@@ -51,20 +51,27 @@ module MediaFacebookItem
   def get_facebook_post_id_from_url
     uri = URI.parse(self.url)
     id = uri.path.split('/').last
-    if id === 'photo.php'
-      params = CGI.parse(uri.query)
-      id = params['fbid'].first
-    end
-    if id === 'permalink.php' || id === 'story.php'
-      params = CGI.parse(uri.query)
-      id = params['story_fbid'].first
-    end
-    if id === 'set'
-      params = CGI.parse(uri.query)
-      id = params['set'].first.split('.')[1]
-    end
+    mapping = { 'photo.php' => 'fbid', 'permalink.php' => 'story_fbid', 'story.php' => 'story_fbid', 'set' => 'set', 'photos' => 'album_id' }
+    id = self.get_facebook_post_id_from_uri_params(id, uri, mapping[id]) if mapping.keys.include?(id)
     id = '' if id === 'livemap'
-    self.data['object_id'] = id.sub(/:0$/, '')
+    self.data['object_id'] = id.sub(/:0$/, '') if id
+  end
+
+  def get_facebook_post_id_from_uri_params(id, uri, key)
+    params = parse_uri(uri)
+    if id == 'photos' && params.empty?
+      self.url = self.original_url
+      uri = URI.parse(self.original_url)
+      params = parse_uri(uri)
+    end
+    return '' if params.empty?
+    post_id = params[key].first
+    post_id = post_id.split('.')[1] if id == 'set'
+    post_id
+  end
+
+  def parse_uri(uri)
+    CGI.parse(uri.query.to_s)
   end
 
   def get_object_from_facebook(*fields)
@@ -117,8 +124,13 @@ module MediaFacebookItem
 
   def get_url_from_object(object)
     return unless ['video', 'photo', 'status'].include?(object['type'])
-    self.url = object['link'] if object['type'] === 'video'
-    self.url = object['permalink_url'] if object['type'] == 'status' || object['type'] === 'photo'
+    self.url = if object['type'] == 'video'
+                 object['link']
+               elsif object['type'] == 'status'
+                 object['permalink_url']
+               elsif object['type'] == 'photo'
+                 object['permalink_url'].match(/album\.php/) ? object['link'] : object['permalink_url']
+               end
     normalize_url
   end
 
@@ -143,7 +155,7 @@ module MediaFacebookItem
     if object['link'].match(/^https?:\/\/([^\.]+\.)?(giphy\.com|gph\.is)\/.*/)
       self.data['link'] = object['link']
       uri = URI.parse(object['full_picture'])
-      params = CGI.parse(uri.query)
+      params = parse_uri(uri)
       params['url'].first
     end
   end

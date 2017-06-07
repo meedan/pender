@@ -16,10 +16,10 @@ module MediaFacebookProfile
       link        name                first_name     id            last_name    picture              timezone
       albums      books               events         family        games        groups               likes
       movies      music               photos         tagged_places television   videos               feed
-      about       age_range           bio            birthday      cover        currency             education
+      about       age_range           birthday       cover         currency     education            website
       email       favorite_athletes   favorite_teams gender        hometown     inspirational_people interested_in
       is_verified languages           locale         location      middle_name  name_format          political
-      quotes      relationship_status religion       sports        updated_time verified             website
+      quotes      relationship_status religion       sports        updated_time verified
     )
     fields
   end

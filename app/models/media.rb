@@ -3,7 +3,7 @@ class Media
   include ActiveModel::Conversion
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data, :request, :doc
+  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url
 
   TYPES = {}
 
@@ -11,6 +11,7 @@ class Media
     attributes.each do |name, value|
       send("#{name}=", value)
     end
+    self.original_url = self.url
     self.follow_redirections
     self.normalize_url unless self.get_canonical_url
     self.try_https
@@ -111,7 +112,7 @@ class Media
   end
 
   def get_id
-    Digest::MD5.hexdigest(self.url)
+    Digest::MD5.hexdigest(self.original_url)
   end
 
   def parse
