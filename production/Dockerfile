@@ -9,6 +9,8 @@ ENV DEPLOYUSER=pender \
     RAILS_ENV=production \
     PRODUCT=pender \
     APP=pender \
+    MIN_INSTANCES=4 \
+    MAX_POOL_SIZE=12 \
     TERM=xterm
 
 # runtime binaries
