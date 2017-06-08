@@ -81,7 +81,8 @@ module MediaFacebookItem
     if response.code.to_i === 200
       JSON.parse(response.body)
     else
-      Airbrake.notify(Exception.new(response.body)) if Airbrake.configuration.api_key
+      response = JSON.parse(response.body)
+      Airbrake.notify(Exception.new(response['error']['message'])) if response['error']['code'] == 190 && Airbrake.configuration.api_key
       nil
     end
   end
