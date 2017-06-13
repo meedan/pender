@@ -847,15 +847,15 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse Facebook removed live post" do
-    m = create_media url: 'https://www.facebook.com/LiveNationTV/videos/1817191221829045/'
+    m = create_media url: 'https://www.facebook.com/teste637621352/posts/1538843716180215/'
     data = m.as_json
-    assert_equal 'https://www.facebook.com/LiveNationTV/videos/1817191221829045', m.url
+    assert_equal 'https://www.facebook.com/teste637621352/posts/1538843716180215', m.url
     assert_equal 'Not Identified on Facebook', data['title']
     assert_equal '', data['description']
     assert_equal '', data['published_at']
     assert_equal 'Not Identified', data['username']
-    assert_equal 'http://facebook.com/1600067986874704', data['author_url']
-    assert_equal 'https://graph.facebook.com/1600067986874704/picture', data['picture']
+    assert_equal 'http://facebook.com/749262715138323', data['author_url']
+    assert_equal 'https://graph.facebook.com/749262715138323/picture', data['picture']
   end
 
   test "should parse Facebook livemap" do

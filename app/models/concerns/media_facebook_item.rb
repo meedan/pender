@@ -171,11 +171,17 @@ module MediaFacebookItem
     time = self.doc.at_css('span.timestampContent')
     self.data['published_at'] = Time.parse(time.inner_html) unless time.nil?
     self.data['photos'] = []
+    self.get_facebook_user_info_from_html
+  end
+
+  def get_facebook_user_info_from_html
+    user_uuid = self.doc.to_s.match(/"entity_id":"([^"]+)"/)
+    self.data['user_uuid'] = user_uuid[1] if self.data['user_uuid'].blank? && !user_uuid.nil?
+    self.get_facebook_picture(self.data['user_uuid']) if !self.data['user_uuid'].blank? && self.data['picture'].blank?
   end
 
   def get_facebook_text_from_html
     content = self.doc.at_css('div.userContent') || self.doc.at_css('span.hasCaption')
-    f = File.open('/tmp/bli', 'w+'); f.puts(self.doc.to_s); f.close
     if content.nil?
       meta_description = self.doc.at_css('meta[name=description]')
       text = meta_description ? meta_description.attr('content') : ''
