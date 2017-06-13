@@ -12,6 +12,8 @@ mkdir -p /app/tmp/pids
 rm -f /app/tmp/pids/server-$RAILS_ENV.pid
 if [ "$RAILS_ENV" == "test" ]
 then
+  rm -rf /app/public/cache/test/*
+  rm -rf /app/tmp/cache/*
   bundle exec rails s -b 0.0.0.0 -p $SERVER_PORT -P /app/tmp/pids/server-$RAILS_ENV.pid
 else
   puma="/app/tmp/puma-$RAILS_ENV.rb"
