@@ -1431,4 +1431,24 @@ class MediaTest < ActiveSupport::TestCase
     Airbrake.unstub(:notify)
   end
 
+  test "should keep port when building author_url if port is not 443 or 80" do
+    Media.any_instance.stubs(:generate_screenshot).returns('')
+
+    url = 'https://mediatheque.karimratib.me:5001/as/sharing/uhfxuitn'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'https://mediatheque.karimratib.me:5001', data['author_url']
+
+    url = 'http://ca.ios.ba/slack'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'http://ca.ios.ba', data['author_url']
+
+    url = 'https://meedan.com/en/check'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'https://meedan.com', data['author_url']
+    
+    Media.any_instance.unstub(:generate_screenshot)
+  end
 end

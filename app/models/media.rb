@@ -248,7 +248,8 @@ class Media
 
   def top_url(url)
     uri = parse_url(url)
-    "#{uri.scheme}://#{uri.host}"
+    port = (uri.port == 80 || uri.port == 443) ? '' : ":#{uri.port}"
+    "#{uri.scheme}://#{uri.host}#{port}"
   end
 
   def absolute_url(path = '')
