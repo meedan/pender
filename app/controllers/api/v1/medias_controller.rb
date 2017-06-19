@@ -126,7 +126,7 @@ module Api
         cache = Rails.cache.read(@id)
         data = cache && !@refresh ? cache : @media.as_json({ force: @refresh })
 
-        if !data['html'].blank? && (data['url'] =~ /^https:/ || Rails.env.development?)
+        if should_serve_external_embed?(data)
           locals = { html: data['html'].html_safe }
           template = 'custom'
         else
@@ -139,6 +139,10 @@ module Api
         content = av.render(template: "medias/#{template}.html.erb", layout: 'layouts/application.html.erb')
         File.atomic_write(cache_path) { |file| file.write(content) }
         clear_upstream_cache if @refresh
+      end
+
+      def should_serve_external_embed?(data)
+        !data['html'].blank? && (data['url'] =~ /^https:/ || Rails.env.development?)
       end
 
       def cache_path
