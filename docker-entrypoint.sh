@@ -4,6 +4,9 @@ bundle exec rake db:migrate
 export SECRET_KEY_BASE=$(bundle exec rake secret)
 bundle exec rake lapis:api_keys:create_default
 
+# Nginx
+nginx &
+
 # Sidekiq
 redis-server &
 bundle exec sidekiq -L log/sidekiq.log -d
