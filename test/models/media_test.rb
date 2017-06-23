@@ -1451,4 +1451,13 @@ class MediaTest < ActiveSupport::TestCase
     
     Media.any_instance.unstub(:generate_screenshot)
   end
+
+  test "should store metatags in an Array" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'https://www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html', request: request
+    assert m.data['metatags'].is_a? Array
+    assert !m.data['metatags'].empty?
+  end
+
 end

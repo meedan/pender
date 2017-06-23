@@ -16,6 +16,7 @@ class Media
     self.normalize_url unless self.get_canonical_url
     self.try_https
     self.data = {}.with_indifferent_access
+    self.get_metatags
   end
 
   def self.declare(type, patterns)
@@ -278,5 +279,17 @@ class Media
     rescue
       self.url.gsub!(/^https:/i, 'http:')
     end
+  end
+
+  def get_metatags
+    fields = []
+    unless self.doc.nil?
+      self.doc.search('meta').each do |meta|
+        metatag = {}
+        meta.each { |key, value| metatag.merge!({key => value}) }
+        fields << metatag
+      end
+    end
+    data['metatags'] = fields
   end
 end
