@@ -15,4 +15,15 @@ module MediasHelper
   def timeout_value
     CONFIG['timeout'] || 20
   end
+
+  def handle_exceptions(media, exception, message_method = :message, code_method = :code)
+    begin
+      yield
+    rescue exception => error
+      code = error.respond_to?(code_method) ? error.send(code_method) : 5
+      media.data.merge!(error: { message: "#{error.class}: #{error.send(message_method)}", code: code })
+      return
+    end
+  end
+
 end

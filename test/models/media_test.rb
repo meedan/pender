@@ -618,9 +618,9 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Facebook photo on page album" do
     m = create_media url: 'https://www.facebook.com/scmp/videos/vb.355665009819/10154584426664820/?type=2&theater'
     d = m.as_json
-    assert_equal 'South China Morning Post SCMP on Facebook', d['title']
+    assert_equal 'South China Morning Post on Facebook', d['title']
     assert_match /SCMP #FacebookLive/, d['description']
-    assert_equal 'South China Morning Post SCMP', d['username']
+    assert_equal 'South China Morning Post', d['username']
     assert_match /355665009819/, d['picture']
     assert_equal 'http://facebook.com/355665009819', d['author_url']
     assert_not_nil d['published_at']
@@ -826,10 +826,10 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://m.facebook.com/story.php?story_fbid=10154584426664820&id=355665009819%C2%ACif_t=live_video%C2%ACif_id=1476846578702256&ref=bookmarks'
     data = m.as_json
     assert_equal 'https://www.facebook.com/scmp/videos/10154584426664820', m.url
-    assert_equal 'South China Morning Post SCMP on Facebook', data['title']
+    assert_equal 'South China Morning Post on Facebook', data['title']
     assert_match /SCMP #FacebookLive amid chaotic scenes in #HongKong Legco/, data['description']
     assert_not_nil data['published_at']
-    assert_equal 'South China Morning Post SCMP', data['username']
+    assert_equal 'South China Morning Post', data['username']
     assert_equal 'http://facebook.com/355665009819', data['author_url']
     assert_equal 'https://graph.facebook.com/355665009819/picture', data['picture']
   end
@@ -1451,4 +1451,13 @@ class MediaTest < ActiveSupport::TestCase
     
     Media.any_instance.unstub(:generate_screenshot)
   end
+
+  test "should store metatags in an Array" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'https://www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html', request: request
+    assert m.data['metatags'].is_a? Array
+    assert !m.data['metatags'].empty?
+  end
+
 end
