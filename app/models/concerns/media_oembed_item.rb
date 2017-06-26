@@ -20,7 +20,7 @@ module MediaOembedItem
   end
 
   def data_from_oembed_item
-    handle_exceptions(StandardError) do
+    handle_exceptions(self, StandardError) do
       oembed_url = self.get_oembed_url
       response = self.oembed_get_data_from_url(oembed_url)
       if !response.nil? && response.code == '200'
