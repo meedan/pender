@@ -223,7 +223,7 @@ module MediaFacebookItem
 
   # First method
   def data_from_facebook_item
-    handle_exceptions(RuntimeError) do
+    handle_exceptions(self, RuntimeError) do
       self.parse_facebook_uuid
       self.parse_from_facebook_html unless self.parse_from_facebook_api
       self.data['text'].strip!

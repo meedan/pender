@@ -1,6 +1,7 @@
 class Media
   include ActiveModel::Validations
   include ActiveModel::Conversion
+  include MediasHelper
   extend ActiveModel::Naming
 
   attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url
@@ -58,16 +59,6 @@ class Media
       parsed_at: Time.now,
       favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, '')}"
     }
-  end
-
-  def handle_exceptions(exception, message_method = :message, code_method = :code)
-    begin
-      yield
-    rescue exception => error
-      code = error.respond_to?(code_method) ? error.send(code_method) : 5
-      self.data.merge!(error: { message: "#{error.class}: #{error.send(message_method)}", code: code })
-      return
-    end
   end
 
   def self.validate_url(url)
@@ -217,13 +208,12 @@ class Media
         f.binmode
         html = f.read
       end
-      doc = Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
+      Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
     rescue OpenURI::HTTPError
       return nil
     rescue Zlib::DataError
       self.get_html(html_options.merge('Accept-Encoding' => 'identity'))
     end
-    doc
   end
 
   def html_options
