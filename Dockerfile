@@ -12,9 +12,9 @@ RUN curl -sL -o phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/download
 RUN tar --wildcards -xvjf phantomjs.tar.bz2 phantomjs-*/bin/phantomjs && mv phantomjs-*/bin/phantomjs /usr/bin/phantomjs && chmod 755 /usr/bin/phantomjs && rm -rf phantomjs.tar.bz2 phantomjs*
 
 # nginx
-COPY ./nginx.conf /etc/nginx/sites-available/pender
-RUN ln -s /etc/nginx/sites-available/pender /etc/nginx/sites-enabled/pender \
- && rm /etc/nginx/sites-enabled/default
+COPY ./nginx.development.conf /etc/nginx/sites-available/pender-development
+COPY ./nginx.test.conf /etc/nginx/sites-available/pender-test
+RUN rm /etc/nginx/sites-enabled/default
 
 # install our app
 RUN mkdir -p /app

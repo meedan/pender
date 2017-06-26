@@ -5,6 +5,7 @@ export SECRET_KEY_BASE=$(bundle exec rake secret)
 bundle exec rake lapis:api_keys:create_default
 
 # Nginx
+ln -s "/etc/nginx/sites-available/pender-$RAILS_ENV" /etc/nginx/sites-enabled/pender
 nginx &
 
 # Sidekiq
