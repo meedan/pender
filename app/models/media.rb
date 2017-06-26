@@ -17,7 +17,6 @@ class Media
     self.normalize_url unless self.get_canonical_url
     self.try_https
     self.data = {}.with_indifferent_access
-    self.get_metatags
   end
 
   def self.declare(type, patterns)
@@ -109,6 +108,7 @@ class Media
 
   def parse
     self.data = Media.minimal_data(self)
+    self.get_metatags
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|
@@ -280,6 +280,6 @@ class Media
         fields << metatag
       end
     end
-    data['metatags'] = fields
+    self.data['metatags'] = fields
   end
 end
