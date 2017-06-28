@@ -370,4 +370,22 @@ class MediasControllerTest < ActionController::TestCase
     delete :delete, url: 'http://test.com', format: 'json'
     assert_response 401
   end
+
+  test "should return custom oEmbed format for scmp url" do
+    url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
+    get :index, url: url, format: :oembed, refresh: '1'
+    assert_response :success
+    assert_not_nil response.body
+  end
+
+  test "should handle error when calls oembed format" do
+    url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
+    Media.any_instance.stubs(:as_oembed).raises(StandardError)
+    get :index, url: url, format: :oembed, refresh: '1'
+    assert_response :success
+    assert_not_nil response.body
+    Media.any_instance.unstub(:as_oembed)
+  end
+
+
 end
