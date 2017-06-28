@@ -116,8 +116,14 @@ module Api
       end
 
       def render_as_oembed
-        json = @media.as_oembed(request.original_url, params[:maxwidth], params[:maxheight], { force: @refresh })
-        render json: json, status: 200
+        begin
+          json = @media.as_oembed(request.original_url, params[:maxwidth], params[:maxheight], { force: @refresh })
+          render json: json, status: 200
+        rescue StandardError => e
+          data = @media.nil? ? {} : @media.data
+          Airbrake.notify(e) if Airbrake.configuration.api_key
+          render_media(data.merge(error: { message: e.message, code: 'UNKNOWN' }))
+        end
       end
 
       def save_cache

@@ -37,7 +37,7 @@ class Media
   def as_oembed(original_url, maxwidth, maxheight, options = {})
     data = self.as_json(options)
     oembed = "#{data['provider']}_as_oembed"
-    self.respond_to?(oembed)? self.send(oembed, original_url, maxwidth, maxheight) : self.default_oembed(original_url, maxwidth, maxheight)
+    self.respond_to?(oembed)? self.send(oembed, original_url, maxwidth, maxheight) : self.default_oembed(data, original_url, maxwidth, maxheight)
   end
 
   def self.minimal_data(instance)
@@ -82,10 +82,9 @@ class Media
 
   protected
 
-  def default_oembed(original_url, maxwidth, maxheight)
+  def default_oembed(data, original_url, maxwidth, maxheight)
     maxwidth ||= 800
     maxheight ||= 200
-    data = self.as_json
     src = original_url.gsub('medias.oembed', 'medias.html')
     {
       type: 'rich',
