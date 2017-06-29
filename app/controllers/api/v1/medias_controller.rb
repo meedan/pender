@@ -86,7 +86,7 @@ module Api
         return false
       end
 
-      def render_timeout_media(data, must_render, oembed)
+      def render_timeout_media(data, must_render, oembed = false)
         return false unless must_render
         oembed ? render_oembed(data) : render_media(data)
         return true
@@ -95,7 +95,7 @@ module Api
       def render_media(data)
         json = { type: 'media' }
         json[:data] = data.merge({ embed_tag: embed_url(request) })
-        render json: data, status: 200
+        render json: json, status: 200
       end
 
       def render_oembed(data, instance = nil)
