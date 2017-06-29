@@ -106,7 +106,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should return item as oembed" do
     url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
     m = create_media url: url
-    data = m.as_oembed("http://pender.org/medias.html?url=#{url}", 300, 150)
+    data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150)
     assert_equal 'Meedan', data['title']
     assert_equal 'Meedan', data['author_name']
     assert_equal 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
