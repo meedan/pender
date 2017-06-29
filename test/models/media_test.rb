@@ -1239,7 +1239,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should handle zlib error when opening a url" do
     m = create_media url: 'https://ca.yahoo.com'
-    parsed_url = m.send(:parse_url, m.url)
+    parsed_url = Media.parse_url( m.url)
     header_options = m.send(:html_options)
     Media.any_instance.expects(:open).with(parsed_url, header_options).raises(Zlib::DataError)
     Media.any_instance.expects(:open).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))

@@ -34,10 +34,9 @@ class Media
     include concern
   end
 
-  def as_oembed(original_url, maxwidth, maxheight, options = {})
-    data = self.as_json(options)
+  def self.as_oembed(data, original_url, maxwidth, maxheight, instance = nil)
     oembed = "#{data['provider']}_as_oembed"
-    self.respond_to?(oembed)? self.send(oembed, original_url, maxwidth, maxheight) : self.default_oembed(data, original_url, maxwidth, maxheight)
+    (instance && instance.respond_to?(oembed))? instance.send(oembed, original_url, maxwidth, maxheight) : Media.default_oembed(data, original_url, maxwidth, maxheight)
   end
 
   def self.minimal_data(instance)
@@ -80,9 +79,7 @@ class Media
     data
   end
 
-  protected
-
-  def default_oembed(data, original_url, maxwidth, maxheight)
+  def self.default_oembed(data, original_url, maxwidth, maxheight)
     maxwidth ||= 800
     maxheight ||= 200
     src = original_url.gsub('medias.oembed', 'medias.html')
@@ -93,13 +90,15 @@ class Media
       author_name: data['username'],
       author_url: (data['type'] === 'profile' ? data['url'] : ''),
       provider_name: data['provider'],
-      provider_url: 'http://' + parse_url(data['url']).host,
+      provider_url: 'http://' + Media.parse_url(data['url']).host,
       thumbnail_url: data['picture'],
       html: "<iframe src=\"#{src}\" width=\"#{maxwidth}\" height=\"#{maxheight}\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>",
       width: maxwidth,
       height: maxheight
     }.with_indifferent_access
   end
+
+  protected
 
   def get_id
     Digest::MD5.hexdigest(self.original_url)
@@ -175,7 +174,7 @@ class Media
   end
 
   def request_media_url
-    uri = parse_url(self.url)
+    uri = Media.parse_url(self.url)
     response = nil
     Retryable.retryable(tries: 3, sleep: 1) do
       response = Media.request_uri(uri, 'Head')
@@ -203,7 +202,7 @@ class Media
   def get_html(header_options = {})
     html = ''
     begin
-      open(parse_url(self.url), header_options) do |f|
+      open(Media.parse_url(self.url), header_options) do |f|
         f.binmode
         html = f.read
       end
@@ -217,7 +216,7 @@ class Media
 
   def html_options
     options = { allow_redirections: :safe }
-    credentials = self.get_http_auth(parse_url(self.url))
+    credentials = self.get_http_auth(Media.parse_url(self.url))
     options[:http_basic_authentication] = credentials
     options['User-Agent'] = 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1'
     options['Accept-Language'] = 'en'
@@ -237,7 +236,7 @@ class Media
   end
 
   def top_url(url)
-    uri = parse_url(url)
+    uri = Media.parse_url(url)
     port = (uri.port == 80 || uri.port == 443) ? '' : ":#{uri.port}"
     "#{uri.scheme}://#{uri.host}#{port}"
   end
@@ -247,13 +246,13 @@ class Media
     if path =~ /^https?:/
       path
     elsif path =~ /^\/\//
-      self.parse_url(self.url).scheme + ':' + path
+      Media.parse_url(self.url).scheme + ':' + path
     else
       self.top_url(self.url) + path
     end
   end
 
-  def parse_url(url)
+  def self.parse_url(url)
     URI.parse(URI.encode(url))
   end
 
