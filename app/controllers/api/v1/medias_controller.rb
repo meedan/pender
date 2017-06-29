@@ -17,6 +17,7 @@ module Api
         
         @refresh = params[:refresh] == '1'
         @id = Digest::MD5.hexdigest(@url)
+
         (render_uncached_media and return) if @refresh || Rails.cache.read(@id).nil?
 
         respond_to do |format|
