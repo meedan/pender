@@ -202,7 +202,7 @@ class Media
   def get_html(header_options = {})
     html = ''
     begin
-      open(Media.parse_url(self.url), header_options) do |f|
+      OpenURI.open_uri(Media.parse_url(self.url), header_options) do |f|
         f.binmode
         html = f.read
       end
