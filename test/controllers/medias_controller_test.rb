@@ -336,4 +336,76 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: url
     assert_response :success
   end
+
+  test "should clear cache for multiple URLs sent as array" do
+    authenticate_with_token
+    url1 = 'http://ca.ios.ba'
+    url2 = 'https://twitter.com/caiosba/status/742779467521773568'
+    id1 = Digest::MD5.hexdigest(url1)
+    id2 = Digest::MD5.hexdigest(url2)
+    cachefile1 = File.join('public', 'cache', Rails.env, "#{id1}.html")
+    cachefile2 = File.join('public', 'cache', Rails.env, "#{id2}.html")
+    
+    assert !File.exist?(cachefile1)
+    assert !File.exist?(cachefile2)
+    assert_nil Rails.cache.read(id1)
+    assert_nil Rails.cache.read(id2)
+    
+    get :index, url: url1
+    get :index, url: url2
+    assert File.exist?(cachefile1)
+    assert File.exist?(cachefile2)
+    assert_not_nil Rails.cache.read(id1)
+    assert_not_nil Rails.cache.read(id2)
+    
+    delete :delete, url: [url1, url2], format: 'json'
+    assert_response :success
+    assert !File.exist?(cachefile1)
+    assert !File.exist?(cachefile2)
+    assert_nil Rails.cache.read(id1)
+    assert_nil Rails.cache.read(id2)
+  end
+
+  test "should not clear cache if not authenticated" do
+    delete :delete, url: 'http://test.com', format: 'json'
+    assert_response 401
+  end
+
+  test "should return custom oEmbed format for scmp url" do
+    url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
+    get :index, url: url, format: :oembed
+    assert_response :success
+    assert_not_nil response.body
+    data = JSON.parse(response.body)
+    assert_nil data['error']
+  end
+
+  test "should handle error when calls oembed format" do
+    url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
+    id = Digest::MD5.hexdigest(url)
+    Media.stubs(:as_oembed).raises(StandardError)
+    Rails.cache.delete(id)
+    get :index, url: url, format: :oembed
+    assert_response :success
+    data = JSON.parse(response.body)['data']
+    assert_not_nil data['error']['message']
+    Media.unstub(:as_oembed)
+  end
+
+  test "should respond to oembed format when data is on cache" do
+    url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
+    id = Digest::MD5.hexdigest(url)
+
+    assert_nil Rails.cache.read(id)
+    get :index, url: url, format: :oembed
+    assert_not_nil assigns(:media)
+    assert_response :success
+    assert_nil JSON.parse(response.body)['error']
+
+    assert_not_nil Rails.cache.read(assigns(:id))
+    get :index, url: url, format: :oembed
+    assert_response :success
+    assert_nil JSON.parse(response.body)['error']
+  end
+
 end

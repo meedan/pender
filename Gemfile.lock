@@ -120,7 +120,7 @@ GEM
     multipart-post (2.0.0)
     naught (1.1.0)
     newrelic_rpm (4.1.0.333)
-    nokogiri (1.7.1)
+    nokogiri (1.7.2)
       mini_portile2 (~> 2.1.0)
     open_uri_redirections (0.2.1)
     poltergeist (1.6.0)
@@ -262,7 +262,7 @@ DEPENDENCIES
   logstash-logger
   mocha
   newrelic_rpm
-  nokogiri (= 1.7.1)
+  nokogiri (= 1.7.2)
   open_uri_redirections
   postrank-uri
   protected_attributes

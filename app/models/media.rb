@@ -1,6 +1,7 @@
 class Media
   include ActiveModel::Validations
   include ActiveModel::Conversion
+  include MediasHelper
   extend ActiveModel::Naming
 
   attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url
@@ -33,10 +34,9 @@ class Media
     include concern
   end
 
-  def as_oembed(original_url, maxwidth, maxheight, options = {})
-    data = self.as_json(options)
+  def self.as_oembed(data, original_url, maxwidth, maxheight, instance = nil)
     oembed = "#{data['provider']}_as_oembed"
-    self.respond_to?(oembed)? self.send(oembed, original_url, maxwidth, maxheight) : self.default_oembed(original_url, maxwidth, maxheight)
+    (instance && instance.respond_to?(oembed))? instance.send(oembed, original_url, maxwidth, maxheight) : Media.default_oembed(data, original_url, maxwidth, maxheight)
   end
 
   def self.minimal_data(instance)
@@ -55,18 +55,8 @@ class Media
       provider: provider || 'page',
       type: type || 'item',
       parsed_at: Time.now,
-      favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url}"
+      favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, '')}"
     }
-  end
-
-  def handle_exceptions(exception, message_method = :message, code_method = :code)
-    begin
-      yield
-    rescue exception => error
-      code = error.respond_to?(code_method) ? error.send(code_method) : 5
-      self.data.merge!(error: { message: "#{error.class}: #{error.send(message_method)}", code: code })
-      return
-    end
   end
 
   def self.validate_url(url)
@@ -89,12 +79,9 @@ class Media
     data
   end
 
-  protected
-
-  def default_oembed(original_url, maxwidth, maxheight)
+  def self.default_oembed(data, original_url, maxwidth, maxheight)
     maxwidth ||= 800
     maxheight ||= 200
-    data = self.as_json
     src = original_url.gsub('medias.oembed', 'medias.html')
     {
       type: 'rich',
@@ -103,7 +90,7 @@ class Media
       author_name: data['username'],
       author_url: (data['type'] === 'profile' ? data['url'] : ''),
       provider_name: data['provider'],
-      provider_url: 'http://' + parse_url(data['url']).host,
+      provider_url: 'http://' + Media.parse_url(data['url']).host,
       thumbnail_url: data['picture'],
       html: "<iframe src=\"#{src}\" width=\"#{maxwidth}\" height=\"#{maxheight}\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>",
       width: maxwidth,
@@ -111,12 +98,15 @@ class Media
     }.with_indifferent_access
   end
 
+  protected
+
   def get_id
     Digest::MD5.hexdigest(self.original_url)
   end
 
   def parse
     self.data = Media.minimal_data(self)
+    self.get_metatags
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|
@@ -184,7 +174,7 @@ class Media
   end
 
   def request_media_url
-    uri = parse_url(self.url)
+    uri = Media.parse_url(self.url)
     response = nil
     Retryable.retryable(tries: 3, sleep: 1) do
       response = Media.request_uri(uri, 'Head')
@@ -212,22 +202,21 @@ class Media
   def get_html(header_options = {})
     html = ''
     begin
-      open(parse_url(self.url), header_options) do |f|
+      OpenURI.open_uri(Media.parse_url(self.url), header_options) do |f|
         f.binmode
         html = f.read
       end
-      doc = Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
+      Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
     rescue OpenURI::HTTPError
       return nil
     rescue Zlib::DataError
       self.get_html(html_options.merge('Accept-Encoding' => 'identity'))
     end
-    doc
   end
 
   def html_options
     options = { allow_redirections: :safe }
-    credentials = self.get_http_auth(parse_url(self.url))
+    credentials = self.get_http_auth(Media.parse_url(self.url))
     options[:http_basic_authentication] = credentials
     options['User-Agent'] = 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1'
     options['Accept-Language'] = 'en'
@@ -247,8 +236,9 @@ class Media
   end
 
   def top_url(url)
-    uri = parse_url(url)
-    "#{uri.scheme}://#{uri.host}"
+    uri = Media.parse_url(url)
+    port = (uri.port == 80 || uri.port == 443) ? '' : ":#{uri.port}"
+    "#{uri.scheme}://#{uri.host}#{port}"
   end
 
   def absolute_url(path = '')
@@ -256,13 +246,13 @@ class Media
     if path =~ /^https?:/
       path
     elsif path =~ /^\/\//
-      self.parse_url(self.url).scheme + ':' + path
+      Media.parse_url(self.url).scheme + ':' + path
     else
       self.top_url(self.url) + path
     end
   end
 
-  def parse_url(url)
+  def self.parse_url(url)
     URI.parse(URI.encode(url))
   end
 
@@ -277,5 +267,17 @@ class Media
     rescue
       self.url.gsub!(/^https:/i, 'http:')
     end
+  end
+
+  def get_metatags
+    fields = []
+    unless self.doc.nil?
+      self.doc.search('meta').each do |meta|
+        metatag = {}
+        meta.each { |key, value| metatag.merge!({key => value}) }
+        fields << metatag
+      end
+    end
+    self.data['metatags'] = fields
   end
 end

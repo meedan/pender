@@ -106,7 +106,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should return item as oembed" do
     url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
     m = create_media url: url
-    data = m.as_oembed("http://pender.org/medias.html?url=#{url}", 300, 150)
+    data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150)
     assert_equal 'Meedan', data['title']
     assert_equal 'Meedan', data['author_name']
     assert_equal 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
@@ -618,9 +618,9 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Facebook photo on page album" do
     m = create_media url: 'https://www.facebook.com/scmp/videos/vb.355665009819/10154584426664820/?type=2&theater'
     d = m.as_json
-    assert_equal 'South China Morning Post SCMP on Facebook', d['title']
+    assert_equal 'South China Morning Post on Facebook', d['title']
     assert_match /SCMP #FacebookLive/, d['description']
-    assert_equal 'South China Morning Post SCMP', d['username']
+    assert_equal 'South China Morning Post', d['username']
     assert_match /355665009819/, d['picture']
     assert_equal 'http://facebook.com/355665009819', d['author_url']
     assert_not_nil d['published_at']
@@ -826,10 +826,10 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://m.facebook.com/story.php?story_fbid=10154584426664820&id=355665009819%C2%ACif_t=live_video%C2%ACif_id=1476846578702256&ref=bookmarks'
     data = m.as_json
     assert_equal 'https://www.facebook.com/scmp/videos/10154584426664820', m.url
-    assert_equal 'South China Morning Post SCMP on Facebook', data['title']
+    assert_equal 'South China Morning Post on Facebook', data['title']
     assert_match /SCMP #FacebookLive amid chaotic scenes in #HongKong Legco/, data['description']
     assert_not_nil data['published_at']
-    assert_equal 'South China Morning Post SCMP', data['username']
+    assert_equal 'South China Morning Post', data['username']
     assert_equal 'http://facebook.com/355665009819', data['author_url']
     assert_equal 'https://graph.facebook.com/355665009819/picture', data['picture']
   end
@@ -847,15 +847,15 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse Facebook removed live post" do
-    m = create_media url: 'https://www.facebook.com/LiveNationTV/videos/1817191221829045/'
+    m = create_media url: 'https://www.facebook.com/teste637621352/posts/1538843716180215/'
     data = m.as_json
-    assert_equal 'https://www.facebook.com/LiveNationTV/videos/1817191221829045', m.url
+    assert_equal 'https://www.facebook.com/teste637621352/posts/1538843716180215', m.url
     assert_equal 'Not Identified on Facebook', data['title']
     assert_equal '', data['description']
     assert_equal '', data['published_at']
     assert_equal 'Not Identified', data['username']
-    assert_equal 'http://facebook.com/1600067986874704', data['author_url']
-    assert_equal 'https://graph.facebook.com/1600067986874704/picture', data['picture']
+    assert_equal 'http://facebook.com/749262715138323', data['author_url']
+    assert_equal 'https://graph.facebook.com/749262715138323/picture', data['picture']
   end
 
   test "should parse Facebook livemap" do
@@ -1239,12 +1239,12 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should handle zlib error when opening a url" do
     m = create_media url: 'https://ca.yahoo.com'
-    parsed_url = m.send(:parse_url, m.url)
+    parsed_url = Media.parse_url( m.url)
     header_options = m.send(:html_options)
-    Media.any_instance.expects(:open).with(parsed_url, header_options).raises(Zlib::DataError)
-    Media.any_instance.expects(:open).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Zlib::DataError)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
     m.send(:get_html, m.send(:html_options))
-    Media.any_instance.unstub(:open)
+    OpenURI.unstub(:open_uri)
   end
 
   test "should parse Facebook post from user profile and get username and name" do
@@ -1414,6 +1414,56 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '10154534110871407', d['object_id']
     Media.any_instance.unstub(:url)
     Media.any_instance.unstub(:original_url)
+  end
+
+  test "should parse as html when API token is expired and notify Airbrake" do
+    fb_token = CONFIG['facebook_auth_token']
+    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:notify).once
+    CONFIG['facebook_auth_token'] = 'EAACMBapoawsBAP8ugWtoTpZBpI68HdM68qgVdLNc8R0F8HMBvTU1mOcZA4R91BsHZAZAvSfTktgBrdjqhYJq2Qet2RMsNZAu12J14NqsP1oyIt74vXlFOBkR7IyjRLLVDysoUploWZC1N76FMPf5Dzvz9Sl0EymSkZD'
+    m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
+    data = m.as_json
+    assert_equal 'Not Identified on Facebook', data['title']
+    CONFIG['facebook_auth_token'] = fb_token
+    data = m.as_json(force: 1)
+    assert_equal 'Nostalgia on Facebook', data['title']
+    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:notify)
+  end
+
+  test "should keep port when building author_url if port is not 443 or 80" do
+    Media.any_instance.stubs(:generate_screenshot).returns('')
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:data_from_page_item)
+
+    url = 'https://mediatheque.karimratib.me:5001/as/sharing/uhfxuitn'
+    m = create_media url: url
+    assert_equal 'https://mediatheque.karimratib.me:5001', m.send(:top_url, m.url)
+
+    url = 'http://ca.ios.ba/slack'
+    m = create_media url: url
+    assert_equal 'http://ca.ios.ba', m.send(:top_url, m.url)
+
+    url = 'https://meedan.com/en/check'
+    m = create_media url: url
+    assert_equal 'https://meedan.com', m.send(:top_url, m.url)
+    
+    Media.any_instance.unstub(:generate_screenshot)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:data_from_page_item)
+  end
+
+  test "should store metatags in an Array" do
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    m = create_media url: 'https://www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html', request: request
+    data = m.as_json
+    assert data['metatags'].is_a? Array
+    assert !data['metatags'].empty?
   end
 
 end

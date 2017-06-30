@@ -81,7 +81,8 @@ module MediaFacebookItem
     if response.code.to_i === 200
       JSON.parse(response.body)
     else
-      Airbrake.notify(Exception.new(response.body)) if Airbrake.configuration.api_key
+      response = JSON.parse(response.body)
+      Airbrake.notify(Exception.new(response['error']['message'])) if response['error']['code'] == 190 && Airbrake.configuration.api_key
       nil
     end
   end
@@ -170,11 +171,17 @@ module MediaFacebookItem
     time = self.doc.at_css('span.timestampContent')
     self.data['published_at'] = Time.parse(time.inner_html) unless time.nil?
     self.data['photos'] = []
+    self.get_facebook_user_info_from_html
+  end
+
+  def get_facebook_user_info_from_html
+    user_uuid = self.doc.to_s.match(/"entity_id":"([^"]+)"/)
+    self.data['user_uuid'] = user_uuid[1] if self.data['user_uuid'].blank? && !user_uuid.nil?
+    self.get_facebook_picture(self.data['user_uuid']) if !self.data['user_uuid'].blank? && self.data['picture'].blank?
   end
 
   def get_facebook_text_from_html
     content = self.doc.at_css('div.userContent') || self.doc.at_css('span.hasCaption')
-    f = File.open('/tmp/bli', 'w+'); f.puts(self.doc.to_s); f.close
     if content.nil?
       meta_description = self.doc.at_css('meta[name=description]')
       text = meta_description ? meta_description.attr('content') : ''
@@ -216,7 +223,7 @@ module MediaFacebookItem
 
   # First method
   def data_from_facebook_item
-    handle_exceptions(RuntimeError) do
+    handle_exceptions(self, RuntimeError) do
       self.parse_facebook_uuid
       self.parse_from_facebook_html unless self.parse_from_facebook_api
       self.data['text'].strip!
