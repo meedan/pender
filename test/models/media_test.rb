@@ -106,7 +106,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should return item as oembed" do
     url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
     m = create_media url: url
-    data = m.as_oembed("http://pender.org/medias.html?url=#{url}", 300, 150)
+    data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150)
     assert_equal 'Meedan', data['title']
     assert_equal 'Meedan', data['author_name']
     assert_equal 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
@@ -1239,12 +1239,12 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should handle zlib error when opening a url" do
     m = create_media url: 'https://ca.yahoo.com'
-    parsed_url = m.send(:parse_url, m.url)
+    parsed_url = Media.parse_url( m.url)
     header_options = m.send(:html_options)
-    Media.any_instance.expects(:open).with(parsed_url, header_options).raises(Zlib::DataError)
-    Media.any_instance.expects(:open).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Zlib::DataError)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
     m.send(:get_html, m.send(:html_options))
-    Media.any_instance.unstub(:open)
+    OpenURI.unstub(:open_uri)
   end
 
   test "should parse Facebook post from user profile and get username and name" do
@@ -1433,23 +1433,28 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should keep port when building author_url if port is not 443 or 80" do
     Media.any_instance.stubs(:generate_screenshot).returns('')
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:data_from_page_item)
 
     url = 'https://mediatheque.karimratib.me:5001/as/sharing/uhfxuitn'
     m = create_media url: url
-    data = m.as_json
-    assert_equal 'https://mediatheque.karimratib.me:5001', data['author_url']
+    assert_equal 'https://mediatheque.karimratib.me:5001', m.send(:top_url, m.url)
 
     url = 'http://ca.ios.ba/slack'
     m = create_media url: url
-    data = m.as_json
-    assert_equal 'http://ca.ios.ba', data['author_url']
+    assert_equal 'http://ca.ios.ba', m.send(:top_url, m.url)
 
     url = 'https://meedan.com/en/check'
     m = create_media url: url
-    data = m.as_json
-    assert_equal 'https://meedan.com', data['author_url']
+    assert_equal 'https://meedan.com', m.send(:top_url, m.url)
     
     Media.any_instance.unstub(:generate_screenshot)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:data_from_page_item)
   end
 
   test "should store metatags in an Array" do

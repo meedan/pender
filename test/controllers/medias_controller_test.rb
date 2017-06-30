@@ -373,19 +373,39 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return custom oEmbed format for scmp url" do
     url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
-    get :index, url: url, format: :oembed, refresh: '1'
+    get :index, url: url, format: :oembed
     assert_response :success
     assert_not_nil response.body
+    data = JSON.parse(response.body)
+    assert_nil data['error']
   end
 
   test "should handle error when calls oembed format" do
     url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
-    Media.any_instance.stubs(:as_oembed).raises(StandardError)
-    get :index, url: url, format: :oembed, refresh: '1'
+    id = Digest::MD5.hexdigest(url)
+    Media.stubs(:as_oembed).raises(StandardError)
+    Rails.cache.delete(id)
+    get :index, url: url, format: :oembed
     assert_response :success
-    assert_not_nil response.body
-    Media.any_instance.unstub(:as_oembed)
+    data = JSON.parse(response.body)['data']
+    assert_not_nil data['error']['message']
+    Media.unstub(:as_oembed)
   end
 
+  test "should respond to oembed format when data is on cache" do
+    url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
+    id = Digest::MD5.hexdigest(url)
+
+    assert_nil Rails.cache.read(id)
+    get :index, url: url, format: :oembed
+    assert_not_nil assigns(:media)
+    assert_response :success
+    assert_nil JSON.parse(response.body)['error']
+
+    assert_not_nil Rails.cache.read(assigns(:id))
+    get :index, url: url, format: :oembed
+    assert_response :success
+    assert_nil JSON.parse(response.body)['error']
+  end
 
 end

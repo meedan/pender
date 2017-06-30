@@ -71,10 +71,10 @@ module Api
         end
       end
 
-      def render_timeout(must_render)
+      def render_timeout(must_render, oembed = false)
         data = Rails.cache.read(@id)
         if !data.nil? && !@refresh
-          render_timeout_media(data, must_render) and return true
+          render_timeout_media(data, must_render, oembed) and return true
         end
         
         begin
@@ -87,15 +87,20 @@ module Api
         return false
       end
 
-      def render_timeout_media(data, must_render)
+      def render_timeout_media(data, must_render, oembed = false)
         return false unless must_render
-        render_media(data)
+        oembed ? render_oembed(data) : render_media(data)
         return true
       end
 
       def render_media(data)
         json = { type: 'media' }
         json[:data] = data.merge({ embed_tag: embed_url(request) })
+        render json: json, status: 200
+      end
+
+      def render_oembed(data, instance = nil)
+        json = Media.as_oembed(data, request.original_url, params[:maxwidth], params[:maxheight], instance)
         render json: json, status: 200
       end
 
@@ -117,8 +122,7 @@ module Api
 
       def render_as_oembed
         begin
-          json = @media.as_oembed(request.original_url, params[:maxwidth], params[:maxheight], { force: @refresh })
-          render json: json, status: 200
+          render_timeout(true, true) { render_oembed(@media.as_json({ force: @refresh }), @media)}
         rescue StandardError => e
           data = @media.nil? ? {} : @media.data
           Airbrake.notify(e) if Airbrake.configuration.api_key
