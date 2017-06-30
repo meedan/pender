@@ -1241,10 +1241,10 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://ca.yahoo.com'
     parsed_url = Media.parse_url( m.url)
     header_options = m.send(:html_options)
-    Media.any_instance.expects(:open).with(parsed_url, header_options).raises(Zlib::DataError)
-    Media.any_instance.expects(:open).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Zlib::DataError)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
     m.send(:get_html, m.send(:html_options))
-    Media.any_instance.unstub(:open)
+    OpenURI.unstub(:open_uri)
   end
 
   test "should parse Facebook post from user profile and get username and name" do
