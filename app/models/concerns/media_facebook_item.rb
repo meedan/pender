@@ -92,6 +92,7 @@ module MediaFacebookItem
     if object.nil?
       false
     else
+      self.data['raw']['api'] = object
       self.data['text'] = get_text_from_object(object)
       self.data['published_at'] = object['created_time'] || object['updated_time']
       self.data['user_name'] = object['name'] || object['from']['name']

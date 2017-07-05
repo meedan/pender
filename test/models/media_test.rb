@@ -1466,4 +1466,86 @@ class MediaTest < ActiveSupport::TestCase
     assert !data['raw']['metatags'].empty?
   end
 
+  test "should store data of a post returned by facebook API" do
+    m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
+    data = m.as_json
+    assert data['raw']['api'].is_a? Hash
+    assert !data['raw']['api'].empty?
+  end
+
+  test "should store data of a profile returned by facebook API" do
+    m = create_media url: 'https://www.facebook.com/profile.php?id=100008161175765&fref=ts'
+    data = m.as_json
+    assert data['raw']['api'].is_a? Hash
+    assert !data['raw']['api'].empty?
+
+    assert_equal 'Tico-Santa-Cruz', data[:username]
+    assert_equal 'Tico Santa Cruz', data[:title]
+    assert !data[:picture].blank?
+  end
+
+  test "should store data of a page returned by facebook API" do
+    m = create_media url: 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
+    data = m.as_json
+    assert data['raw']['api'].is_a? Hash
+    assert !data['raw']['api'].empty?
+
+    assert_equal 'Meedan', data[:username]
+    assert_equal 'Meedan', data[:title]
+    assert_match /Meedan is a non-profit social technology company/, data[:description]
+    assert !data[:likes].blank?
+    assert !data[:picture].blank?
+  end
+
+  test "should store data of post returned by instagram api and graphql" do
+    m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
+    data = m.as_json
+    assert data['raw']['api'].is_a? Hash
+    assert !data['raw']['api'].empty?
+
+    assert data['raw']['graphql'].is_a? Hash
+    assert !data['raw']['graphql'].empty?
+
+    assert_equal 'megadeth', data[:username]
+    assert_match /Peace Sells/, data[:description]
+    assert_match /Peace Sells/, data[:title]
+    assert !data[:picture].blank?
+    assert_equal "https://www.instagram.com/megadeth", data[:author_url]
+    assert !data[:html].blank?
+    assert !data[:author_picture].blank?
+    assert_equal 'Megadeth', data[:author_name]
+    assert !data[:published_at].blank?
+  end
+
+  test "should store data of post returned by oembed" do
+    m = create_media url: 'https://meedan.checkdesk.org/node/2161'
+    data = m.as_json
+    assert data['raw']['oembed'].is_a? Hash
+    assert !data['raw']['oembed'].empty?
+
+    assert_equal 'Twitter / History In Pictures: Little Girl &amp; Ba...', data['title']
+    assert_equal 'Tom', data['username']
+    assert_equal 'https://meedan.checkdesk.org/en/users/tom', data['author_url']
+    assert !data['description'].blank?
+    assert !data['picture'].blank?
+    assert_not_nil data['published_at']
+    assert !data['html'].blank?
+  end
+
+  test "should store data of post returned by twitter API" do
+    m = create_media url: 'https://twitter.com/caiosba/status/742779467521773568'
+    data = m.as_json
+    assert data['raw']['api'].is_a? Hash
+    assert !data['raw']['api'].empty?
+
+    assert_equal 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
+  end
+
+  test "should store data of profile returned by twitter API" do
+    m = create_media url: 'https://twitter.com/caiosba'
+    data = m.as_json
+    assert data['raw']['api'].is_a? Hash
+    assert !data['raw']['api'].empty?
+  end
+
 end

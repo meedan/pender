@@ -14,11 +14,14 @@ module MediaInstagramItem
       self.get_instagram_data(id.to_s)
       data = self.data
       self.data.merge!({
-        username: data['author_name'],
-        description: data['title'],
-        picture: data['thumbnail_url'],
-        author_picture: data['graphql']['shortcode_media']['owner']['profile_pic_url'],
-        author_name: data['graphql']['shortcode_media']['owner']['full_name'],
+        username: data['raw']['api']['author_name'],
+        description: data['raw']['api']['title'],
+        title: data['raw']['api']['title'],
+        picture: data['raw']['api']['thumbnail_url'],
+        author_url: data['raw']['api']['author_url'],
+        html: data['raw']['api']['html'],
+        author_picture: data['raw']['graphql']['shortcode_media']['owner']['profile_pic_url'],
+        author_name: data['raw']['graphql']['shortcode_media']['owner']['full_name'],
         published_at: self.get_instagram_datetime
       })
     end
@@ -26,17 +29,18 @@ module MediaInstagramItem
 
   def get_instagram_data(id)
     pool = []
-    links = ["https://api.instagram.com/oembed/?url=http://instagr.am/p/#{id}", "https://www.instagram.com/p/#{id}/?__a=1"]
-    links.each do |link|
+    sources = { api: "https://api.instagram.com/oembed/?url=http://instagr.am/p/#{id}", graphql: "https://www.instagram.com/p/#{id}/?__a=1" }
+    sources.each do |source|
       pool << Thread.new {
-        self.data.merge! self.get_instagram_json_data(link)
+        data = self.get_instagram_json_data(source[1])
+        self.data['raw'][source[0]] = (source[0] == :api) ? data : data['graphql']
       }
     end
     pool.each(&:join)
   end
 
   def get_instagram_datetime
-    Time.parse(self.data['html'].match(/.*datetime=\\?"([^"]+)\\?".*/)[1])
+    Time.parse(self.data['raw']['api']['html'].match(/.*datetime=\\?"([^"]+)\\?".*/)[1])
   end
 
   def get_instagram_json_data(url)

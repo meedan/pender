@@ -50,11 +50,13 @@ module MediaFacebookProfile
     client = self.facebook_client
     # Try to parse as a user profile first
     begin
-      data = client.get_object(id, { fields: self.facebook_user_fields }, { method: 'post' })
+      object = client.get_object(id, { fields: self.facebook_user_fields }, { method: 'post' })
+      self.data[:raw][:api] = object
       data['subtype'] = 'user'
     # If it fails, try to parse as a page
     rescue
-      data = client.get_object(id, { fields: self.facebook_page_fields }, { method: 'post' })
+      object = client.get_object(id, { fields: self.facebook_page_fields }, { method: 'post' })
+      self.data[:raw][:api] = object
       data['subtype'] = 'page'
     end
     data['published_at'] = ''
@@ -72,17 +74,20 @@ module MediaFacebookProfile
     end
 
     self.data[:username] = self.get_facebook_username
-    description = self.data['bio'] || self.data['about'] || ''
-    self.data.merge!({ title: self.data['name'], description: description, picture: self.facebook_picture })
+    self.data.merge!({ title: self.data['raw']['api']['name'], description: get_description, picture: self.facebook_picture })
     self.get_facebook_likes
   end
 
+  def get_description
+    self.data['raw']['api']['bio'] || self.data['raw']['api']['about'] || self.data['raw']['api']['description'] || ''
+  end
+
   def get_facebook_likes
-    self.data['likes'] = self.data['fan_count'] if self.data['likes'].to_s.match(/^[0-9]+$/).nil?
+    self.data['likes'] = self.data['likes'].to_s.match(/^[0-9]+$/).nil? ? self.data['raw']['api']['fan_count'] : self.data['raw']['api']['likes'].to_s.match(/^[0-9]+$/).nil?
   end
 
   def facebook_picture
-    data = self.data
+    data = self.data['raw']['api']
     picture = ''
     if data['picture'] && data['picture']['data'] && data['picture']['data']['url']
       picture = data['picture']['data']['url']
@@ -97,7 +102,7 @@ module MediaFacebookProfile
     if username === 'pages'
       username = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/pages\/([^\/]+)\/([^\/\?]+).*/)[2]
     elsif username === 'profile.php'
-      username = self.data['name'].tr(' ', '-')
+      username = self.data['raw']['api']['name'].tr(' ', '-')
     end
     username
   end

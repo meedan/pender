@@ -10,12 +10,12 @@ module MediaOembedItem
     data = self.data
     self.data.merge!({
       published_at: '',
-      username: data[:oembed]['author_name'],
-      description: data[:oembed]['title'],
-      title: data[:oembed]['title'],
-      picture: data[:oembed]['thumbnail_url'].to_s,
-      html: data[:oembed]['html'],
-      author_url: data[:oembed]['author_url']
+      username: data[:raw][:oembed]['author_name'],
+      description: data[:raw][:oembed]['title'],
+      title: data[:raw][:oembed]['title'],
+      picture: data[:raw][:oembed]['thumbnail_url'].to_s,
+      html: data[:raw][:oembed]['html'],
+      author_url: data[:raw][:oembed]['author_url']
     })
   end
 
@@ -24,9 +24,9 @@ module MediaOembedItem
       oembed_url = self.get_oembed_url
       response = self.oembed_get_data_from_url(oembed_url)
       if !response.nil? && response.code == '200'
-        self.data[:oembed] = JSON.parse(response.body)
+        self.data[:raw][:oembed] = JSON.parse(response.body)
         if ['DENY', 'SAMEORIGIN'].include? response.header['X-Frame-Options']
-          self.data[:oembed][:html] = ''
+          self.data[:raw][:oembed][:html] = ''
         end
         self.post_process_oembed_data
       end

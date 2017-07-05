@@ -8,12 +8,10 @@ class Media
 
   TYPES = {}
 
-  =begin
-    * follow_redirections: update the media `url` with the url found after all redirections
-    * get_canonical_url: parse the page and set it to media `doc`. If the `doc` has a tag (`og:url`, `twitter:url`, `rel='canonical`) with a different url, the media `url` is updated with the url found, the page is parsed and the media `doc` is updated
-    * normalize_url: escape and normalize media `url`
-    * try_https: try to access the media `url` with HTTPS and it it succeeds, the media `url` is updated with the HTTPS version
-  =end
+  # follow_redirections: update the media `url` with the url found after all redirections
+  # get_canonical_url: parse the page and set it to media `doc`. If the `doc` has a tag (`og:url`, `twitter:url`, `rel='canonical`) with a different url, the media `url` is updated with the url found, the page is parsed and the media `doc` is updated
+  # normalize_url: escape and normalize media `url`
+  # try_https: try to access the media `url` with HTTPS and it it succeeds, the media `url` is updated with the HTTPS version
   def initialize(attributes = {})
     attributes.each do |name, value|
       send("#{name}=", value)
@@ -51,6 +49,7 @@ class Media
     %w(published_at username title description picture author_url author_picture).each do |field|
       data[field] = ''
     end
+    data[:raw] = {}
     data.merge(Media.required_fields(instance)).with_indifferent_access
   end
 

@@ -21,7 +21,7 @@ module MediaTwitterItem
   end
 
   def text_from_twitter_item
-    self.data['text'] || self.data['full_text'] || ''
+    self.data['raw']['api']['text'] || self.data['raw']['api']['full_text'] || ''
   end
 
   def data_from_twitter_item
@@ -29,14 +29,14 @@ module MediaTwitterItem
     parts = self.url.match(URL)
     user, id = parts['user'], parts['id']
     handle_twitter_exceptions do
-      self.data.merge!(self.twitter_client.status(id, tweet_mode: 'extended').as_json)
+      self.data['raw']['api'] = self.twitter_client.status(id, tweet_mode: 'extended').as_json
       self.data.merge!({
         username: user,
         title: self.text_from_twitter_item.gsub(/\s+/, ' '),
         description: self.text_from_twitter_item,
         picture: self.twitter_item_picture,
         author_picture: self.twitter_item_picture,
-        published_at: self.data['created_at'],
+        published_at: self.data['raw']['api']['created_at'],
         html: html_for_twitter_item,
         author_url: 'https://twitter.com/' + user
       })
@@ -44,7 +44,7 @@ module MediaTwitterItem
   end
 
   def twitter_item_picture
-    self.data['user']['profile_image_url_https'].gsub('_normal', '')
+    self.data['raw']['api']['user']['profile_image_url_https'].gsub('_normal', '')
   end
 
   def html_for_twitter_item
