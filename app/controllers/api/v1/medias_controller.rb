@@ -1,6 +1,7 @@
 require 'timeout'
 require 'pender_exceptions'
 require 'cc_deville'
+require 'semaphore'
 
 module Api
   module V1
@@ -187,25 +188,22 @@ module Api
       end
 
       def lock_url
-        url = params[:url]
-        unless url.blank?
-          if PROCESSING_URLS.has_key?(url)
+        unless params[:url].blank?
+          if locker.locked?
             render_error('This URL is already being processed. Please try again in a few seconds.', 'DUPLICATED', 409) and return false
           else
-            MUTEX.synchronize do
-              PROCESSING_URLS[url] = true
-            end
+            locker.lock
           end
         end
       end
 
       def unlock_url
-        url = params[:url]
-        unless url.blank?
-          MUTEX.synchronize do
-            PROCESSING_URLS.except!(url)
-          end
-        end
+        locker.unlock unless params[:url].blank?
+      end
+
+      def locker
+        @locker ||= Semaphore.new(params[:url])
+        @locker
       end
     end
   end
