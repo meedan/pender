@@ -83,6 +83,18 @@
                 }
               },
               "message": "API limit reached"
+            },
+            {
+              "code": 409,
+              "responseModel": {
+                "query": {
+                  "url": "https://www.youtube.com/user/MeedanTube"
+                },
+                "headers": {
+                  "x-Pender-Token": "test"
+                }
+              },
+              "message": "URL already being processed"
             }
           ],
           "method": "get",

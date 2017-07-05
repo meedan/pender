@@ -18,6 +18,7 @@ module MediasDoc
       response 401, 'Access denied', { query: { url: url } }
       response 408, 'Timeout', { query: { url: url }, headers: authed }
       response 429, 'API limit reached', { query: { url: url }, headers: authed }
+      response 409, 'URL already being processed', { query: { url: url }, headers: authed }
     end
   end
 end

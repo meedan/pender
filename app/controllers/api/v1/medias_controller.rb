@@ -9,7 +9,8 @@ module Api
       include MediasHelper
 
       skip_before_filter :authenticate_from_token!, if: proc { request.format.html? || request.format.js? || request.format.oembed? }
-      after_action :allow_iframe, only: :index
+      before_action :lock_url, only: :index
+      after_action :allow_iframe, :unlock_url, only: :index
 
       def index
         @url = params[:url]
@@ -183,6 +184,22 @@ module Api
         FileUtils.rm_f cache_path
         url = request.original_url.gsub(/medias(\.[a-z]+)?\?/, 'medias.html?')
         CcDeville.clear_cache_for_url(url)
+      end
+
+      def lock_url
+        url = params[:url]
+        unless url.blank?
+          if PROCESSING_URLS.has_key?(url)
+            render_error('This URL is already being processed. Please try again in a few seconds.', 'DUPLICATED', 409) and return false
+          else
+            PROCESSING_URLS[url] = true
+          end
+        end
+      end
+
+      def unlock_url
+        url = params[:url]
+        PROCESSING_URLS.except!(url) unless url.blank?
       end
     end
   end

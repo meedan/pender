@@ -25,4 +25,23 @@ class MediasIntegrationTest < ActionDispatch::IntegrationTest
     assert Rails.application.routes.recognize_path('api/medias.html', { method: 'get' })
     assert_recognizes({ controller: 'api/v1/medias', action: 'index', format: 'html' }, { path: 'api/medias.html', method: :get })
   end
+
+  test "should handle concurrency" do
+    url = 'http://ca.ios.ba/files/meedan/sleep.php'
+    threads = []
+
+    threads << Thread.new do
+      get "/api/medias.html?url=#{url}"
+      assert_response :success
+    end
+
+    sleep 1
+
+    threads << Thread.new do
+      get "/api/medias.html?url=#{url}"
+      assert_response :conflict
+    end
+
+    threads.map(&:join)
+  end
 end
