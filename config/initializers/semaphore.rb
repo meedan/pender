@@ -1,1 +1,2 @@
 PROCESSING_URLS = {}
+MUTEX = Mutex.new

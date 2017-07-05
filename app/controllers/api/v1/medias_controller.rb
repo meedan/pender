@@ -192,14 +192,20 @@ module Api
           if PROCESSING_URLS.has_key?(url)
             render_error('This URL is already being processed. Please try again in a few seconds.', 'DUPLICATED', 409) and return false
           else
-            PROCESSING_URLS[url] = true
+            MUTEX.synchronize do
+              PROCESSING_URLS[url] = true
+            end
           end
         end
       end
 
       def unlock_url
         url = params[:url]
-        PROCESSING_URLS.except!(url) unless url.blank?
+        unless url.blank?
+          MUTEX.synchronize do
+            PROCESSING_URLS.except!(url)
+          end
+        end
       end
     end
   end
