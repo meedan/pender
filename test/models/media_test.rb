@@ -1373,7 +1373,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://twitter.com/bradymakesstuff/status/844240817334247425'
     d = m.as_json
     assert_equal 'Anti immigrant graffiti in a portajon on a residential construction site in Mtn Brook, AL. Job has about 50% Latino workers. https://t.co/bS5vI4Jq7I', d['description']
-    assert_not_nil d['entities']['media'][0]['media_url_https']
+    assert_not_nil d['raw']['api']['entities']['media'][0]['media_url_https']
   end
 
   test "should support facebook pattern with pg" do
@@ -1548,4 +1548,25 @@ class MediaTest < ActiveSupport::TestCase
     assert !data['raw']['api'].empty?
   end
 
+  test "should store data of item returned by Youtube API" do
+    m = create_media url: 'https://www.youtube.com/watch?v=mtLxD7r4BZQ'
+    data = m.as_json
+    assert data['raw']['api'].is_a? Hash
+    assert !data['raw']['api'].empty?
+
+    assert !data['title'].blank?
+    assert_not_nil data['published_at']
+  end
+
+  test "should store data of profile returned by Youtube API AAA" do
+    m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
+    data = m.as_json
+    assert data['raw']['api'].is_a? Hash
+    assert !data['raw']['api'].empty?
+
+    assert !data['title'].blank?
+    assert !data['description'].blank?
+    assert !data['published_at'].blank?
+    assert !data['picture'].blank?
+  end
 end

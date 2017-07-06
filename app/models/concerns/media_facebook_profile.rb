@@ -48,6 +48,7 @@ module MediaFacebookProfile
     data = {}
     id = self.get_facebook_id_from_url
     client = self.facebook_client
+    self.data[:raw][:api] = {}
     # Try to parse as a user profile first
     begin
       object = client.get_object(id, { fields: self.facebook_user_fields }, { method: 'post' })
