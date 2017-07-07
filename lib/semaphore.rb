@@ -1,18 +1,20 @@
 class Semaphore
   def initialize(key)
-    @key = "semaphore:#{key}"
-    @redis = Redis.new({ host: SIDEKIQ_CONFIG[:redis_host], port: SIDEKIQ_CONFIG[:redis_port], db: SIDEKIQ_CONFIG[:redis_database] })
+    unless SIDEKIQ_CONFIG.nil?
+      @key = "semaphore:#{key}"
+      @redis = Redis.new({ host: SIDEKIQ_CONFIG[:redis_host], port: SIDEKIQ_CONFIG[:redis_port], db: SIDEKIQ_CONFIG[:redis_database] })
+    end
   end
 
   def lock
-    @redis.getset(@key, Time.now)
+    @redis.getset(@key, Time.now) unless SIDEKIQ_CONFIG.nil?
   end
 
   def locked?
-    !@redis.get(@key).nil?
+    SIDEKIQ_CONFIG.nil? ? false : !@redis.get(@key).nil?
   end
 
   def unlock
-    @redis.del(@key)
+    @redis.del(@key) unless SIDEKIQ_CONFIG.nil?
   end
 end
