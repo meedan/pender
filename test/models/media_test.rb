@@ -118,6 +118,20 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['thumbnail_url']
   end
 
+  test "should return item as oembed when the page has oembed url" do
+    url = 'https://meedan.checkdesk.org/node/2161'
+    m = create_media url: url
+    data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
+    assert_match /History In Pictures/, data['title']
+    assert_equal 'Tom', data['author_name']
+    assert_equal 'https://meedan.checkdesk.org/en/users/tom', data['author_url']
+    assert_equal 'Meedan Checkdesk', data['provider_name']
+    assert_equal 'https://meedan.checkdesk.org/en', data['provider_url']
+    assert_equal 0, data['width']
+    assert_equal 0, data['height']
+    assert_equal '<script src="https://meedan.checkdesk.org/sites/all/modules/meedan/meedan_iframes/js/meedan_iframes.parent.min.js?style=width%3A%20100%25%3B&amp;u=/en/embed/2161"></script>', data['html']
+  end
+
   test "should parse Checkdesk report" do
     m = create_media url: 'https://meedan.checkdesk.org/node/2161'
     data = m.as_json

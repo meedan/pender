@@ -63,6 +63,6 @@ module MediaOembedItem
 
   def oembed_as_oembed(_original_url, _maxwidth, _maxheight)
     data = self.as_json
-    data[:oembed] || data['oembed']
+    data[:raw][:oembed]
   end
 end
