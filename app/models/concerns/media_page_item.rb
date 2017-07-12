@@ -45,9 +45,8 @@ module MediaPageItem
   end
 
   def get_oembed_metadata
-    data = self.data_from_oembed_item
-    self.provider = 'oembed' if data
-    data || {}
+    self.data_from_oembed_item
+    self.post_process_oembed_data || {}
   end
 
   def get_basic_metadata

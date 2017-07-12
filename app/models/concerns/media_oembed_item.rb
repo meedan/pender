@@ -8,6 +8,7 @@ module MediaOembedItem
 
   def post_process_oembed_data
     data = self.data
+    return if data[:error]
     self.data.merge!({
       published_at: '',
       username: data[:raw][:oembed]['author_name'],
@@ -28,7 +29,6 @@ module MediaOembedItem
         if ['DENY', 'SAMEORIGIN'].include? response.header['X-Frame-Options']
           self.data[:raw][:oembed][:html] = ''
         end
-        self.post_process_oembed_data
       end
     end
   end
@@ -38,15 +38,11 @@ module MediaOembedItem
     unless url.blank?
       uri = URI.parse(self.absolute_url(url))
       http = Net::HTTP.new(uri.host, uri.port)
-
-      unless url.match(/^https/).nil?
-        http.use_ssl = true
-        # http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      end
+      http.use_ssl = uri.scheme == 'https'
 
       request = self.oembed_create_request(uri)
       response = http.request(request)
-      
+
       if %w(301 302).include?(response.code)
         response = self.oembed_get_data_from_url(response.header['location'])
       end
