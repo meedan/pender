@@ -43,4 +43,9 @@ module MediaYoutubeItem
     channel = Yt::Channel.new id: self.data[:raw][:api]['channel_id']
     channel.thumbnail_url.to_s
   end
+
+  def youtube_oembed_url
+    "https://www.youtube.com/oembed?format=json&url=#{self.url}"
+  end
+
 end

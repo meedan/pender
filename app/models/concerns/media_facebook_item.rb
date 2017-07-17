@@ -163,7 +163,7 @@ module MediaFacebookItem
   end
 
   def parse_from_facebook_html
-    self.doc ||= self.get_html(html_options)
+    self.doc = self.get_html(html_options)
     self.get_facebook_text_from_html
     text = self.doc.to_s.gsub(/<[^>]+>/, '')
 
@@ -240,4 +240,9 @@ module MediaFacebookItem
       })
     end
   end
+
+  def facebook_oembed_url
+    "https://www.facebook.com/plugins/post/oembed.json/?url=#{self.url}"
+  end
+
 end

@@ -153,7 +153,7 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'Twitter / History In Pictures: Little Girl &amp; Ba...', data['title']
     assert_equal 'Tom', data['username']
-    assert_equal 'oembed', data['provider']
+    assert_equal 'page', data['provider']
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
@@ -1597,7 +1597,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
   end
 
-  test "should store data of profile returned by Youtube API AAA" do
+  test "should store data of profile returned by Youtube API" do
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
     data = m.as_json
     assert data['raw']['api'].is_a? Hash
@@ -1642,7 +1642,7 @@ class MediaTest < ActiveSupport::TestCase
 
     assert data['raw']['oembed'].is_a? Hash
     assert_equal 'megadeth', data['raw']['oembed']['author_name']
-    assert_equal 'Peace Sells', data['raw']['oembed']['title']
+    assert_match /Peace Sells/, data['raw']['oembed']['title']
   end
 
   test "should store oembed data of a twitter post" do

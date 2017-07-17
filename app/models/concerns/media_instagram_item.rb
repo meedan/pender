@@ -37,6 +37,7 @@ module MediaInstagramItem
       }
     end
     pool.each(&:join)
+    self.data['raw']['oembed'] = self.data['raw']['api']
   end
 
   def get_instagram_datetime

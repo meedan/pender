@@ -54,4 +54,8 @@ module MediaTwitterItem
     '</blockquote>' +
     '<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>'
   end
+
+  def twitter_oembed_url
+    "https://publish.twitter.com/oembed?url=#{self.url}"
+  end
 end

@@ -22,7 +22,7 @@ module MediaOembedItem
 
   def data_from_oembed_item
     handle_exceptions(self, StandardError) do
-      oembed_url = self.get_oembed_url
+      oembed_url = self.send("#{self.provider}_oembed_url") || self.get_oembed_url
       response = self.oembed_get_data_from_url(oembed_url)
       if !response.nil? && response.code == '200'
         self.data[:raw][:oembed] = JSON.parse(response.body)
