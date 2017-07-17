@@ -14,7 +14,7 @@ module MediaInstagramItem
       self.get_instagram_data(id.to_s)
       data = self.data
       self.data.merge!({
-        username: data['raw']['api']['author_name'],
+        username: '@' + data['raw']['api']['author_name'],
         description: data['raw']['api']['title'],
         title: data['raw']['api']['title'],
         picture: data['raw']['api']['thumbnail_url'],

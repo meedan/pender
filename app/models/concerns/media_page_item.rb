@@ -12,6 +12,7 @@ module MediaPageItem
     end
     handle_exceptions(self, RuntimeError) do
       self.data = self.page_get_data_from_url
+      self.data['author_name'] = self.data['username']
     end
 
     if self.data[:picture].blank?
@@ -19,7 +20,6 @@ module MediaPageItem
     else
       self.data[:picture] = self.add_scheme(self.data[:picture])
     end
-    self.data['author_name'] = self.data['username'] if self.data['author_name'].blank?
   end
 
   def page_get_data_from_url

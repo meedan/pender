@@ -49,6 +49,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Caio Almeida', data['title']
     assert_equal 'caiosba', data['username']
     assert_equal 'twitter', data['provider']
+    assert_equal 'Caio Almeida', data['author_name']
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
@@ -118,6 +119,21 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['thumbnail_url']
   end
 
+  test "should return item as oembed when data is not on cache" do
+    url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
+    m = create_media url: url
+    data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
+    assert_equal 'Meedan', data['title']
+    assert_equal 'Meedan', data['author_name']
+    assert_equal 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
+    assert_equal 'facebook', data['provider_name']
+    assert_equal 'http://www.facebook.com', data['provider_url']
+    assert_equal 300, data['width']
+    assert_equal 150, data['height']
+    assert_equal '<iframe src="http://pender.org/medias.html?url=https://www.facebook.com/pages/Meedan/105510962816034?fref=ts" width="300" height="150" scrolling="no" border="0" seamless>Not supported</iframe>', data['html']
+    assert_not_nil data['thumbnail_url']
+  end
+
   test "should return item as oembed when the page has oembed url" do
     url = 'https://meedan.checkdesk.org/node/2161'
     m = create_media url: url
@@ -127,8 +143,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://meedan.checkdesk.org/en/users/tom', data['author_url']
     assert_equal 'Meedan Checkdesk', data['provider_name']
     assert_equal 'https://meedan.checkdesk.org/en', data['provider_url']
-    assert_equal 0, data['width']
-    assert_equal 0, data['height']
+    assert_equal 300, data['width']
+    assert_equal 150, data['height']
     assert_equal '<script src="https://meedan.checkdesk.org/sites/all/modules/meedan/meedan_iframes/js/meedan_iframes.parent.min.js?style=width%3A%20100%25%3B&amp;u=/en/embed/2161"></script>', data['html']
   end
 
@@ -296,6 +312,9 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://twitter.com/caiosba/status/742779467521773568'
     data = m.as_json
     assert_equal 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
+    assert_equal 'Caio Almeida', data['author_name']
+    assert_equal '@caiosba', data['username']
+    assert_not_nil data['picture']
   end
 
   test "should throw Pender::ApiLimitReached when Twitter::Error::TooManyRequests is thrown when parsing tweet" do
@@ -439,7 +458,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '100000497329098_1195161923843707', d['uuid']
     assert_equal '', d['text']
     assert_equal '100000497329098', d['user_uuid']
-    assert_equal 'Kiko Loureiro', d['user_name']
+    assert_equal 'Kiko Loureiro', d['author_name']
     assert_equal 1, d['media_count']
     assert_equal '1195161923843707', d['object_id']
     # FIXME: This publishing date can be different for FB users who are in a different timezone.
@@ -452,25 +471,30 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://twitter.com/theconfmalmo_ar', d['author_url']
   end
 
-  test "should return author_url for Facebook post" do
+  test "should return author_name and author_url for Facebook post" do
     m = create_media url: 'https://www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3&theater'
     d = m.as_json
     assert_equal 'http://facebook.com/100000497329098', d['author_url']
+    assert_equal 'Kiko Loureiro', d['author_name']
+    assert_not_nil d['picture']
   end
 
   test "should parse Instagram link" do
     m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
     d = m.as_json
-    assert_equal 'megadeth', d['username']
+    assert_equal '@megadeth', d['username']
     assert_equal 'item', d['type']
+    assert_equal 'Megadeth', d['author_name']
+    assert_not_nil d['picture']
   end
 
   test "should parse Instagram profile" do
     m = create_media url: 'https://www.instagram.com/megadeth'
     d = m.as_json
-    assert_equal 'megadeth', d['username']
+    assert_equal '@megadeth', d['username']
     assert_equal 'profile', d['type']
     assert_equal 'megadeth', d['title']
+    assert_equal 'megadeth', d['author_name']
     assert_match /^http/, d['picture']
   end
 
@@ -485,6 +509,8 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'New Quoted Pictures Everyday on Facebook', d['title']
     assert_match(/New Quoted Pictures Everyday added a new photo./, d['description'])
+    assert_equal 'quoted.pictures', d['username']
+    assert_equal 'New Quoted Pictures Everyday', d['author_name']
   end
 
   test "should parse Facebook photo post within an album url" do
@@ -676,7 +702,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '@andybudd @jennifermjones cc @blinkpopshift', d['title']
     assert_equal '@andybudd @jennifermjones cc @blinkpopshift', d['description']
     assert_not_nil d['published_at']
-    assert_equal 'anxiaostudio', d['username']
+    assert_equal '@anxiaostudio', d['username']
     assert_equal 'https://twitter.com/anxiaostudio', d['author_url']
     assert_not_nil d['picture']
   end
@@ -831,7 +857,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'وعشان نبقى على بياض أنا مش موافقة على فكرة الاعتصام اللي في التحرير، بس دة حقهم وأنا بدافع عن حقهم الشرعي، بغض النظر عن اختلافي معهم', data['title']
     assert_equal data['title'], data['description']
     assert_not_nil data['published_at']
-    assert_equal 'salmaeldaly', data['username']
+    assert_equal '@salmaeldaly', data['username']
     assert_equal 'https://twitter.com/salmaeldaly', data['author_url']
     assert_not_nil data['picture']
   end
@@ -1222,7 +1248,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse pages when the scheme is missing on oembed url" do
     url = 'https://www.hongkongfp.com/2017/03/01/hearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers/'
     m = create_media url: url
-    m.expects(:get_oembed_url).returns('//www.hongkongfp.com/2017/03/01/hearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers')
+    m.expects(:get_oembed_url).returns('//www.hongkongfp.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.hongkongfp.com%2F2017%2F03%2F01%2Fhearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers%2F')
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'page', data['provider']
@@ -1278,7 +1304,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Instagram post from page and get username and name" do
     m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
     d = m.as_json
-    assert_equal 'megadeth', d['username']
+    assert_equal '@megadeth', d['username']
     assert_equal 'Megadeth', d['author_name']
   end
 
@@ -1365,7 +1391,6 @@ class MediaTest < ActiveSupport::TestCase
   test "should return empty html on oembed when frame is not allowed" do
     m = create_media url: 'https://martinoei.com/article/13371/%e9%81%b8%e6%b0%91%e7%99%bb%e8%a8%98-%e5%a4%b1%e7%ab%8a%e4%ba%8b%e4%bb%b6%e8%b6%8a%e8%a7%a3%e8%b6%8a%e4%bc%bcx%e6%aa%94%e6%a1%88'
     data = m.as_json
-    assert_equal 'oembed', data['provider']
     response = m.oembed_get_data_from_url(m.get_oembed_url)
     assert_equal 'SAMEORIGIN', response.header['X-Frame-Options']
     assert_equal '', data['html']
@@ -1520,7 +1545,7 @@ class MediaTest < ActiveSupport::TestCase
     assert data['raw']['graphql'].is_a? Hash
     assert !data['raw']['graphql'].empty?
 
-    assert_equal 'megadeth', data[:username]
+    assert_equal '@megadeth', data[:username]
     assert_match /Peace Sells/, data[:description]
     assert_match /Peace Sells/, data[:title]
     assert !data[:picture].blank?
@@ -1583,4 +1608,77 @@ class MediaTest < ActiveSupport::TestCase
     assert !data['published_at'].blank?
     assert !data['picture'].blank?
   end
+
+  test "should store oembed data of a facebook post" do
+    m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
+    data = m.as_json
+
+    assert data['raw']['oembed'].is_a? Hash
+    assert_equal "https://www.facebook.com", data['raw']['oembed']['provider_url']
+    assert_equal "Facebook", data['raw']['oembed']['provider_name']
+  end
+
+  test "should store oembed data of a facebook profile" do
+    m = create_media url: 'https://www.facebook.com/profile.php?id=100008161175765&fref=ts'
+    data = m.as_json
+
+    assert data['raw']['oembed'].is_a? Hash
+    assert_equal 'Tico-Santa-Cruz', data['raw']['oembed']['author_name']
+    assert_equal 'Tico Santa Cruz', data['raw']['oembed']['title']
+  end
+
+  test "should store oembed data of a facebook page" do
+    m = create_media url: 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
+    data = m.as_json
+
+    assert data['raw']['oembed'].is_a? Hash
+    assert_equal 'Meedan', data['raw']['oembed']['author_name']
+    assert_equal 'Meedan', data['raw']['oembed']['title']
+  end
+
+  test "should store oembed data of a instagram post" do
+    m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
+    data = m.as_json
+
+    assert data['raw']['oembed'].is_a? Hash
+    assert_equal 'megadeth', data['raw']['oembed']['author_name']
+    assert_equal 'Peace Sells', data['raw']['oembed']['title']
+  end
+
+  test "should store oembed data of a twitter post" do
+    m = create_media url: 'https://twitter.com/caiosba/status/742779467521773568'
+    data = m.as_json
+
+    assert data['raw']['oembed'].is_a? Hash
+    assert_equal "https:\/\/twitter.com", data['raw']['oembed']['provider_url']
+    assert_equal "Twitter", data['raw']['oembed']['provider_name']
+  end
+
+  test "should store oembed data of a twitter profile" do
+    m = create_media url: 'https://twitter.com/caiosba'
+    data = m.as_json
+
+    assert data['raw']['oembed'].is_a? Hash
+    assert_equal "https:\/\/twitter.com", data['raw']['oembed']['provider_url']
+    assert_equal "Twitter", data['raw']['oembed']['provider_name']
+  end
+
+  test "should store oembed data of a youtube item" do
+    m = create_media url: 'https://www.youtube.com/watch?v=mtLxD7r4BZQ'
+    data = m.as_json
+
+    assert data['raw']['oembed'].is_a? Hash
+    assert_equal "https:\/\/www.youtube.com\/", data['raw']['oembed']['provider_url']
+    assert_equal "YouTube", data['raw']['oembed']['provider_name']
+  end
+
+  test "should store oembed data of a youtube profile" do
+    m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
+    data = m.as_json
+
+    assert data['raw']['oembed'].is_a? Hash
+    assert_equal 'ironmaiden', data['raw']['oembed']['author_name']
+    assert_equal 'Iron Maiden', data['raw']['oembed']['title']
+  end
+
 end

@@ -235,6 +235,7 @@ module MediaFacebookItem
         description: self.data['text'] || self.data['description'],
         picture: self.data['picture'] || self.data['photos'].first,
         html: self.html_for_facebook_post,
+        author_name: self.data['user_name'],
         author_url: 'http://facebook.com/' + self.data['user_uuid']
       })
     end

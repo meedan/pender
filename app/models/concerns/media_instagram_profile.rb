@@ -15,8 +15,9 @@ module MediaInstagramProfile
     end
 
     self.data.merge!({
-      username: username,
+      username: '@' + username,
       title: username,
+      author_name: username,
       picture: data['image'],
       published_at: ''
     })

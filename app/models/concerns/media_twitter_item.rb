@@ -31,13 +31,14 @@ module MediaTwitterItem
     handle_twitter_exceptions do
       self.data['raw']['api'] = self.twitter_client.status(id, tweet_mode: 'extended').as_json
       self.data.merge!({
-        username: user,
+        username: '@' + user,
         title: self.text_from_twitter_item.gsub(/\s+/, ' '),
         description: self.text_from_twitter_item,
         picture: self.twitter_item_picture,
         author_picture: self.twitter_item_picture,
         published_at: self.data['raw']['api']['created_at'],
         html: html_for_twitter_item,
+        author_name: self.data['raw']['api']['user']['name'],
         author_url: 'https://twitter.com/' + user
       })
     end

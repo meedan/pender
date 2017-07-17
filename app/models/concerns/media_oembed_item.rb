@@ -8,7 +8,7 @@ module MediaOembedItem
 
   def post_process_oembed_data
     data = self.data
-    return if data[:error]
+    return if data[:error] || data[:raw][:oembed].nil?
     self.data.merge!({
       published_at: '',
       username: data[:raw][:oembed]['author_name'],
@@ -29,6 +29,7 @@ module MediaOembedItem
         if ['DENY', 'SAMEORIGIN'].include? response.header['X-Frame-Options']
           self.data[:raw][:oembed][:html] = ''
         end
+        return true
       end
     end
   end
@@ -55,10 +56,5 @@ module MediaOembedItem
     credentials = self.get_http_auth(uri)
     request.basic_auth(credentials.first, credentials.last) unless credentials.blank?
     request
-  end
-
-  def oembed_as_oembed(_original_url, _maxwidth, _maxheight)
-    data = self.as_json
-    data[:raw][:oembed]
   end
 end

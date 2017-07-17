@@ -74,9 +74,13 @@ module MediaFacebookProfile
       end
     end
 
-    self.data[:username] = self.get_facebook_username
-    self.data.merge!({ title: self.data['raw']['api']['name'], description: get_description, picture: self.facebook_picture })
     self.get_facebook_likes
+    self.data.merge!({
+      username: self.get_facebook_username,
+      title: self.data['raw']['api']['name'],
+      description: get_description,
+      picture: self.facebook_picture
+    })
   end
 
   def get_description

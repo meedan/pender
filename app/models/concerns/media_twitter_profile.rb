@@ -27,6 +27,7 @@ module MediaTwitterProfile
 
     self.data.merge!({
       title: self.data[:raw][:api][:name],
+      author_name: self.data[:raw][:api][:name],
       picture: self.data[:pictures][:original],
       published_at: self.data[:raw][:api][:created_at]
     })

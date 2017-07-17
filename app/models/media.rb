@@ -77,14 +77,13 @@ class Media
   end
 
   def self.as_oembed(data, original_url, maxwidth, maxheight, instance = nil)
-    oembed = "#{data['provider']}_as_oembed"
-    (instance && instance.respond_to?(oembed))? instance.send(oembed, original_url, maxwidth, maxheight) : Media.default_oembed(data, original_url, maxwidth, maxheight)
+    return instance.send(:get_oembed_data, original_url, maxwidth, maxheight) if instance
+    data[:raw][:oembed].nil? ? Media.default_oembed(data, original_url, maxwidth, maxheight) : data[:raw][:oembed].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(original_url, maxwidth, maxheight))
   end
 
   def self.minimal_data(instance)
     data = {}
-    data[:raw] = {}
-    %w(published_at username title description picture author_url author_picture).each do |field|
+    %w(published_at username title description picture author_url author_picture author_name).each do |field|
       data[field] = ''
     end
     data[:raw] = {}
@@ -117,7 +116,7 @@ class Media
     end
   end
 
-  def self.default_oembed(data, original_url, maxwidth, maxheight)
+  def self.default_oembed(data, original_url, maxwidth = nil, maxheight= nil)
     maxwidth ||= 800
     maxheight ||= 200
     src = original_url.gsub('medias.oembed', 'medias.html')
@@ -130,10 +129,14 @@ class Media
       provider_name: data['provider'],
       provider_url: 'http://' + Media.parse_url(data['url']).host,
       thumbnail_url: data['picture'],
-      html: "<iframe src=\"#{src}\" width=\"#{maxwidth}\" height=\"#{maxheight}\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>",
+      html: Media.default_oembed_html(src, maxwidth, maxheight),
       width: maxwidth,
       height: maxheight
     }.with_indifferent_access
+  end
+
+  def self.default_oembed_html(src, maxwidth = 800, maxheight = 200)
+    "<iframe src=\"#{src}\" width=\"#{maxwidth}\" height=\"#{maxheight}\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>"
   end
 
   protected
@@ -151,6 +154,7 @@ class Media
         unless pattern.match(self.url).nil?
           self.provider, self.type = type.split('_')
           self.send("data_from_#{type}")
+          self.get_oembed_data
           parsed = true
           break
         end
@@ -314,5 +318,16 @@ class Media
     rescue
       self.url.gsub!(/^https:/i, 'http:')
     end
+  end
+
+  def get_oembed_data(original_url = nil, maxwidth = nil, maxheight= nil)
+    url = original_url || self.url
+    if !self.data['raw']['oembed'].nil?
+      self.data['raw']['oembed'].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(url, maxwidth, maxheight))
+    else
+      %w(type provider).each { |key| self.data[key] = self.send(key.to_sym) }
+      self.data['raw']['oembed'] = Media.default_oembed(self.data, url, maxwidth, maxheight) unless self.data_from_oembed_item
+    end
+    self.data['raw']['oembed']
   end
 end
