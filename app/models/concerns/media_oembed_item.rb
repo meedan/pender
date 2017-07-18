@@ -21,8 +21,9 @@ module MediaOembedItem
   end
 
   def data_from_oembed_item
+    return if data[:error]
     handle_exceptions(self, StandardError) do
-      oembed_url = self.send("#{self.provider}_oembed_url") || self.get_oembed_url
+      oembed_url = self.provider_oembed_url || self.get_oembed_url
       response = self.oembed_get_data_from_url(oembed_url)
       if !response.nil? && response.code == '200'
         self.data[:raw][:oembed] = JSON.parse(response.body)
@@ -56,5 +57,9 @@ module MediaOembedItem
     credentials = self.get_http_auth(uri)
     request.basic_auth(credentials.first, credentials.last) unless credentials.blank?
     request
+  end
+
+  def provider_oembed_url
+    self.send("#{self.provider}_oembed_url") if self.respond_to?("#{self.provider}_oembed_url")
   end
 end
