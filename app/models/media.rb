@@ -322,9 +322,10 @@ class Media
 
   def get_oembed_data(original_url = nil, maxwidth = nil, maxheight= nil)
     url = original_url || self.url
-    if !self.data['raw']['oembed'].nil?
+    if !self.data['raw'].nil? && !self.data['raw']['oembed'].nil?
       self.data['raw']['oembed'].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(url, maxwidth, maxheight))
     else
+      self.as_json if self.data.empty?
       %w(type provider).each { |key| self.data[key] = self.send(key.to_sym) }
       self.data['raw']['oembed'] = Media.default_oembed(self.data, url, maxwidth, maxheight) unless self.data_from_oembed_item
     end

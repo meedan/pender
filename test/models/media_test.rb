@@ -122,7 +122,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should return item as oembed when data is not on cache" do
     url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
     m = create_media url: url
-    data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
+    data = Media.as_oembed(nil, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
     assert_equal 'Meedan', data['title']
     assert_equal 'Meedan', data['author_name']
     assert_equal 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
@@ -143,8 +143,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://meedan.checkdesk.org/en/users/tom', data['author_url']
     assert_equal 'Meedan Checkdesk', data['provider_name']
     assert_equal 'https://meedan.checkdesk.org/en', data['provider_url']
-    assert_equal 300, data['width']
-    assert_equal 150, data['height']
+    assert_equal 0, data['width']
+    assert_equal 0, data['height']
     assert_equal '<script src="https://meedan.checkdesk.org/sites/all/modules/meedan/meedan_iframes/js/meedan_iframes.parent.min.js?style=width%3A%20100%25%3B&amp;u=/en/embed/2161"></script>', data['html']
   end
 
