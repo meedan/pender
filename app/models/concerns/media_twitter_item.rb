@@ -35,7 +35,7 @@ module MediaTwitterItem
         title: self.text_from_twitter_item.gsub(/\s+/, ' '),
         description: self.text_from_twitter_item,
         picture: self.twitter_item_picture,
-        author_picture: self.twitter_item_picture,
+        author_picture: self.twitter_author_picture,
         published_at: self.data['raw']['api']['created_at'],
         html: html_for_twitter_item,
         author_name: self.data['raw']['api']['user']['name'],
@@ -44,8 +44,14 @@ module MediaTwitterItem
     end
   end
 
-  def twitter_item_picture
+  def twitter_author_picture
     self.data['raw']['api']['user']['profile_image_url_https'].gsub('_normal', '')
+  end
+
+  def twitter_item_picture
+    unless self.data['raw']['api']['entities']['media'].nil?
+      self.data['raw']['api']['entities']['media'][0]['media_url_https'] || self.data['raw']['api']['entities']['media'][0]['media_url']
+    end
   end
 
   def html_for_twitter_item
