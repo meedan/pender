@@ -20,10 +20,6 @@ module MediaTwitterItem
     end
   end
 
-  def text_from_twitter_item
-    self.data['raw']['api']['text'] || self.data['raw']['api']['full_text'] || ''
-  end
-
   def data_from_twitter_item
     self.url = self.url.gsub(/(%23|#)!\//, '')
     parts = self.url.match(URL)
@@ -32,8 +28,8 @@ module MediaTwitterItem
       self.data['raw']['api'] = self.twitter_client.status(id, tweet_mode: 'extended').as_json
       self.data.merge!({
         username: '@' + user,
-        title: self.text_from_twitter_item.gsub(/\s+/, ' '),
-        description: self.text_from_twitter_item,
+        title: get_info_from_api_data(data, 'text', 'full_text').gsub(/\s+/, ' '),
+        description: get_info_from_api_data(data, 'text', 'full_text'),
         picture: self.twitter_item_picture,
         author_picture: self.twitter_author_picture,
         published_at: self.data['raw']['api']['created_at'],
