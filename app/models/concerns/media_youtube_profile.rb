@@ -34,6 +34,7 @@ module MediaYoutubeProfile
       country: channel.snippet.data['country'],
       username: self.get_youtube_username || '',
       subtype: self.get_youtube_subtype,
+      author_name: self.data[:raw][:api][:title].to_s,
       # videos: self.parse_youtube_videos(channel.videos),
       playlists_count: channel.playlists.count,
       # playlists: self.parse_youtube_playlists(channel.playlists)

@@ -15,6 +15,7 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'Porta dos Fundos', data['title']
     assert_equal 'portadosfundos', data['username']
+    assert_equal 'Porta dos Fundos', data['author_name']
     assert_equal 'user', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
@@ -26,6 +27,7 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'Iron Maiden', data['title']
     assert_equal 'ironmaiden', data['username'].downcase
+    assert_equal 'Iron Maiden', data['author_name']
     assert_equal 'user', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
