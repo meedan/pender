@@ -17,8 +17,8 @@ module MediaInstagramProfile
     self.data.merge!({
       username: '@' + username,
       title: username,
-      author_name: username,
       picture: data['image'],
+      author_picture: data['image'],
       published_at: ''
     })
   end
@@ -28,6 +28,8 @@ module MediaInstagramProfile
     data = {}
     metatags = { image: 'og:image', title: 'og:title', description: 'og:description' }
     data.merge! get_html_metadata(self, 'property', metatags)
+    author_name = self.doc.to_s.match(/"full_name": "([^"]+)"/)
+    data[:author_name] = author_name.nil? ? username : author_name[1]
     data
   end
 end 

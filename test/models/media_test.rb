@@ -494,7 +494,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '@megadeth', d['username']
     assert_equal 'profile', d['type']
     assert_equal 'megadeth', d['title']
-    assert_equal 'megadeth', d['author_name']
+    assert_equal 'Megadeth', d['author_name']
     assert_match /^http/, d['picture']
   end
 
