@@ -88,7 +88,8 @@ module MediaFacebookProfile
   end
 
   def get_facebook_likes
-    self.data['likes'] = self.data['likes'].to_s.match(/^[0-9]+$/).nil? ? self.data['raw']['api']['fan_count'] : self.data['raw']['api']['likes'].to_s.match(/^[0-9]+$/).nil?
+    likes = self.data['raw']['api']['likes'].to_s
+    self.data['likes'] = likes.match(/^[0-9]+$/).nil? ? self.data['raw']['api']['fan_count'] : likes
   end
 
   def facebook_picture
