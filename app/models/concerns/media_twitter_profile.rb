@@ -17,7 +17,7 @@ module MediaTwitterProfile
   end
 
   def data_from_twitter_profile
-    username = self.data[:username] = self.get_twitter_username
+    username = self.get_twitter_username
     self.data[:raw][:api] = {}
     handle_twitter_exceptions do
       self.data[:raw][:api].merge!(self.twitter_client.user(username).as_json)
@@ -26,6 +26,7 @@ module MediaTwitterProfile
     self.process_twitter_profile_images
 
     self.data.merge!({
+      username: '@' + username,
       title: self.data[:raw][:api][:name],
       author_name: self.data[:raw][:api][:name],
       picture: self.data[:pictures][:original],

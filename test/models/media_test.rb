@@ -47,7 +47,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://twitter.com/caiosba'
     data = m.as_json
     assert_equal 'Caio Almeida', data['title']
-    assert_equal 'caiosba', data['username']
+    assert_equal '@caiosba', data['username']
     assert_equal 'twitter', data['provider']
     assert_equal 'Caio Almeida', data['author_name']
     assert_not_nil data['description']
@@ -250,7 +250,7 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'https://twitter.com/caiosba', data['url']
     assert_equal 'Caio Almeida', data['title']
-    assert_equal 'caiosba', data['username']
+    assert_equal '@caiosba', data['username']
     assert_equal 'twitter', data['provider']
     assert_not_nil data['description']
     assert_not_nil data['picture']
