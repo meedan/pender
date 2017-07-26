@@ -31,15 +31,15 @@ module MediaPageItem
 
   def get_twitter_metadata
     metatags = { title: 'twitter:title', picture: 'twitter:image', description: 'twitter:description', username: 'twitter:creator' }
-    data = get_html_metadata('name', metatags).with_indifferent_access
-    data.merge!(get_html_metadata('property', metatags))
+    data = get_html_metadata(self, 'name', metatags).with_indifferent_access
+    data.merge!(get_html_metadata(self, 'property', metatags))
     data['author_url'] = 'https://twitter.com/' + data['username'] if data['username']
     data
   end
 
   def get_opengraph_metadata
     metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time' }
-    get_html_metadata('property', metatags)
+    get_html_metadata(self, 'property', metatags)
   end
 
   def get_oembed_metadata
@@ -50,7 +50,7 @@ module MediaPageItem
 
   def get_basic_metadata
     metatags = { title: 'title',  description: 'description', username: 'author' }
-    data = get_html_metadata('name', metatags)
+    data = get_html_metadata(self, 'name', metatags)
     title = self.doc.at_css("title")
     data[:title] ||= title.nil? ? '' : title.content
     data[:description] ||= ''
