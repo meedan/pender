@@ -950,8 +950,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'تسلسل زمني| تحرير الموصل: أسئلة الصراع الإقليمي تنتظر الإجابة.. أو الانفجار', d['title']
     assert_match /مرت الأيام التي تلت محاولة اغتيال العبادي/, d['description']
     assert_equal '', d['published_at']
-    assert_equal 'ميس رمضاني', d['username']
-    assert_equal 'https://almanassa.com/ar/user/970', d['author_url']
+    assert_equal '', d['username']
+    assert_equal 'https://almanassa.com', d['author_url']
     assert_match /\/\/almanassa.com\/sites\/default\/files\/irq_367110792_1469895703-bicubic\.jpg/, d['picture']
   end
 
@@ -1086,7 +1086,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'item', d['type']
     assert_equal 'page', d['provider']
     assert_equal 'Yahoo', d['title']
-    assert_match /Yahoo/, d['description']
+    assert_match /Notícias/, d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://br.yahoo.com', d['author_url']
