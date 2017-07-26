@@ -4,7 +4,7 @@ class Media
   include MediasHelper
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url
+  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :ssl_error
 
   TYPES = {}
 
@@ -41,6 +41,7 @@ class Media
 
   def self.minimal_data(instance)
     data = {}
+    data[:raw] = {}
     %w(published_at username title description picture author_url author_picture).each do |field|
       data[field] = ''
     end
@@ -67,16 +68,9 @@ class Media
     rescue URI::InvalidURIError, SocketError => e
       Rails.logger.warn "Could not access url: #{e.message}"
       return false
+    rescue OpenSSL::SSL::SSLError
+      Media.validate_url(url.gsub(/^https:/i, 'http:'))
     end
-  end
-
-  def get_html_metadata(attr, metatags)
-    data = {}
-    metatags.each do |key, value|
-      metatag = self.doc.at_css("meta[#{attr}='#{value}']")
-      data[key] = metatag.attr('content') if metatag
-    end
-    data
   end
 
   def self.default_oembed(data, original_url, maxwidth, maxheight)
@@ -106,7 +100,7 @@ class Media
 
   def parse
     self.data = Media.minimal_data(self)
-    self.get_metatags
+    self.data['raw']['metatags'] = get_metatags(self)
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|
@@ -174,10 +168,16 @@ class Media
   end
 
   def request_media_url
-    uri = Media.parse_url(self.url)
     response = nil
     Retryable.retryable(tries: 3, sleep: 1) do
-      response = Media.request_uri(uri, 'Head')
+      begin
+        uri = Media.parse_url(self.url)
+        response = Media.request_uri(uri, 'Head')
+      rescue OpenSSL::SSL::SSLError
+        self.url.gsub!(/^https:/i, 'http:')
+        self.ssl_error = true
+        retry
+      end
     end
     response
   end
@@ -267,17 +267,5 @@ class Media
     rescue
       self.url.gsub!(/^https:/i, 'http:')
     end
-  end
-
-  def get_metatags
-    fields = []
-    unless self.doc.nil?
-      self.doc.search('meta').each do |meta|
-        metatag = {}
-        meta.each { |key, value| metatag.merge!({key => value}) }
-        fields << metatag
-      end
-    end
-    self.data['metatags'] = fields
   end
 end

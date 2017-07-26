@@ -950,8 +950,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'تسلسل زمني| تحرير الموصل: أسئلة الصراع الإقليمي تنتظر الإجابة.. أو الانفجار', d['title']
     assert_match /مرت الأيام التي تلت محاولة اغتيال العبادي/, d['description']
     assert_equal '', d['published_at']
-    assert_equal 'ميس رمضاني', d['username']
-    assert_equal 'https://almanassa.com/ar/user/970', d['author_url']
+    assert_equal '', d['username']
+    assert_equal 'https://almanassa.com', d['author_url']
     assert_match /\/\/almanassa.com\/sites\/default\/files\/irq_367110792_1469895703-bicubic\.jpg/, d['picture']
   end
 
@@ -1086,7 +1086,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'item', d['type']
     assert_equal 'page', d['provider']
     assert_equal 'Yahoo', d['title']
-    assert_match /Yahoo/, d['description']
+    assert_match /Notícias/, d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://br.yahoo.com', d['author_url']
@@ -1462,8 +1462,19 @@ class MediaTest < ActiveSupport::TestCase
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'https://www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html', request: request
     data = m.as_json
-    assert data['metatags'].is_a? Array
-    assert !data['metatags'].empty?
+    assert data['raw']['metatags'].is_a? Array
+    assert !data['raw']['metatags'].empty?
   end
 
+  test "should parse url with certificate error" do
+    url = 'https://www.poynter.org/2017/european-policy-makers-are-not-done-with-facebook-google-and-fake-news-just-yet/465809/'
+    m = create_media url: url
+    d = m.as_json
+    assert_equal 'Alexios Mantzarlis', d['author_name']
+    assert_equal 'http://www.poynter.org/author/alexios/', d['author_url']
+    assert_equal 'European policy-makers are not done with Facebook, Google and fake news just yet', d['title']
+    assert_match /The U.S. and its political context/, d['description']
+    assert m.ssl_error
+    assert_equal url, m.url
+  end
 end
