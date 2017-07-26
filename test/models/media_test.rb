@@ -1466,4 +1466,15 @@ class MediaTest < ActiveSupport::TestCase
     assert !data['metatags'].empty?
   end
 
+  test "should parse url with certificate error" do
+    url = 'https://www.poynter.org/2017/european-policy-makers-are-not-done-with-facebook-google-and-fake-news-just-yet/465809/'
+    m = create_media url: url
+    d = m.as_json
+    assert_equal 'Alexios Mantzarlis', d['author_name']
+    assert_equal 'http://www.poynter.org/author/alexios/', d['author_url']
+    assert_equal 'European policy-makers are not done with Facebook, Google and fake news just yet', d['title']
+    assert_match /The U.S. and its political context/, d['description']
+    assert m.ssl_error
+    assert_equal url, m.url
+  end
 end
