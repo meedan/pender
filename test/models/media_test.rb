@@ -1462,8 +1462,8 @@ class MediaTest < ActiveSupport::TestCase
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'https://www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html', request: request
     data = m.as_json
-    assert data['metatags'].is_a? Array
-    assert !data['metatags'].empty?
+    assert data['raw']['metatags'].is_a? Array
+    assert !data['raw']['metatags'].empty?
   end
 
   test "should parse url with certificate error" do

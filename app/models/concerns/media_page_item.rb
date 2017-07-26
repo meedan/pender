@@ -6,7 +6,10 @@ module MediaPageItem
   end
 
   def data_from_page_item
-    self.doc ||= self.get_html
+    if self.doc.nil?
+      self.doc = self.get_html
+      self.data['raw']['metatags'] = get_metatags(self)
+    end
     handle_exceptions(self, RuntimeError) do
       self.data = self.page_get_data_from_url
     end
