@@ -4,7 +4,7 @@ class Media
   include MediasHelper
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :ssl_error
+  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url
 
   TYPES = {}
 
@@ -68,8 +68,6 @@ class Media
     rescue URI::InvalidURIError, SocketError => e
       Rails.logger.warn "Could not access url: #{e.message}"
       return false
-    rescue OpenSSL::SSL::SSLError
-      Media.validate_url(url.gsub(/^https:/i, 'http:'))
     end
   end
 
@@ -168,16 +166,10 @@ class Media
   end
 
   def request_media_url
+    uri = Media.parse_url(self.url)
     response = nil
     Retryable.retryable(tries: 3, sleep: 1) do
-      begin
-        uri = Media.parse_url(self.url)
-        response = Media.request_uri(uri, 'Head')
-      rescue OpenSSL::SSL::SSLError
-        self.url.gsub!(/^https:/i, 'http:')
-        self.ssl_error = true
-        retry
-      end
+      response = Media.request_uri(uri, 'Head')
     end
     response
   end

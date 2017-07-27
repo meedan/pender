@@ -408,11 +408,4 @@ class MediasControllerTest < ActionController::TestCase
     assert_nil JSON.parse(response.body)['error']
   end
 
-  test "should parse url with certificate error" do
-    authenticate_with_token
-    url = 'https://www.poynter.org/2017/european-policy-makers-are-not-done-with-facebook-google-and-fake-news-just-yet/465809/'
-    get :index, url: url, format: :json
-    assert_response :success
-    assert_equal url, JSON.parse(response.body)['data']['url']
-  end
 end
