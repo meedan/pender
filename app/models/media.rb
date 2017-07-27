@@ -65,6 +65,9 @@ class Media
       uri = URI.parse(URI.encode(url))
       return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
       Media.request_uri(uri, 'Head')
+    rescue OpenSSL::SSL::SSLError => e
+      Airbrake.notify(e) if Airbrake.configuration.api_key
+      return false
     rescue URI::InvalidURIError, SocketError => e
       Rails.logger.warn "Could not access url: #{e.message}"
       return false
