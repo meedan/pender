@@ -18,6 +18,11 @@ USER root
 COPY production/bin /opt/bin/
 RUN chmod 755 /opt/bin/*.sh
 
+# godaddy intermediate cert
+RUN cd /usr/local/share/ca-certificates \
+		&& curl -o gdig2.crt https://certs.godaddy.com/repository/gdig2.crt.pem \
+		&& update-ca-certificates
+
 # nginx
 COPY ./production/nginx.conf /etc/nginx/sites-available/pender
 RUN ln -s /etc/nginx/sites-available/pender /etc/nginx/sites-enabled/pender \
