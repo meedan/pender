@@ -20,7 +20,6 @@ module MediaPageItem
       self.data[:picture] = self.add_scheme(self.data[:picture])
     end
     self.data['author_name'] = self.data['username'] if self.data['author_name'].blank?
-    self.url.gsub!(/^http:/i, 'https:') if self.ssl_error
   end
 
   def page_get_data_from_url

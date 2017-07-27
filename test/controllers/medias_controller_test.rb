@@ -408,11 +408,20 @@ class MediasControllerTest < ActionController::TestCase
     assert_nil JSON.parse(response.body)['error']
   end
 
-  test "should parse url with certificate error" do
-    authenticate_with_token
+  test "should return invalid url and notify Airbrake when the certificate has error" do
     url = 'https://www.poynter.org/2017/european-policy-makers-are-not-done-with-facebook-google-and-fake-news-just-yet/465809/'
+    uri = URI.parse(URI.encode(url))
+    Media.stubs(:request_uri).with(uri, 'Head').raises(OpenSSL::SSL::SSLError)
+    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:notify).once
+
+    authenticate_with_token
     get :index, url: url, format: :json
-    assert_response :success
-    assert_equal url, JSON.parse(response.body)['data']['url']
+    assert_response 400
+    assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
+
+    Media.unstub(:request_uri)
+    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:notify)
   end
 end
