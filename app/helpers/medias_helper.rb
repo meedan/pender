@@ -26,4 +26,24 @@ module MediasHelper
     end
   end
 
+  def get_metatags(media)
+    fields = []
+    unless media.doc.nil?
+      media.doc.search('meta').each do |meta|
+        metatag = {}
+        meta.each { |key, value| metatag.merge!({key => value}) }
+        fields << metatag
+      end
+    end
+    fields
+  end
+
+  def get_html_metadata(media, attr, metatags)
+    data = {}
+    metatags.each do |key, value|
+      metatag = media.data['raw']['metatags'].find { |tag| tag[attr] == value }
+      data[key] = metatag['content'] if metatag
+    end
+    data
+  end
 end

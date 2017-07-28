@@ -1,6 +1,7 @@
 require 'timeout'
 require 'pender_exceptions'
 require 'cc_deville'
+require 'semaphore'
 
 module Api
   module V1
@@ -9,7 +10,8 @@ module Api
       include MediasHelper
 
       skip_before_filter :authenticate_from_token!, if: proc { request.format.html? || request.format.js? || request.format.oembed? }
-      after_action :allow_iframe, only: :index
+      before_action :lock_url, only: :index
+      after_action :allow_iframe, :unlock_url, only: :index
 
       def index
         @url = params[:url]
@@ -183,6 +185,25 @@ module Api
         FileUtils.rm_f cache_path
         url = request.original_url.gsub(/medias(\.[a-z]+)?\?/, 'medias.html?')
         CcDeville.clear_cache_for_url(url)
+      end
+
+      def lock_url
+        unless params[:url].blank?
+          if locker.locked?
+            render_error('This URL is already being processed. Please try again in a few seconds.', 'DUPLICATED', 409) and return false
+          else
+            locker.lock
+          end
+        end
+      end
+
+      def unlock_url
+        locker.unlock unless params[:url].blank?
+      end
+
+      def locker
+        @locker ||= Semaphore.new(params[:url])
+        @locker
       end
     end
   end

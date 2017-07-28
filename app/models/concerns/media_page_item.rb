@@ -6,7 +6,10 @@ module MediaPageItem
   end
 
   def data_from_page_item
-    self.doc ||= self.get_html
+    if self.doc.nil?
+      self.doc = self.get_html
+      self.data['raw']['metatags'] = get_metatags(self)
+    end
     handle_exceptions(self, RuntimeError) do
       self.data = self.page_get_data_from_url
     end
@@ -16,6 +19,7 @@ module MediaPageItem
     else
       self.data[:picture] = self.add_scheme(self.data[:picture])
     end
+    self.data['author_name'] = self.data['username'] if self.data['author_name'].blank?
   end
 
   def page_get_data_from_url
@@ -29,15 +33,15 @@ module MediaPageItem
 
   def get_twitter_metadata
     metatags = { title: 'twitter:title', picture: 'twitter:image', description: 'twitter:description', username: 'twitter:creator' }
-    data = get_html_metadata('name', metatags).with_indifferent_access
-    data.merge!(get_html_metadata('property', metatags))
+    data = get_html_metadata(self, 'name', metatags).with_indifferent_access
+    data.merge!(get_html_metadata(self, 'property', metatags))
     data['author_url'] = 'https://twitter.com/' + data['username'] if data['username']
     data
   end
 
   def get_opengraph_metadata
     metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time' }
-    get_html_metadata('property', metatags)
+    get_html_metadata(self, 'property', metatags)
   end
 
   def get_oembed_metadata
@@ -48,7 +52,7 @@ module MediaPageItem
 
   def get_basic_metadata
     metatags = { title: 'title',  description: 'description', username: 'author' }
-    data = get_html_metadata('name', metatags)
+    data = get_html_metadata(self, 'name', metatags)
     title = self.doc.at_css("title")
     data[:title] ||= title.nil? ? '' : title.content
     data[:description] ||= ''

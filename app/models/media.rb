@@ -41,6 +41,7 @@ class Media
 
   def self.minimal_data(instance)
     data = {}
+    data[:raw] = {}
     %w(published_at username title description picture author_url author_picture).each do |field|
       data[field] = ''
     end
@@ -64,19 +65,13 @@ class Media
       uri = URI.parse(URI.encode(url))
       return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
       Media.request_uri(uri, 'Head')
+    rescue OpenSSL::SSL::SSLError => e
+      Airbrake.notify(e) if Airbrake.configuration.api_key
+      return false
     rescue URI::InvalidURIError, SocketError => e
       Rails.logger.warn "Could not access url: #{e.message}"
       return false
     end
-  end
-
-  def get_html_metadata(attr, metatags)
-    data = {}
-    metatags.each do |key, value|
-      metatag = self.doc.at_css("meta[#{attr}='#{value}']")
-      data[key] = metatag.attr('content') if metatag
-    end
-    data
   end
 
   def self.default_oembed(data, original_url, maxwidth, maxheight)
@@ -106,7 +101,7 @@ class Media
 
   def parse
     self.data = Media.minimal_data(self)
-    self.get_metatags
+    self.data['raw']['metatags'] = get_metatags(self)
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|
@@ -267,17 +262,5 @@ class Media
     rescue
       self.url.gsub!(/^https:/i, 'http:')
     end
-  end
-
-  def get_metatags
-    fields = []
-    unless self.doc.nil?
-      self.doc.search('meta').each do |meta|
-        metatag = {}
-        meta.each { |key, value| metatag.merge!({key => value}) }
-        fields << metatag
-      end
-    end
-    self.data['metatags'] = fields
   end
 end

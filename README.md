@@ -165,6 +165,17 @@ An oEmbed representation of the item, e.g.:
 }
 ```
 
+409: Conflict
+```json
+{
+  "type": "error",
+  "data": {
+    "message": "This URL is already being processed. Please try again in a few seconds.",
+    "code": 9
+  }
+}
+```
+
 #### DELETE|PURGE /api/medias
 
 Clears the cache for the URL(s) passed as parameter.
