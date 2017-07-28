@@ -316,7 +316,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
     assert_equal 'Caio Almeida', data['author_name']
     assert_equal '@caiosba', data['username']
-    assert_not_nil data['picture']
+    assert_nil data['picture']
+    assert_not_nil data['author_picture']
   end
 
   test "should throw Pender::ApiLimitReached when Twitter::Error::TooManyRequests is thrown when parsing tweet" do
@@ -706,7 +707,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
     assert_equal '@anxiaostudio', d['username']
     assert_equal 'https://twitter.com/anxiaostudio', d['author_url']
-    assert_not_nil d['picture']
+    assert_nil d['picture']
+    assert_not_nil d['author_picture']
   end
 
   test "should get canonical URL parsed from html tags" do
@@ -861,7 +863,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
     assert_equal '@salmaeldaly', data['username']
     assert_equal 'https://twitter.com/salmaeldaly', data['author_url']
-    assert_not_nil data['picture']
+    assert_nil data['picture']
+    assert_not_nil data['author_picture']
   end
 
   test "should parse Facebook live post from mobile URL" do
