@@ -28,8 +28,8 @@ module MediaTwitterItem
       self.data['raw']['api'] = self.twitter_client.status(id, tweet_mode: 'extended').as_json
       self.data.merge!({
         username: '@' + user,
-        title: get_info_from_api_data(data, 'text', 'full_text').gsub(/\s+/, ' '),
-        description: get_info_from_api_data(data, 'text', 'full_text'),
+        title: get_info_from_data('api', data, 'text', 'full_text').gsub(/\s+/, ' '),
+        description: get_info_from_data('api', data, 'text', 'full_text'),
         picture: self.twitter_item_picture,
         author_picture: self.twitter_author_picture,
         published_at: self.data['raw']['api']['created_at'],

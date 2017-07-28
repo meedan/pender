@@ -47,8 +47,8 @@ module MediasHelper
     data
   end
 
-  def get_info_from_api_data(data, *args)
-    hash = data['raw']['api']
+  def get_info_from_data(source, data, *args)
+    hash = data['raw'][source]
     args.each do |i|
       return hash[i] if !hash[i].nil?
     end

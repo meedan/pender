@@ -73,12 +73,14 @@ module MediaFacebookProfile
         raise e
       end
     end
-
     self.get_facebook_likes
     self.data.merge!({
       username: self.get_facebook_username,
-      title: get_info_from_api_data(data, 'name'),
-      description: get_info_from_api_data(data, 'bio', 'about', 'description'),
+      title: get_info_from_data('api', data, 'name'),
+      description: get_info_from_data('api', data, 'bio', 'about', 'description'),
+      author_url: get_info_from_data('api', data, 'link'),
+      author_picture: self.facebook_picture,
+      author_name: get_info_from_data('api', data, 'name'),
       picture: self.facebook_picture
     })
   end
