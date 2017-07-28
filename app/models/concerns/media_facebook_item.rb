@@ -95,7 +95,7 @@ module MediaFacebookItem
       self.data['raw']['api'] = object
       self.data['text'] = get_text_from_object(object)
       self.data['published_at'] = object['created_time'] || object['updated_time']
-      self.data['user_name'] = object['name'] || object['from']['name']
+      self.data['author_name'] = object['name'] || object['from']['name']
       if self.url.match(EVENT_URL).nil?
         self.data['user_uuid'] = object['from']['id'] if self.data['user_uuid'].blank?
         get_facebook_picture(self.data['user_uuid'])
@@ -164,24 +164,23 @@ module MediaFacebookItem
 
   def parse_from_facebook_html
     self.doc = self.get_html(html_options)
+    self.get_facebook_info_from_metadata
     self.get_facebook_text_from_html
-    text = self.doc.to_s.gsub(/<[^>]+>/, '')
-
-    media = text.match(/added ([0-9]+) new photos/)
-    self.data['media_count'] = media.nil? ? 0 : media[1].to_i
-    time = self.doc.at_css('span.timestampContent')
-    self.data['published_at'] = Time.parse(time.inner_html) unless time.nil?
-    self.data['photos'] = []
+    self.get_facebook_owner_name_from_html
     self.get_facebook_user_info_from_html
+    self.get_facebook_url_from_html
   end
 
-  def get_facebook_user_info_from_html
-    user_uuid = self.doc.to_s.match(/"entity_id":"([^"]+)"/)
-    self.data['user_uuid'] = user_uuid[1] if self.data['user_uuid'].blank? && !user_uuid.nil?
-    self.get_facebook_picture(self.data['user_uuid']) if !self.data['user_uuid'].blank? && self.data['picture'].blank?
+  def get_facebook_info_from_metadata
+    self.data['raw']['metatags'] = get_metatags(self)
+    metadata = self.get_opengraph_metadata
+    self.data['author_name'] = metadata['title']
+    self.data['text'] = metadata['description']
+    self.data['photos'] = metadata['picture'].nil? ? [] : [metadata['picture']]
   end
 
   def get_facebook_text_from_html
+    return unless self.data['text'].blank?
     content = self.doc.at_css('div.userContent') || self.doc.at_css('span.hasCaption')
     if content.nil?
       meta_description = self.doc.at_css('meta[name=description]')
@@ -190,11 +189,34 @@ module MediaFacebookItem
       text = content.inner_html.gsub(/<[^>]+>/, '')
     end
     self.data['text'] = text.to_s.gsub('See Translation', ' ')
-    user_name = self.doc.to_s.match(/ownerName:"([^"]+)"/)
-    permalink = self.doc.to_s.match(/permalink:"([^"]+)"/)
+  end
 
+  def get_facebook_user_info_from_html
+    user_uuid = self.doc.to_s.match(/"entity_id":"([^"]+)"/)
+    self.data['user_uuid'] = user_uuid[1] if self.data['user_uuid'].blank? && !user_uuid.nil?
+    self.get_facebook_picture(self.data['user_uuid']) if !self.data['user_uuid'].blank? && self.data['picture'].blank?
+  end
+
+  def get_facebook_owner_name_from_html
+    return unless self.data['author_name'].blank?
+    user_name = self.doc.to_s.match(/ownerName:"([^"]+)"/)
+    self.data['author_name'] = user_name.nil? ? 'Not Identified' : user_name[1]
+  end
+
+  def get_facebook_published_time_from_html
+    time = self.doc.at_css('span.timestampContent')
+    self.data['published_at'] = Time.parse(time.inner_html) unless time.nil?
+  end
+
+  def get_facebook_url_from_html
+    permalink = self.doc.to_s.match(/permalink:"([^"]+)"/)
     self.url = absolute_url(permalink[1]) if permalink
-    self.data['user_name'] = user_name.nil? ? 'Not Identified' : user_name[1]
+  end
+
+  def get_facebook_media_count_from_html
+    text = self.doc.to_s.gsub(/<[^>]+>/, '')
+    media = text.match(/added ([0-9]+) new photos/)
+    self.data['media_count'] = media.nil? ? 0 : media[1].to_i
   end
 
   def html_for_facebook_post
@@ -230,12 +252,12 @@ module MediaFacebookItem
       self.data['text'].strip!
       self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
       self.data.merge!({
-        username: self.get_facebook_slug_from_html || self.data['user_name'],
-        title: self.data['user_name'] + ' on Facebook',
+        username: self.get_facebook_slug_from_html || self.data['author_name'],
+        title: self.data['author_name'] + ' on Facebook',
         description: self.data['text'] || self.data['description'],
-        picture: self.data['picture'] || self.data['photos'].first,
+        picture: self.data['photos'].first,
         html: self.html_for_facebook_post,
-        author_name: self.data['user_name'],
+        author_name: self.data['author_name'],
         author_url: 'http://facebook.com/' + self.data['user_uuid']
       })
     end

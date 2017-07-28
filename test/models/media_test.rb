@@ -335,7 +335,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '749262715138323_1028416870556238', d['uuid']
     assert_equal "This post is only to test.\n\nEsto es una publicación para testar solamente.", d['text']
     assert_equal '749262715138323', d['user_uuid']
-    assert_equal 'Teste', d['user_name']
+    assert_equal 'Teste', d['author_name']
     assert_equal 0, d['media_count']
     assert_equal '1028416870556238', d['object_id']
     assert_equal '18/11/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
@@ -347,7 +347,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '749262715138323_896869113711015', d['uuid']
     assert_equal 'This post should be fetched.', d['text']
     assert_equal '749262715138323', d['user_uuid']
-    assert_equal 'Teste', d['user_name']
+    assert_equal 'Teste', d['author_name']
     assert_equal 1, d['media_count']
     assert_equal '896869113711015', d['object_id']
     assert_equal '09/03/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
@@ -359,7 +359,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '749262715138323_1028424567222135', d['uuid']
     assert_equal 'Teste updated their profile picture.', d['text']
     assert_equal '749262715138323', d['user_uuid']
-    assert_equal 'Teste', d['user_name']
+    assert_equal 'Teste', d['author_name']
     assert_equal 1, d['media_count']
     assert_equal '1028424567222135', d['object_id']
     assert_equal '18/11/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
@@ -371,7 +371,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '749262715138323_1028795030518422', d['uuid']
     assert_equal 'This is just a test with many photos.', d['text']
     assert_equal '749262715138323', d['user_uuid']
-    assert_equal 'Teste', d['user_name']
+    assert_equal 'Teste', d['author_name']
     assert_equal 2, d['media_count']
     assert_equal '1028795030518422', d['object_id']
     assert_equal '18/11/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
@@ -383,7 +383,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '735450245_10156130657385246', d['uuid']
     assert_equal 'Such a great evening with friends last night. Sultan Sooud Al-Qassemi has an amazing collecting of modern Arab art. It was a visual tour of the history of the region over the last century.', d['text'].strip
     assert_equal '735450245', d['user_uuid']
-    assert_equal 'Mohamed Nanabhay', d['user_name']
+    assert_equal 'Mohamed Nanabhay', d['author_name']
     assert_equal 4, d['media_count']
     assert_equal '10156130657385246', d['object_id']
     assert_equal '27/10/2015', d['published_at'].strftime("%d/%m/%Y")
@@ -395,7 +395,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '100000497329098_1195161923843707', d['uuid']
     assert_equal '', d['text']
     assert_equal '100000497329098', d['user_uuid']
-    assert_equal 'Kiko Loureiro', d['user_name']
+    assert_equal 'Kiko Loureiro', d['author_name']
     assert_equal 1, d['media_count']
     assert_equal '1195161923843707', d['object_id']
     # FIXME: This publishing date can be different for FB users who are in a different timezone.
@@ -407,7 +407,7 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal '10155150801660195_10155150801660195', d['uuid']
     assert_equal '10155150801660195', d['user_uuid']
-    assert_equal 'David Marcus', d['user_name']
+    assert_equal 'David Marcus', d['author_name']
     assert_equal 1, d['media_count']
     assert_equal '10155150801660195', d['object_id']
     assert_match /always working on ways to make Messenger more useful/, d['text']
@@ -449,7 +449,7 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal '100003706393630_108561999277346', d['uuid']
     assert_equal '100003706393630', d['user_uuid']
-    assert_equal 'Ahlam Ali Al Shāmsi', d['user_name']
+    assert_equal 'Ahlam Ali Al Shāmsi', d['author_name']
     assert_equal 0, d['media_count']
     assert_equal '108561999277346', d['object_id']
     assert_equal 'أنا مواد رافعة الآن الأموال اللازمة لمشروع مؤسسة خيرية، ودعم المحتاجين في غرب أفريقيا مساعدتي لبناء مكانا أفضل للأطفال في أفريقيا', d['text']
@@ -835,9 +835,9 @@ class MediaTest < ActiveSupport::TestCase
       title: 'Classic on Facebook',
       description: 'Classic added a new photo.',
       username: 'Classic.mou',
-      user_name: 'Classic',
+      author_name: 'Classic',
       author_url: 'http://facebook.com/136985363145802',
-      picture: 'https://graph.facebook.com/136985363145802/picture'
+      author_picture: 'https://graph.facebook.com/136985363145802/picture'
     }.with_indifferent_access
 
     variations = %w(
@@ -849,6 +849,7 @@ class MediaTest < ActiveSupport::TestCase
       data = media.as_json
       expected.each do |key, value|
         assert_equal value, data[key]
+        assert_match /14712625_613639175480416_2497518582358260577/, data[:picture]
       end
     end
   end
@@ -1007,7 +1008,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /We made a thank you video for the people who sponsored Seif and Waleed's 5K charity run/, d['description']
     assert_not_nil d['published_at']
     assert_equal 'rania.zaki', d['username']
-    assert_equal 'Rania Zaki', d['user_name']
+    assert_equal 'Rania Zaki', d['author_name']
     assert_equal 'http://facebook.com/582140607', d['author_url']
     assert_equal 'https://graph.facebook.com/582140607/picture', d['picture']
   end
@@ -1074,7 +1075,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Bimbo Memories on Facebook', d['title']
     assert_not_nil d['description']
     assert_not_nil d['published_at']
-    assert_equal 'Bimbo Memories', d['user_name']
+    assert_equal 'Bimbo Memories', d['author_name']
     assert_equal 'Bimbo.Memories', d['username']
     assert_equal 'http://facebook.com/235404669918505', d['author_url']
     assert_equal 'https://graph.facebook.com/235404669918505/picture', d['picture']
@@ -1087,7 +1088,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Classic on Facebook', d['title']
     assert_match /سعاد/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'Classic', d['user_name']
+    assert_equal 'Classic', d['author_name']
     assert_equal 'Classic.mou', d['username']
     assert_equal 'http://facebook.com/136985363145802', d['author_url']
     assert_equal 'https://graph.facebook.com/136985363145802/picture', d['picture']
@@ -1200,7 +1201,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'El-tnheda - التنهّيدة on Facebook', d['title']
     assert_match /كان هيحصل إيه/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'El-tnheda - التنهّيدة', d['user_name']
+    assert_equal 'El-tnheda - التنهّيدة', d['author_name']
     assert_equal 'Eltnheda', d['username']
     assert_equal 'http://facebook.com/604927369711405', d['author_url']
     assert_equal 'https://graph.facebook.com/604927369711405/picture', d['picture']
@@ -1216,7 +1217,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /مين قالك تسكن فى حاراتنا/, d['description']
     assert_not_nil d['published_at']
     assert_equal 'nostalgia.y', d['username']
-    assert_equal 'Nostalgia', d['user_name']
+    assert_equal 'Nostalgia', d['author_name']
     assert_equal 'http://facebook.com/456182634511888', d['author_url']
     assert_equal 'https://graph.facebook.com/456182634511888/picture', d['picture']
     assert_nil d['error']
@@ -1244,7 +1245,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /إليزابيث تايلو/, d['description']
     assert_not_nil d['published_at']
     assert_equal 'Classic.mou', d['username']
-    assert_equal 'Classic', d['user_name']
+    assert_equal 'Classic', d['author_name']
     assert_equal 'http://facebook.com/136985363145802', d['author_url']
     assert_equal 'https://graph.facebook.com/136985363145802/picture', d['picture']
     assert_equal 'https://www.facebook.com/Classic.mou/posts/666508790193454:0', m.url
@@ -1295,14 +1296,14 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Facebook post from user profile and get username and name" do
     m = create_media url: 'https://www.facebook.com/nanabhay/posts/10156130657385246'
     data = m.as_json
-    assert_equal 'Mohamed Nanabhay', data['user_name']
+    assert_equal 'Mohamed Nanabhay', data['author_name']
     assert_equal 'nanabhay', data['username']
   end
 
   test "should parse Facebook post from page and get username and name" do
     m = create_media url: 'https://www.facebook.com/ironmaiden/photos/a.406269382050.189128.172685102050/10154015223857051/?type=3&theater'
     data = m.as_json
-    assert_equal 'Iron Maiden', data['user_name']
+    assert_equal 'Iron Maiden', data['author_name']
     assert_equal 'ironmaiden', data['username']
   end
 
@@ -1407,7 +1408,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '54212446406_10154534110871407', d['uuid']
     assert_match(/En el Museo Serralves de Oporto/, d['text'])
     assert_equal '54212446406', d['user_uuid']
-    assert_equal 'Mariano Rajoy Brey', d['user_name']
+    assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert_equal 10, d['media_count']
     assert_equal '10154534110871407', d['object_id']
     assert_equal 'https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3', m.url
@@ -1426,7 +1427,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '54212446406_10154534110871407', d['uuid']
     assert_match(/En el Museo Serralves de Oporto/, d['text'])
     assert_equal '54212446406', d['user_uuid']
-    assert_equal 'Mariano Rajoy Brey', d['user_name']
+    assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert_equal 10, d['media_count']
     assert_equal '10154534110871407', d['object_id']
     assert_equal 'https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3',
@@ -1439,7 +1440,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '54212446406_10154534110871407', d['uuid']
     assert_match(/En el Museo Serralves de Oporto/, d['text'])
     assert_equal '54212446406', d['user_uuid']
-    assert_equal 'Mariano Rajoy Brey', d['user_name']
+    assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert_equal 10, d['media_count']
     assert_equal '10154534110871407', d['object_id']
     assert_equal 'https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3', m.url
@@ -1453,7 +1454,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '54212446406_10154534110871407', d['uuid']
     assert_match(/En el Museo Serralves de Oporto/, d['text'])
     assert_equal '54212446406', d['user_uuid']
-    assert_equal 'Mariano Rajoy Brey', d['user_name']
+    assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert_equal 10, d['media_count']
     assert_equal '10154534110871407', d['object_id']
     Media.any_instance.unstub(:url)
