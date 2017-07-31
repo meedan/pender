@@ -138,7 +138,7 @@ module MediaFacebookItem
 
   def get_facebook_picture(id)
     return if id.blank?
-    self.data['picture'] = self.data['author_picture'] = 'https://graph.facebook.com/' + id + '/picture'
+    self.data['author_picture'] = 'https://graph.facebook.com/' + id + '/picture'
   end
 
   def parse_facebook_media(object)
@@ -168,6 +168,8 @@ module MediaFacebookItem
     self.get_facebook_text_from_html
     self.get_facebook_owner_name_from_html
     self.get_facebook_user_info_from_html
+    self.get_facebook_published_time_from_html
+    self.get_facebook_media_count_from_html
     self.get_facebook_url_from_html
   end
 

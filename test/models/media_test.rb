@@ -431,14 +431,16 @@ class MediaTest < ActiveSupport::TestCase
 
     m = create_media url: 'https://www.facebook.com/teste637621352/posts/1035783969819528'
     d = m.as_json
-    assert_match /^https/, d['picture']
+    assert_nil d['picture']
+    assert_match /^https/, d['author_picture']
     assert_kind_of Array, d['photos']
     assert_equal 0, d['media_count']
     assert_equal 0, d['photos'].size
 
     m = create_media url: 'https://www.facebook.com/johnwlai/posts/10101205465813840?pnref=story'
     d = m.as_json
-    assert_match /^https/, d['picture']
+    assert_match /^https/, d['author_picture']
+    assert_nil d['picture']
     assert_kind_of Array, d['photos']
     assert_equal 2, d['media_count']
     assert_equal 0, d['photos'].size
@@ -479,7 +481,7 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'http://facebook.com/100000497329098', d['author_url']
     assert_equal 'Kiko Loureiro', d['author_name']
-    assert_not_nil d['picture']
+    assert_nil d['picture']
   end
 
   test "should parse Instagram link" do
@@ -522,7 +524,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'item', d['type']
     assert_equal 'Escape on Facebook', d['title']
     assert_equal 'Escape added a new photo.', d['description']
-    assert_match /423930480981426/, d['picture']
+    assert_match /423930480981426/, d['author_picture']
+    assert_match /14212700_1204094906298309_5686096491476642814/, d['picture']
     assert_equal '1204094906298309', d['object_id']
   end
 
@@ -531,7 +534,8 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'Dina Samak on Facebook', d['title']
     assert_not_nil d['description']
-    assert_not_nil d['picture']
+    assert_not_nil d['author_picture']
+    assert_nil d['picture']
     assert_not_nil d['published_at']
   end
 
@@ -560,7 +564,8 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'Eddie Scott on Facebook', d['title']
     assert_equal 'item', d['type']
-    assert_not_nil d['picture']
+    assert_nil d['picture']
+    assert_not_nil d['author_picture']
     assert_not_nil d['published_at']
   end
 
@@ -571,7 +576,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Nancy Ajram will be performing in Stella Di Mare, September 13th, 2016 in Egypt. For tickets and information please contact 19565.', d['description']
     assert_equal '25432690933', d['user_uuid']
     assert_equal '1090503577698748', d['object_id']
-    assert_match /1090503577698748/, d['picture']
+    assert_nil d['picture']
+    assert_match /1090503577698748/, d['author_picture']
     assert_not_nil d['published_at']
   end
 
@@ -581,7 +587,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Mariano Rajoy Brey on Facebook', d['title']
     assert_equal 'item', d['type']
     assert_equal '10154534111016407', d['object_id']
-    assert_match /54212446406/, d['picture']
+    assert_match /54212446406/, d['author_picture']
+    assert_match /14543767_10154534111016407_5167486558738906371/, d['picture']
     assert_not_nil d['published_at']
   end
 
@@ -664,7 +671,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'South China Morning Post on Facebook', d['title']
     assert_match /SCMP #FacebookLive/, d['description']
     assert_equal 'South China Morning Post', d['username']
-    assert_match /355665009819/, d['picture']
+    assert_match /355665009819/, d['author_picture']
+    assert_match /14645700_10154584445939820_3787909207995449344/, d['picture']
     assert_equal 'http://facebook.com/355665009819', d['author_url']
     assert_not_nil d['published_at']
   end
@@ -877,7 +885,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
     assert_equal 'South China Morning Post', data['username']
     assert_equal 'http://facebook.com/355665009819', data['author_url']
-    assert_equal 'https://graph.facebook.com/355665009819/picture', data['picture']
+    assert_equal 'https://graph.facebook.com/355665009819/picture', data['author_picture']
+    assert_match /14645700_10154584445939820_3787909207995449344/, data['picture']
   end
 
   test "should parse Facebook live post" do
@@ -889,7 +898,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
     assert_equal 'CBC News', data['username']
     assert_equal 'http://facebook.com/5823419603', data['author_url']
-    assert_equal 'https://graph.facebook.com/5823419603/picture', data['picture']
+    assert_equal 'https://graph.facebook.com/5823419603/picture', data['author_picture']
+    assert_match /14926650_10154783812779604_1342878673929240576/, data['picture']
   end
 
   test "should parse Facebook removed live post" do
@@ -901,7 +911,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', data['published_at']
     assert_equal 'Not Identified', data['username']
     assert_equal 'http://facebook.com/749262715138323', data['author_url']
-    assert_equal 'https://graph.facebook.com/749262715138323/picture', data['picture']
+    assert_equal 'https://graph.facebook.com/749262715138323/picture', data['author_picture']
+    assert_nil data['picture']
   end
 
   test "should parse Facebook livemap" do
@@ -915,7 +926,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
     assert_equal 'Not Identified', data['username']
     assert_equal 'http://facebook.com/', data['author_url']
-    assert_equal '', data['picture']
+    assert_equal '', data['author_picture']
+    assert_nil data['picture']
   end
 
   test "should parse Facebook event post" do
@@ -927,7 +939,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
     assert_equal 'Zawya', data['username']
     assert_match /#{data['user_uuid']}/, data['author_url']
-    assert_match /#{data['user_uuid']}/, data['picture']
+    assert_match /14716274_1184539554945737_3479338944730951318/, data['picture']
   end
 
   test "should parse Facebook event post 2" do
@@ -939,7 +951,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
     assert_equal 'Hema Elsyaad', data['username']
     assert_match /#{data['user_uuid']}/, data['author_url']
-    assert_match /#{data['user_uuid']}/, data['picture']
+    assert_match /#{data['user_uuid']}/, data['author_picture']
+    assert_nil data['picture']
   end
 
   test "should parse url with arabic chars" do
@@ -1010,7 +1023,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'rania.zaki', d['username']
     assert_equal 'Rania Zaki', d['author_name']
     assert_equal 'http://facebook.com/582140607', d['author_url']
-    assert_equal 'https://graph.facebook.com/582140607/picture', d['picture']
+    assert_equal 'https://graph.facebook.com/582140607/picture', d['author_picture']
+    assert_nil d['picture']
   end
 
   test "should parse bridge url" do
@@ -1078,7 +1092,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Bimbo Memories', d['author_name']
     assert_equal 'Bimbo.Memories', d['username']
     assert_equal 'http://facebook.com/235404669918505', d['author_url']
-    assert_equal 'https://graph.facebook.com/235404669918505/picture', d['picture']
+    assert_equal 'https://graph.facebook.com/235404669918505/picture', d['author_picture']
+    assert_match /15400507_1051597428299221_6315842220063966332/, d['picture']
   end
 
   test "should parse facebook url without identified pattern as item 2" do
@@ -1091,7 +1106,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Classic', d['author_name']
     assert_equal 'Classic.mou', d['username']
     assert_equal 'http://facebook.com/136985363145802', d['author_url']
-    assert_equal 'https://graph.facebook.com/136985363145802/picture', d['picture']
+    assert_equal 'https://graph.facebook.com/136985363145802/picture', d['author_picture']
+    assert_match /15400387_640132509497749_4281523565478374345/, d['picture']
   end
 
   test "should return author picture" do
@@ -1204,7 +1220,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'El-tnheda - التنهّيدة', d['author_name']
     assert_equal 'Eltnheda', d['username']
     assert_equal 'http://facebook.com/604927369711405', d['author_url']
-    assert_equal 'https://graph.facebook.com/604927369711405/picture', d['picture']
+    assert_equal 'https://graph.facebook.com/604927369711405/picture', d['author_picture']
+    assert_nil d['picture']
     assert_nil d['error']
   end
 
@@ -1219,7 +1236,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'nostalgia.y', d['username']
     assert_equal 'Nostalgia', d['author_name']
     assert_equal 'http://facebook.com/456182634511888', d['author_url']
-    assert_equal 'https://graph.facebook.com/456182634511888/picture', d['picture']
+    assert_equal 'https://graph.facebook.com/456182634511888/picture', d['author_picture']
+    assert_match /15181134_928269767303170_7195169848911975270/, d['picture']
     assert_nil d['error']
   end
 
@@ -1247,7 +1265,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Classic.mou', d['username']
     assert_equal 'Classic', d['author_name']
     assert_equal 'http://facebook.com/136985363145802', d['author_url']
-    assert_equal 'https://graph.facebook.com/136985363145802/picture', d['picture']
+    assert_equal 'https://graph.facebook.com/136985363145802/picture', d['author_picture']
+    assert_match /16473884_666508790193454_8112186335057907723/, d['picture']
     assert_equal 'https://www.facebook.com/Classic.mou/posts/666508790193454:0', m.url
   end
 
