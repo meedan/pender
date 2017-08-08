@@ -1214,10 +1214,10 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'item', d['type']
     assert_equal 'facebook', d['provider']
-    assert_equal 'El-tnheda - التنهّيدة on Facebook', d['title']
+    assert_equal 'El-tnheda on Facebook', d['title']
     assert_match /كان هيحصل إيه/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'El-tnheda - التنهّيدة', d['author_name']
+    assert_equal 'El-tnheda', d['author_name']
     assert_equal 'Eltnheda', d['username']
     assert_equal 'http://facebook.com/604927369711405', d['author_url']
     assert_equal 'https://graph.facebook.com/604927369711405/picture', d['author_picture']
