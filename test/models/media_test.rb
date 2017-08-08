@@ -1115,7 +1115,7 @@ class MediaTest < ActiveSupport::TestCase
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'http://github.com', request: request
     d = m.as_json
-    assert_equal '', d['author_picture']
+    assert_match /github-logo.png/, d['author_picture']
   end
 
   test "should return Facebook author picture" do

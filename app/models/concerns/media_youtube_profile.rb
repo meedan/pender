@@ -31,6 +31,7 @@ module MediaYoutubeProfile
       description: self.data[:raw][:api][:description].to_s,
       published_at: self.data[:raw][:api][:published_at],
       picture: self.data[:raw][:api][:thumbnail_url].to_s,
+      author_picture: self.data[:raw][:api][:thumbnail_url].to_s,
       country: channel.snippet.data['country'],
       username: self.get_youtube_username || '',
       subtype: self.get_youtube_subtype,
