@@ -39,11 +39,19 @@ module MediasHelper
   end
 
   def get_html_metadata(media, attr, metatags)
-    data = {}
+    data = {}.with_indifferent_access
     metatags.each do |key, value|
       metatag = media.data['raw']['metatags'].find { |tag| tag[attr] == value }
       data[key] = metatag['content'] if metatag
     end
     data
+  end
+
+  def get_info_from_data(source, data, *args)
+    hash = data['raw'][source]
+    args.each do |i|
+      return hash[i] if !hash[i].nil?
+    end
+    ''
   end
 end

@@ -153,6 +153,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should parse facebook url when url does not exist 7" do
+    stub_configs({ 'timeout' => 10 })
     authenticate_with_token
     get :index, url: 'https://www.facebook.com/ahlam.alialshamsi/posts/000000000000000', format: :json
     assert_response 200

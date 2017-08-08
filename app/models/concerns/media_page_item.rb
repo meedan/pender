@@ -12,14 +12,13 @@ module MediaPageItem
     end
     handle_exceptions(self, RuntimeError) do
       self.data = self.page_get_data_from_url
+      self.data['author_name'] = self.data['username']
+      if self.data[:picture].blank?
+        generate_screenshot
+      else
+        self.data[:picture] = self.add_scheme(self.data[:picture])
+      end
     end
-
-    if self.data[:picture].blank?
-      generate_screenshot
-    else
-      self.data[:picture] = self.add_scheme(self.data[:picture])
-    end
-    self.data['author_name'] = self.data['username'] if self.data['author_name'].blank?
   end
 
   def page_get_data_from_url
@@ -45,9 +44,8 @@ module MediaPageItem
   end
 
   def get_oembed_metadata
-    data = self.data_from_oembed_item
-    self.provider = 'oembed' if data
-    data || {}
+    self.data_from_oembed_item
+    self.post_process_oembed_data || {}
   end
 
   def get_basic_metadata

@@ -1,3 +1,45 @@
+##
+# Creates a new media based on a given url
+#
+# The url is visited, parsed and the data found is used to create a media
+# and its attributes.
+#
+# The data can be obtained by +API+ or parsing directly the +HTML+.
+#
+# To avoid the duplication of media for the same url, it tries to find the
+# canonical url and normalize it before parsing.
+#
+# There are specific parsers for +Youtube+, +Twitter+, +Facebook+, +Instagram+,
+# +Bridge+, +Dropbox+ and +oEmbed+.
+# When the url cannot be parsed by a specific parser, it is parsed as a
+# generic page.
+#
+# For every url, all the metatags are parsed from the page and merged to the
+# media data.
+# If the page has an oEmbed link, the oEmbed data is also retrieved and merged.
+#
+# If there's an error when parsing the url, the media is created with the
+# minimal data and the error message is merged to the data.
+#
+# Parsing steps:
+#  * Initialize
+#    1. Follow the url redirections;
+#    2. Parse the page and search if there is a canonical url on meta tags or
+#    link tag to update the media url;
+#    3. Escape and normalize the media url;
+#    4. Try to convert the url to HTTPS;
+#  * Parse as json
+#    1. Set the minimal data for media
+#    2. Search the page meta tags and store them on media
+#    3. Search the page to find the oEmbed url and, if it exists, retrieve the
+#    oEmbed data
+#    4. Match the url with the patterns described on specific parsers
+#    5. Parse the page with the parser found on previous step
+#  * Parse as oEmbed
+#    1. Get media the json data
+#    2. If the page has an oEmbed url, request it and get the response
+#    2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media json data
+
 class Media
   include ActiveModel::Validations
   include ActiveModel::Conversion
@@ -35,16 +77,16 @@ class Media
   end
 
   def self.as_oembed(data, original_url, maxwidth, maxheight, instance = nil)
-    oembed = "#{data['provider']}_as_oembed"
-    (instance && instance.respond_to?(oembed))? instance.send(oembed, original_url, maxwidth, maxheight) : Media.default_oembed(data, original_url, maxwidth, maxheight)
+    return instance.send(:get_oembed_data, original_url, maxwidth, maxheight) if instance
+    data[:raw][:oembed].nil? ? Media.default_oembed(data, original_url, maxwidth, maxheight) : data[:raw][:oembed].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(original_url, maxwidth, maxheight))
   end
 
   def self.minimal_data(instance)
     data = {}
-    data[:raw] = {}
-    %w(published_at username title description picture author_url author_picture).each do |field|
+    %w(published_at username title description picture author_url author_picture author_name).each do |field|
       data[field] = ''
     end
+    data[:raw] = {}
     data.merge(Media.required_fields(instance)).with_indifferent_access
   end
 
@@ -74,7 +116,7 @@ class Media
     end
   end
 
-  def self.default_oembed(data, original_url, maxwidth, maxheight)
+  def self.default_oembed(data, original_url, maxwidth = nil, maxheight= nil)
     maxwidth ||= 800
     maxheight ||= 200
     src = original_url.gsub('medias.oembed', 'medias.html')
@@ -87,10 +129,14 @@ class Media
       provider_name: data['provider'],
       provider_url: 'http://' + Media.parse_url(data['url']).host,
       thumbnail_url: data['picture'],
-      html: "<iframe src=\"#{src}\" width=\"#{maxwidth}\" height=\"#{maxheight}\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>",
+      html: Media.default_oembed_html(src, maxwidth, maxheight),
       width: maxwidth,
       height: maxheight
     }.with_indifferent_access
+  end
+
+  def self.default_oembed_html(src, maxwidth = 800, maxheight = 200)
+    "<iframe src=\"#{src}\" width=\"#{maxwidth}\" height=\"#{maxheight}\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>"
   end
 
   protected
@@ -108,6 +154,7 @@ class Media
         unless pattern.match(self.url).nil?
           self.provider, self.type = type.split('_')
           self.send("data_from_#{type}")
+          self.get_oembed_data
           parsed = true
           break
         end
@@ -115,6 +162,9 @@ class Media
       break if parsed
     end
   end
+
+  ##
+  # Parse the page and set it to media `doc`. If the `doc` has a tag (`og:url`, `twitter:url`, `rel='canonical`) with a different url, the media `url` is updated with the url found, the page is parsed and the media `doc` is updated
 
   def get_canonical_url
     self.doc = self.get_html(html_options)
@@ -137,6 +187,9 @@ class Media
   def normalize_url
     self.url = PostRank::URI.normalize(self.url).to_s
   end
+
+  ##
+  # Update the media `url` with the url found after all redirections
 
   def follow_redirections
     self.url = self.add_scheme(URI.decode(self.url.strip))
@@ -251,6 +304,9 @@ class Media
     URI.parse(URI.encode(url))
   end
 
+  ##
+  # Try to access the media `url` with HTTPS and it it succeeds, the media `url` is updated with the HTTPS version
+
   def try_https
     begin
       uri = URI.parse(self.url)
@@ -262,5 +318,17 @@ class Media
     rescue
       self.url.gsub!(/^https:/i, 'http:')
     end
+  end
+
+  def get_oembed_data(original_url = nil, maxwidth = nil, maxheight= nil)
+    url = original_url || self.url
+    if !self.data['raw'].nil? && !self.data['raw']['oembed'].nil?
+      self.data['raw']['oembed'].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(url, maxwidth, maxheight))
+    else
+      self.as_json if self.data.empty?
+      %w(type provider).each { |key| self.data[key] = self.send(key.to_sym) }
+      self.data['raw']['oembed'] = Media.default_oembed(self.data, url, maxwidth, maxheight) unless self.data_from_oembed_item
+    end
+    self.data['raw']['oembed']
   end
 end

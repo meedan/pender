@@ -20,23 +20,32 @@ module MediaYoutubeItem
   def data_from_youtube_item
     video = Yt::Video.new url: self.url
 
+    self.data[:raw][:api] = {}
     self.youtube_item_direct_attributes.each do |attr|
-      self.data[attr] = video.send(attr)
+      self.data[:raw][:api][attr] = video.send(attr)
     end
 
     data = self.data
 
     self.data.merge!({
-      username: data['channel_title'],
-      picture: data['thumbnail_url'],
-      html: data['embed_html'],
+      username: data[:raw][:api]['channel_title'],
+      description: data[:raw][:api]['description'],
+      title: data[:raw][:api]['title'],
+      picture: data[:raw][:api]['thumbnail_url'],
+      html: data[:raw][:api]['embed_html'],
+      author_name: data[:raw][:api]['channel_title'],
       author_picture: self.get_youtube_item_author_picture, 
-      author_url: 'https://www.youtube.com/channel/' + data['channel_id']
+      author_url: 'https://www.youtube.com/channel/' + data[:raw][:api]['channel_id']
     })
   end
 
   def get_youtube_item_author_picture
-    channel = Yt::Channel.new id: self.data['channel_id']
+    channel = Yt::Channel.new id: self.data[:raw][:api]['channel_id']
     channel.thumbnail_url.to_s
   end
+
+  def youtube_oembed_url
+    "https://www.youtube.com/oembed?format=json&url=#{self.url}"
+  end
+
 end

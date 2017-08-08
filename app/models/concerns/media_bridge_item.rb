@@ -10,6 +10,7 @@ module MediaBridgeItem
       self.parse_from_bridge_html
       self.data.merge!({
         html: html_for_bridge_item,
+        author_name: self.data['username']
       })
     end
   end
