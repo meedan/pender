@@ -21,15 +21,21 @@ module MediaYoutubeProfile
   def data_from_youtube_profile
     channel = Yt::Channel.new url: self.url
 
+    self.data[:raw][:api] = {}
     self.youtube_profile_direct_attributes.each do |attr|
-      self.data[attr] = channel.send(attr)
+      self.data[:raw][:api][attr] = channel.send(attr)
     end
 
     self.data.merge!({
-      picture: self.data['thumbnail_url'].to_s,
+      title: self.data[:raw][:api][:title].to_s,
+      description: self.data[:raw][:api][:description].to_s,
+      published_at: self.data[:raw][:api][:published_at],
+      picture: self.data[:raw][:api][:thumbnail_url].to_s,
+      author_picture: self.data[:raw][:api][:thumbnail_url].to_s,
       country: channel.snippet.data['country'],
       username: self.get_youtube_username || '',
       subtype: self.get_youtube_subtype,
+      author_name: self.data[:raw][:api][:title].to_s,
       # videos: self.parse_youtube_videos(channel.videos),
       playlists_count: channel.playlists.count,
       # playlists: self.parse_youtube_playlists(channel.playlists)

@@ -20,31 +20,34 @@ module MediaTwitterItem
     end
   end
 
-  def text_from_twitter_item
-    self.data['text'] || self.data['full_text'] || ''
-  end
-
   def data_from_twitter_item
     self.url = self.url.gsub(/(%23|#)!\//, '')
     parts = self.url.match(URL)
     user, id = parts['user'], parts['id']
     handle_twitter_exceptions do
-      self.data.merge!(self.twitter_client.status(id, tweet_mode: 'extended').as_json)
+      self.data['raw']['api'] = self.twitter_client.status(id, tweet_mode: 'extended').as_json
       self.data.merge!({
-        username: user,
-        title: self.text_from_twitter_item.gsub(/\s+/, ' '),
-        description: self.text_from_twitter_item,
+        username: '@' + user,
+        title: get_info_from_data('api', data, 'text', 'full_text').gsub(/\s+/, ' '),
+        description: get_info_from_data('api', data, 'text', 'full_text'),
         picture: self.twitter_item_picture,
-        author_picture: self.twitter_item_picture,
-        published_at: self.data['created_at'],
+        author_picture: self.twitter_author_picture,
+        published_at: self.data['raw']['api']['created_at'],
         html: html_for_twitter_item,
+        author_name: self.data['raw']['api']['user']['name'],
         author_url: 'https://twitter.com/' + user
       })
     end
   end
 
+  def twitter_author_picture
+    self.data['raw']['api']['user']['profile_image_url_https'].gsub('_normal', '')
+  end
+
   def twitter_item_picture
-    self.data['user']['profile_image_url_https'].gsub('_normal', '')
+    unless self.data['raw']['api']['entities']['media'].nil?
+      self.data['raw']['api']['entities']['media'][0]['media_url_https'] || self.data['raw']['api']['entities']['media'][0]['media_url']
+    end
   end
 
   def html_for_twitter_item
@@ -52,5 +55,9 @@ module MediaTwitterItem
     '<a href="' + self.url + '"></a>' +
     '</blockquote>' +
     '<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>'
+  end
+
+  def twitter_oembed_url
+    "https://publish.twitter.com/oembed?url=#{self.url}"
   end
 end

@@ -8,27 +8,29 @@ module MediaOembedItem
 
   def post_process_oembed_data
     data = self.data
+    return if data[:error] || data[:raw][:oembed].nil?
     self.data.merge!({
       published_at: '',
-      username: data[:oembed]['author_name'],
-      description: data[:oembed]['title'],
-      title: data[:oembed]['title'],
-      picture: data[:oembed]['thumbnail_url'].to_s,
-      html: data[:oembed]['html'],
-      author_url: data[:oembed]['author_url']
+      username: data[:raw][:oembed]['author_name'],
+      description: data[:raw][:oembed]['title'],
+      title: data[:raw][:oembed]['title'],
+      picture: data[:raw][:oembed]['thumbnail_url'].to_s,
+      html: data[:raw][:oembed]['html'],
+      author_url: data[:raw][:oembed]['author_url']
     })
   end
 
   def data_from_oembed_item
+    return if data[:error]
     handle_exceptions(self, StandardError) do
-      oembed_url = self.get_oembed_url
+      oembed_url = self.provider_oembed_url || self.get_oembed_url
       response = self.oembed_get_data_from_url(oembed_url)
       if !response.nil? && response.code == '200'
-        self.data[:oembed] = JSON.parse(response.body)
+        self.data[:raw][:oembed] = JSON.parse(response.body)
         if ['DENY', 'SAMEORIGIN'].include? response.header['X-Frame-Options']
-          self.data[:oembed][:html] = ''
+          self.data[:raw][:oembed][:html] = ''
         end
-        self.post_process_oembed_data
+        return true
       end
     end
   end
@@ -38,15 +40,11 @@ module MediaOembedItem
     unless url.blank?
       uri = URI.parse(self.absolute_url(url))
       http = Net::HTTP.new(uri.host, uri.port)
-
-      unless url.match(/^https/).nil?
-        http.use_ssl = true
-        # http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      end
+      http.use_ssl = uri.scheme == 'https'
 
       request = self.oembed_create_request(uri)
       response = http.request(request)
-      
+
       if %w(301 302).include?(response.code)
         response = self.oembed_get_data_from_url(response.header['location'])
       end
@@ -61,8 +59,7 @@ module MediaOembedItem
     request
   end
 
-  def oembed_as_oembed(_original_url, _maxwidth, _maxheight)
-    data = self.as_json
-    data[:oembed] || data['oembed']
+  def provider_oembed_url
+    self.send("#{self.provider}_oembed_url") if self.respond_to?("#{self.provider}_oembed_url")
   end
 end
