@@ -30,7 +30,9 @@ module MediaTwitterProfile
       title: self.data[:raw][:api][:name],
       author_name: self.data[:raw][:api][:name],
       picture: self.data[:pictures][:original],
-      published_at: self.data[:raw][:api][:created_at]
+      author_picture: self.data[:pictures][:original],
+      published_at: self.data[:raw][:api][:created_at],
+      description: get_info_from_data('api', data, 'description')
     })
   end
   

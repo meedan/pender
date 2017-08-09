@@ -1115,7 +1115,7 @@ class MediaTest < ActiveSupport::TestCase
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'http://github.com', request: request
     d = m.as_json
-    assert_equal '', d['author_picture']
+    assert_match /github-logo.png/, d['author_picture']
   end
 
   test "should return Facebook author picture" do
@@ -1210,17 +1210,17 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse facebook page item" do
-    m = create_media url: 'https://www.facebook.com/Eltnheda/posts/665592823644859'
+    m = create_media url: 'https://www.facebook.com/dina.hawary/posts/10158416884740321'
     d = m.as_json
     assert_equal 'item', d['type']
     assert_equal 'facebook', d['provider']
-    assert_equal 'El-tnheda - التنهّيدة on Facebook', d['title']
-    assert_match /كان هيحصل إيه/, d['description']
+    assert_equal 'Dina El Hawary on Facebook', d['title']
+    assert_match /ربنا يزيدهن فوق القوة قوة/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'El-tnheda - التنهّيدة', d['author_name']
-    assert_equal 'Eltnheda', d['username']
-    assert_equal 'http://facebook.com/604927369711405', d['author_url']
-    assert_equal 'https://graph.facebook.com/604927369711405/picture', d['author_picture']
+    assert_equal 'Dina El Hawary', d['author_name']
+    assert_equal 'Dina El Hawary', d['username']
+    assert_equal 'http://facebook.com/813705320', d['author_url']
+    assert_equal 'https://graph.facebook.com/813705320/picture', d['author_picture']
     assert_nil d['picture']
     assert_nil d['error']
   end
