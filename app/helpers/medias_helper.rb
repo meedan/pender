@@ -31,7 +31,9 @@ module MediasHelper
     unless media.doc.nil?
       media.doc.search('meta').each do |meta|
         metatag = {}
-        meta.each { |key, value| metatag.merge!({key => value}) }
+        meta.each do |key, value|
+          metatag.merge!({key => value.strip}) unless value.blank?
+        end
         fields << metatag
       end
     end
