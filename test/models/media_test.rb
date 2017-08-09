@@ -1706,4 +1706,10 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Iron Maiden', data['raw']['oembed']['title']
   end
 
+  test "should not return empty values on metadata keys due to bad html" do
+    m = create_media url: 'http://www.politifact.com/truth-o-meter/article/2017/may/09/year-fact-checking-about-james-comey-clinton-email/'
+    tag_description = m.as_json['raw']['metatags'].find { |tag| tag['property'] == 'og:description'}
+    assert_equal ['property', 'content'], tag_description.keys
+    assert_match /\AJames Comey is out as FBI director.*last July.\z/, tag_description['content']
+  end
 end
