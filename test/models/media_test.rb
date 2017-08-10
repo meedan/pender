@@ -1712,4 +1712,10 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal ['property', 'content'], tag_description.keys
     assert_match /\AJames Comey is out as FBI director.*last July.\z/, tag_description['content']
   end
+
+  test "should use username as author_name on Instagram profile when a full name is not available" do
+    m = create_media url: 'https://www.instagram.com/emeliiejanssonn/'
+    data = m.as_json
+    assert_equal 'emeliiejanssonn', data['author_name']
+  end
 end
