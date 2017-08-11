@@ -20,6 +20,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
+    assert_equal data[:raw][:api][:video_count].to_s, data['video_count']
+    assert_equal data[:raw][:api][:subscriber_count].to_s, data['subscriber_count']
   end
 
   test "should parse YouTube channel" do
@@ -32,6 +34,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
+    assert_equal data[:raw][:api][:video_count].to_s, data['video_count']
+    assert_equal data[:raw][:api][:subscriber_count].to_s, data['subscriber_count']
   end
 
   test "should not cache result" do
