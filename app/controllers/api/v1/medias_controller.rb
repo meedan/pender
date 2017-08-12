@@ -16,7 +16,7 @@ module Api
       def index
         @url = params[:url]
         (render_parameters_missing and return) if @url.blank?
-        
+
         @refresh = params[:refresh] == '1'
         @id = Digest::MD5.hexdigest(@url)
 
@@ -68,8 +68,10 @@ module Api
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
         rescue StandardError => e
-          data = @media.nil? ? {} : @media.data
-          render_media(data.merge(error: { message: e.message, code: 'UNKNOWN' }))
+          data = get_error_data({ message: e.message, code: 'UNKNOWN' })
+          data.merge!(@data) unless @data.blank?
+          data.merge!(@media.data) unless @media.blank?
+          render_media(data)
         end
       end
 
@@ -78,14 +80,14 @@ module Api
         if !data.nil? && !@refresh
           render_timeout_media(data, must_render, oembed) and return true
         end
-        
+
         begin
           Timeout::timeout(timeout_value) { yield }
         rescue Timeout::Error
-          data = get_timeout_data
-          render_timeout_media(data, must_render) and return true
+          @data = get_timeout_data
+          render_timeout_media(@data, must_render) and return true
         end
-          
+
         return false
       end
 
@@ -174,11 +176,15 @@ module Api
         CcDeville.clear_cache_for_url(url_no_refresh) if url != url_no_refresh
       end
 
-      def get_timeout_data
+      def get_error_data(error_data)
         data = @media.nil? ? Media.minimal_data(OpenStruct.new(url: @url)) : @media.data
-        data = data.merge(error: { message: 'Timeout', code: 'TIMEOUT' })
+        data = data.merge(error: error_data)
         Rails.cache.write(@id, data)
         data
+      end
+
+      def get_timeout_data
+        get_error_data({ message: 'Timeout', code: 'TIMEOUT' })
       end
 
       def clear_html_cache
