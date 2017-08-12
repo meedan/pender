@@ -68,7 +68,9 @@ module Api
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
         rescue StandardError => e
-          data = @media.nil? ? (@data || get_error_data({ message: e.message, code: 'UNKNOWN' })) : @media.data
+          data = get_error_data({ message: e.message, code: 'UNKNOWN' })
+          data.merge!(@data) unless @data.blank?
+          data.merge!(@media.data) unless @media.blank?
           render_media(data)
         end
       end
