@@ -38,6 +38,8 @@ module MediaYoutubeProfile
       author_name: self.data[:raw][:api][:title].to_s,
       # videos: self.parse_youtube_videos(channel.videos),
       playlists_count: channel.playlists.count,
+      video_count: self.data[:raw][:api][:video_count].to_s,
+      subscriber_count: self.data[:raw][:api][:subscriber_count].to_s
       # playlists: self.parse_youtube_playlists(channel.playlists)
     })
   end

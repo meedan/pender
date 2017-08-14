@@ -35,7 +35,8 @@ module MediaYoutubeItem
       html: data[:raw][:api]['embed_html'],
       author_name: data[:raw][:api]['channel_title'],
       author_picture: self.get_youtube_item_author_picture, 
-      author_url: 'https://www.youtube.com/channel/' + data[:raw][:api]['channel_id']
+      author_url: 'https://www.youtube.com/channel/' + data[:raw][:api]['channel_id'],
+      published_at: data[:raw][:api]['published_at']
     })
   end
 

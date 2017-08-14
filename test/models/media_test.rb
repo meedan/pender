@@ -20,6 +20,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
+    assert_equal data[:raw][:api][:video_count].to_s, data['video_count']
+    assert_equal data[:raw][:api][:subscriber_count].to_s, data['subscriber_count']
   end
 
   test "should parse YouTube channel" do
@@ -32,6 +34,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
+    assert_equal data[:raw][:api][:video_count].to_s, data['video_count']
+    assert_equal data[:raw][:api][:subscriber_count].to_s, data['subscriber_count']
   end
 
   test "should not cache result" do
@@ -1136,10 +1140,18 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /^http/, d['author_picture']
   end
 
-  test "should return YouTube author picture" do
+  test "should return YouTube fields" do
     m = create_media url: 'https://www.youtube.com/watch?v=mtLxD7r4BZQ'
-    d = m.as_json
-    assert_match /^http/, d['author_picture']
+    data = m.as_json
+    assert_match /^http/, data['author_picture']
+    assert_equal data[:raw][:api]['channel_title'], data['username']
+    assert_equal data[:raw][:api]['description'], data['description']
+    assert_equal data[:raw][:api]['title'], data['title']
+    assert_equal data[:raw][:api]['thumbnail_url'], data['picture']
+    assert_equal data[:raw][:api]['embed_html'], data['html']
+    assert_equal data[:raw][:api]['channel_title'], data['author_name']
+    assert_equal 'https://www.youtube.com/channel/' + data[:raw][:api]['channel_id'], data['author_url']
+    assert_equal data[:raw][:api]['published_at'], data['published_at']
   end
 
   test "should parse yahoo site 1" do
