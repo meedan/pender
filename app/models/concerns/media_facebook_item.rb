@@ -37,7 +37,7 @@ module MediaFacebookItem
 
   def get_facebook_user_id_from_url
     return unless self.url.match(EVENT_URL).nil?
-    user_id = IdsPlease.new(self.url).grab[:facebook].first.network_id
+    user_id = IdsPlease::Grabbers::Facebook.new(self.url, Media.request_uri(Media.parse_url(self.url)).body.to_s).grab_link.network_id
     if user_id.blank?
       uri = URI.parse(self.url)
       params = parse_uri(uri)
@@ -60,7 +60,6 @@ module MediaFacebookItem
   def get_facebook_post_id_from_uri_params(id, uri, key)
     params = parse_uri(uri)
     if id == 'photos' && params.empty?
-      self.url = self.original_url
       uri = URI.parse(self.original_url)
       params = parse_uri(uri)
     end
@@ -182,7 +181,7 @@ module MediaFacebookItem
   end
 
   def get_facebook_text_from_html
-    return unless self.data['text'].blank?
+    return unless self.data['text'].blank? && !self.doc.nil?
     content = self.doc.at_css('div.userContent') || self.doc.at_css('span.hasCaption')
     if content.nil?
       meta_description = self.doc.at_css('meta[name=description]')
@@ -206,6 +205,7 @@ module MediaFacebookItem
   end
 
   def get_facebook_published_time_from_html
+    return if self.doc.nil?
     time = self.doc.at_css('span.timestampContent')
     self.data['published_at'] = Time.parse(time.inner_html) unless time.nil?
   end
@@ -241,20 +241,15 @@ module MediaFacebookItem
     <div class="fb-post" data-href="' + self.url + '"></div>'
   end
 
-  def get_facebook_slug_from_html
-    username = self.doc.to_s.match(/"username":"([^"]+)"/) || self.doc.to_s.match(/entity:{url:"https:\/\/www\.facebook\.com\/([^"]+)",id:#{self.data['user_uuid']}/)
-    self.data['username'] = username[1] unless username.nil?
-  end
-
   # First method
   def data_from_facebook_item
     handle_exceptions(self, RuntimeError) do
       self.parse_facebook_uuid
       self.parse_from_facebook_html unless self.parse_from_facebook_api
-      self.data['text'].strip!
+      self.data['text'].strip! if self.data['text']
       self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
       self.data.merge!({
-        username: self.get_facebook_slug_from_html || self.data['author_name'],
+        username: self.get_facebook_username || self.data['author_name'],
         title: self.data['author_name'] + ' on Facebook',
         description: self.data['text'] || self.data['description'],
         picture: self.data['photos'].first,
@@ -266,7 +261,8 @@ module MediaFacebookItem
   end
 
   def facebook_oembed_url
-    "https://www.facebook.com/plugins/post/oembed.json/?url=#{self.url}"
+    uri = Media.parse_url(self.url)
+    "https://www.facebook.com/plugins/post/oembed.json/?url=#{uri}"
   end
 
 end

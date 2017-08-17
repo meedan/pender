@@ -100,24 +100,41 @@ module MediaFacebookProfile
   end
 
   def get_facebook_username
-    match = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+)/)
-    match = self.url.match(/^https?:\/\/([^\.]+\.)?facebook\.com\/people\/([^\/\?]+)/) if match.nil?
-    username = match[2]
+    patterns = [
+      /^https?:\/\/([^\.]+\.)?facebook\.com\/people\/([^\/\?]+)/,
+      /^https:\/\/(www\.)?facebook\.com\/([0-9]+)$/,
+      /^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+)/
+    ]
+    username = compare_patterns(patterns)
+    return if ['events', 'livemap'].include? username
     if username === 'pages'
       username = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/pages\/([^\/]+)\/([^\/\?]+).*/)[2]
-    elsif username === 'profile.php'
-      username = self.data['raw']['api']['name'].tr(' ', '-')
+    elsif username.to_i > 0 || username === 'profile.php'
+      username = self.data['raw']['api']['name']
     end
     username
   end
 
   def get_facebook_id_from_url
-    uri = URI(self.url)
-    id = IdsPlease::Grabbers::Facebook.new(self.url, Media.request_uri(uri).body.to_s).grab_link.network_id.to_i
+    self.url = self.original_url if self.url.match(/^https:\/\/www\.facebook\.com\/login\.php\?/)
+    uri = Media.parse_url(self.url)
+    id = IdsPlease::Grabbers::Facebook.new(self.original_url, Media.request_uri(uri).body.to_s).grab_link.network_id.to_i
     if id === 0
-      id = self.url.match(/^https:\/\/www\.facebook\.com\/profile\.php\?id=([0-9]+)$/)
-      id = id[1].to_i unless id.nil?
+      patterns = [
+        /^https:\/\/(www\.)?facebook\.com\/profile\.php\?id=([0-9]+)$/,
+        /^https:\/\/(www\.)?facebook\.com\/([0-9]+)$/,
+        /^https?:\/\/([^\.]+\.)?facebook\.com\/people\/[^\/\?]+\/([0-9]+)$/
+      ]
+      id = compare_patterns(patterns).to_i
     end
     id
+  end
+
+  def compare_patterns(patterns)
+    patterns.each do |p|
+      match = self.url.match p
+      return match[2] unless match.nil?
+    end
+    nil
   end
 end
