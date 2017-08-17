@@ -56,7 +56,7 @@ class Media
     end
     self.original_url = self.url
     self.follow_redirections
-    self.normalize_url unless self.get_canonical_url
+    self.url = Media.normalize_url(self.url) unless self.get_canonical_url
     self.try_https
     self.data = {}.with_indifferent_access
   end
@@ -184,8 +184,8 @@ class Media
     true
   end
 
-  def normalize_url
-    self.url = PostRank::URI.normalize(self.url).to_s
+  def self.normalize_url(url)
+    PostRank::URI.normalize(url).to_s
   end
 
   ##

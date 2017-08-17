@@ -18,7 +18,7 @@ module Api
         (render_parameters_missing and return) if @url.blank?
 
         @refresh = params[:refresh] == '1'
-        @id = Digest::MD5.hexdigest(@url)
+        @id = Digest::MD5.hexdigest(Media.normalize_url(@url))
 
         (render_uncached_media and return) if @refresh || Rails.cache.read(@id).nil?
 

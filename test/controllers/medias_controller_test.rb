@@ -425,4 +425,15 @@ class MediasControllerTest < ActionController::TestCase
     Airbrake.configuration.unstub(:api_key)
     Airbrake.unstub(:notify)
   end
+
+  test "should parse Facebook user profile with normalized urls" do
+    authenticate_with_token
+    get :index, url: 'https://facebook.com/caiosba', refresh: '1', format: :json
+    first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
+    sleep 1
+    get :index, url: 'https://facebook.com/caiosba/', format: :json
+    second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
+    assert_equal first_parsed_at, second_parsed_at
+  end
+
 end
