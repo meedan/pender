@@ -235,16 +235,7 @@ class Media
     http.read_timeout = CONFIG['timeout'] || 30
     http.use_ssl = uri.scheme == 'https'
     request = "Net::HTTP::#{verb}".constantize.new(uri.request_uri)
-    request['Cookie'] = Media.set_cookies
     http.request(request)
-  end
-
-  def self.set_cookies
-    cookies = []
-    CONFIG['cookies'].each do |k, v|
-      cookies << "#{k}=#{v}"
-    end
-    cookies.join('; ')
   end
 
   def get_html(header_options = {})
@@ -268,7 +259,6 @@ class Media
     options[:http_basic_authentication] = credentials
     options['User-Agent'] = 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1'
     options['Accept-Language'] = 'en'
-    options['Cookie'] = Media.set_cookies
     options
   end
 
