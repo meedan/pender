@@ -18,7 +18,7 @@ module Api
         (render_parameters_missing and return) if @url.blank?
 
         @refresh = params[:refresh] == '1'
-        @id = Digest::MD5.hexdigest(Media.normalize_url(@url))
+        @id = Media.get_id(@url)
 
         (render_uncached_media and return) if @refresh || Rails.cache.read(@id).nil?
 
@@ -33,7 +33,7 @@ module Api
         return unless request.format.json?
         urls = params[:url].is_a?(Array) ? params[:url] : params[:url].split(' ')
         urls.each do |url|
-          @id = Digest::MD5.hexdigest(url)
+          @id = Media.get_id(url)
           Rails.cache.delete(@id)
           cc_url = request.domain + '/api/medias.html?url=' + url
           CcDeville.clear_cache_for_url(cc_url)

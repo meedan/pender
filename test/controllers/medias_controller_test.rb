@@ -342,8 +342,8 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     url1 = 'http://ca.ios.ba'
     url2 = 'https://twitter.com/caiosba/status/742779467521773568'
-    id1 = Digest::MD5.hexdigest(url1)
-    id2 = Digest::MD5.hexdigest(url2)
+    id1 = Media.get_id(url1)
+    id2 = Media.get_id(url2)
     cachefile1 = File.join('public', 'cache', Rails.env, "#{id1}.html")
     cachefile2 = File.join('public', 'cache', Rails.env, "#{id2}.html")
     

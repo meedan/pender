@@ -54,7 +54,7 @@ class Media
     attributes.each do |name, value|
       send("#{name}=", value)
     end
-    self.original_url = self.url
+    self.original_url = self.url.strip
     self.follow_redirections
     self.url = Media.normalize_url(self.url) unless self.get_canonical_url
     self.try_https
@@ -66,7 +66,7 @@ class Media
   end
 
   def as_json(options = {})
-    Rails.cache.fetch(self.get_id, options) do
+    Rails.cache.fetch(Media.get_id(self.original_url), options) do
       self.parse
       self.data.merge(Media.required_fields(self)).with_indifferent_access
     end
@@ -139,11 +139,11 @@ class Media
     "<iframe src=\"#{src}\" width=\"#{maxwidth}\" height=\"#{maxheight}\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>"
   end
 
-  protected
-
-  def get_id
-    Digest::MD5.hexdigest(self.original_url)
+  def self.get_id(url)
+    Digest::MD5.hexdigest(Media.normalize_url(url))
   end
+
+  protected
 
   def parse
     self.data = Media.minimal_data(self)
