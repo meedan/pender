@@ -342,8 +342,8 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     url1 = 'http://ca.ios.ba'
     url2 = 'https://twitter.com/caiosba/status/742779467521773568'
-    id1 = Digest::MD5.hexdigest(url1)
-    id2 = Digest::MD5.hexdigest(url2)
+    id1 = Media.get_id(url1)
+    id2 = Media.get_id(url2)
     cachefile1 = File.join('public', 'cache', Rails.env, "#{id1}.html")
     cachefile2 = File.join('public', 'cache', Rails.env, "#{id2}.html")
     
@@ -425,4 +425,15 @@ class MediasControllerTest < ActionController::TestCase
     Airbrake.configuration.unstub(:api_key)
     Airbrake.unstub(:notify)
   end
+
+  test "should parse Facebook user profile with normalized urls" do
+    authenticate_with_token
+    get :index, url: 'https://facebook.com/caiosba', refresh: '1', format: :json
+    first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
+    sleep 1
+    get :index, url: 'https://facebook.com/caiosba/', format: :json
+    second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
+    assert_equal first_parsed_at, second_parsed_at
+  end
+
 end

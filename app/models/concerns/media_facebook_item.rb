@@ -132,7 +132,7 @@ module MediaFacebookItem
                elsif object['type'] == 'photo'
                  object['permalink_url'].match(/album\.php/) ? object['link'] : object['permalink_url']
                end
-    normalize_url
+    self.url = Media.normalize_url(self.url)
   end
 
   def get_facebook_picture(id)
