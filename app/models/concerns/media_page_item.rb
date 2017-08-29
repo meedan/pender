@@ -7,7 +7,7 @@ module MediaPageItem
 
   def data_from_page_item
     if self.doc.nil?
-      self.doc = self.get_html
+      self.doc = self.get_html({ allow_redirections: :all })
       self.data['raw']['metatags'] = get_metatags(self)
     end
     handle_exceptions(self, RuntimeError) do
@@ -17,9 +17,8 @@ module MediaPageItem
       else
         self.data[:picture] = self.add_scheme(self.data[:picture])
       end
-
       self.data.merge!({
-        author_name: self.data['username'],
+        author_name: get_page_author_name,
         author_picture: self.data[:picture]
       })
     end
@@ -35,7 +34,7 @@ module MediaPageItem
   end
 
   def get_twitter_metadata
-    metatags = { title: 'twitter:title', picture: 'twitter:image', description: 'twitter:description', username: 'twitter:creator' }
+    metatags = { title: 'twitter:title', picture: 'twitter:image', description: 'twitter:description', username: 'twitter:creator', author_name: 'twitter:site' }
     data = get_html_metadata(self, 'name', metatags).with_indifferent_access
     data.merge!(get_html_metadata(self, 'property', metatags))
     data['author_url'] = 'https://twitter.com/' + data['username'] if data['username']
@@ -43,7 +42,7 @@ module MediaPageItem
   end
 
   def get_opengraph_metadata
-    metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time' }
+    metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time', author_name: 'og:site_name' }
     get_html_metadata(self, 'property', metatags)
   end
 
@@ -53,7 +52,7 @@ module MediaPageItem
   end
 
   def get_basic_metadata
-    metatags = { title: 'title',  description: 'description', username: 'author' }
+    metatags = { title: 'title',  description: 'description', username: 'author', author_name: 'application-name' }
     data = get_html_metadata(self, 'name', metatags)
     title = self.doc.at_css("title")
     data[:title] ||= title.nil? ? '' : title.content
@@ -76,5 +75,10 @@ module MediaPageItem
     FileUtils.ln_s File.join(Rails.root, 'public', 'pending_picture.png'), path 
     data[:picture] = picture
     ScreenshotWorker.perform_async(url, picture)
+  end
+
+  def get_page_author_name
+    return self.data['author_name'] unless self.data['author_name'].blank?
+    self.data['username'].blank? ? self.data['title'] : self.data['username']
   end
 end

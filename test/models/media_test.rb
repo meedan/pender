@@ -1208,6 +1208,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://br.yahoo.com', d['author_url']
+    assert_equal 'Yahoo', d['author_name']
     assert_not_nil d['picture']
   end
 
@@ -1223,6 +1224,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://ca.yahoo.com', d['author_url']
+    assert_equal 'Yahoo', d['author_name']
     assert_not_nil d['picture']
     assert_nil d['error']
   end
@@ -1239,6 +1241,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
     assert_equal '', d['username']
     assert_not_nil d['author_url']
+    assert_equal 'Yahoo', d['author_name']
     assert_not_nil d['picture']
     assert_nil d['error']
   end
@@ -1785,5 +1788,50 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://graph.facebook.com/735450245/picture', d['author_picture']
     assert_equal 0, d['media_count']
     assert_not_nil d['picture']
+  end
+
+  test "should parse url with redirection https -> http" do
+    m = create_media url: 'https://noticias.uol.com.br/cotidiano/ultimas-noticias/2017/07/18/nove-anos-apos-ser-condenado-por-moro-beira-mar-repete-trafico-em-presidio-federal.htm'
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'page', d['provider']
+    assert_match /Nove anos após ser condenado/, d['title']
+    assert_not_nil d['description']
+    assert_not_nil d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'https://noticias.uol.com.br', d['author_url']
+    assert_equal 'Cotidiano', d['author_name']
+    assert_not_nil d['picture']
+    assert_nil d['error']
+  end
+
+  test "should parse url with redirection https -> http 2" do
+    m = create_media url: 'https://www.nature.com/articles/s41562-017-0132'
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'page', d['provider']
+    assert_equal 'Limited individual attention and online virality of low-quality inform', d['title']
+    assert_not_nil d['description']
+    assert_not_nil d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'https://www.nature.com', d['author_url']
+    assert_equal '@NatureHumBehav', d['author_name']
+    assert_equal 'https://media.springernature.com/m685/nature-static/assets/v1/image-assets/s41562-017-0132-f1.jpg',  d['picture']
+    assert_nil d['error']
+  end
+
+  test "should get author_name from site" do
+    m = create_media url: 'https://noticias.uol.com.br/'
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'page', d['provider']
+    assert_match /UOL Notícias:/, d['title']
+    assert_not_nil d['description']
+    assert_not_nil d['published_at']
+    assert_equal '', d['username']
+    assert_equal 'https://noticias.uol.com.br', d['author_url']
+    assert_equal 'UOL Notícias', d['author_name']
+    assert_not_nil d['picture']
+    assert_nil d['error']
   end
 end

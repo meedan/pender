@@ -250,6 +250,9 @@ class Media
       return nil
     rescue Zlib::DataError
       self.get_html(html_options.merge('Accept-Encoding' => 'identity'))
+    rescue RuntimeError => e
+      Airbrake.notify(e) if Airbrake.configuration.api_key
+      return nil
     end
   end
 
