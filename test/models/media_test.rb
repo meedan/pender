@@ -400,7 +400,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/photo.php?fbid=1028424567222135&set=a.1028424563888802.1073741827.749262715138323&type=3'
     d = m.as_json
     assert_equal '749262715138323_1028424567222135', d['uuid']
-    assert_equal 'Teste updated their profile picture.', d['text']
+    assert_equal 'Teste added a new photo.', d['text']
     assert_equal '749262715138323', d['user_uuid']
     assert_equal 'Teste', d['author_name']
     assert_equal 1, d['media_count']
