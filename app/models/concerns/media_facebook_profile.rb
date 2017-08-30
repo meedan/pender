@@ -105,7 +105,7 @@ module MediaFacebookProfile
       /^https:\/\/(www\.)?facebook\.com\/([0-9]+)$/,
       /^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+)/
     ]
-    username = compare_patterns(patterns)
+    username = compare_patterns(URI.decode(self.url), patterns)
     return if ['events', 'livemap'].include? username
     if username === 'pages'
       username = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/pages\/([^\/]+)\/([^\/\?]+).*/)[2]
@@ -125,14 +125,14 @@ module MediaFacebookProfile
         /^https:\/\/(www\.)?facebook\.com\/([0-9]+)$/,
         /^https?:\/\/([^\.]+\.)?facebook\.com\/people\/[^\/\?]+\/([0-9]+)$/
       ]
-      id = compare_patterns(patterns).to_i
+      id = compare_patterns(self.url, patterns).to_i
     end
     id
   end
 
-  def compare_patterns(patterns)
+  def compare_patterns(url, patterns)
     patterns.each do |p|
-      match = self.url.match p
+      match = url.match p
       return match[2] unless match.nil?
     end
     nil
