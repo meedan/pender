@@ -43,7 +43,12 @@ module MediaPageItem
 
   def get_opengraph_metadata
     metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time', author_name: 'og:site_name' }
-    get_html_metadata(self, 'property', metatags)
+    data = get_html_metadata(self, 'property', metatags)
+    if (data['username'] =~ /\A#{URI::regexp}\z/)
+      data['author_url'] = data['username']
+      data.delete('username')
+    end
+    data
   end
 
   def get_oembed_metadata

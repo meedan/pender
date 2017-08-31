@@ -9,14 +9,14 @@ module MediaOembedItem
   def post_process_oembed_data
     data = self.data
     return if data[:error] || data[:raw][:oembed].nil?
-    self.data.merge!({
+    data.merge({
       published_at: '',
-      username: data[:raw][:oembed]['author_name'],
-      description: data[:raw][:oembed]['title'],
-      title: data[:raw][:oembed]['title'],
-      picture: data[:raw][:oembed]['thumbnail_url'].to_s,
-      html: data[:raw][:oembed]['html'],
-      author_url: data[:raw][:oembed]['author_url']
+      username: get_info_from_data('oembed', data, 'author_name'),
+      description: get_info_from_data('oembed', data, 'summary', 'title'),
+      title: get_info_from_data('oembed', data, 'title'),
+      picture: get_info_from_data('oembed', data, 'thumbnail_url'),
+      html: get_info_from_data('oembed', data, 'html'),
+      author_url: get_info_from_data('oembed', data, 'author_url')
     })
   end
 
