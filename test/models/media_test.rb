@@ -41,12 +41,14 @@ class MediaTest < ActiveSupport::TestCase
   test "should not cache result" do
     Media.any_instance.stubs(:parse).once
     create_media url: 'https://www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQ'
+    Media.any_instance.unstub(:parse)
   end
 
   test "should cache result" do
     create_media url: 'https://www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQ'
     Media.any_instance.stubs(:parse).never
     create_media url: 'https://www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQ'
+    Media.any_instance.unstub(:parse)
   end
 
   test "should parse Twitter profile" do
@@ -1834,4 +1836,30 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['picture']
     assert_nil d['error']
   end
+
+  test "should check if article:author is a url and add it to author_url" do
+    m = create_media url: 'https://www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html'
+    tag = [{property: 'article:author', content: 'https://www.nytimes.com/by/michael-s-schmidt'}]
+    m.data[:raw] = { metatags: tag }
+    data = m.get_opengraph_metadata
+    assert_nil data['username']
+    assert_equal 'https://www.nytimes.com/by/michael-s-schmidt', data['author_url']
+  end
+
+  test "should return blank on post_process_oembed for unexistent keys on oembed" do
+    m = create_media url: 'https://www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html'
+    m.data[:raw] = {}
+    fields = %w(username description title picture html author_url)
+    fields.each { |f| m.data[f] = f }
+    response = 'mock';response.expects(:code).returns('200');response.expects(:body).returns('{"type":"rich"}');response.expects(:header).returns({})
+    m.stubs(:oembed_get_data_from_url).returns(response)
+
+    oembed_data = m.data_from_oembed_item
+    m.post_process_oembed_data
+    fields.each do |f|
+      assert_equal f, m.data[f]
+    end
+    m.unstub(:oembed_get_data_from_url)
+  end
+
 end
