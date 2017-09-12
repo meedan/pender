@@ -47,7 +47,11 @@ module Api
       def render_uncached_media
         render_timeout(false) do
           (render_url_invalid and return true) unless valid_url?
-          @media = Media.new(url: @url, request: request)
+          begin
+            @media = Media.new(url: @url, request: request)
+          rescue OpenSSL::SSL::SSLError
+            render_url_invalid and return true
+          end
         end and return true
         false
       end
