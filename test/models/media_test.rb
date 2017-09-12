@@ -1066,7 +1066,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'تسلسل زمني| تحرير الموصل: أسئلة الصراع الإقليمي تنتظر الإجابة.. أو الانفجار', d['title']
     assert_match /مرت الأيام التي تلت محاولة اغتيال العبادي/, d['description']
     assert_equal '', d['published_at']
-    assert !d['username'].blank?
     assert !d['author_name'].blank?
     assert_match /https:\/\/almanassa.com/, d['author_url']
     assert_match /\/\/almanassa.com\/sites\/default\/files\/irq_367110792_1469895703-bicubic\.jpg/, d['picture']
