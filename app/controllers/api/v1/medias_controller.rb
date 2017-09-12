@@ -49,7 +49,7 @@ module Api
           (render_url_invalid and return true) unless valid_url?
           begin
             @media = Media.new(url: @url, request: request)
-          rescue OpenSSL::SSL::SSLError => e
+          rescue OpenSSL::SSL::SSLError
             render_url_invalid and return true
           end
         end and return true
