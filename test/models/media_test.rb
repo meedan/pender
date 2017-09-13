@@ -1372,6 +1372,26 @@ class MediaTest < ActiveSupport::TestCase
     OpenURI.unstub(:open_uri)
   end
 
+  test "should not notify Airbrake when it is a redirection from https to http" do
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+
+    m = create_media url: 'https://www.scmp.com/news/china/diplomacy-defence/article/2110488/china-tries-build-bigger-bloc-stop-brics-crumbling'
+    parsed_url = Media.parse_url(m.url)
+    header_options = m.send(:html_options)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises('redirection forbidden')
+    Airbrake.configuration.stubs(:api_key).returns('token')
+
+    m.send(:get_html, header_options)
+
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    OpenURI.unstub(:open_uri)
+    Airbrake.configuration.unstub(:api_key)
+  end
+
   test "should parse Facebook post from user profile and get username and name" do
     m = create_media url: 'https://www.facebook.com/nanabhay/posts/10156130657385246'
     data = m.as_json
