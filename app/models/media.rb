@@ -248,7 +248,7 @@ class Media
     rescue Zlib::DataError
       self.get_html(html_options.merge('Accept-Encoding' => 'identity'))
     rescue RuntimeError => e
-      Airbrake.notify(e) if Airbrake.configuration.api_key
+      Airbrake.notify(e) if !redirect_https_to_http?(header_options, e.message) && Airbrake.configuration.api_key
       return nil
     end
   end
@@ -320,5 +320,9 @@ class Media
       self.data['raw']['oembed'] = Media.default_oembed(self.data, url, maxwidth, maxheight) unless self.data_from_oembed_item
     end
     self.data['raw']['oembed']
+  end
+
+  def redirect_https_to_http?(header_options, message)
+    message.match('redirection forbidden') && header_options[:allow_redirections] != :all
   end
 end

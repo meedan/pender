@@ -874,7 +874,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should get canonical URL from facebook object 3" do
-    expected = 'https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3'
+    expected = 'https://www.facebook.com/media/set?set=a.10154534110871407.1073742048.54212446406&type=3'
     variations = %w(
       https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407/?type=3
       https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3
@@ -1372,6 +1372,26 @@ class MediaTest < ActiveSupport::TestCase
     OpenURI.unstub(:open_uri)
   end
 
+  test "should not notify Airbrake when it is a redirection from https to http" do
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+
+    m = create_media url: 'https://www.scmp.com/news/china/diplomacy-defence/article/2110488/china-tries-build-bigger-bloc-stop-brics-crumbling'
+    parsed_url = Media.parse_url(m.url)
+    header_options = m.send(:html_options)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises('redirection forbidden')
+    Airbrake.configuration.stubs(:api_key).returns('token')
+
+    m.send(:get_html, header_options)
+
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    OpenURI.unstub(:open_uri)
+    Airbrake.configuration.unstub(:api_key)
+  end
+
   test "should parse Facebook post from user profile and get username and name" do
     m = create_media url: 'https://www.facebook.com/nanabhay/posts/10156130657385246'
     data = m.as_json
@@ -1490,7 +1510,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert_equal 10, d['media_count']
     assert_equal '10154534110871407', d['object_id']
-    assert_equal 'https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3', m.url
+    assert_equal 'https://www.facebook.com/media/set?set=a.10154534110871407.1073742048.54212446406&type=3', m.url
   end
 
   test "should get all information of a truncated tweet" do
@@ -1509,8 +1529,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert_equal 10, d['media_count']
     assert_equal '10154534110871407', d['object_id']
-    assert_equal 'https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3',
-    m.url
+    assert_equal 'https://www.facebook.com/media/set?set=a.10154534110871407.1073742048.54212446406&type=3', m.url
   end
 
   test "should support facebook pattern with album" do
@@ -1522,7 +1541,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert_equal 10, d['media_count']
     assert_equal '10154534110871407', d['object_id']
-    assert_equal 'https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3', m.url
+    assert_equal 'https://www.facebook.com/media/set?set=a.10154534110871407.1073742048.54212446406&type=3', m.url
   end
 
   test "should get facebook data from original_url when url fails" do
