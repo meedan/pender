@@ -14,6 +14,7 @@ module MediaFacebookItem
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/permalink.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/story.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/livemap(\/.*)?/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/live\/map(\/.*)?/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>[0-9]+)\/permalink\/([0-9]+).*/,
     /^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+).*$/,
     EVENT_URL
@@ -53,7 +54,7 @@ module MediaFacebookItem
     id = uri.path.split('/').last
     mapping = { 'photo.php' => 'fbid', 'permalink.php' => 'story_fbid', 'story.php' => 'story_fbid', 'set' => 'set', 'photos' => 'album_id' }
     id = self.get_facebook_post_id_from_uri_params(id, uri, mapping[id]) if mapping.keys.include?(id)
-    id = '' if id === 'livemap'
+    id = '' if ['livemap', 'map'].include?(id)
     self.data['object_id'] = id.sub(/:0$/, '') if id
   end
 
