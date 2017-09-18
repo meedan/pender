@@ -142,6 +142,23 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['thumbnail_url']
   end
 
+  test "should return item as oembed when data is on cache and raw key is missing" do
+    url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
+    m = create_media url: url
+    json_data = m.as_json
+    json_data.delete('raw')
+    data = Media.as_oembed(json_data, "http://pender.org/medias.html?url=#{url}", 300, 150)
+    assert_equal 'Meedan', data['title']
+    assert_equal 'Meedan', data['author_name']
+    assert_equal 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
+    assert_equal 'facebook', data['provider_name']
+    assert_equal 'http://www.facebook.com', data['provider_url']
+    assert_equal 300, data['width']
+    assert_equal 150, data['height']
+    assert_equal '<iframe src="http://pender.org/medias.html?url=https://www.facebook.com/pages/Meedan/105510962816034?fref=ts" width="300" height="150" scrolling="no" border="0" seamless>Not supported</iframe>', data['html']
+    assert_not_nil data['thumbnail_url']
+  end
+
   test "should return item as oembed when the page has oembed url" do
     url = 'https://meedan.checkdesk.org/node/2161'
     m = create_media url: url
