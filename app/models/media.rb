@@ -78,7 +78,11 @@ class Media
 
   def self.as_oembed(data, original_url, maxwidth, maxheight, instance = nil)
     return instance.send(:get_oembed_data, original_url, maxwidth, maxheight) if instance
-    data[:raw][:oembed].nil? ? Media.default_oembed(data, original_url, maxwidth, maxheight) : data[:raw][:oembed].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(original_url, maxwidth, maxheight))
+    if data[:raw].nil? || data[:raw][:oembed].nil?
+      Media.default_oembed(data, original_url, maxwidth, maxheight)
+    else
+      data[:raw][:oembed].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(original_url, maxwidth, maxheight))
+    end
   end
 
   def self.minimal_data(instance)

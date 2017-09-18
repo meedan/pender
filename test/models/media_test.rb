@@ -142,6 +142,23 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['thumbnail_url']
   end
 
+  test "should return item as oembed when data is on cache and raw key is missing" do
+    url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
+    m = create_media url: url
+    json_data = m.as_json
+    json_data.delete('raw')
+    data = Media.as_oembed(json_data, "http://pender.org/medias.html?url=#{url}", 300, 150)
+    assert_equal 'Meedan', data['title']
+    assert_equal 'Meedan', data['author_name']
+    assert_equal 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
+    assert_equal 'facebook', data['provider_name']
+    assert_equal 'http://www.facebook.com', data['provider_url']
+    assert_equal 300, data['width']
+    assert_equal 150, data['height']
+    assert_equal '<iframe src="http://pender.org/medias.html?url=https://www.facebook.com/pages/Meedan/105510962816034?fref=ts" width="300" height="150" scrolling="no" border="0" seamless>Not supported</iframe>', data['html']
+    assert_not_nil data['thumbnail_url']
+  end
+
   test "should return item as oembed when the page has oembed url" do
     url = 'https://meedan.checkdesk.org/node/2161'
     m = create_media url: url
@@ -965,18 +982,26 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse Facebook livemap" do
+    variations = %w(
+      https://www.facebook.com/livemap/#@-12.991858482361014,-38.521747589110994,4z
+      https://www.facebook.com/live/map/#@37.777053833008,-122.41587829590001,4z
+    )
+
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
-    m = create_media url: 'https://www.facebook.com/livemap/#@37.777053833008,-122.41587829590001,4z', request: request
-    data = m.as_json
-    assert_equal 'https://www.facebook.com/livemap/', m.url
-    assert_equal 'Not Identified on Facebook', data['title']
-    assert_equal 'Explore live videos from around the world.', data['description']
-    assert_not_nil data['published_at']
-    assert_equal 'Not Identified', data['username']
-    assert_equal 'http://facebook.com/', data['author_url']
-    assert_equal '', data['author_picture']
-    assert_nil data['picture']
+
+    variations.each do |url|
+      m = create_media url: url, request: request
+      data = m.as_json
+      assert_equal 'Not Identified on Facebook', data['title']
+      assert_equal 'Explore live videos from around the world.', data['description']
+      assert_not_nil data['published_at']
+      assert_equal 'Not Identified', data['username']
+      assert_equal 'http://facebook.com/', data['author_url']
+      assert_equal '', data['author_picture']
+      assert_nil data['picture']
+      assert_equal 'https://www.facebook.com/live/map/', m.url
+    end
   end
 
   test "should parse Facebook event post" do
