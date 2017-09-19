@@ -248,7 +248,7 @@ class Media
         html = f.read
       end
       Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
-    rescue OpenURI::HTTPError
+    rescue OpenURI::HTTPError, Errno::ECONNRESET
       return nil
     rescue Zlib::DataError
       self.get_html(html_options.merge('Accept-Encoding' => 'identity'))
