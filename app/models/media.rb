@@ -148,7 +148,8 @@ class Media
 
   def parse
     self.data = Media.minimal_data(self)
-    self.data['raw']['metatags'] = get_metatags(self)
+    get_metatags(self)
+    get_jsonld_data(self)
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|

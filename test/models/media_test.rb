@@ -1905,4 +1905,20 @@ class MediaTest < ActiveSupport::TestCase
     m.unstub(:oembed_get_data_from_url)
   end
 
+  test "should store json+ld data as a json string" do
+    m = create_media url: 'https://monitor.krzana.com/pulse/1219:b4e0ae7c4d21f72a:4841'
+    data = m.as_json
+
+    assert !data['raw']['json+ld'].empty?
+    assert data['raw']['json+ld'].is_a? String
+    assert JSON.parse(data['raw']['json+ld']).is_a? Hash
+  end
+
+  test "should not have the subkey json+ld if the tag is not present on page" do
+    m = create_media url: 'https://www.instagram.com/emeliiejanssonn/'
+    data = m.as_json
+
+    assert data['raw']['json+ld'].nil?
+  end
+
 end
