@@ -1224,21 +1224,18 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal data[:raw][:api]['published_at'], data['published_at']
   end
 
-  test "should parse yahoo site 1" do
-    m = create_media url: 'https://br.yahoo.com/'
-    d = m.as_json
-    assert_equal 'item', d['type']
-    assert_equal 'page', d['provider']
-    assert_equal 'Yahoo', d['title']
-    assert_match /Notícias/, d['description']
-    assert_not_nil d['published_at']
-    assert_equal '', d['username']
-    assert_equal 'https://br.yahoo.com', d['author_url']
-    assert_equal 'Yahoo', d['author_name']
-    assert_not_nil d['picture']
+  test "should handle connection reset by peer error" do
+    url = 'https://br.yahoo.com/'
+    parsed_url = Media.parse_url(url)
+    OpenURI.stubs(:open_uri).raises(Errno::ECONNRESET)
+    m = create_media url: url
+    assert_nothing_raised do
+      m.send(:get_html, m.send(:html_options))
+    end
+    OpenURI.unstub(:open_uri)
   end
 
-  test "should parse yahoo site 2" do
+  test "should parse ca yahoo site" do
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'https://ca.yahoo.com/', request: request
@@ -1255,7 +1252,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil d['error']
   end
 
-  test "should parse yahoo site 3" do
+  test "should parse us yahoo site" do
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'https://www.yahoo.com/', request: request
@@ -1903,6 +1900,22 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal f, m.data[f]
     end
     m.unstub(:oembed_get_data_from_url)
+  end
+
+  test "should store json+ld data as a json string" do
+    m = create_media url: 'https://monitor.krzana.com/pulse/1219:b4e0ae7c4d21f72a:4841'
+    data = m.as_json
+
+    assert !data['raw']['json+ld'].empty?
+    assert data['raw']['json+ld'].is_a? String
+    assert JSON.parse(data['raw']['json+ld']).is_a? Hash
+  end
+
+  test "should not have the subkey json+ld if the tag is not present on page" do
+    m = create_media url: 'https://www.instagram.com/emeliiejanssonn/'
+    data = m.as_json
+
+    assert data['raw']['json+ld'].nil?
   end
 
 end

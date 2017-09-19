@@ -37,7 +37,13 @@ module MediasHelper
         fields << metatag
       end
     end
-    fields
+    media.data['raw']['metatags'] = fields
+  end
+
+  def get_jsonld_data(media)
+    return if media.doc.nil?
+    tag = media.doc.at_css('script[type="application/ld+json"]')
+    media.data['raw']['json+ld'] = tag.content unless tag.nil?
   end
 
   def get_html_metadata(media, attr, metatags)

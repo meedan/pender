@@ -8,7 +8,7 @@ module MediaPageItem
   def data_from_page_item
     if self.doc.nil?
       self.doc = self.get_html({ allow_redirections: :all })
-      self.data['raw']['metatags'] = get_metatags(self)
+      get_metatags(self)
     end
     handle_exceptions(self, RuntimeError) do
       self.data = self.page_get_data_from_url
