@@ -43,7 +43,13 @@ module MediasHelper
   def get_jsonld_data(media)
     return if media.doc.nil?
     tag = media.doc.at_css('script[type="application/ld+json"]')
-    media.data['raw']['json+ld'] = JSON.parse(tag.content) unless tag.blank?
+    unless tag.blank?
+      begin
+        media.data['raw']['json+ld'] = JSON.parse(tag.content)
+      rescue JSON::ParserError
+        Rails.logger.info "Could not parse the JSON-LD content: #{media.url}"
+      end
+    end
   end
 
   def get_html_metadata(media, attr, metatags)
