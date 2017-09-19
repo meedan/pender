@@ -43,7 +43,7 @@ module MediasHelper
   def get_jsonld_data(media)
     return if media.doc.nil?
     tag = media.doc.at_css('script[type="application/ld+json"]')
-    media.data['raw']['json+ld'] = tag.content unless tag.nil?
+    media.data['raw']['json+ld'] = JSON.parse(tag.content) unless tag.blank?
   end
 
   def get_html_metadata(media, attr, metatags)

@@ -1907,8 +1907,7 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
 
     assert !data['raw']['json+ld'].empty?
-    assert data['raw']['json+ld'].is_a? String
-    assert JSON.parse(data['raw']['json+ld']).is_a? Hash
+    assert data['raw']['json+ld'].is_a? Hash
   end
 
   test "should not have the subkey json+ld if the tag is not present on page" do
