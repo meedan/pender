@@ -22,4 +22,13 @@ class MediasHelperTest < ActionView::TestCase
     @request.path = '/api/medias.html?url=http://twitter.com/meedan&refresh=1'
     assert_equal '<script src="http://foo.bar/api/medias.js?refresh=1&url=http://twitter.com/meedan" type="text/javascript"></script>', embed_url
   end
+
+  test "should not crash if jsonld content is not valid" do
+    JSON.stubs(:parse).raises(JSON::ParserError)
+    m = create_media url: 'https://www.facebook.com/dina.samak/posts/10153679232246949'
+    assert_nothing_raised do
+      get_jsonld_data(m)
+    end
+    JSON.unstub(:parse)
+  end
 end
