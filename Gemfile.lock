@@ -123,6 +123,7 @@ GEM
     nokogiri (1.7.2)
       mini_portile2 (~> 2.1.0)
     open_uri_redirections (0.2.1)
+    pg (0.21.0)
     poltergeist (1.6.0)
       capybara (~> 2.1)
       cliver (~> 0.3.1)
@@ -264,6 +265,7 @@ DEPENDENCIES
   newrelic_rpm
   nokogiri (= 1.7.2)
   open_uri_redirections
+  pg
   postrank-uri
   protected_attributes
   puma
@@ -288,4 +290,4 @@ DEPENDENCIES
   yt (~> 0.25.5)
 
 BUNDLED WITH
-   1.12.5
+   1.15.4
