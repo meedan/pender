@@ -142,6 +142,23 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['thumbnail_url']
   end
 
+  test "should return item as oembed when data is on cache and raw key is missing" do
+    url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
+    m = create_media url: url
+    json_data = m.as_json
+    json_data.delete('raw')
+    data = Media.as_oembed(json_data, "http://pender.org/medias.html?url=#{url}", 300, 150)
+    assert_equal 'Meedan', data['title']
+    assert_equal 'Meedan', data['author_name']
+    assert_equal 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
+    assert_equal 'facebook', data['provider_name']
+    assert_equal 'http://www.facebook.com', data['provider_url']
+    assert_equal 300, data['width']
+    assert_equal 150, data['height']
+    assert_equal '<iframe src="http://pender.org/medias.html?url=https://www.facebook.com/pages/Meedan/105510962816034?fref=ts" width="300" height="150" scrolling="no" border="0" seamless>Not supported</iframe>', data['html']
+    assert_not_nil data['thumbnail_url']
+  end
+
   test "should return item as oembed when the page has oembed url" do
     url = 'https://meedan.checkdesk.org/node/2161'
     m = create_media url: url
@@ -1207,21 +1224,18 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal data[:raw][:api]['published_at'], data['published_at']
   end
 
-  test "should parse yahoo site 1" do
-    m = create_media url: 'https://br.yahoo.com/'
-    d = m.as_json
-    assert_equal 'item', d['type']
-    assert_equal 'page', d['provider']
-    assert_equal 'Yahoo', d['title']
-    assert_match /Notícias/, d['description']
-    assert_not_nil d['published_at']
-    assert_equal '', d['username']
-    assert_equal 'https://br.yahoo.com', d['author_url']
-    assert_equal 'Yahoo', d['author_name']
-    assert_not_nil d['picture']
+  test "should handle connection reset by peer error" do
+    url = 'https://br.yahoo.com/'
+    parsed_url = Media.parse_url(url)
+    OpenURI.stubs(:open_uri).raises(Errno::ECONNRESET)
+    m = create_media url: url
+    assert_nothing_raised do
+      m.send(:get_html, m.send(:html_options))
+    end
+    OpenURI.unstub(:open_uri)
   end
 
-  test "should parse yahoo site 2" do
+  test "should parse ca yahoo site" do
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'https://ca.yahoo.com/', request: request
@@ -1238,7 +1252,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil d['error']
   end
 
-  test "should parse yahoo site 3" do
+  test "should parse us yahoo site" do
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'https://www.yahoo.com/', request: request
@@ -1378,6 +1392,26 @@ class MediaTest < ActiveSupport::TestCase
     OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
     m.send(:get_html, m.send(:html_options))
     OpenURI.unstub(:open_uri)
+  end
+
+  test "should not notify Airbrake when it is a redirection from https to http" do
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+
+    m = create_media url: 'https://www.scmp.com/news/china/diplomacy-defence/article/2110488/china-tries-build-bigger-bloc-stop-brics-crumbling'
+    parsed_url = Media.parse_url(m.url)
+    header_options = m.send(:html_options)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises('redirection forbidden')
+    Airbrake.configuration.stubs(:api_key).returns('token')
+
+    m.send(:get_html, header_options)
+
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    OpenURI.unstub(:open_uri)
+    Airbrake.configuration.unstub(:api_key)
   end
 
   test "should parse Facebook post from user profile and get username and name" do
@@ -1866,6 +1900,21 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal f, m.data[f]
     end
     m.unstub(:oembed_get_data_from_url)
+  end
+
+  test "should store json+ld data as a json string" do
+    m = create_media url: 'https://monitor.krzana.com/pulse/1219:b4e0ae7c4d21f72a:4841'
+    data = m.as_json
+
+    assert !data['raw']['json+ld'].empty?
+    assert data['raw']['json+ld'].is_a? Hash
+  end
+
+  test "should not have the subkey json+ld if the tag is not present on page" do
+    m = create_media url: 'https://www.instagram.com/emeliiejanssonn/'
+    data = m.as_json
+
+    assert data['raw']['json+ld'].nil?
   end
 
 end

@@ -174,7 +174,7 @@ module MediaFacebookItem
   end
 
   def get_facebook_info_from_metadata
-    self.data['raw']['metatags'] = get_metatags(self)
+    get_metatags(self)
     metadata = self.get_opengraph_metadata
     self.data['author_name'] = metadata['title']
     self.data['text'] = metadata['description']
