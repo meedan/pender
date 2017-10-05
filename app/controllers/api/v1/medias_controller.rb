@@ -16,6 +16,7 @@ module Api
       def index
         @url = params[:url]
         (render_parameters_missing and return) if @url.blank?
+        (render_url_invalid and return) unless is_url?
 
         @refresh = params[:refresh] == '1'
         @id = Media.get_id(@url)
@@ -214,6 +215,10 @@ module Api
       def locker
         @locker ||= Semaphore.new(params[:url])
         @locker
+      end
+
+      def is_url?
+        @url.match(/^https?:?\/?\/?\z/).nil?
       end
     end
   end

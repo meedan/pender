@@ -447,4 +447,24 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal first_parsed_at, second_parsed_at
   end
 
+  test "should return invalid url when is there is only the scheme" do
+    variations = %w(
+      http
+      http:
+      http:/
+      http://
+      https
+      https:
+      https:/
+      https://
+    )
+
+    authenticate_with_token
+    variations.each do |url|
+      get :index, url: url, format: :json
+      assert_response 400
+      assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
+    end
+  end
+
 end
