@@ -68,4 +68,9 @@ module MediasHelper
     end
     ''
   end
+
+  def list_formats
+    %w(html js json oembed)
+  end
+
 end

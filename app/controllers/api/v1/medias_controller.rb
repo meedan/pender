@@ -57,10 +57,6 @@ module Api
         false
       end
 
-      def list_formats
-        %w(html js json oembed)
-      end
-
       def allow_iframe
         response.headers.except! 'X-Frame-Options'
       end
@@ -218,7 +214,8 @@ module Api
       end
 
       def is_url?
-        @url.match(/^https?:?\/?\/?\z/).nil?
+        uri = URI.parse(URI.encode(@url))
+        !uri.host.nil?
       end
     end
   end
