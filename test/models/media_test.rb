@@ -1505,7 +1505,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.dropbox.com/sh/748f94925f0gesq/AAAMSoRJyhJFfkupnAU0wXuva?dl=0', m.url
     assert_equal 'item', d['type']
     assert_equal 'dropbox', d['provider']
-    assert_equal 'Shared Link Metadata', d['title']
+    assert !d['title'].blank?
     assert_equal 'Shared with Dropbox', d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
