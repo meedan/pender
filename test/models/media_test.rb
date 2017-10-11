@@ -1917,4 +1917,12 @@ class MediaTest < ActiveSupport::TestCase
     assert data['raw']['json+ld'].nil?
   end
 
+  test "should return empty html on oembed when script has http src" do
+    m = create_media url: 'https://politi.co/2j7qyT0'
+    data = m.as_json
+    response = m.oembed_get_data_from_url(m.get_oembed_url)
+    assert_match /script.*src="http:\/\//, JSON.parse(response.body)['html']
+    assert_equal '', data['html']
+  end
+
 end

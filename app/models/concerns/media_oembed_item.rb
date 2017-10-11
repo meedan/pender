@@ -30,6 +30,7 @@ module MediaOembedItem
         if ['DENY', 'SAMEORIGIN'].include? response.header['X-Frame-Options']
           self.data[:raw][:oembed][:html] = ''
         end
+        verify_https_oembed_html
         return true
       end
     end
@@ -61,5 +62,15 @@ module MediaOembedItem
 
   def provider_oembed_url
     self.send("#{self.provider}_oembed_url") if self.respond_to?("#{self.provider}_oembed_url")
+  end
+
+  def verify_https_oembed_html
+    return if self.data[:raw][:oembed][:html].blank?
+    html = Nokogiri::HTML self.data[:raw][:oembed][:html]
+    script_tag = html.at_css('script')
+    unless script_tag.nil? || script_tag.attr('src').nil?
+      uri = URI.parse(script_tag.attr('src'))
+      self.data[:raw][:oembed][:html] = '' unless uri.kind_of?(URI::HTTPS)
+    end
   end
 end
