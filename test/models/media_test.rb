@@ -1505,7 +1505,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.dropbox.com/sh/748f94925f0gesq/AAAMSoRJyhJFfkupnAU0wXuva?dl=0', m.url
     assert_equal 'item', d['type']
     assert_equal 'dropbox', d['provider']
-    assert_equal 'Shared Link Metadata', d['title']
+    assert !d['title'].blank?
     assert_equal 'Shared with Dropbox', d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
@@ -1915,6 +1915,14 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
 
     assert data['raw']['json+ld'].nil?
+  end
+
+  test "should return empty html on oembed when script has http src" do
+    m = create_media url: 'https://politi.co/2j7qyT0'
+    data = m.as_json
+    response = m.oembed_get_data_from_url(m.get_oembed_url)
+    assert_match /script.*src="http:\/\//, JSON.parse(response.body)['html']
+    assert_equal '', data['html']
   end
 
 end
