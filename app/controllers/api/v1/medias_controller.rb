@@ -15,8 +15,8 @@ module Api
 
       def index
         @url = params[:url]
-        (render_parameters_missing and return) if @url.blank?
-        (render_url_invalid and return) unless is_url?
+        (render_parameters_missing; return) if @url.blank?
+        (render_url_invalid; return) unless is_url?
 
         @refresh = params[:refresh] == '1'
         @id = Media.get_id(@url)
