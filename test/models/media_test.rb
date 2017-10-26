@@ -302,7 +302,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nothing_raised do
       m = create_media url: 'http://www.almasryalyoum.com/node/517699', request: request
       data = m.as_json
-      assert_match /https:\/\/www.almasryalyoum.com\/editor\/details\/968/, data['url']
+      assert_match /https?:\/\/www.almasryalyoum.com\/editor\/details\/968/, data['url']
     end
   end
 
