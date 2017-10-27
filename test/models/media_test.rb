@@ -302,7 +302,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nothing_raised do
       m = create_media url: 'http://www.almasryalyoum.com/node/517699', request: request
       data = m.as_json
-      assert_match /https:\/\/www.almasryalyoum.com\/editor\/details\/968/, data['url']
+      assert_match /https?:\/\/www.almasryalyoum.com\/editor\/details\/968/, data['url']
     end
   end
 
@@ -1919,10 +1919,14 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should return empty html on oembed when script has http src" do
     m = create_media url: 'https://politi.co/2j7qyT0'
+    oembed = '{"version":"1.0","type":"rich","html":"<script type=\"text/javascript\" src=\"http://www.politico.com/story/2017/09/07/facebook-fake-news-social-media-242407?_embed=true&amp;_format=js\"></script>"}'
+    response = 'mock';response.expects(:code).returns('200');response.stubs(:body).returns(oembed)
+    Media.any_instance.stubs(:oembed_get_data_from_url).with(m.get_oembed_url).returns(response);response.expects(:header).returns({})
     data = m.as_json
     response = m.oembed_get_data_from_url(m.get_oembed_url)
     assert_match /script.*src="http:\/\//, JSON.parse(response.body)['html']
     assert_equal '', data['html']
+    Media.any_instance.unstub(:oembed_get_data_from_url)
   end
 
 end
