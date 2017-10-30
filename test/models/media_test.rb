@@ -986,6 +986,7 @@ class MediaTest < ActiveSupport::TestCase
     variations = %w(
       https://www.facebook.com/livemap/#@-12.991858482361014,-38.521747589110994,4z
       https://www.facebook.com/live/map/#@37.777053833008,-122.41587829590001,4z
+      https://www.facebook.com/live/discover/map/#@37.777053833008,-122.41587829590001,4z
     )
 
     request = 'http://localhost'
@@ -1001,7 +1002,7 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal 'http://facebook.com/', data['author_url']
       assert_equal '', data['author_picture']
       assert_nil data['picture']
-      assert_equal 'https://www.facebook.com/live/map/', m.url
+      assert_equal 'https://www.facebook.com/live/discover/map/', m.url
     end
   end
 
