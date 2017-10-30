@@ -1,4 +1,13 @@
 GIT
+  remote: https://github.com/meedan/chromeshot
+  revision: 2ce778ff6802118bdb39e366684ce6f70059afa6
+  ref: 2ce778f
+  branch: feature/6114_chromeshot_gem
+  specs:
+    chromeshot (0.0.0)
+      mini_magick
+
+GIT
   remote: https://github.com/meedan/ids_please
   revision: 31b9e03fe7860d57697e9b6deec321bc7d7482f4
   ref: 31b9e0
@@ -56,14 +65,6 @@ GEM
     buftok (0.2.0)
     builder (3.2.3)
     byebug (9.0.6)
-    capybara (2.13.0)
-      addressable
-      mime-types (>= 1.16)
-      nokogiri (>= 1.3.3)
-      rack (>= 1.0.0)
-      rack-test (>= 0.5.4)
-      xpath (~> 2.0)
-    cliver (0.3.2)
     codeclimate-test-reporter (0.6.0)
       simplecov (>= 0.7.1, < 1.0.0)
     concurrent-ruby (1.0.5)
@@ -112,6 +113,7 @@ GEM
     mime-types (3.1)
       mime-types-data (~> 3.2015)
     mime-types-data (3.2016.0521)
+    mini_magick (4.8.0)
     mini_portile2 (2.1.0)
     minitest (5.10.1)
     mocha (1.2.1)
@@ -124,11 +126,6 @@ GEM
       mini_portile2 (~> 2.1.0)
     open_uri_redirections (0.2.1)
     pg (0.21.0)
-    poltergeist (1.6.0)
-      capybara (~> 2.1)
-      cliver (~> 0.3.1)
-      multi_json (~> 1.0)
-      websocket-driver (>= 0.2.0)
     postrank-uri (1.0.22)
       addressable (>= 2.3.0, < 2.6)
       nokogiri (>= 1.6.1, < 1.8)
@@ -196,9 +193,6 @@ GEM
       json (>= 1.8, < 3)
       simplecov-html (~> 0.10.0)
     simplecov-html (0.10.0)
-    smartshot (0.0.7)
-      activesupport
-      poltergeist (~> 1.6.0)
     sprockets (3.7.1)
       concurrent-ruby (~> 1.0)
       rack (> 1, < 3)
@@ -241,11 +235,6 @@ GEM
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
       hashdiff
-    websocket-driver (0.6.5)
-      websocket-extensions (>= 0.1.0)
-    websocket-extensions (0.1.2)
-    xpath (2.0.0)
-      nokogiri (~> 1.3)
     yt (0.25.40)
       activesupport
 
@@ -256,6 +245,7 @@ DEPENDENCIES
   airbrake (= 4.3.3)
   awesome_print
   byebug
+  chromeshot!
   codeclimate-test-reporter (= 0.6.0)
   gem-licenses
   ids_please!
@@ -280,7 +270,6 @@ DEPENDENCIES
   sass-rails
   sidekiq
   simplecov
-  smartshot
   sqlite3
   swagger-docs (= 0.1.9)
   thin

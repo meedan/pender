@@ -1,4 +1,5 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
+require 'cc_deville'
 
 class MediaTest < ActiveSupport::TestCase
   test "should create media" do
@@ -823,7 +824,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should store the picture address" do
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
-    Smartshot::Screenshot.any_instance.stubs(:take_screenshot!).returns(false)
+    Chromeshot::Screenshot.any_instance.stubs(:take_screenshot!).returns(false)
     m = create_media url: 'http://xkcd.com/448/', request: request
     d = m.as_json
     assert_equal 'xkcd: Good Morning', d['title']
@@ -832,7 +833,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
     assert_equal 'http://localhost/screenshots/https-xkcd-com-448.png', d['picture']
-    Smartshot::Screenshot.any_instance.unstub(:take_screenshot!)
+    Chromeshot::Screenshot.any_instance.unstub(:take_screenshot!)
   end
 
   test "should get relative canonical URL parsed from html tags" do
