@@ -1,7 +1,5 @@
 language: ruby
 bundler_args: "--jobs 3 --retry 3 --without nothing"
-addons:
-  chrome: stable
 before_install:
 - openssl aes-256-cbc -K $encrypted_30953c9e4ece_key -iv $encrypted_30953c9e4ece_iv -in config/config.yml.travis.enc -out config/config.yml -d
 - sudo apt-get install redis-server
@@ -19,6 +17,7 @@ after_script:
 rvm:
 - 2.3.1
 addons:
+  chrome: stable
   code_climate:
     repo_token:
       secure: fWrtUsan669Hz5li90y3REKdAcCY8/eCtg7FLiS9wFPRPwviocE0JrsBgEfzwsTY9jR77zc7uQDr79Zv9QVukdhoPQXF5CgKZZxqrU9mxkSwH/K7SmGSuUqPQBq+0t4pdL2FpJS+hLkuSiVmmZMsWgtz+u79X5GcQWQQS825SHxd1vigvj2/Jzdnnm1hOsieB3sSSNaXeGblCzpyxICapwfCMQAOHubg6oyuAO3Jm9edvsAJMyltKxDN8Ydp39Rf8zzkkGAN/iQ3That4JQKRd1XLsW/iSDCMfUh+Pwe1T8V53PZZum9IRUgo2OeuZCUVOHPuImkBpMsf5j6qCf+EuByo6IC9UnX6jCez4bDYsm62C7XAJ2SfCe24z7vpB9oyC7C5ggPf6ze6GBpGBoY5gydpTx/QS/dSDszvCdLGyUxuKMf4ACr12wU6oBOX4KM+vWiEZKjHdCz/I58HCkwKUSPUnnJL1PkM2LZHEEAIilBvaVjjkljAhoXxZ4/hiRncnI1d47jYGQBF8aex0CR0dGhYpeCd69dv0HoUNrr3fChPmHa9M7Q4/EnC8flsbxBHlhXUHj5xoJzbxOB0hJmz/1KwPc9Z/ZBwX94SCVtSHYAYMin9W4DmtshHf2oRWXCEXweoUrbR9rPiCYi34wjleJpNyRwGHmnvfMMK3K6vPo=
