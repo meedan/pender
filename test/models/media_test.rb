@@ -1,4 +1,5 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
+require 'cc_deville'
 
 class MediaTest < ActiveSupport::TestCase
   test "should create media" do
@@ -823,7 +824,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should store the picture address" do
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
-    Smartshot::Screenshot.any_instance.stubs(:take_screenshot!).returns(false)
+    Chromeshot::Screenshot.any_instance.stubs(:take_screenshot!).returns(false)
     m = create_media url: 'http://xkcd.com/448/', request: request
     d = m.as_json
     assert_equal 'xkcd: Good Morning', d['title']
@@ -832,7 +833,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
     assert_equal 'http://localhost/screenshots/https-xkcd-com-448.png', d['picture']
-    Smartshot::Screenshot.any_instance.unstub(:take_screenshot!)
+    Chromeshot::Screenshot.any_instance.unstub(:take_screenshot!)
   end
 
   test "should get relative canonical URL parsed from html tags" do
@@ -985,6 +986,7 @@ class MediaTest < ActiveSupport::TestCase
     variations = %w(
       https://www.facebook.com/livemap/#@-12.991858482361014,-38.521747589110994,4z
       https://www.facebook.com/live/map/#@37.777053833008,-122.41587829590001,4z
+      https://www.facebook.com/live/discover/map/#@37.777053833008,-122.41587829590001,4z
     )
 
     request = 'http://localhost'
@@ -1000,7 +1002,7 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal 'http://facebook.com/', data['author_url']
       assert_equal '', data['author_picture']
       assert_nil data['picture']
-      assert_equal 'https://www.facebook.com/live/map/', m.url
+      assert_equal 'https://www.facebook.com/live/discover/map/', m.url
     end
   end
 
