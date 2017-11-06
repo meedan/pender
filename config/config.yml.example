@@ -13,6 +13,7 @@ development: &default
   cc_deville_host:
   cc_deville_token:
   cc_deville_httpauth: 'username:password'
+  public_url: 'http://localhost:3200'
   hosts:
     one.host:
       http_auth: username:password
