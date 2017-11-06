@@ -308,9 +308,9 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse HTTP-authed URL" do
-    m = create_media url: 'http://qa.checkdesk.org/en/source/2777'
+    m = create_media url: 'https://qa.checkmedia.org/'
     data = m.as_json
-    assert_equal 'Western Sahara AF', data['title']
+    assert_equal 'Check', data['title']
   end
 
   test "should parse Facebook user profile using user token" do
