@@ -73,7 +73,7 @@ module MediaPageItem
   def generate_screenshot
     url = self.url
     filename = url.parameterize + '.png'
-    base_url = self.request.base_url
+    base_url = CONFIG['public_url'] || self.request.base_url
     picture = URI.join(base_url, 'screenshots/', filename).to_s
     path = File.join(Rails.root, 'public', 'screenshots', filename)
     FileUtils.rm_f path
