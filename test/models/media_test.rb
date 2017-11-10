@@ -1616,7 +1616,7 @@ class MediaTest < ActiveSupport::TestCase
     url = 'https://meedan.com/en/check'
     m = create_media url: url
     assert_equal 'https://meedan.com', m.send(:top_url, m.url)
-    
+
     Media.any_instance.unstub(:generate_screenshot)
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_canonical_url)
@@ -1929,6 +1929,12 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /script.*src="http:\/\//, JSON.parse(response.body)['html']
     assert_equal '', data['html']
     Media.any_instance.unstub(:oembed_get_data_from_url)
+  end
+
+  test "should decode html entities" do
+    m = create_media url: 'https://twitter.com/cal_fire/status/919029734847025152'
+    data = m.as_json
+    assert_no_match /&amp;/, data['title']
   end
 
 end

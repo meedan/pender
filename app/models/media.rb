@@ -163,6 +163,16 @@ class Media
       end
       break if parsed
     end
+    self.cleanup_html_entities
+  end
+
+  ##
+  # Remove HTML entities from standard text fields
+
+  def cleanup_html_entities
+    %w(username title description author_name).each do |field|
+      self.data[field] = CGI.unescapeHTML(self.data[field])
+    end
   end
 
   ##
