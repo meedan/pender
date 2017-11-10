@@ -177,7 +177,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Checkdesk report" do
     m = create_media url: 'https://meedan.checkdesk.org/node/2161'
     data = m.as_json
-    assert_equal 'Twitter / History In Pictures: Little Girl &amp; Ba...', data['title']
+    assert_equal 'Twitter / History In Pictures: Little Girl & Ba...', data['title']
     assert_equal 'Tom', data['username']
     assert_equal 'page', data['provider']
     assert_not_nil data['description']
@@ -1690,7 +1690,7 @@ class MediaTest < ActiveSupport::TestCase
     assert data['raw']['oembed'].is_a? Hash
     assert !data['raw']['oembed'].empty?
 
-    assert_equal 'Twitter / History In Pictures: Little Girl &amp; Ba...', data['title']
+    assert_equal 'Twitter / History In Pictures: Little Girl & Ba...', data['title']
     assert_equal 'Tom', data['username']
     assert_equal 'https://meedan.checkdesk.org/en/users/tom', data['author_url']
     assert !data['description'].blank?
