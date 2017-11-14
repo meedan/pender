@@ -73,4 +73,13 @@ module MediasHelper
     %w(html js json oembed)
   end
 
+  ##
+  # Remove HTML entities from standard text fields
+
+  def cleanup_html_entities(media)
+    %w(username title description author_name).each do |field|
+      media.data[field] = CGI.unescapeHTML(media.data[field])
+    end
+  end
+
 end
