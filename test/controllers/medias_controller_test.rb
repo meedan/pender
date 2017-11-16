@@ -472,7 +472,7 @@ class MediasControllerTest < ActionController::TestCase
     
     get :index, url: url, foo: 'bar', format: :html
     assert_response 302
-    assert_match /\/api\/medias\.html\?url=https:\/\/twitter\.com\/caiosba\/status\/923697122855096320$/, @response.redirect_url
+    assert_equal 'api/medias.html?url=https%3A%2F%2Ftwitter.com%2Fcaiosba%2Fstatus%2F923697122855096320', @response.redirect_url.split('/', 4).last
 
     get :index, url: url, foo: 'bar', format: :js
     assert_response 200
