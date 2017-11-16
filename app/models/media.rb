@@ -163,6 +163,7 @@ class Media
       end
       break if parsed
     end
+    cleanup_html_entities(self)
   end
 
   ##

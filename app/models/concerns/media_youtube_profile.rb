@@ -90,8 +90,8 @@ module MediaYoutubeProfile
 
   def get_youtube_username
     match = self.url.match(/^https?:\/\/(www\.)?youtube\.com\/user\/([^\/]+)/)
-    username = match.nil? ? self.data['title'].gsub(/[^a-zA-Z0-9]/, '') : match[2]
-    username
+    username = match.nil? ? self.data[:raw][:api][:title].gsub(/[^a-zA-Z0-9]/, '') : match[2]
+    username.downcase
   end
 
   def get_youtube_subtype

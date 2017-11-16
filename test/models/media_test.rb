@@ -17,7 +17,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Porta dos Fundos', data['title']
     assert_equal 'portadosfundos', data['username']
     assert_equal 'Porta dos Fundos', data['author_name']
-    assert_equal 'user', data['subtype']
+    assert_equal 'channel', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
@@ -31,7 +31,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Iron Maiden', data['title']
     assert_equal 'ironmaiden', data['username'].downcase
     assert_equal 'Iron Maiden', data['author_name']
-    assert_equal 'user', data['subtype']
+    assert_equal 'channel', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
@@ -177,7 +177,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Checkdesk report" do
     m = create_media url: 'https://meedan.checkdesk.org/node/2161'
     data = m.as_json
-    assert_equal 'Twitter / History In Pictures: Little Girl &amp; Ba...', data['title']
+    assert_equal 'Twitter / History In Pictures: Little Girl & Ba...', data['title']
     assert_equal 'Tom', data['username']
     assert_equal 'page', data['provider']
     assert_not_nil data['description']
@@ -203,7 +203,7 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'Porta dos Fundos', data['title']
     assert_equal 'portadosfundos', data['username']
-    assert_equal 'user', data['subtype']
+    assert_equal 'channel', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
@@ -214,7 +214,7 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'Iron Maiden', data['title']
     assert_equal 'ironmaiden', data['username']
-    assert_equal 'user', data['subtype']
+    assert_equal 'channel', data['subtype']
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
@@ -1616,7 +1616,7 @@ class MediaTest < ActiveSupport::TestCase
     url = 'https://meedan.com/en/check'
     m = create_media url: url
     assert_equal 'https://meedan.com', m.send(:top_url, m.url)
-    
+
     Media.any_instance.unstub(:generate_screenshot)
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_canonical_url)
@@ -1690,7 +1690,7 @@ class MediaTest < ActiveSupport::TestCase
     assert data['raw']['oembed'].is_a? Hash
     assert !data['raw']['oembed'].empty?
 
-    assert_equal 'Twitter / History In Pictures: Little Girl &amp; Ba...', data['title']
+    assert_equal 'Twitter / History In Pictures: Little Girl & Ba...', data['title']
     assert_equal 'Tom', data['username']
     assert_equal 'https://meedan.checkdesk.org/en/users/tom', data['author_url']
     assert !data['description'].blank?
@@ -1929,6 +1929,12 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /script.*src="http:\/\//, JSON.parse(response.body)['html']
     assert_equal '', data['html']
     Media.any_instance.unstub(:oembed_get_data_from_url)
+  end
+
+  test "should decode html entities" do
+    m = create_media url: 'https://twitter.com/cal_fire/status/919029734847025152'
+    data = m.as_json
+    assert_no_match /&amp;/, data['title']
   end
 
 end

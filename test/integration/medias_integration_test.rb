@@ -44,4 +44,11 @@ class MediasIntegrationTest < ActionDispatch::IntegrationTest
 
     threads.map(&:join)
   end
+
+  test "should normalize request URL" do
+    url = '/api/medias.html?referrer=https%3A%2F%2Fmedium.com%2Fmedia%2F11d9292b164066cd07ec67d8090734cf%3FpostId%3D4308e5aacf6c&url=https%3A%2F%2Fcheckmedia.org%2F2222%2Fproject%2F691%2Fmedia%2F6923'
+    get url
+    assert_response 302
+    assert_equal 'api/medias.html?url=https%3A%2F%2Fcheckmedia.org%2F2222%2Fproject%2F691%2Fmedia%2F6923', @response.redirect_url.split('/', 4).last
+  end
 end
