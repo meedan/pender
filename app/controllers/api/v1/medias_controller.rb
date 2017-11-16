@@ -10,6 +10,7 @@ module Api
       include MediasHelper
 
       skip_before_filter :authenticate_from_token!, if: proc { request.format.html? || request.format.js? || request.format.oembed? }
+      before_action :strip_params, only: :index, if: proc { request.format.html? }
       before_action :lock_url, only: :index
       after_action :allow_iframe, :unlock_url, only: :index
 
@@ -216,6 +217,15 @@ module Api
       def is_url?
         uri = URI.parse(URI.encode(@url))
         !uri.host.nil?
+      end
+
+      def strip_params
+        rails_params = ['id', 'action', 'controller', 'format']
+        supported_params = ['url', 'refresh', 'maxwidth', 'maxheight', 'version']
+        url_params = params.keys - rails_params
+        if (url_params & supported_params) == ['url'] && url_params.size > 1
+          redirect_to(CONFIG['public_url'] + '/api/medias.html?url=' + params[:url]) and return
+        end
       end
     end
   end

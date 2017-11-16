@@ -467,4 +467,20 @@ class MediasControllerTest < ActionController::TestCase
     end
   end
 
+  test "should redirect and remove unsupported parameters if format is HTML and URL is the only supported parameter provided" do
+    url = 'https://twitter.com/caiosba/status/923697122855096320'
+    
+    get :index, url: url, foo: 'bar', format: :html
+    assert_response 302
+    assert_match /\/api\/medias\.html\?url=https:\/\/twitter\.com\/caiosba\/status\/923697122855096320$/, @response.redirect_url
+
+    get :index, url: url, foo: 'bar', format: :js
+    assert_response 200
+
+    get :index, url: url, foo: 'bar', format: :html, refresh: '1'
+    assert_response 200
+
+    get :index, url: url, format: :html
+    assert_response 200
+  end
 end
