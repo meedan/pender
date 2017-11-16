@@ -224,7 +224,7 @@ module Api
         supported_params = ['url', 'refresh', 'maxwidth', 'maxheight', 'version']
         url_params = params.keys - rails_params
         if (url_params & supported_params) == ['url'] && url_params.size > 1
-          redirect_to(CONFIG['public_url'] + '/api/medias.html?url=' + params[:url]) and return
+          redirect_to(host: CONFIG['public_url'], action: :index, format: :html, url: params[:url]) and return
         end
       end
     end
