@@ -29,6 +29,7 @@ plugins:
     enabled: false
   rubocop:
     enabled: true
+    config: .rubocop.yml
   brakeman:
     enabled: true
   duplication:
