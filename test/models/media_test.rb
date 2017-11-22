@@ -1860,7 +1860,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['username']
     assert_equal 'https://www.nature.com', d['author_url']
     assert_equal '@NatureHumBehav', d['author_name']
-    assert_equal 'https://media.springernature.com/m685/nature-static/assets/v1/image-assets/s41562-017-0132-f1.jpg',  d['picture']
+    assert_match /image-assets\/s41562-017-0132-f1.jpg/,  d['picture']
     assert_nil d['error']
   end
 
