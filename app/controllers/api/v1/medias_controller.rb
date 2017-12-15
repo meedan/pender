@@ -50,7 +50,7 @@ module Api
         render_timeout(false) do
           (render_url_invalid and return true) unless valid_url?
           begin
-            @media = Media.new(url: @url, request: request)
+            @media = Media.new(url: @url, request: request, key: @key)
           rescue OpenSSL::SSL::SSLError
             render_url_invalid and return true
           end

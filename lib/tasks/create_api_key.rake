@@ -18,12 +18,13 @@ namespace :lapis do
         when 'test' then 'test'
         when 'development' then 'dev'
       end
-      ApiKey.where(access_token: key_name).destroy_all
-      api_key = ApiKey.create!
-      api_key.access_token = key_name
-      api_key.expire_at = api_key.expire_at.since(100.years)
-      api_key.save!
-      puts "Created a new API key for #{app} with access token #{api_key.access_token} and that expires at #{api_key.expire_at}"
+      unless ApiKey.where(access_token: key_name).exists?
+        api_key = ApiKey.create!
+        api_key.access_token = key_name
+        api_key.expire_at = api_key.expire_at.since(100.years)
+        api_key.save!
+        puts "Created a new API key for #{app} with access token #{api_key.access_token} and that expires at #{api_key.expire_at}"
+      end
     end
   end
 end

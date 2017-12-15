@@ -13,7 +13,7 @@ module MediaPageItem
     handle_exceptions(self, RuntimeError) do
       self.data = self.page_get_data_from_url
       if self.data[:picture].blank?
-        generate_screenshot
+        self.data[:picture] = self.data['screenshot']
       else
         self.data[:picture] = self.add_scheme(self.data[:picture])
       end
@@ -68,18 +68,6 @@ module MediaPageItem
 
     data[:author_url] = top_url(self.url)
     data
-  end
-
-  def generate_screenshot
-    url = self.url
-    filename = url.parameterize + '.png'
-    base_url = CONFIG['public_url'] || self.request.base_url
-    picture = URI.join(base_url, 'screenshots/', filename).to_s
-    path = File.join(Rails.root, 'public', 'screenshots', filename)
-    FileUtils.rm_f path
-    FileUtils.ln_s File.join(Rails.root, 'public', 'pending_picture.png'), path 
-    data[:picture] = picture
-    ScreenshotWorker.perform_async(url, picture)
   end
 
   def get_page_author_name

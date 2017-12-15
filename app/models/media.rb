@@ -35,6 +35,7 @@
 #    oEmbed data
 #    4. Match the url with the patterns described on specific parsers
 #    5. Parse the page with the parser found on previous step
+#    6. Generate screenshot in background
 #  * Parse as oEmbed
 #    1. Get media the json data
 #    2. If the page has an oEmbed url, request it and get the response
@@ -46,7 +47,7 @@ class Media
   include MediasHelper
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url
+  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :key
 
   TYPES = {}
 
@@ -68,6 +69,7 @@ class Media
   def as_json(options = {})
     Rails.cache.fetch(Media.get_id(self.original_url), options) do
       self.parse
+      self.generate_screenshot
       self.data.merge(Media.required_fields(self)).with_indifferent_access
     end
   end
@@ -87,7 +89,7 @@ class Media
 
   def self.minimal_data(instance)
     data = {}
-    %w(published_at username title description picture author_url author_picture author_name).each do |field|
+    %w(published_at username title description picture author_url author_picture author_name screenshot).each do |field|
       data[field] = ''
     end
     data[:raw] = {}
@@ -330,5 +332,19 @@ class Media
 
   def redirect_https_to_http?(header_options, message)
     message.match('redirection forbidden') && header_options[:allow_redirections] != :all
+  end
+
+  def generate_screenshot
+    url = self.url
+    filename = url.parameterize + '.png'
+    base_url = CONFIG['public_url'] || self.request.base_url
+    picture = URI.join(base_url, 'screenshots/', filename).to_s
+    path = File.join(Rails.root, 'public', 'screenshots', filename)
+    FileUtils.rm_f path
+    FileUtils.ln_s File.join(Rails.root, 'public', 'pending_picture.png'), path 
+    self.data['screenshot'] = picture
+    self.data['screenshot_taken'] = 0
+    key_id = self.key ? self.key.id : nil
+    ScreenshotWorker.perform_async(url, picture, key_id)
   end
 end
