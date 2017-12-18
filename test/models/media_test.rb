@@ -577,7 +577,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Escape on Facebook', d['title']
     assert_equal 'Photos by Ahmed Tarek Bayoumi', d['description']
     assert_match /423930480981426/, d['author_picture']
-    assert_match /14224731_1204094832964983_7206455761034252173/, d['picture']
+    assert_match /1204094832964983_7206455761034252173/, d['picture']
     assert_equal '1204090389632094', d['object_id']
   end
 
@@ -912,7 +912,7 @@ class MediaTest < ActiveSupport::TestCase
       data = media.as_json
       expected.each do |key, value|
         assert_equal value, data[key]
-        assert_match /14724649_613639042147096_5586727492554773434/, data[:picture]
+        assert_match /613639042147096_5586727492554773434/, data[:picture]
         assert_match /خلال افتتاح معرض لفساتين الزفاف بالسويد اليوم تم عرض جميع فساتين زفاف/, data[:description]
       end
     end
@@ -1172,7 +1172,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Classic.mou', d['username']
     assert_equal 'http://facebook.com/136985363145802', d['author_url']
     assert_equal 'https://graph.facebook.com/136985363145802/picture', d['author_picture']
-    assert_match /15400387_640132509497749_4281523565478374345/, d['picture']
+    assert_match /640132509497749_4281523565478374345/, d['picture']
   end
 
   test "should return author picture" do
