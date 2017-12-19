@@ -1,5 +1,6 @@
 class ScreenshotWorker
   include Sidekiq::Worker
+  sidekiq_options retry: 10
 
   def update_cache(url)
     id = Media.get_id(url)
@@ -24,6 +25,14 @@ class ScreenshotWorker
       response = http.request(request)
     end
   end
+    
+  def start_chromeshot_if_not_running
+    port = CONFIG['chrome_debug_port'] || 9555
+    while !system("lsof -i:#{port}", out: '/dev/null')
+      Chromeshot::Screenshot.setup_chromeshot(port) 
+      sleep 10
+    end
+  end
 
   def perform(url, picture, key_id)
     key = ApiKey.where(id: key_id).last
@@ -32,11 +41,13 @@ class ScreenshotWorker
     path = File.join(Rails.root, 'public', 'screenshots', filename)
     output_file = File.join(Rails.root, 'public', 'screenshots', tmp)
 
+    start_chromeshot_if_not_running
     fetcher = Chromeshot::Screenshot.new debug_port: CONFIG['chrome_debug_port']
     fetcher.take_screenshot!(url: url, output: output_file)
 
     FileUtils.rm_f path
-    File.exist?(output_file) ? FileUtils.mv(output_file, path) : FileUtils.ln_s(File.join(Rails.root, 'public', 'no_picture.png'), path)
+    File.exist?(output_file) ? FileUtils.mv(output_file, path) : raise('Could not take screenshow now, will retry later')
+
     CcDeville.clear_cache_for_url(picture)
 
     self.update_cache(url)
