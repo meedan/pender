@@ -37,7 +37,7 @@ module Api
         urls.each do |url|
           @id = Media.get_id(url)
           Rails.cache.delete(@id)
-          cc_url = request.domain + '/api/medias.html?url=' + url
+          cc_url = CONFIG['public_url'] + '/api/medias.html?url=' + url
           CcDeville.clear_cache_for_url(cc_url)
           FileUtils.rm_f(cache_path)
         end
@@ -172,7 +172,7 @@ module Api
       end
 
       def clear_upstream_cache
-        url = request.original_url
+        url = public_url(request)
         CcDeville.clear_cache_for_url(url)
         url_no_refresh = url.gsub(/&?refresh=1&?/, '')
         CcDeville.clear_cache_for_url(url_no_refresh) if url != url_no_refresh
@@ -191,8 +191,12 @@ module Api
 
       def clear_html_cache
         FileUtils.rm_f cache_path
-        url = request.original_url.gsub(/medias(\.[a-z]+)?\?/, 'medias.html?')
+        url = public_url(request).gsub(/medias(\.[a-z]+)?\?/, 'medias.html?')
         CcDeville.clear_cache_for_url(url)
+      end
+
+      def public_url(request)
+        request.original_url.gsub(request.base_url, CONFIG['public_url'])
       end
 
       def lock_url
