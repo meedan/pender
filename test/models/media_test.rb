@@ -161,28 +161,17 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should return item as oembed when the page has oembed url" do
-    url = 'https://meedan.checkdesk.org/node/2161'
+    url = 'https://www.facebook.com/teste637621352/posts/1028416870556238'
     m = create_media url: url
     data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
-    assert_match /History In Pictures/, data['title']
-    assert_equal 'Tom', data['author_name']
-    assert_equal 'https://meedan.checkdesk.org/en/users/tom', data['author_url']
-    assert_equal 'Meedan Checkdesk', data['provider_name']
-    assert_equal 'https://meedan.checkdesk.org/en', data['provider_url']
-    assert_equal 0, data['width']
-    assert_equal 0, data['height']
-    assert_equal '<script src="https://meedan.checkdesk.org/sites/all/modules/meedan/meedan_iframes/js/meedan_iframes.parent.min.js?style=width%3A%20100%25%3B&amp;u=/en/embed/2161"></script>', data['html']
-  end
-
-  test "should parse Checkdesk report" do
-    m = create_media url: 'https://meedan.checkdesk.org/node/2161'
-    data = m.as_json
-    assert_equal 'Twitter / History In Pictures: Little Girl & Ba...', data['title']
-    assert_equal 'Tom', data['username']
-    assert_equal 'page', data['provider']
-    assert_not_nil data['description']
-    assert_not_nil data['picture']
-    assert_not_nil data['published_at']
+    assert_nil data['title']
+    assert_equal 'Teste', data['author_name']
+    assert_equal 'https://www.facebook.com/teste637621352/', data['author_url']
+    assert_equal 'Facebook', data['provider_name']
+    assert_equal 'https://www.facebook.com', data['provider_url']
+    assert_equal 552, data['width']
+    assert data['height'].nil?
+    assert data['html'].blank?
   end
 
   test "should parse Facebook with numeric id" do
@@ -588,7 +577,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Escape on Facebook', d['title']
     assert_equal 'Photos by Ahmed Tarek Bayoumi', d['description']
     assert_match /423930480981426/, d['author_picture']
-    assert_match /14224731_1204094832964983_7206455761034252173/, d['picture']
+    assert_match /1204094832964983_7206455761034252173/, d['picture']
     assert_equal '1204090389632094', d['object_id']
   end
 
@@ -740,7 +729,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should not overwrite metatags with nil" do
-    m = create_media url: 'https://meedan.checkdesk.org/node/2161'
+    m = create_media url: 'http://meedan.com'
     m.expects(:get_opengraph_metadata).returns({author_url: nil})
     m.expects(:get_twitter_metadata).returns({author_url: nil})
     m.expects(:get_oembed_metadata).returns({})
@@ -923,7 +912,7 @@ class MediaTest < ActiveSupport::TestCase
       data = media.as_json
       expected.each do |key, value|
         assert_equal value, data[key]
-        assert_match /14724649_613639042147096_5586727492554773434/, data[:picture]
+        assert_match /613639042147096_5586727492554773434/, data[:picture]
         assert_match /خلال افتتاح معرض لفساتين الزفاف بالسويد اليوم تم عرض جميع فساتين زفاف/, data[:description]
       end
     end
@@ -1183,7 +1172,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Classic.mou', d['username']
     assert_equal 'http://facebook.com/136985363145802', d['author_url']
     assert_equal 'https://graph.facebook.com/136985363145802/picture', d['author_picture']
-    assert_match /15400387_640132509497749_4281523565478374345/, d['picture']
+    assert_match /640132509497749_4281523565478374345/, d['picture']
   end
 
   test "should return author picture" do
@@ -1685,18 +1674,19 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should store data of post returned by oembed" do
-    m = create_media url: 'https://meedan.checkdesk.org/node/2161'
-    data = m.as_json
-    assert data['raw']['oembed'].is_a? Hash
-    assert !data['raw']['oembed'].empty?
+    m = create_media url: 'https://www.facebook.com/teste637621352/posts/1028416870556238'
+    oembed = m.as_json['raw']['oembed']
+    assert oembed.is_a? Hash
+    assert !oembed.empty?
 
-    assert_equal 'Twitter / History In Pictures: Little Girl & Ba...', data['title']
-    assert_equal 'Tom', data['username']
-    assert_equal 'https://meedan.checkdesk.org/en/users/tom', data['author_url']
-    assert !data['description'].blank?
-    assert !data['picture'].blank?
-    assert_not_nil data['published_at']
-    assert !data['html'].blank?
+    assert_nil oembed['title']
+    assert_equal 'Teste', oembed['author_name']
+    assert_equal 'https://www.facebook.com/teste637621352/', oembed['author_url']
+    assert_equal 'Facebook', oembed['provider_name']
+    assert_equal 'https://www.facebook.com', oembed['provider_url']
+    assert_equal 552, oembed['width']
+    assert oembed['height'].nil?
+    assert oembed['html'].blank?
   end
 
   test "should store data of post returned by twitter API" do

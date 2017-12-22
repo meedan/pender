@@ -214,10 +214,14 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should render custom HTML if provided by oEmbed" do
-    get :index, url: 'https://meedan.checkdesk.org/en/report/2161', format: :html
+    oembed = '{"version":"1.0","type":"rich","html":"<script type=\"text/javascript\"src=\"https:\/\/meedan.com\/meedan_iframes\/js\/meedan_iframes.parent.min.js?style=width%3A%20100%25%3B&amp;u=\/en\/embed\/3300\"><\/script>"}'
+    response = 'mock';response.stubs(:code).returns('200');response.stubs(:body).returns(oembed)
+    Media.any_instance.stubs(:oembed_get_data_from_url).returns(response);response.stubs(:header).returns({})
+    get :index, url: 'http://meedan.com', format: :html
     assert_response :success
     assert_match /meedan_iframes.parent.min.js/, response.body
     assert_no_match /pender-title/, response.body
+    Media.any_instance.unstub(:oembed_get_data_from_url)
   end
 
   test "should render default HTML if not provided by oEmbed" do
@@ -227,9 +231,14 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return custom oEmbed format" do
-    get :index, url: 'https://meedan.checkdesk.org/en/report/2161', format: :oembed
+    oembed = '{"version":"1.0","type":"rich","html":"<script type=\"text/javascript\"src=\"https:\/\/meedan.com\/meedan_iframes\/js\/meedan_iframes.parent.min.js?style=width%3A%20100%25%3B&amp;u=\/en\/embed\/3300\"><\/script>"}'
+    response = 'mock';response.stubs(:code).returns('200');response.stubs(:body).returns(oembed)
+    Media.any_instance.stubs(:oembed_get_data_from_url).returns(response);response.stubs(:header).returns({})
+
+    get :index, url: 'http://meedan.com', format: :oembed
     assert_response :success
     assert_not_nil response.body
+    Media.any_instance.unstub(:oembed_get_data_from_url)
   end
 
   test "should create cache file" do
@@ -308,8 +317,8 @@ class MediasControllerTest < ActionController::TestCase
   test "should try to clear upstream cache when asking to" do
     url = 'https://twitter.com/caiosba/status/742779467521773568'
     encurl = CGI.escape(url)
-    CcDeville.any_instance.expects(:clear_cache).with('http://test.host/api/medias.html?url=' + encurl).once
-    CcDeville.any_instance.expects(:clear_cache).with('http://test.host/api/medias.html?refresh=1&url=' + encurl).once
+    CcDeville.any_instance.expects(:clear_cache).with(CONFIG['public_url'] + '/api/medias.html?url=' + encurl).once
+    CcDeville.any_instance.expects(:clear_cache).with(CONFIG['public_url'] + '/api/medias.html?refresh=1&url=' + encurl).once
     get :index, url: url, format: :html
     get :index, url: url, format: :html, refresh: '1'
     CcDeville.any_instance.unstub(:clear_cache)
