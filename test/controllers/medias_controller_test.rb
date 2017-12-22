@@ -317,8 +317,8 @@ class MediasControllerTest < ActionController::TestCase
   test "should try to clear upstream cache when asking to" do
     url = 'https://twitter.com/caiosba/status/742779467521773568'
     encurl = CGI.escape(url)
-    CcDeville.any_instance.expects(:clear_cache).with('http://test.host/api/medias.html?url=' + encurl).once
-    CcDeville.any_instance.expects(:clear_cache).with('http://test.host/api/medias.html?refresh=1&url=' + encurl).once
+    CcDeville.any_instance.expects(:clear_cache).with(CONFIG['public_url'] + '/api/medias.html?url=' + encurl).once
+    CcDeville.any_instance.expects(:clear_cache).with(CONFIG['public_url'] + '/api/medias.html?refresh=1&url=' + encurl).once
     get :index, url: url, format: :html
     get :index, url: url, format: :html, refresh: '1'
     CcDeville.any_instance.unstub(:clear_cache)
