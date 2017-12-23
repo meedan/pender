@@ -1,0 +1,4 @@
+screenshot:
+  every: '1m'
+  class: SaveScreenshotWorker
+  description: 'This job saves the screenshots of pages that are ready in a browser tab and that were invoked by ScreenshotWorker'

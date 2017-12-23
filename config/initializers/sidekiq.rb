@@ -1,4 +1,7 @@
+require 'sidekiq'
+require 'sidekiq/scheduler'
 file = File.join(Rails.root, 'config', 'sidekiq.yml')
+scheduler = YAML.load_file(File.join(Rails.root, 'config', 'scheduler.yml'))
 if File.exist?(file)
   SIDEKIQ_CONFIG = YAML.load_file(file)
 
@@ -6,6 +9,10 @@ if File.exist?(file)
 
   Sidekiq.configure_server do |config|
     config.redis = redis_config
+    config.on(:startup) do
+      Sidekiq.schedule = scheduler
+      Sidekiq::Scheduler.reload_schedule!
+    end
   end
 
   Sidekiq.configure_client do |config|
@@ -13,4 +20,10 @@ if File.exist?(file)
   end
 else
   SIDEKIQ_CONFIG = nil
+  Sidekiq.configure_server do |config|
+    config.on(:startup) do
+      Sidekiq.schedule = scheduler
+      Sidekiq::Scheduler.reload_schedule!
+    end
+  end
 end
