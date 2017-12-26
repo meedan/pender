@@ -685,6 +685,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse meta tags as fallback" do
+    Media.any_instance.unstub(:generate_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'https://xkcd.com/1479', request: request
@@ -701,6 +702,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse meta tags as fallback 2" do
+    Media.any_instance.unstub(:generate_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'http://ca.ios.ba/', request: request
@@ -811,9 +813,9 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should store the picture address" do
+    Media.any_instance.unstub(:generate_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
-    Chromeshot::Screenshot.any_instance.stubs(:take_screenshot!).returns(false)
     m = create_media url: 'http://xkcd.com/448/', request: request
     d = m.as_json
     assert_equal 'xkcd: Good Morning', d['title']
@@ -822,7 +824,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
     assert_equal 'http://localhost/screenshots/https-xkcd-com-448.png', d['picture']
-    Chromeshot::Screenshot.any_instance.unstub(:take_screenshot!)
   end
 
   test "should get relative canonical URL parsed from html tags" do
