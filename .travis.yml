@@ -11,6 +11,7 @@ before_script:
 - cp config/sidekiq.yml.example config/sidekiq.yml
 - cp config/initializers/secret_token.rb.example config/initializers/secret_token.rb
 - RAILS_ENV=test bundle exec rake db:migrate
+- bundle exec sidekiq -d
 script: bundle exec rake test:coverage
 after_script:
 - cat tmp/performance.csv
