@@ -18,6 +18,7 @@ A parsing and rendering service.
 * Instagram posts
 * Instagram profiles
 * Any link with an oEmbed endpoint
+* Any other link with metatags
 
 ### Installation
 
