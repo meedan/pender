@@ -1942,7 +1942,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil Rails.cache.read(id)['webhook_called']
     sleep 70 # Wait enough for the scheduler
     dimensions = IO.read(path)[0x10..0x18].unpack('NN')
-    assert_equal 3000, dimensions[1]
+    assert dimensions[1] > 2000
     assert_equal 1, Rails.cache.read(id)['screenshot_taken']
     assert_equal 1, Rails.cache.read(id)['webhook_called']
   end
