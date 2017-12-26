@@ -698,7 +698,7 @@ class MediaTest < ActiveSupport::TestCase
 
     path = File.join(Rails.root, 'public', 'screenshots', 'https-xkcd-com-1479.png')
     assert File.exists?(path)
-    assert_match /http:\/\/localhost\/screenshots\/https-xkcd-com-1479.png$/, d['picture']
+    assert_match /\/screenshots\/https-xkcd-com-1479.png$/, d['picture']
   end
 
   test "should parse meta tags as fallback 2" do
@@ -715,7 +715,7 @@ class MediaTest < ActiveSupport::TestCase
 
     path = File.join(Rails.root, 'public', 'screenshots', 'http-ca-ios-ba.png')
     assert File.exists?(path)
-    assert_match /http:\/\/localhost\/screenshots\/http-ca-ios-ba.png$/, d['picture']
+    assert_match /\/screenshots\/http-ca-ios-ba.png$/, d['picture']
   end
 
   test "should parse Facebook photo on page album" do
@@ -823,7 +823,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
-    assert_equal 'http://localhost/screenshots/https-xkcd-com-448.png', d['picture']
+    assert_match /\/screenshots\/https-xkcd-com-448\.png/, d['picture']
   end
 
   test "should get relative canonical URL parsed from html tags" do
@@ -1438,8 +1438,8 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should not redirect to HTTPS if not available" do
-    m = create_media url: 'http://fox.usa-radio.com'
-    assert m.url == 'http://fox.states-tv.com' || m.url == 'http://fox.usa-radio.com/'
+    m = create_media url: 'http://ca.ios.ba'
+    assert_equal 'http://ca.ios.ba/', m.url
   end
 
   test "should parse dropbox video url" do

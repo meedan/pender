@@ -39,6 +39,7 @@ class CcDeville
     request.add_field('x-cc-deville-token', @token)
     http = Net::HTTP.new(uri.hostname, uri.port)
     http.use_ssl = uri.scheme == 'https'
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     http.request(request)
   end
 end

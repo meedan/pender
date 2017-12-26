@@ -13,7 +13,7 @@ module MediaPageItem
     handle_exceptions(self, RuntimeError) do
       self.data = self.page_get_data_from_url
       if self.data[:picture].blank?
-        self.data[:picture] = self.data['screenshot']
+        self.data[:picture] = self.screenshot_path
       else
         self.data[:picture] = self.add_scheme(self.data[:picture])
       end

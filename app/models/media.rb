@@ -334,14 +334,19 @@ class Media
     message.match('redirection forbidden') && header_options[:allow_redirections] != :all
   end
 
+  def screenshot_path
+    base_url = CONFIG['public_url'] || self.request.base_url
+    filename = self.url.parameterize + '.png'
+    URI.join(base_url, 'screenshots/', filename).to_s
+  end
+
   def generate_screenshot
     url = self.url
-    filename = url.parameterize + '.png'
-    base_url = CONFIG['public_url'] || self.request.base_url
-    picture = URI.join(base_url, 'screenshots/', filename).to_s
+    picture = self.screenshot_path
+    filename = self.url.parameterize + '.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
     FileUtils.rm_f path
-    FileUtils.ln_s File.join(Rails.root, 'public', 'pending_picture.png'), path 
+    FileUtils.ln_s File.join(Rails.root, 'public', 'pending_picture.png'), path
     self.data['screenshot'] = picture
     self.data['screenshot_taken'] = 0
     key_id = self.key ? self.key.id : nil
