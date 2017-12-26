@@ -14,7 +14,6 @@ class SaveScreenshotWorker
   end
 
   def notify_webhook(url, picture, settings)
-
     if settings['webhook_url'] && settings['webhook_token']
       uri = URI.parse(settings['webhook_url'])
       payload = { screenshot_url: picture, screenshot_taken: 1, url: url }.to_json
