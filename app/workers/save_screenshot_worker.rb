@@ -1,3 +1,5 @@
+require 'pender_redis'
+
 class SaveScreenshotWorker
   include Sidekiq::Worker
 
@@ -6,12 +8,12 @@ class SaveScreenshotWorker
     data = Rails.cache.read(id)
     unless data.blank?
       data['screenshot_taken'] = 1
+      data['webhook_called'] = @webhook_called ? 1 : 0
       Rails.cache.write(id, data)
     end
   end
 
-  def notify_webhook(url, picture, key)
-    settings = key.application_settings.with_indifferent_access
+  def notify_webhook(url, picture, settings)
 
     if settings['webhook_url'] && settings['webhook_token']
       uri = URI.parse(settings['webhook_url'])
@@ -21,12 +23,12 @@ class SaveScreenshotWorker
       http = Net::HTTP.new(uri.host, uri.port)
       request = Net::HTTP::Post.new(uri.request_uri, headers)
       request.body = payload
-      response = http.request(request)
+      http.request(request)
+      @webhook_called = true
     end
   end
     
-  def save(url, picture, key_id, tab)
-    key = ApiKey.where(id: key_id).last
+  def save(url, picture, settings, tab)
     filename = url.parameterize + '.png'
     tmp = url.parameterize + '-temp.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
@@ -40,22 +42,18 @@ class SaveScreenshotWorker
     File.exist?(output_file) ? FileUtils.mv(output_file, path) : raise('Could not take screenshot')
 
     CcDeville.clear_cache_for_url(picture)
-
+    
+    self.notify_webhook(url, picture, settings)
+    
     self.update_cache(url)
-
-    self.notify_webhook(url, picture, key) unless key.nil?
   end
 
   def perform
-    redis = SIDEKIQ_CONFIG.nil? ? Redis.new : Redis.new({ host: SIDEKIQ_CONFIG[:redis_host], port: SIDEKIQ_CONFIG[:redis_port], db: SIDEKIQ_CONFIG[:redis_database] })
+    redis = PenderRedis.new.redis 
     job = redis.lpop('pender-screenshots-queue')
     unless job.nil?
       data = JSON.parse(job)
-      begin
-        self.save(data['url'], data['picture'], data['key_id'], data['tab'])
-      rescue
-        ScreenshotWorker.perform_async(data['url'], data['picture'], data['key_id'])
-      end
+      begin self.save(data['url'], data['picture'], data['settings'], data['tab']) rescue ScreenshotWorker.perform_async(data['url'], data['picture'], data['key_id']) end
     end
   end
 end

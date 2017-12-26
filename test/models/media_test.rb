@@ -1928,4 +1928,22 @@ class MediaTest < ActiveSupport::TestCase
     assert_no_match /&amp;/, data['title']
   end
 
+  test "should take full screenshot, update cache and call webhook" do
+    Media.any_instance.unstub(:generate_screenshot)
+    a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
+    url = 'https://twitter.com/marcouza'
+    id = Media.get_id(url)
+    m = create_media url: url, key: a
+    data = m.as_json
+    filename = url.parameterize + '.png'
+    path = File.join(Rails.root, 'public', 'screenshots', filename)
+    assert File.exists?(path)
+    assert_equal 0, Rails.cache.read(id)['screenshot_taken']
+    assert_nil Rails.cache.read(id)['webhook_called']
+    sleep 70 # Wait enough for the scheduler
+    dimensions = IO.read(path)[0x10..0x18].unpack('NN')
+    assert_equal 3000, dimensions[1]
+    assert_equal 1, Rails.cache.read(id)['screenshot_taken']
+    assert_equal 1, Rails.cache.read(id)['webhook_called']
+  end
 end
