@@ -1,17 +1,20 @@
+require 'pender_redis'
+
 class ScreenshotWorker
   include Sidekiq::Worker
+  sidekiq_options retry: 10
 
-  def perform(url, picture)
-    filename = url.parameterize + '.png'
-    tmp = url.parameterize + '-temp.png'
-    path = File.join(Rails.root, 'public', 'screenshots', filename)
-    output_file = File.join(Rails.root, 'public', 'screenshots', tmp)
+  def save_to_redis(data)
+    redis = PenderRedis.new.redis
+    redis.rpush('pender-screenshots-queue', data)
+  end
 
-    fetcher = Chromeshot::Screenshot.new debug_port: CONFIG['chrome_debug_port']
-    fetcher.take_screenshot!(url: url, output: output_file)
-
-    FileUtils.rm_f path
-    File.exist?(output_file) ? FileUtils.mv(output_file, path) : FileUtils.ln_s(File.join(Rails.root, 'public', 'no_picture.png'), path)
-    CcDeville.clear_cache_for_url(picture)
+  def perform(url, picture, key_id)
+    saver = Chromeshot::Screenshot.new debug_port: CONFIG['chrome_debug_port']
+    tab = saver.load_page_in_new_tab(url: url)
+    raise 'Could not open tab' if tab.blank?
+    key = ApiKey.where(id: key_id).last
+    settings = key ? key.application_settings.with_indifferent_access : {}
+    self.save_to_redis({ url: url, picture: picture, settings: settings, tab: tab, key_id: key_id }.to_json)
   end
 end

@@ -685,6 +685,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse meta tags as fallback" do
+    Media.any_instance.unstub(:generate_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'https://xkcd.com/1479', request: request
@@ -697,10 +698,11 @@ class MediaTest < ActiveSupport::TestCase
 
     path = File.join(Rails.root, 'public', 'screenshots', 'https-xkcd-com-1479.png')
     assert File.exists?(path)
-    assert_match /http:\/\/localhost\/screenshots\/https-xkcd-com-1479.png$/, d['picture']
+    assert_match /\/screenshots\/https-xkcd-com-1479.png$/, d['picture']
   end
 
   test "should parse meta tags as fallback 2" do
+    Media.any_instance.unstub(:generate_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'http://ca.ios.ba/', request: request
@@ -713,7 +715,7 @@ class MediaTest < ActiveSupport::TestCase
 
     path = File.join(Rails.root, 'public', 'screenshots', 'http-ca-ios-ba.png')
     assert File.exists?(path)
-    assert_match /http:\/\/localhost\/screenshots\/http-ca-ios-ba.png$/, d['picture']
+    assert_match /\/screenshots\/http-ca-ios-ba.png$/, d['picture']
   end
 
   test "should parse Facebook photo on page album" do
@@ -811,9 +813,9 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should store the picture address" do
+    Media.any_instance.unstub(:generate_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
-    Chromeshot::Screenshot.any_instance.stubs(:take_screenshot!).returns(false)
     m = create_media url: 'http://xkcd.com/448/', request: request
     d = m.as_json
     assert_equal 'xkcd: Good Morning', d['title']
@@ -821,8 +823,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
-    assert_equal 'http://localhost/screenshots/https-xkcd-com-448.png', d['picture']
-    Chromeshot::Screenshot.any_instance.unstub(:take_screenshot!)
+    assert_match /\/screenshots\/https-xkcd-com-448\.png/, d['picture']
   end
 
   test "should get relative canonical URL parsed from html tags" do
@@ -1437,8 +1438,8 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should not redirect to HTTPS if not available" do
-    m = create_media url: 'http://fox.usa-radio.com'
-    assert m.url == 'http://fox.states-tv.com' || m.url == 'http://fox.usa-radio.com/'
+    m = create_media url: 'http://ca.ios.ba'
+    assert_equal 'http://ca.ios.ba/', m.url
   end
 
   test "should parse dropbox video url" do
@@ -1927,4 +1928,22 @@ class MediaTest < ActiveSupport::TestCase
     assert_no_match /&amp;/, data['title']
   end
 
+  test "should take full screenshot, update cache and call webhook" do
+    Media.any_instance.unstub(:generate_screenshot)
+    a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
+    url = 'https://twitter.com/marcouza'
+    id = Media.get_id(url)
+    m = create_media url: url, key: a
+    data = m.as_json
+    filename = url.parameterize + '.png'
+    path = File.join(Rails.root, 'public', 'screenshots', filename)
+    assert File.exists?(path)
+    assert_equal 0, Rails.cache.read(id)['screenshot_taken']
+    assert_nil Rails.cache.read(id)['webhook_called']
+    sleep 70 # Wait enough for the scheduler
+    dimensions = IO.read(path)[0x10..0x18].unpack('NN')
+    assert dimensions[1] > 2000
+    assert_equal 1, Rails.cache.read(id)['screenshot_taken']
+    assert_equal 1, Rails.cache.read(id)['webhook_called']
+  end
 end
