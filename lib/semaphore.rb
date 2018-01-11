@@ -2,7 +2,7 @@ class Semaphore
   def initialize(key)
     unless CONFIG.nil?
       @key = "semaphore:#{key}"
-      @redis = Redis.new({ host: CONFIG[:redis_host], port: CONFIG[:redis_port], db: CONFIG[:redis_database] })
+      @redis = Redis.new({ host: CONFIG['redis_host'], port: CONFIG['redis_port'], db: CONFIG['redis_database'] })
     end
   end
 
