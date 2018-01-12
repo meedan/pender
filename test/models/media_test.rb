@@ -2019,4 +2019,21 @@ class MediaTest < ActiveSupport::TestCase
 
     WebMock.disable!
   end
+
+  test "should store ClaimReview schema" do
+    url = 'http://www.politifact.com/truth-o-meter/statements/2017/aug/17/donald-trump/donald-trump-retells-pants-fire-claim-about-gen-pe'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'http://schema.org/ClaimReview', data['schema']['ClaimReview']['type']
+    assert_equal ['author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview']['properties'].keys.sort
+  end
+
+  test "should return nil on schema key if not found on page" do
+    url = 'http://ca.ios.ba/'
+    m = create_media url: url
+    data = m.as_json
+    puts m.doc
+    assert data['schema'].nil?
+  end
+
 end

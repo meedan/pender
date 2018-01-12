@@ -49,7 +49,7 @@ class Media
   include MediaArchiver
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :key
+  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :key, :microdata
 
   TYPES = {}
 
@@ -124,6 +124,7 @@ class Media
     self.data = Media.minimal_data(self)
     get_metatags(self)
     get_jsonld_data(self)
+    get_schema_data(self, 'ClaimReview')
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|
@@ -217,11 +218,15 @@ class Media
 
   def get_html(header_options = {})
     html = ''
+    microdata = ''
+    url = Media.parse_url(self.url)
     begin
-      OpenURI.open_uri(Media.parse_url(self.url), header_options) do |f|
+      OpenURI.open_uri(url, header_options) do |f|
+        microdata = Mida::Document.new(f, url)
         f.binmode
         html = f.read
       end
+      self.microdata ||= microdata unless microdata.items.empty?
       Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
     rescue OpenURI::HTTPError, Errno::ECONNRESET
       return nil

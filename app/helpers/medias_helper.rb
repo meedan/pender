@@ -69,6 +69,13 @@ module MediasHelper
     ''
   end
 
+  def get_schema_data(media, type = 'ClaimReview')
+    return if media.microdata.nil?
+    media.data[:schema] ||= {}.with_indifferent_access
+    item = media.microdata.search(Regexp.new(type)).first
+    media.data['schema'][type] = item.to_h unless item.nil?
+  end
+
   def list_formats
     %w(html js json oembed)
   end
