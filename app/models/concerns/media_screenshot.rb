@@ -9,6 +9,11 @@ module MediaScreenshot
 
   def generate_screenshot
     url = self.url
+    skip = CONFIG['screenshot_skip_hosts']
+    unless skip.blank?
+      host = begin URI.parse(url).host rescue '' end
+      return if skip.split(',').include?(host)
+    end
     picture = self.screenshot_path
     filename = self.url.parameterize + '.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)

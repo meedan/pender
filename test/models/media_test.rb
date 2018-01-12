@@ -1946,4 +1946,32 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 1, Rails.cache.read(id)['screenshot_taken']
     assert_equal 1, Rails.cache.read(id)['webhook_called']
   end
+
+  test "should skip screenshots" do
+    config = CONFIG['screenshot_skip_hosts']
+    
+    CONFIG['screenshot_skip_hosts'] = ''
+
+    Media.any_instance.unstub(:generate_screenshot)
+    a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
+    url = 'https://checkmedia.org/caio-screenshots/project/1121/media/8390'
+    id = Media.get_id(url)
+    m = create_media url: url, key: a
+    data = m.as_json
+    filename = url.parameterize + '.png'
+    path = File.join(Rails.root, 'public', 'screenshots', filename)
+    assert File.exists?(path)
+
+    CONFIG['screenshot_skip_hosts'] = 'checkmedia.org'
+
+    url = 'https://checkmedia.org/caio-screenshots/project/1121/media/8390?hide_tasks=1'
+    id = Media.get_id(url)
+    m = create_media url: url, key: a
+    data = m.as_json
+    filename = url.parameterize + '.png'
+    path = File.join(Rails.root, 'public', 'screenshots', filename)
+    assert !File.exists?(path)
+    
+    CONFIG['screenshot_skip_hosts'] = config
+  end
 end

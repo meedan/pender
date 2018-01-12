@@ -14,6 +14,10 @@ development: &default
   cc_deville_token:
   cc_deville_httpauth: 'username:password'
   public_url:
+  redis_host: 'localhost'
+  redis_port: 6379
+  redis_database: 1
+  screenshot_skip_hosts: 'checkmedia.org'
   hosts:
     one.host:
       http_auth: username:password
