@@ -124,7 +124,7 @@ class Media
     self.data = Media.minimal_data(self)
     get_metatags(self)
     get_jsonld_data(self)
-    get_schema_data(self, 'ClaimReview')
+    get_schema_data(self)
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|

@@ -69,11 +69,14 @@ module MediasHelper
     ''
   end
 
-  def get_schema_data(media, type = 'ClaimReview')
+  def get_schema_data(media)
     return if media.microdata.nil?
     media.data[:schema] ||= {}.with_indifferent_access
-    item = media.microdata.search(Regexp.new(type)).first
-    media.data['schema'][type] = item.to_h unless item.nil?
+    media.microdata.items.each do |item|
+      type = item.type.match(/^https?:\/\/schema\.org\/(.*)/)[1]
+      media.data['schema'][type] ||= []
+      media.data['schema'][type] << item.to_h
+    end
   end
 
   def list_formats
