@@ -70,12 +70,17 @@ module MediasHelper
   end
 
   def get_schema_data(media)
-    return if media.microdata.nil?
-    media.data[:schema] ||= {}.with_indifferent_access
-    media.microdata.items.each do |item|
-      type = item.type.match(/^https?:\/\/schema\.org\/(.*)/)[1]
-      media.data['schema'][type] ||= []
-      media.data['schema'][type] << item.to_h
+    return if self.doc.nil?
+    microdata = Mida::Document.new(self.doc)
+    if !microdata.items.empty?
+      media.data[:schema] ||= {}.with_indifferent_access
+      microdata.items.each do |item|
+        type = item.type.match(/^https?:\/\/schema\.org\/(.*)/)
+        if type
+          media.data['schema'][type[1]] ||= []
+          media.data['schema'][type[1]] << item.to_h.with_indifferent_access
+        end
+      end
     end
   end
 

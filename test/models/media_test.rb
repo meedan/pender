@@ -2024,15 +2024,14 @@ class MediaTest < ActiveSupport::TestCase
     url = 'http://www.politifact.com/truth-o-meter/statements/2017/aug/17/donald-trump/donald-trump-retells-pants-fire-claim-about-gen-pe'
     m = create_media url: url
     data = m.as_json
-    assert_equal 'http://schema.org/ClaimReview', data['schema']['ClaimReview']['type']
-    assert_equal ['author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview']['properties'].keys.sort
+    assert_equal 'http://schema.org/ClaimReview', data['schema']['ClaimReview'].first['type']
+    assert_equal ['author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview'].first['properties'].keys.sort
   end
 
   test "should return nil on schema key if not found on page" do
     url = 'http://ca.ios.ba/'
     m = create_media url: url
     data = m.as_json
-    puts m.doc
     assert data['schema'].nil?
   end
 
@@ -2044,6 +2043,4 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 1, data['schema']['NewsArticle'].size
     assert_equal 2, data['schema']['VideoObject'].size
   end
-
-
 end
