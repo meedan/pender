@@ -685,7 +685,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse meta tags as fallback" do
-    Media.any_instance.unstub(:generate_screenshot)
+    Media.any_instance.unstub(:archive_to_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'https://xkcd.com/1479', request: request
@@ -702,7 +702,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse meta tags as fallback 2" do
-    Media.any_instance.unstub(:generate_screenshot)
+    Media.any_instance.unstub(:archive_to_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'http://ca.ios.ba/', request: request
@@ -813,7 +813,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should store the picture address" do
-    Media.any_instance.unstub(:generate_screenshot)
+    Media.any_instance.unstub(:archive_to_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'http://xkcd.com/448/', request: request
@@ -1589,7 +1589,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should keep port when building author_url if port is not 443 or 80" do
-    Media.any_instance.stubs(:generate_screenshot).returns('')
+    Media.any_instance.stubs(:archive_to_screenshot).returns('')
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)
@@ -1607,7 +1607,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: url
     assert_equal 'https://meedan.com', m.send(:top_url, m.url)
 
-    Media.any_instance.unstub(:generate_screenshot)
+    Media.any_instance.unstub(:archive_to_screenshot)
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_canonical_url)
     Media.any_instance.unstub(:try_https)
@@ -1929,7 +1929,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should take full screenshot, update cache and call webhook" do
-    Media.any_instance.unstub(:generate_screenshot)
+    Media.any_instance.unstub(:archive_to_screenshot)
     a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
     url = 'https://twitter.com/marcouza'
     id = Media.get_id(url)
@@ -1952,7 +1952,7 @@ class MediaTest < ActiveSupport::TestCase
     
     CONFIG['archiver_skip_hosts'] = ''
 
-    Media.any_instance.unstub(:generate_screenshot)
+    Media.any_instance.unstub(:archive_to_screenshot)
     a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
     url = 'https://checkmedia.org/caio-screenshots/project/1121/media/8390'
     id = Media.get_id(url)

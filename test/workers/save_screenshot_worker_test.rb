@@ -3,7 +3,7 @@ require 'cc_deville'
 
 class SaveScreenshotWorkerTest < ActiveSupport::TestCase
   test "should take screenshot" do
-    Media.any_instance.unstub(:generate_screenshot)
+    Media.any_instance.unstub(:archive_to_screenshot)
     CcDeville.stubs(:clear_cache_for_url)
     a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
     url = 'https://twitter.com/marcouza'
