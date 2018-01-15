@@ -35,7 +35,7 @@
 #    oEmbed data
 #    4. Match the url with the patterns described on specific parsers
 #    5. Parse the page with the parser found on previous step
-#    6. Generate screenshot in background
+#    6. Archives the page in background, for the archivers that apply to the current URL
 #  * Parse as oEmbed
 #    1. Get media the json data
 #    2. If the page has an oEmbed url, request it and get the response
@@ -45,8 +45,8 @@ class Media
   include ActiveModel::Validations
   include ActiveModel::Conversion
   include MediasHelper
-  include MediaScreenshot
   include MediaOembed
+  include MediaArchiver
   extend ActiveModel::Naming
 
   attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :key
@@ -71,12 +71,13 @@ class Media
   def as_json(options = {})
     Rails.cache.fetch(Media.get_id(self.original_url), options) do
       self.parse
-      self.generate_screenshot
+      self.archive
       self.data.merge(Media.required_fields(self)).with_indifferent_access
     end
   end
 
-  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem].each do |concern|
+  # Parsers and archivers
+  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver].each do |concern|
     include concern
   end
 

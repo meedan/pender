@@ -5,9 +5,11 @@
 [![Test Coverage](https://codeclimate.com/repos/5715585edb5e930072004cc5/badges/f5868b936888747f319f/coverage.svg)](https://codeclimate.com/repos/5715585edb5e930072004cc5/coverage)
 [![Travis](https://travis-ci.org/meedan/pender.svg?branch=develop)](https://travis-ci.org/meedan/pender/)
 
-A parsing and rendering service.
+A parsing, archiving and rendering service.
 
 ### Current support
+
+#### Parsers
 
 * Twitter profiles
 * Twitter posts
@@ -19,6 +21,10 @@ A parsing and rendering service.
 * Instagram profiles
 * Any link with an oEmbed endpoint
 * Any other link with metatags
+
+#### Archivers
+
+* Screenshot
 
 ### Installation
 
@@ -221,7 +227,7 @@ There are rake tasks for a few tasks (besides Rails' default ones). Run them thi
 * `lapis:docker:shell`: Enter the Docker container
 * `swagger:docs:markdown`: Generate the documentation in markdown format
 
-### How to add a new type
+### How to add a new parser
 
 * Add a new file at `app/models/concerns/media_<provider>_<type>` (example... `provider` could be `facebook` and type could be `post` or `profile`)
 * Include the class in `app/models/media.rb`
@@ -245,6 +251,30 @@ module Media<Provider><Type>
   def <provider>_as_oembed(original_url, maxwidth, maxheight)
     # Optional method
     # Define a custom oEmbed structure for this provider
+  end
+end
+```
+
+### How to add a new archiver
+
+* Add a new file at `app/models/concerns/media_<name>_archiver.rb`
+* Include the class in `app/models/media.rb`
+* It should have a method `archive_to_<name>`
+* It should call method `Media.declare_archiver`, saying the URL patterns it supports (using the `only` modifier) or the URL patterns it doesn't support (using the `except` modifier)
+* The skeleton should look like this:
+
+```ruby
+module Media<Name>Archiver
+  extend ActiveSupport::Concern
+
+  included do
+    Media.declare_archiver('<name>', [<list of URL patterns as regular expressions>], :only) # Or :except instead of :only
+  end
+
+  def archive_to_<name>
+    # Archive and then update cache (if needed) and call webhook (if needed)
+    Media.notify_webhook(url, data, api_key_settings)
+    Media.update_cache(url, data)
   end
 end
 ```
