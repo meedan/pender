@@ -18,6 +18,7 @@ development: &default
   redis_port: 6379
   redis_database: 1
   archiver_skip_hosts: 'checkmedia.org'
+  video_vault_token: ''
   hosts:
     one.host:
       http_auth: username:password

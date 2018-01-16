@@ -77,7 +77,7 @@ class Media
   end
 
   # Parsers and archivers
-  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver].each do |concern|
+  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaVideoVaultArchiver].each do |concern|
     include concern
   end
 
@@ -87,6 +87,7 @@ class Media
       data[field] = ''
     end
     data[:raw] = {}
+    data[:archives] = {}
     data.merge(Media.required_fields(instance)).with_indifferent_access
   end
 

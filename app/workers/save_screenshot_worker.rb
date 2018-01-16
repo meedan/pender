@@ -19,9 +19,9 @@ class SaveScreenshotWorker
     CcDeville.clear_cache_for_url(picture)
     
     data = { screenshot_url: picture, screenshot_taken: 1 }
-    Media.notify_webhook(url, data, settings)
+    Media.notify_webhook('screenshot', url, data, settings)
     
-    Media.update_cache(url, { 'screenshot_taken' => 1 })
+    Media.update_cache(url, { 'screenshot_taken' => 1, 'archives' => { 'screenshot' => data } })
   end
 
   def perform

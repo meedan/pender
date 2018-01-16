@@ -35,16 +35,18 @@ module MediaArchiver
       id = Media.get_id(url)
       data = Rails.cache.read(id)
       unless data.blank?
-        newdata.each { |key, value| data[key] = value }
+        newdata.each do |key, value|
+          data[key] = data[key].is_a?(Hash) ? data[key].merge(value) : value
+        end
         data['webhook_called'] = @webhook_called ? 1 : 0
         Rails.cache.write(id, data)
       end
     end
 
-    def notify_webhook(url, data, settings)
+    def notify_webhook(type, url, data, settings)
       if settings['webhook_url'] && settings['webhook_token']
         uri = URI.parse(settings['webhook_url'])
-        payload = data.merge({ url: url }).to_json
+        payload = data.merge({ url: url, type: type }).to_json
         sig = 'sha1=' + OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), settings['webhook_token'], payload)
         headers = { 'Content-Type': 'text/json', 'X-Signature': sig }
         http = Net::HTTP.new(uri.host, uri.port)

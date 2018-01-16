@@ -27,3 +27,4 @@ else
     end
   end
 end
+Sidekiq::Extensions.enable_delay!
