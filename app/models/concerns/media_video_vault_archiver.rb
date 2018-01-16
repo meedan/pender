@@ -7,36 +7,39 @@ module MediaVideoVaultArchiver
   end
 
   def archive_to_video_vault
-    token = CONFIG['video_vault_token']
-    return if token.blank?
-    url = self.url
+    return if CONFIG['video_vault_token'].blank?
     key_id = self.key ? self.key.id : nil
-    self.class.send_to_video_vault_in_background(url, key_id, token)
+    self.class.send_to_video_vault_in_background(self.url, key_id)
   end
 
   module ClassMethods
-    def send_to_video_vault_in_background(url, key_id, token)
-      self.delay_for(1.second).send_to_video_vault(url, key_id, token)
+    def send_to_video_vault_in_background(url, key_id)
+      self.delay_for(1.second).send_to_video_vault(url, key_id)
     end
 
-    def send_to_video_vault(url, key_id, token, attempts = 0, package = nil, endpoint = '')
-      return if attempts > 5
+    def prepare_video_vault_params(url, package)
+      params = { token: CONFIG['video_vault_token'] }
+      params[:url] = url if package.blank?
+      params[:package] = package unless package.blank?
+      params
+    end
+
+    def send_to_video_vault(url, key_id, attempts = 1, package = nil, endpoint = '')
+      return if attempts > 20
 
       key = ApiKey.where(id: key_id).last
       settings = key ? key.application_settings.with_indifferent_access : {}
       uri = URI("https://www.bravenewtech.org/api/#{endpoint}")
 
-      params = { token: token }
-      params[:url] = url if package.blank?
-      params[:package] = package unless package.blank?
-      response = Net::HTTP.post_form(uri, params)
+      response = Net::HTTP.post_form(uri, self.prepare_video_vault_params(url, package))
 
       data = JSON.parse(response.body)
       data['timestamp'] = Time.now.to_i
 
       # If not finished (error or success), run again
       if !data.has_key?('location') && data['status'].to_i != 418 && data.has_key?('package')
-        Media.delay_for(3.minutes).send_to_video_vault(url, key_id, token, attempts + 1, data['package'], 'status.php')
+        time = attempts * 3
+        Media.delay_for(time.minutes).send_to_video_vault(url, key_id, attempts + 1, data['package'], 'status.php')
       else
         Media.notify_webhook('video_vault', url, data, settings)
         Media.update_cache(url, { archives: { video_vault: data } })
