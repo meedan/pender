@@ -25,6 +25,8 @@ A parsing, archiving and rendering service.
 #### Archivers
 
 * Screenshot
+* Archive.is
+* Video Vault
 
 ### Installation
 
