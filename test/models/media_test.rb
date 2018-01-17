@@ -1976,6 +1976,9 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should archive to Video Vault" do
+    config = CONFIG['video_vault_token']
+    CONFIG['video_vault_token'] = '123456'
+
     Media.any_instance.unstub(:archive_to_video_vault)
     a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
     url = 'https://twitter.com/marcouza/status/875424957613920256'
@@ -1990,6 +1993,7 @@ class MediaTest < ActiveSupport::TestCase
       data = m.as_json
     end
 
+    CONFIG['video_vault_token'] = config
     WebMock.disable!
   end
 
