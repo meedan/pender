@@ -1974,4 +1974,49 @@ class MediaTest < ActiveSupport::TestCase
     
     CONFIG['archiver_skip_hosts'] = config
   end
+
+  test "should archive to Video Vault" do
+    Media.any_instance.unstub(:archive_to_video_vault)
+    a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
+    url = 'https://twitter.com/marcouza/status/875424957613920256'
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'www.bravenewtech.org' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    WebMock.stub_request(:any, 'https://www.bravenewtech.org/api/').to_return(body: { status: 203, package: '123456' }.to_json)
+    WebMock.stub_request(:any, 'https://www.bravenewtech.org/api/status.php').to_return(body: { location: 'http://videovault/123456' }.to_json)
+
+    assert_nothing_raised do
+      m = create_media url: url, key: a
+      data = m.as_json
+    end
+
+    WebMock.disable!
+  end
+
+  test "should archive to Archive.is" do
+    Media.any_instance.unstub(:archive_to_archive_is)
+    a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
+    urls = ['https://twitter.com/marcouza/status/875424957613920256', 'https://twitter.com/marcouza/status/863907872421412864', 'https://twitter.com/marcouza/status/863876311428861952']
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'archive.is' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+
+    assert_nothing_raised do
+      WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { refresh: '1' })
+      m = create_media url: urls[0], key: a
+      data = m.as_json
+
+      WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
+      m = create_media url: urls[1], key: a
+      data = m.as_json
+    end
+
+    assert_raises RuntimeError do
+      WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '')
+      m = create_media url: urls[2], key: a
+      data = m.as_json
+    end
+
+    WebMock.disable!
+  end
 end
