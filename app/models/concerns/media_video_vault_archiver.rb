@@ -25,24 +25,21 @@ module MediaVideoVaultArchiver
     end
 
     def send_to_video_vault(url, key_id, attempts = 1, package = nil, endpoint = '')
-      return if attempts > 20
-
-      key = ApiKey.where(id: key_id).last
-      settings = key ? key.application_settings.with_indifferent_access : {}
+      Media.give_up('video_vault', url, key_id, attempts) and return
+      
       uri = URI("https://www.bravenewtech.org/api/#{endpoint}")
 
       response = Net::HTTP.post_form(uri, self.prepare_video_vault_params(url, package))
+      Rails.logger.info "[Archiver Video Vault] Sending #{url} to Video Vault: Code: #{response.code} Response: #{response.body}"
 
       data = JSON.parse(response.body)
       data['timestamp'] = Time.now.to_i
 
       # If not finished (error or success), run again
       if !data.has_key?('location') && data['status'].to_i != 418 && data.has_key?('package')
-        time = attempts * 3
-        Media.delay_for(time.minutes).send_to_video_vault(url, key_id, attempts + 1, data['package'], 'status.php')
+        Media.delay_for(6.minutes).send_to_video_vault(url, key_id, attempts + 1, data['package'], 'status.php')
       else
-        Media.notify_webhook('video_vault', url, data, settings)
-        Media.update_cache(url, { archives: { video_vault: data } })
+        Media.notify_webhook_and_update_cache('video_vault', url, data, key_id)
       end
     end
   end
