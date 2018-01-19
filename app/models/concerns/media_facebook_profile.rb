@@ -69,7 +69,8 @@ module MediaFacebookProfile
       begin
         self.data.merge! self.get_data_from_facebook
       rescue Koala::Facebook::ClientError => e
-        Airbrake.notify("#{e}: #{self.url}") if Airbrake.configuration.api_key
+        Rails.logger.info "[Facebook Profile] Parsing `#{url}`: Error Code: #{e.fb_error_code} Subcode #{e.fb_error_subcode} Message: #{e.fb_error_message}"
+        Airbrake.notify(e) if Airbrake.configuration.api_key && e.fb_error_code == 190
         raise e
       end
     end
