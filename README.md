@@ -275,8 +275,7 @@ module Media<Name>Archiver
 
   def archive_to_<name>
     # Archive and then update cache (if needed) and call webhook (if needed)
-    Media.notify_webhook(url, data, api_key_settings)
-    Media.update_cache(url, data)
+    Media.notify_webhook_and_update_cache(<name>, url, data, key_id)
   end
 end
 ```
