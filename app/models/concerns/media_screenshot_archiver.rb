@@ -16,8 +16,7 @@ module MediaScreenshotArchiver
     picture = self.screenshot_path
     filename = self.url.parameterize + '.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
-    FileUtils.rm_f path
-    FileUtils.ln_s File.join(Rails.root, 'public', 'pending_picture.png'), path
+    FileUtils.ln_sf File.join(Rails.root, 'public', 'pending_picture.png'), path
     self.data['screenshot'] = picture
     self.data['screenshot_taken'] = 0
     key_id = self.key ? self.key.id : nil

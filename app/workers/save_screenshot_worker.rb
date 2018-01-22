@@ -5,7 +5,8 @@ class SaveScreenshotWorker
     
   def save(url, picture, settings, tab)
     filename = url.parameterize + '.png'
-    tmp = url.parameterize + '-temp.png'
+    t = Time.now.to_i.to_s
+    tmp = url.parameterize + '-' + t + '.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
     output_file = File.join(Rails.root, 'public', 'screenshots', tmp)
 
@@ -13,12 +14,12 @@ class SaveScreenshotWorker
 
     Timeout::timeout(30) { fetcher.take_screenshot_from_tab(tab: tab, output: output_file) }
 
-    FileUtils.rm_f path
-    File.exist?(output_file) ? FileUtils.mv(output_file, path) : raise('Could not take screenshot')
+    dimensions = IO.read(output_file)[0x10..0x18].unpack('NN')
+    dimensions[0] > 100 ? (FileUtils.rm_f(path) && FileUtils.ln_s(output_file, path)) : raise('Could not take screenshot')
 
     CcDeville.clear_cache_for_url(picture)
     
-    data = { screenshot_url: picture, screenshot_taken: 1 }
+    data = { screenshot_url: picture + "?t=#{t}", screenshot_taken: 1 }
     Media.notify_webhook('screenshot', url, data, settings)
     
     Media.update_cache(url, { 'screenshot_taken' => 1, 'archives' => { 'screenshot' => data } })
