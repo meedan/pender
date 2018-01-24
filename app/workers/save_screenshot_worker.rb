@@ -2,34 +2,11 @@ require 'pender_redis'
 
 class SaveScreenshotWorker
   include Sidekiq::Worker
-
-  def update_cache(url)
-    id = Media.get_id(url)
-    data = Rails.cache.read(id)
-    unless data.blank?
-      data['screenshot_taken'] = 1
-      data['webhook_called'] = @webhook_called ? 1 : 0
-      Rails.cache.write(id, data)
-    end
-  end
-
-  def notify_webhook(url, picture, settings)
-    if settings['webhook_url'] && settings['webhook_token']
-      uri = URI.parse(settings['webhook_url'])
-      payload = { screenshot_url: picture, screenshot_taken: 1, url: url }.to_json
-      sig = 'sha1=' + OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), settings['webhook_token'], payload)
-      headers = { 'Content-Type': 'text/json', 'X-Signature': sig }
-      http = Net::HTTP.new(uri.host, uri.port)
-      request = Net::HTTP::Post.new(uri.request_uri, headers)
-      request.body = payload
-      http.request(request)
-      @webhook_called = true
-    end
-  end
     
   def save(url, picture, settings, tab)
     filename = url.parameterize + '.png'
-    tmp = url.parameterize + '-temp.png'
+    t = Time.now.to_i.to_s
+    tmp = url.parameterize + '-' + t + '.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
     output_file = File.join(Rails.root, 'public', 'screenshots', tmp)
 
@@ -37,14 +14,15 @@ class SaveScreenshotWorker
 
     Timeout::timeout(30) { fetcher.take_screenshot_from_tab(tab: tab, output: output_file) }
 
-    FileUtils.rm_f path
-    File.exist?(output_file) ? FileUtils.mv(output_file, path) : raise('Could not take screenshot')
+    dimensions = IO.read(output_file)[0x10..0x18].unpack('NN')
+    dimensions[0] > 100 ? (FileUtils.rm_f(path) && FileUtils.ln_s(output_file, path)) : raise('Could not take screenshot')
 
     CcDeville.clear_cache_for_url(picture)
     
-    self.notify_webhook(url, picture, settings)
+    data = { screenshot_url: picture + "?t=#{t}", screenshot_taken: 1 }
+    Media.notify_webhook('screenshot', url, data, settings)
     
-    self.update_cache(url)
+    Media.update_cache(url, { 'screenshot_taken' => 1, 'archives' => { 'screenshot' => data } })
   end
 
   def perform

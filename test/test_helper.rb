@@ -35,7 +35,9 @@ class ActiveSupport::TestCase
     Rails.cache.clear if File.exists?(File.join(Rails.root, 'tmp', 'cache'))
     FileUtils.rm_rf File.join(Rails.root, 'public', 'cache', 'test')
     Rails.application.reload_routes!
-    Media.any_instance.stubs(:generate_screenshot).returns(nil)
+    Media.any_instance.stubs(:archive_to_screenshot).returns(nil)
+    Media.any_instance.stubs(:archive_to_archive_is).returns(nil)
+    Media.any_instance.stubs(:archive_to_video_vault).returns(nil)
   end
 
   # This will run after any test
@@ -46,7 +48,9 @@ class ActiveSupport::TestCase
     Time.unstub(:now)
     Media.any_instance.unstub(:parse)
     Media.any_instance.unstub(:as_json)
-    Media.any_instance.unstub(:generate_screenshot)
+    Media.any_instance.unstub(:archive_to_screenshot)
+    Media.any_instance.unstub(:archive_to_archive_is)
+    Media.any_instance.unstub(:archive_to_video_vault)
     CONFIG.unstub(:[])
   end
 

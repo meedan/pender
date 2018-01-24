@@ -1,7 +1,7 @@
 language: ruby
 bundler_args: "--jobs 3 --retry 3 --without nothing"
 before_install:
-- openssl aes-256-cbc -K $encrypted_8f3bc8a71dc8_key -iv $encrypted_8f3bc8a71dc8_iv -in config/config.yml.travis.enc -out config/config.yml -d
+- openssl aes-256-cbc -K $encrypted_723adc5b383a_key -iv $encrypted_723adc5b383a_iv -in config/config.yml.travis.enc -out config/config.yml -d
 - sudo apt-get install redis-server
 - redis-server &
 - export NODE_PATH=$PWD/node_modules:$NODE_PATH

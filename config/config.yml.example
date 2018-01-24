@@ -17,7 +17,8 @@ development: &default
   redis_host: 'localhost'
   redis_port: 6379
   redis_database: 1
-  screenshot_skip_hosts: 'checkmedia.org'
+  archiver_skip_hosts: 'checkmedia.org'
+  video_vault_token: ''
   hosts:
     one.host:
       http_auth: username:password

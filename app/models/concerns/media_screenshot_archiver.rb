@@ -1,5 +1,9 @@
-module MediaScreenshot
+module MediaScreenshotArchiver
   extend ActiveSupport::Concern
+
+  included do
+    Media.declare_archiver('screenshot', [/^.*$/], :only)
+  end
 
   def screenshot_path
     base_url = CONFIG['public_url'] || self.request.base_url
@@ -7,18 +11,12 @@ module MediaScreenshot
     URI.join(base_url, 'screenshots/', filename).to_s
   end
 
-  def generate_screenshot
+  def archive_to_screenshot
     url = self.url
-    skip = CONFIG['screenshot_skip_hosts']
-    unless skip.blank?
-      host = begin URI.parse(url).host rescue '' end
-      return if skip.split(',').include?(host)
-    end
     picture = self.screenshot_path
     filename = self.url.parameterize + '.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
-    FileUtils.rm_f path
-    FileUtils.ln_s File.join(Rails.root, 'public', 'pending_picture.png'), path
+    FileUtils.ln_sf File.join(Rails.root, 'public', 'pending_picture.png'), path
     self.data['screenshot'] = picture
     self.data['screenshot_taken'] = 0
     key_id = self.key ? self.key.id : nil
