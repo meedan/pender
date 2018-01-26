@@ -69,11 +69,19 @@ module MediaOembedItem
   def verify_oembed_html
     return if self.data[:raw][:oembed][:html].blank?
     html = Nokogiri::HTML self.data[:raw][:oembed][:html]
+    self.verify_oembed_html_script(html)
+    self.verify_oembed_html_iframe(html)
+  end
+
+  def verify_oembed_html_script(html)
     script_tag = html.at_css('script')
     unless script_tag.nil? || script_tag.attr('src').nil?
       uri = URI.parse(script_tag.attr('src'))
       self.data[:raw][:oembed][:html] = '' unless uri.kind_of?(URI::HTTPS)
     end
+  end
+
+  def verify_oembed_html_iframe(html)
     iframe_tag = html.at_css('iframe')
     unless iframe_tag.nil? || iframe_tag.attr('src').nil?
       uri = URI.parse(iframe_tag.attr('src'))
