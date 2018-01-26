@@ -171,7 +171,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.facebook.com', data['provider_url']
     assert_equal 552, data['width']
     assert data['height'].nil?
-    assert data['html'].blank?
   end
 
   test "should parse Facebook with numeric id" do
@@ -1685,7 +1684,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.facebook.com', oembed['provider_url']
     assert_equal 552, oembed['width']
     assert oembed['height'].nil?
-    assert oembed['html'].blank?
   end
 
   test "should store data of post returned by twitter API" do
