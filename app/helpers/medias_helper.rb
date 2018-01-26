@@ -45,7 +45,8 @@ module MediasHelper
     tag = media.doc.at_css('script[type="application/ld+json"]')
     unless tag.blank?
       begin
-        media.data['raw']['json+ld'] = JSON.parse(tag.content)
+        data = JSON.parse(tag.content)
+        data['@context'] == 'http://schema.org' ? add_schema_to_data(media, data, data['@type']) : media.data['raw']['json+ld'] = data
       rescue JSON::ParserError
         Rails.logger.info "Could not parse the JSON-LD content: #{media.url}"
       end
@@ -76,12 +77,15 @@ module MediasHelper
       media.data[:schema] ||= {}.with_indifferent_access
       microdata.items.each do |item|
         type = item.type.match(/^https?:\/\/schema\.org\/(.*)/)
-        if type
-          media.data['schema'][type[1]] ||= []
-          media.data['schema'][type[1]] << item.to_h.with_indifferent_access
-        end
+        add_schema_to_data(media, item.to_h, type[1]) if type
       end
     end
+  end
+
+  def add_schema_to_data(media, data, type)
+    media.data[:schema] ||= {}.with_indifferent_access
+    media.data['schema'][type] ||= []
+    media.data['schema'][type] << data.with_indifferent_access
   end
 
   def list_formats

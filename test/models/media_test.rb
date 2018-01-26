@@ -2024,7 +2024,7 @@ class MediaTest < ActiveSupport::TestCase
     url = 'http://www.politifact.com/truth-o-meter/statements/2017/aug/17/donald-trump/donald-trump-retells-pants-fire-claim-about-gen-pe'
     m = create_media url: url
     data = m.as_json
-    assert_equal 'http://schema.org/ClaimReview', data['schema']['ClaimReview'].first['type']
+    assert_equal 'ClaimReview', data['schema']['ClaimReview'].first['@type']
     assert_equal ['author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview'].first['properties'].keys.sort
   end
 
@@ -2040,7 +2040,16 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: url
     data = m.as_json
     assert_equal ["NewsArticle", "VideoObject", "WebPage"], data['schema'].keys.sort
-    assert_equal 1, data['schema']['NewsArticle'].size
-    assert_equal 2, data['schema']['VideoObject'].size
+    assert data['schema']['NewsArticle'].is_a? Array
+    assert data['schema']['VideoObject'].is_a? Array
   end
+
+  test "should store ClaimReview schema after preprocess" do
+    url = 'http://www.politifact.com/global-news/statements/2017/feb/17/bob-corker/are-27-million-people-trapped-modern-slavery'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'ClaimReview', data['schema']['ClaimReview'].first['@type']
+    assert_equal ['author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview'].first.keys.sort
+  end
+
 end
