@@ -2024,8 +2024,10 @@ class MediaTest < ActiveSupport::TestCase
     url = 'http://www.politifact.com/truth-o-meter/statements/2017/aug/17/donald-trump/donald-trump-retells-pants-fire-claim-about-gen-pe'
     m = create_media url: url
     data = m.as_json
-    assert_equal 'ClaimReview', data['schema']['ClaimReview'].first['@type']
-    assert_equal ['author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview'].first['properties'].keys.sort
+    claim_review = data['schema']['ClaimReview'].first
+    assert_equal 'ClaimReview', claim_review['@type']
+    assert_equal 'http://schema.org', claim_review['@context']
+    assert_equal ['@context', '@type', 'author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], claim_review.keys.sort
   end
 
   test "should return nil on schema key if not found on page" do
@@ -2049,7 +2051,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: url
     data = m.as_json
     assert_equal 'ClaimReview', data['schema']['ClaimReview'].first['@type']
-    assert_equal ['author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview'].first.keys.sort
+    assert_equal ['@context', '@type', 'author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview'].first.keys.sort
   end
 
 end

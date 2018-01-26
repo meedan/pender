@@ -76,13 +76,40 @@ module MediasHelper
     if !microdata.items.empty?
       media.data[:schema] ||= {}.with_indifferent_access
       microdata.items.each do |item|
-        type = item.type.match(/^https?:\/\/schema\.org\/(.*)/)
-        add_schema_to_data(media, item.to_h, type[1]) if type
+        type = schema_type(item.type)
+        add_schema_to_data(media, schema_mapping(item.to_h.with_indifferent_access), type) if type
       end
     end
   end
 
+  def schema_type(item_type)
+    type = item_type.match(/^https?:\/\/schema\.org\/(.*)/)
+    return type[1] if type
+  end
+
+  def schema_mapping(item)
+    if item[:properties]
+      item.merge!(item[:properties])
+      item.delete(:properties)
+    end
+    schema = item.clone
+    item.each do |key, value|
+      if key.to_sym == :type
+        schema['@type'] = schema_type(value) || value
+        schema.delete(key)
+      end
+      if value.is_a?(Array) && value.size == 1
+        schema[key] = value.first
+      end
+      if schema[key].is_a? Hash
+        schema[key] = schema_mapping(schema[key])
+      end
+    end
+    schema
+  end
+
   def add_schema_to_data(media, data, type)
+    data['@context'] ||= 'http://schema.org'
     media.data[:schema] ||= {}.with_indifferent_access
     media.data['schema'][type] ||= []
     media.data['schema'][type] << data.with_indifferent_access
@@ -100,5 +127,4 @@ module MediasHelper
       media.data[field] = CGI.unescapeHTML(media.data[field])
     end
   end
-
 end
