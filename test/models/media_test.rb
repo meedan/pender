@@ -1510,8 +1510,6 @@ class MediaTest < ActiveSupport::TestCase
   test "should return empty html on oembed when frame is not allowed" do
     m = create_media url: 'https://martinoei.com/article/13371/%e9%81%b8%e6%b0%91%e7%99%bb%e8%a8%98-%e5%a4%b1%e7%ab%8a%e4%ba%8b%e4%bb%b6%e8%b6%8a%e8%a7%a3%e8%b6%8a%e4%bc%bcx%e6%aa%94%e6%a1%88'
     data = m.as_json
-    response = m.oembed_get_data_from_url(m.get_oembed_url)
-    assert_equal 'SAMEORIGIN', response.header['X-Frame-Options']
     assert_equal '', data['html']
   end
 
@@ -1949,7 +1947,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should skip screenshots" do
     config = CONFIG['archiver_skip_hosts']
-    
+
     CONFIG['archiver_skip_hosts'] = ''
 
     Media.any_instance.unstub(:archive_to_screenshot)
@@ -1971,7 +1969,7 @@ class MediaTest < ActiveSupport::TestCase
     filename = url.parameterize + '.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
     assert !File.exists?(path)
-    
+
     CONFIG['archiver_skip_hosts'] = config
   end
 
