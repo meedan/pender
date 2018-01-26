@@ -27,10 +27,7 @@ module MediaOembedItem
       response = self.oembed_get_data_from_url(oembed_url)
       if !response.nil? && response.code == '200'
         self.data[:raw][:oembed] = JSON.parse(response.body)
-        if ['DENY', 'SAMEORIGIN'].include? response.header['X-Frame-Options']
-          self.data[:raw][:oembed][:html] = ''
-        end
-        verify_https_oembed_html
+        self.verify_oembed_html
         return true
       end
     end
@@ -65,13 +62,27 @@ module MediaOembedItem
     self.send("#{self.provider}_oembed_url") if self.respond_to?("#{self.provider}_oembed_url")
   end
 
-  def verify_https_oembed_html
+  #
+  # Discard the oEmbed's HTML fragment in the following cases:
+  # - The script.src URL is not HTTPS
+  # - The iframe.src response includes X-Frame-Options = DENY or SAMEORIGIN
+  def verify_oembed_html
     return if self.data[:raw][:oembed][:html].blank?
     html = Nokogiri::HTML self.data[:raw][:oembed][:html]
     script_tag = html.at_css('script')
     unless script_tag.nil? || script_tag.attr('src').nil?
       uri = URI.parse(script_tag.attr('src'))
       self.data[:raw][:oembed][:html] = '' unless uri.kind_of?(URI::HTTPS)
+    end
+    iframe_tag = html.at_css('iframe')
+    unless iframe_tag.nil? || iframe_tag.attr('src').nil?
+      uri = URI.parse(iframe_tag.attr('src'))
+      response = Net::HTTP.get_response(uri)
+      if !response.nil? && response.code == '200'
+        if ['DENY', 'SAMEORIGIN'].include? response.header['X-Frame-Options']
+          self.data[:raw][:oembed][:html] = ''
+        end
+      end
     end
   end
 end
