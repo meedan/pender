@@ -1892,11 +1892,16 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should store json+ld data as a json string" do
-    m = create_media url: 'https://monitor.krzana.com/pulse/1219:b4e0ae7c4d21f72a:4841'
-    data = m.as_json
+    m = create_media url: 'http://www.example.com'
+    doc = ''
+    open('test/data/page-with-json-ld.html') { |f| doc = f.read }
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
+    m.data = Media.minimal_data(m)
+    m.get_jsonld_data(m)
 
-    assert !data['raw']['json+ld'].empty?
-    assert data['raw']['json+ld'].is_a? Hash
+    assert !m.data['raw']['json+ld'].empty?
+    assert m.data['raw']['json+ld'].is_a? Hash
+    Media.any_instance.unstub(:doc)
   end
 
   test "should not have the subkey json+ld if the tag is not present on page" do
