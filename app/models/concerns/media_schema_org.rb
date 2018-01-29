@@ -25,10 +25,7 @@ module MediaSchemaOrg
     end
     schema = item.clone
     item.each do |key, value|
-      if key.to_sym == :type
-        schema['@type'] = schema_type(value) || value
-        schema.delete(key)
-      end
+      schema = check_type_pattern(key, value, schema)
       if value.is_a?(Array) && value.size == 1
         schema[key] = value.first
       end
@@ -36,6 +33,13 @@ module MediaSchemaOrg
         schema[key] = schema_mapping(schema[key])
       end
     end
+    schema
+  end
+
+  def check_type_pattern(key, value, schema)
+    return schema unless key.to_sym == :type
+    schema['@type'] = schema_type(value) || value
+    schema.delete(key)
     schema
   end
 
