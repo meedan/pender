@@ -1880,7 +1880,7 @@ class MediaTest < ActiveSupport::TestCase
     m.data[:raw] = {}
     fields = %w(username description title picture html author_url)
     fields.each { |f| m.data[f] = f }
-    response = 'mock';response.expects(:code).returns('200');response.expects(:body).returns('{"type":"rich"}');response.expects(:header).returns({})
+    response = 'mock';response.expects(:code).returns('200');response.expects(:body).returns('{"type":"rich"}').twice;response.expects(:header).returns({})
     m.stubs(:oembed_get_data_from_url).returns(response)
 
     oembed_data = m.data_from_oembed_item
