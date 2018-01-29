@@ -25,7 +25,7 @@ module MediaOembedItem
     handle_exceptions(self, StandardError) do
       oembed_url = self.provider_oembed_url || self.get_oembed_url
       response = self.oembed_get_data_from_url(oembed_url)
-      if !response.nil? && response.code == '200'
+      if !response.nil? && response.code == '200' && !response.body.blank?
         self.data[:raw][:oembed] = JSON.parse(response.body)
         self.verify_oembed_html
         return true

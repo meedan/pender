@@ -116,6 +116,9 @@ GEM
     memoizable (0.4.2)
       thread_safe (~> 0.3, >= 0.3.1)
     metaclass (0.0.4)
+    mida (0.4.0)
+      addressable (~> 2.4)
+      nokogiri (>= 1.6)
     mini_magick (4.8.0)
     mini_mime (1.0.0)
     mini_portile2 (2.3.0)
@@ -271,6 +274,7 @@ DEPENDENCIES
   ids_please!
   koala
   logstash-logger
+  mida
   mocha
   newrelic_rpm
   nokogiri (= 1.8.1)

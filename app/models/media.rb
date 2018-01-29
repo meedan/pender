@@ -77,7 +77,7 @@ class Media
   end
 
   # Parsers and archivers
-  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaVideoVaultArchiver, MediaArchiveIsArchiver].each do |concern|
+  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaVideoVaultArchiver, MediaArchiveIsArchiver, MediaHtmlPreprocessor, MediaSchemaOrg].each do |concern|
     include concern
   end
 
@@ -124,6 +124,7 @@ class Media
     self.data = Media.minimal_data(self)
     get_metatags(self)
     get_jsonld_data(self)
+    get_schema_data
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|
@@ -222,6 +223,7 @@ class Media
         f.binmode
         html = f.read
       end
+      html = preprocess_html(html)
       Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
     rescue OpenURI::HTTPError, Errno::ECONNRESET
       return nil
