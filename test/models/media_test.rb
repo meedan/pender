@@ -2055,6 +2055,7 @@ class MediaTest < ActiveSupport::TestCase
     url = 'http://www.politifact.com/global-news/statements/2017/feb/17/bob-corker/are-27-million-people-trapped-modern-slavery'
     m = create_media url: url
     data = m.as_json
+    assert data['error'].nil?
     assert_equal 'ClaimReview', data['schema']['ClaimReview'].first['@type']
     assert_equal ['@context', '@type', 'author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview'].first.keys.sort
   end
