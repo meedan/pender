@@ -171,7 +171,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.facebook.com', data['provider_url']
     assert_equal 552, data['width']
     assert data['height'].nil?
-    assert data['html'].blank?
   end
 
   test "should parse Facebook with numeric id" do
@@ -1510,8 +1509,6 @@ class MediaTest < ActiveSupport::TestCase
   test "should return empty html on oembed when frame is not allowed" do
     m = create_media url: 'https://martinoei.com/article/13371/%e9%81%b8%e6%b0%91%e7%99%bb%e8%a8%98-%e5%a4%b1%e7%ab%8a%e4%ba%8b%e4%bb%b6%e8%b6%8a%e8%a7%a3%e8%b6%8a%e4%bc%bcx%e6%aa%94%e6%a1%88'
     data = m.as_json
-    response = m.oembed_get_data_from_url(m.get_oembed_url)
-    assert_equal 'SAMEORIGIN', response.header['X-Frame-Options']
     assert_equal '', data['html']
   end
 
@@ -1687,7 +1684,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.facebook.com', oembed['provider_url']
     assert_equal 552, oembed['width']
     assert oembed['height'].nil?
-    assert oembed['html'].blank?
   end
 
   test "should store data of post returned by twitter API" do
@@ -1884,7 +1880,7 @@ class MediaTest < ActiveSupport::TestCase
     m.data[:raw] = {}
     fields = %w(username description title picture html author_url)
     fields.each { |f| m.data[f] = f }
-    response = 'mock';response.expects(:code).returns('200');response.expects(:body).returns('{"type":"rich"}');response.expects(:header).returns({})
+    response = 'mock';response.expects(:code).returns('200');response.expects(:body).returns('{"type":"rich"}').twice;response.expects(:header).returns({})
     m.stubs(:oembed_get_data_from_url).returns(response)
 
     oembed_data = m.data_from_oembed_item
@@ -1896,11 +1892,16 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should store json+ld data as a json string" do
-    m = create_media url: 'https://monitor.krzana.com/pulse/1219:b4e0ae7c4d21f72a:4841'
-    data = m.as_json
+    m = create_media url: 'http://www.example.com'
+    doc = ''
+    open('test/data/page-with-json-ld.html') { |f| doc = f.read }
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
+    m.data = Media.minimal_data(m)
+    m.get_jsonld_data(m)
 
-    assert !data['raw']['json+ld'].empty?
-    assert data['raw']['json+ld'].is_a? Hash
+    assert !m.data['raw']['json+ld'].empty?
+    assert m.data['raw']['json+ld'].is_a? Hash
+    Media.any_instance.unstub(:doc)
   end
 
   test "should not have the subkey json+ld if the tag is not present on page" do
@@ -1949,7 +1950,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should skip screenshots" do
     config = CONFIG['archiver_skip_hosts']
-    
+
     CONFIG['archiver_skip_hosts'] = ''
 
     Media.any_instance.unstub(:archive_to_screenshot)
@@ -1971,7 +1972,7 @@ class MediaTest < ActiveSupport::TestCase
     filename = url.parameterize + '.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
     assert !File.exists?(path)
-    
+
     CONFIG['archiver_skip_hosts'] = config
   end
 
@@ -2023,4 +2024,40 @@ class MediaTest < ActiveSupport::TestCase
 
     WebMock.disable!
   end
+
+  test "should store ClaimReview schema" do
+    url = 'http://www.politifact.com/truth-o-meter/statements/2017/aug/17/donald-trump/donald-trump-retells-pants-fire-claim-about-gen-pe'
+    m = create_media url: url
+    data = m.as_json
+    claim_review = data['schema']['ClaimReview'].first
+    assert_equal 'ClaimReview', claim_review['@type']
+    assert_equal 'http://schema.org', claim_review['@context']
+    assert_equal ['@context', '@type', 'author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], claim_review.keys.sort
+  end
+
+  test "should return nil on schema key if not found on page" do
+    url = 'http://ca.ios.ba/'
+    m = create_media url: url
+    data = m.as_json
+    assert data['schema'].nil?
+  end
+
+  test "should store all schemas as array" do
+    url = 'https://g1.globo.com/sp/sao-paulo/noticia/pf-indicia-haddad-por-caixa-2-em-campanha-para-a-prefeitura-de-sp.ghtml'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal ["NewsArticle", "VideoObject", "WebPage"], data['schema'].keys.sort
+    assert data['schema']['NewsArticle'].is_a? Array
+    assert data['schema']['VideoObject'].is_a? Array
+  end
+
+  test "should store ClaimReview schema after preprocess" do
+    url = 'http://www.politifact.com/global-news/statements/2017/feb/17/bob-corker/are-27-million-people-trapped-modern-slavery'
+    m = create_media url: url
+    data = m.as_json
+    assert data['error'].nil?
+    assert_equal 'ClaimReview', data['schema']['ClaimReview'].first['@type']
+    assert_equal ['@context', '@type', 'author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview'].first.keys.sort
+  end
+
 end

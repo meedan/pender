@@ -45,7 +45,8 @@ module MediasHelper
     tag = media.doc.at_css('script[type="application/ld+json"]')
     unless tag.blank?
       begin
-        media.data['raw']['json+ld'] = JSON.parse(tag.content)
+        data = JSON.parse(tag.content)
+        data['@context'] == 'http://schema.org' ? add_schema_to_data(media, data, data['@type']) : media.data['raw']['json+ld'] = data
       rescue JSON::ParserError
         Rails.logger.info "Could not parse the JSON-LD content: #{media.url}"
       end
@@ -81,5 +82,4 @@ module MediasHelper
       media.data[field] = CGI.unescapeHTML(media.data[field])
     end
   end
-
 end
