@@ -540,7 +540,7 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal '@megadeth', d['username']
     assert_equal 'item', d['type']
-    assert_equal 'megadeth', d['author_name']
+    assert_equal 'Megadeth', d['author_name']
     assert_not_nil d['picture']
   end
 
