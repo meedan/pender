@@ -285,7 +285,7 @@ class Media
       unless (uri.kind_of?(URI::HTTPS))
         self.url.gsub!(/^http:/i, 'https:')
         uri = URI.parse(self.url)
-        Media.request_uri(uri, 'Head')
+        Media.request_uri(uri, 'Head').value
       end
     rescue
       self.url.gsub!(/^https:/i, 'http:')
