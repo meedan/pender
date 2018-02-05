@@ -89,6 +89,7 @@ GEM
     globalid (0.4.1)
       activesupport (>= 4.2.0)
     hashdiff (0.3.7)
+    htmlentities (4.3.4)
     http (3.0.0)
       addressable (~> 2.3)
       http-cookie (~> 1.0)
@@ -271,6 +272,7 @@ DEPENDENCIES
   chromeshot!
   codeclimate-test-reporter (= 0.6.0)
   gem-licenses
+  htmlentities
   ids_please!
   koala
   logstash-logger
