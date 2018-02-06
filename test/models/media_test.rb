@@ -2060,4 +2060,24 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal ['@context', '@type', 'author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview'].first.keys.sort
   end
 
+  test "should archive to Archive.org" do
+    Media.any_instance.unstub(:archive_to_archive_org)
+    a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
+    urls = ['https://twitter.com/marcouza/status/875424957613920256', 'https://twitter.com/marcouza/status/863907872421412864']
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+
+    assert_nothing_raised do
+      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: {})
+      m = create_media url: urls[0], key: a
+      data = m.as_json
+
+      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
+      m = create_media url: urls[1], key: a
+      data = m.as_json
+    end
+
+    WebMock.disable!
+  end
 end
