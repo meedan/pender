@@ -77,7 +77,7 @@ class Media
   end
 
   # Parsers and archivers
-  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaVideoVaultArchiver, MediaArchiveIsArchiver, MediaHtmlPreprocessor, MediaSchemaOrg].each do |concern|
+  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaVideoVaultArchiver, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg].each do |concern|
     include concern
   end
 
@@ -285,7 +285,7 @@ class Media
       unless (uri.kind_of?(URI::HTTPS))
         self.url.gsub!(/^http:/i, 'https:')
         uri = URI.parse(self.url)
-        Media.request_uri(uri, 'Head')
+        Media.request_uri(uri, 'Head').value
       end
     rescue
       self.url.gsub!(/^https:/i, 'http:')

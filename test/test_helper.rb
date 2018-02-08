@@ -38,6 +38,7 @@ class ActiveSupport::TestCase
     Media.any_instance.stubs(:archive_to_screenshot).returns(nil)
     Media.any_instance.stubs(:archive_to_archive_is).returns(nil)
     Media.any_instance.stubs(:archive_to_video_vault).returns(nil)
+    Media.any_instance.stubs(:archive_to_archive_org).returns(nil)
   end
 
   # This will run after any test
@@ -51,6 +52,7 @@ class ActiveSupport::TestCase
     Media.any_instance.unstub(:archive_to_screenshot)
     Media.any_instance.unstub(:archive_to_archive_is)
     Media.any_instance.unstub(:archive_to_video_vault)
+    Media.any_instance.unstub(:archive_to_archive_org)
     CONFIG.unstub(:[])
   end
 

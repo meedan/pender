@@ -79,7 +79,7 @@ module MediasHelper
 
   def cleanup_html_entities(media)
     %w(username title description author_name).each do |field|
-      media.data[field] = CGI.unescapeHTML(media.data[field])
+      media.data[field] = HTMLEntities.new.decode(media.data[field])
     end
   end
 end
