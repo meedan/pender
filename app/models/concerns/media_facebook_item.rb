@@ -244,6 +244,7 @@ module MediaFacebookItem
 
   # First method
   def data_from_facebook_item
+    self.screenshot_script = 'document.getElementById("u_0_c").style.display="none"'
     handle_exceptions(self, RuntimeError) do
       self.parse_facebook_uuid
       self.parse_from_facebook_html unless self.parse_from_facebook_api

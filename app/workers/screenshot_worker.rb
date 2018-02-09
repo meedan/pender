@@ -9,12 +9,12 @@ class ScreenshotWorker
     redis.rpush('pender-screenshots-queue', data)
   end
 
-  def perform(url, picture, key_id)
+  def perform(url, picture, key_id, script = '')
     saver = Chromeshot::Screenshot.new debug_port: CONFIG['chrome_debug_port']
     tab = saver.load_page_in_new_tab(url: url)
     raise 'Could not open tab' if tab.blank?
     key = ApiKey.where(id: key_id).last
     settings = key ? key.application_settings.with_indifferent_access : {}
-    self.save_to_redis({ url: url, picture: picture, settings: settings, tab: tab, key_id: key_id }.to_json)
+    self.save_to_redis({ url: url, picture: picture, settings: settings, tab: tab, key_id: key_id, script: script }.to_json)
   end
 end

@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/meedan/chromeshot
-  revision: a73b4cd479b48aa344ac4c4b2a1e2d42462c7e93
-  ref: a73b4c
+  revision: fd462cbc244995f824dd16b08482256d3d5be15a
+  ref: fd462c
   branch: master
   specs:
     chromeshot (0.0.0)
