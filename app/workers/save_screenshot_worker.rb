@@ -3,7 +3,7 @@ require 'pender_redis'
 class SaveScreenshotWorker
   include Sidekiq::Worker
     
-  def save(url, picture, settings, tab)
+  def save(url, picture, settings, tab, script = '')
     filename = url.parameterize + '.png'
     t = Time.now.to_i.to_s
     tmp = url.parameterize + '-' + t + '.png'
@@ -12,7 +12,7 @@ class SaveScreenshotWorker
 
     fetcher = Chromeshot::Screenshot.new debug_port: CONFIG['chrome_debug_port']
 
-    Timeout::timeout(30) { fetcher.take_screenshot_from_tab(tab: tab, output: output_file) }
+    Timeout::timeout(30) { fetcher.take_screenshot_from_tab(tab: tab, output: output_file, script: script) }
 
     dimensions = IO.read(output_file)[0x10..0x18].unpack('NN')
     dimensions[0] > 100 ? (FileUtils.rm_f(path) && FileUtils.ln_s(output_file, path)) : raise('Could not take screenshot')
@@ -30,7 +30,7 @@ class SaveScreenshotWorker
     job = redis.lpop('pender-screenshots-queue')
     unless job.nil?
       data = JSON.parse(job)
-      begin self.save(data['url'], data['picture'], data['settings'], data['tab']) rescue ScreenshotWorker.perform_async(data['url'], data['picture'], data['key_id']) end
+      begin self.save(data['url'], data['picture'], data['settings'], data['tab'], data['script']) rescue ScreenshotWorker.perform_async(data['url'], data['picture'], data['key_id'], data['script']) end
     end
   end
 end

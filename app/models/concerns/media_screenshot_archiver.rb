@@ -5,6 +5,14 @@ module MediaScreenshotArchiver
     Media.declare_archiver('screenshot', [/^.*$/], :only)
   end
 
+  def screenshot_script=(script)
+    @screenshot_script = script
+  end
+
+  def screenshot_script
+    @screenshot_script
+  end
+
   def screenshot_path
     base_url = CONFIG['public_url'] || self.request.base_url
     filename = self.url.parameterize + '.png'
@@ -20,6 +28,6 @@ module MediaScreenshotArchiver
     self.data['screenshot'] = picture
     self.data['screenshot_taken'] = 0
     key_id = self.key ? self.key.id : nil
-    ScreenshotWorker.perform_async(url, picture, key_id)
+    ScreenshotWorker.perform_async(url, picture, key_id, self.screenshot_script)
   end
 end
