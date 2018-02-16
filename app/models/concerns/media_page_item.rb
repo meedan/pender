@@ -37,7 +37,11 @@ module MediaPageItem
     metatags = { title: 'twitter:title', picture: 'twitter:image', description: 'twitter:description', username: 'twitter:creator', author_name: 'twitter:site' }
     data = get_html_metadata(self, 'name', metatags).with_indifferent_access
     data.merge!(get_html_metadata(self, 'property', metatags))
-    data['author_url'] = 'https://twitter.com/' + data['username'] if data['username']
+    data['author_url'] = twitter_author_url(data['username'])
+    unless data['author_url']
+      data.delete('author_url')
+      data.delete('username')
+    end
     data
   end
 
