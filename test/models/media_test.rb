@@ -2080,4 +2080,13 @@ class MediaTest < ActiveSupport::TestCase
 
     WebMock.disable!
   end
+
+  test "should validate author_url when taken from twitter metatags" do
+    url = 'http://lnphil.blogspot.com.br/2018/01/villar-at-duterte-nagsanib-pwersa-para.html'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'http://lnphil.blogspot.com', data['author_url']
+    assert_equal '', data['username']
+  end
+
 end
