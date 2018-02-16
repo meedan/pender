@@ -679,8 +679,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Programming comics and digital culture', d['description']
     assert_equal '', d['published_at']
     assert_equal 'Karlisson M. Bezerra', d['username']
-    assert_equal 'http://hacktoon.com/static/img/facebook-image.png', d['picture']
-    assert_equal 'http://hacktoon.com', d['author_url']
+    assert_equal 'https://hacktoon.com/static/img/facebook-image.png', d['picture']
+    assert_equal 'https://hacktoon.com', d['author_url']
   end
 
   test "should parse meta tags as fallback" do
