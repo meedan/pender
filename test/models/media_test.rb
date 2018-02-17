@@ -524,7 +524,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should return author_url for Twitter post" do
     m = create_media url: 'https://twitter.com/TheConfMalmo_AR/status/765474989277638657'
     d = m.as_json
-    assert_equal 'https://twitter.com/theconfmalmo_ar', d['author_url']
+    assert_equal 'https://twitter.com/TheConfMalmo_AR', d['author_url']
   end
 
   test "should return author_name and author_url for Facebook post" do
@@ -669,7 +669,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.hongkongfp.com/wp-content/uploads/2017/03/2017-03-06_11-45-23.jpg', d['picture']
     assert_match(/Chief executive candidate Woo Kw-hing/, d['description'])
     assert_equal '@krislc', d['username']
-    assert_equal 'https://twitter.com/@krislc', d['author_url']
+    assert_equal 'https://twitter.com/krislc', d['author_url']
   end
 
   test "should parse opengraph metatags" do
@@ -1064,7 +1064,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /The Green party candidate, who is fighting the byelection in David Cameron’s old seat/, d['description']
     assert_match /2016-10/, d['published_at']
     assert_equal '@zoesqwilliams', d['username']
-    assert_equal 'https://twitter.com/@zoesqwilliams', d['author_url']
+    assert_equal 'https://twitter.com/zoesqwilliams', d['author_url']
     assert_match /https:\/\/i.guim.co.uk\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, d['picture']
   end
 
@@ -1354,7 +1354,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
     assert_equal '@AFP', data['username']
-    assert_equal 'https://twitter.com/@AFP', data['author_url']
+    assert_equal 'https://twitter.com/AFP', data['author_url']
     assert_not_nil data['picture']
     assert_nil data['error']
   end
@@ -1370,7 +1370,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
     assert_equal '@AFP', data['username']
-    assert_equal 'https://twitter.com/@AFP', data['author_url']
+    assert_equal 'https://twitter.com/AFP', data['author_url']
     assert_not_nil data['picture']
     assert_match(/StandardError/, data['error']['message'])
   end
@@ -2080,4 +2080,13 @@ class MediaTest < ActiveSupport::TestCase
 
     WebMock.disable!
   end
+
+  test "should validate author_url when taken from twitter metatags" do
+    url = 'http://lnphil.blogspot.com.br/2018/01/villar-at-duterte-nagsanib-pwersa-para.html'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal m.send(:top_url, m.url), data['author_url']
+    assert_equal '', data['username']
+  end
+
 end
