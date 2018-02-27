@@ -1011,7 +1011,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/events/364677040588691/permalink/379973812392347/?ref=1&action_history=null'
     data = m.as_json
     assert_equal 'https://www.facebook.com/events/364677040588691/permalink/379973812392347', m.url
-    assert_equal 'Hema Elsyaad on Facebook', data['title']
+    assert_equal 'ابراهيمو ڤيتش on Facebook', data['title']
     assert_equal 'مفيش حاجة قريب ل ا. داواد عبدالسيد ؟!!', data['description']
     assert_not_nil data['published_at']
     assert_equal 'Hema Elsyaad', data['username']
