@@ -1014,7 +1014,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'ابراهيمو ڤيتش on Facebook', data['title']
     assert_equal 'مفيش حاجة قريب ل ا. داواد عبدالسيد ؟!!', data['description']
     assert_not_nil data['published_at']
-    assert_equal 'Hema Elsyaad', data['username']
+    assert_equal 'ابراهيمو ڤيتش', data['username']
     assert_match /#{data['user_uuid']}/, data['author_url']
     assert_match /#{data['user_uuid']}/, data['author_picture']
     assert_nil data['picture']
