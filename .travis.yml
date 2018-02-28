@@ -6,7 +6,7 @@ before_install:
 - export NODE_PATH=$PWD/node_modules:$NODE_PATH
 - curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash - && sudo apt-get install
   -y nodejs && npm install chrome-remote-interface minimist
-- git clone -b 6678-bridge-tests https://${TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
+- git clone https://${TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
 before_script:
 - d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}"; done
 - RAILS_ENV=test bundle exec rake db:migrate
