@@ -35,7 +35,7 @@ module MediaTwitterItem
         published_at: self.data['raw']['api']['created_at'],
         html: html_for_twitter_item,
         author_name: self.data['raw']['api']['user']['name'],
-        author_url: 'https://twitter.com/' + user
+        author_url: self.twitter_author_url(user) || top_url(self.url)
       })
     end
   end
@@ -59,5 +59,14 @@ module MediaTwitterItem
 
   def twitter_oembed_url
     "https://publish.twitter.com/oembed?url=#{self.url}"
+  end
+
+  def twitter_author_url(username)
+    return if username.blank?
+    begin
+      self.twitter_client.user(username).url.to_s
+    rescue Twitter::Error::NotFound
+      nil
+    end
   end
 end
