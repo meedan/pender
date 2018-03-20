@@ -1,7 +1,7 @@
 # meedan/pender
 # https://github.com/meedan/pender
 
-FROM meedan/ruby
+FROM meedan/chrome
 MAINTAINER sysops@meedan.com
 
 ENV DEPLOYUSER=pender \
@@ -24,28 +24,15 @@ RUN cd /usr/local/share/ca-certificates \
 		&& update-ca-certificates
 
 # nginx
-COPY ./production/nginx.conf /etc/nginx/sites-available/${APP}
-RUN ln -s /etc/nginx/sites-available/pender /etc/nginx/sites-enabled/pender \
+COPY --chown=root:www-data ./production/nginx.conf /etc/nginx/sites-available/pender
+RUN ln -s /etc/nginx/sites-available/${APP} /etc/nginx/sites-enabled/${APP} \
  && rm /etc/nginx/sites-enabled/default
-
-# nodejs7 repo
-RUN curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
-# chrome repo
-RUN curl -sL https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
-
-# install stuff needed to take screenshots
-RUN npm install chrome-remote-interface minimist
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    imagemagick \
-    nodejs \
-    google-chrome-stable
 
 # pender user
 RUN useradd ${DEPLOYUSER} -s /bin/bash -m
 
 # deploy directory
-RUN mkdir -p ${DEPLOYDIR}/latest \
+RUN mkdir -p ${DEPLOYDIR}/current \
 	&& chown -R ${DEPLOYUSER}:www-data ${DEPLOYDIR} \
 	&& chmod 775 ${DEPLOYDIR} \
 	&& chmod g+s ${DEPLOYDIR}
@@ -54,18 +41,15 @@ RUN mkdir -p ${DEPLOYDIR}/latest \
 # this way we can more easily cache them and allow code changes to be built later
 USER ${DEPLOYUSER}
 WORKDIR ${DEPLOYDIR}
-COPY ./Gemfile ./latest/Gemfile
-COPY ./Gemfile.lock ./latest/Gemfile.lock
+COPY --chown=pender:www-data ./Gemfile ./current/Gemfile
+COPY --chown=pender:www-data ./Gemfile.lock ./current/Gemfile.lock
 RUN echo "gem: --no-rdoc --no-ri" > ~/.gemrc \
-	&& cd latest \
+	&& cd current \
 	&& bundle install --deployment --without development test 
 
-COPY . ./latest
-USER root
-RUN chown -R ${DEPLOYUSER}:www-data ${DEPLOYDIR}
+COPY --chown=pender:www-data . ./current
 USER ${DEPLOYUSER}
-RUN mv ./latest ./pender-$(date -I) \
-	&& ln -s ./pender-$(date -I) ./current
+RUN ln -s ./current ./pender-$(date -I)
 
 # link to persisted objects and runtime config from the codebase
 RUN ln -s ${DEPLOYDIR}/shared/cache/json ${DEPLOYDIR}/current/tmp/cache \
