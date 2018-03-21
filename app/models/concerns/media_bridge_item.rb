@@ -2,7 +2,7 @@ module MediaBridgeItem
   extend ActiveSupport::Concern
 
   included do
-    Media.declare('bridge_item', [/^https?:\/\/(www\.)?speakbridge.io\/medias\/embed\/(?<project>[^\/]+)\/[^\/]+\/(?<id>[^\/]+)$/])
+    Media.declare('bridge_item', [/^https?:\/\/(www\.|new\.)?speakbridge.io\/medias\/embed\/(?<project>[^\/]+)\/[^\/]+\/(?<id>[^\/]+)$/])
   end
 
   def data_from_bridge_item
@@ -25,10 +25,8 @@ module MediaBridgeItem
 
   def get_author
     author = self.doc.at_css('.bridgeEmbed__item-translation a[class=name]')
-    if author
-      self.data['username'] = author.content
-      self.data['author_url'] = author.attr('href')
-    end
+    self.data['username'] = author.content if author
+    self.data['author_url'] = author.attr('href') if author
   end
 
   def html_for_bridge_item

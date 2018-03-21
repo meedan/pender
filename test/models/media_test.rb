@@ -1093,58 +1093,14 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse bridge url" do
-    m = create_media url: 'https://speakbridge.io/medias/embed/us-presidential-candidates-2016/us-presidential-candidates-2016-general/3143'
+    m = create_media url: 'https://new.speakbridge.io/medias/embed/viber/1/403'
     d = m.as_json
-    assert_equal 'Translation of @moniierjb: At this debate, Donald and Hillary...', d['title']
-    assert_equal 'Translation of @moniierjb: At this debate, Donald and Hillary resemble old tamale-selling women hitting each other with sandals.', d['description']
-    assert_not_nil d['published_at']
-    assert_equal 'Jose Olivares', d['username']
-    assert_equal 'https://twitter.com/intent/user?user_id=1634599530', d['author_url']
-    assert_equal 'https://speakbridge.io/medias/embed/us-presidential-candidates-2016/us-presidential-candidates-2016-general/3143.png', d['picture']
-  end
-
-  test "should parse bridge url 2" do
-    m = create_media url: 'https://speakbridge.io/medias/embed/us-presidential-candidates-2016/us-presidential-candidates-2016-general/3190'
-    d = m.as_json
-    assert_equal 'Translation of @Ma7moudH: Both candidates #Clinton and #Trump have...', d['title']
-    assert_equal 'Translation of @Ma7moudH: Both candidates #Clinton and #Trump have the same vision for the Middle East, for them we are either Oil resources or extremists who need to be terminated.', d['description']
-    assert_not_nil d['published_at']
-    assert_equal 'Abir Kopty', d['username']
-    assert_equal 'https://twitter.com/intent/user?user_id=49568059', d['author_url']
-    assert_equal 'https://speakbridge.io/medias/embed/us-presidential-candidates-2016/us-presidential-candidates-2016-general/3190.png', d['picture']
-  end
-
-  test "should parse bridge url 3" do
-    m = create_media url: 'https://speakbridge.io/medias/embed/rightscon-en-espanol/RightsCon/2089'
-    d = m.as_json
-    assert_equal 'Translation of @rightscon: Hey #RightsCon, gracias por un...', d['title']
-    assert_match /Translation of @rightscon: Hey #RightsCon, gracias por un impresionante día 2! Deseando más convos gran mañana/, d['description']
-    assert_not_nil d['published_at']
-    assert_equal 'Overthinkingly', d['username']
-    assert_equal 'https://twitter.com/intent/user?user_id=17047202', d['author_url']
-    assert_equal 'https://speakbridge.io/medias/embed/rightscon-en-espanol/RightsCon/2089.png', d['picture']
-  end
-
-  test "should parse bridge url 4" do
-    m = create_media url: 'https://speakbridge.io/medias/embed/milestone/M43/b156f9891c399ebab21dbdbf22987a8f723dadbb'
-    d = m.as_json
-    assert_equal 'Translation of @traveler_for_life:', d['title']
-    assert_equal 'Translation of @traveler_for_life:', d['description']
+    assert_equal 'Translations of Viberهل يحتوي هذا الطعام على لحم الخنزير؟', d['title']
+    assert_equal 'هل يحتوي هذا الطعام على لحم الخنزير؟', d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
     assert_equal '', d['author_url']
-    assert_equal 'https://speakbridge.io/medias/embed/milestone/M43/b156f9891c399ebab21dbdbf22987a8f723dadbb.png', d['picture']
-  end
-
-  test "should parse bridge url 5" do
-    m = create_media url: 'https://speakbridge.io/medias/embed/milestone/M29/1bfdfb37e84960622cb9e94a66b7f6b4ab079591'
-    d = m.as_json
-    assert_equal 'Translation of @zlaya_tetka: *ммм?) это лучший кебаб, что я ела в...', d['title']
-    assert_match /Translation of @zlaya_tetka: \*ммм\?\) это лучший кебаб, что я ела в своей жизни;\) #наТифлис/, d['description']
-    assert_not_nil d['published_at']
-    assert_equal 'Aleksandre Jashia', d['username']
-    assert_equal 'https://www.linkedin.com/in/aleksandrejashia', d['author_url']
-    assert_equal 'https://speakbridge.io/medias/embed/milestone/M29/1bfdfb37e84960622cb9e94a66b7f6b4ab079591.png', d['picture']
+    assert_equal 'https://new.speakbridge.io/medias/embed/viber/1/403.png', d['picture']
   end
 
   test "should parse facebook url without identified pattern as item" do
