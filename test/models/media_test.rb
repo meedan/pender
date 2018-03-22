@@ -445,7 +445,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/photo.php?fbid=981302451896323&set=a.155912291102014.38637.100000497329098&type=3&theater'
     d = m.as_json
     assert_equal '100000497329098_981302451896323', d['uuid']
-    assert_equal '', d['text']
+    assert_equal 'Kiko Loureiro added a new photo.', d['text']
     assert_equal '100000497329098', d['user_uuid']
     assert_equal 'Kiko Loureiro', d['author_name']
     assert_not_nil d['picture']
@@ -513,7 +513,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://m.facebook.com/photo.php?fbid=981302451896323&set=a.155912291102014.38637.100000497329098&type=3&theater'
     d = m.as_json
     assert_equal '100000497329098_981302451896323', d['uuid']
-    assert_equal '', d['text']
+    assert_equal 'Kiko Loureiro added a new photo.', d['text']
     assert_equal '100000497329098', d['user_uuid']
     assert_equal 'Kiko Loureiro', d['author_name']
     assert_equal 1, d['media_count']
