@@ -109,7 +109,7 @@ GEM
     logstash-event (1.2.02)
     logstash-logger (0.25.1)
       logstash-event (~> 1.2)
-    loofah (2.1.1)
+    loofah (2.2.1)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
     mail (2.7.0)
@@ -130,7 +130,7 @@ GEM
     multipart-post (2.0.0)
     naught (1.1.0)
     newrelic_rpm (4.7.1.340)
-    nokogiri (1.8.1)
+    nokogiri (1.8.2)
       mini_portile2 (~> 2.3.0)
     open_uri_redirections (0.2.1)
     pg (0.21.0)
@@ -142,9 +142,9 @@ GEM
       activemodel (>= 4.0.1, < 5.0)
     public_suffix (2.0.5)
     puma (3.11.0)
-    rack (1.6.8)
+    rack (1.6.9)
     rack-cors (1.0.2)
-    rack-protection (2.0.0)
+    rack-protection (2.0.1)
       rack
     rack-test (0.6.3)
       rack (>= 1.0)
@@ -276,16 +276,18 @@ DEPENDENCIES
   ids_please!
   koala
   logstash-logger
+  loofah (= 2.2.1)
   mida
   mocha
   newrelic_rpm
-  nokogiri (= 1.8.1)
+  nokogiri (= 1.8.2)
   open_uri_redirections
   pg
   postrank-uri
   protected_attributes
   puma
   rack-cors
+  rack-protection (= 2.0.1)
   railroady
   rails (= 4.2.7.1)
   rails-perftest
