@@ -181,9 +181,13 @@ module MediaFacebookItem
     self.data['photos'] = metadata['picture'].nil? ? [] : [metadata['picture']]
   end
 
+  def get_facebook_content_from_html
+    self.doc.at_css('div.userContent') || self.doc.at_css('span.hasCaption')
+  end
+
   def get_facebook_text_from_html
     return unless self.data['text'].blank? && !self.doc.nil?
-    content = self.doc.at_css('div.userContent') || self.doc.at_css('span.hasCaption')
+    content = self.get_facebook_content_from_html
     if content.nil?
       meta_description = self.doc.at_css('meta[name=description]')
       text = meta_description ? meta_description.attr('content') : ''
