@@ -187,9 +187,8 @@ module MediaFacebookItem
     if content.nil?
       meta_description = self.doc.at_css('meta[name=description]')
       text = meta_description ? meta_description.attr('content') : ''
-    else
-      text = content.inner_html.gsub(/<[^>]+>/, '')
     end
+    text = content.inner_html.gsub(/<[^>]+>/, '') unless content.nil?
     self.data['text'] = text.to_s.gsub('See Translation', ' ')
   end
 
