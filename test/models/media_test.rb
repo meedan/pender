@@ -808,7 +808,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
     assert_equal '', d['username']
     assert_equal 'http://www.youm7.com', d['author_url']
-    assert_equal 'http://img.youm7.com/large/72016619556415g.jpg', d['picture']
+    assert_equal 'https://img.youm7.com/large/72016619556415g.jpg', d['picture']
   end
 
   test "should store the picture address" do
