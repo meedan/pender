@@ -695,7 +695,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
 
-    path = File.join(Rails.root, 'public', 'screenshots', 'https-xkcd-com-1479.png')
+    filename = Digest::MD5.hexdigest(m.url.parameterize) + '.png'
+    path = File.join(Rails.root, 'public', 'screenshots', filename)
     assert File.exists?(path)
     assert_match /\/screenshots\/https-xkcd-com-1479.png$/, d['picture']
   end
@@ -712,9 +713,10 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['username']
     assert_equal 'http://ca.ios.ba', d['author_url']
 
-    path = File.join(Rails.root, 'public', 'screenshots', 'http-ca-ios-ba.png')
+    filename = Digest::MD5.hexdigest(m.url.parameterize) + '.png'
+    path = File.join(Rails.root, 'public', 'screenshots', filename)
     assert File.exists?(path)
-    assert_match /\/screenshots\/http-ca-ios-ba.png$/, d['picture']
+    assert_match /\/screenshots\/#{filename}$/, data['screenshot']
   end
 
   test "should parse Facebook photo on page album" do
@@ -822,7 +824,8 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
-    assert_match /\/screenshots\/https-xkcd-com-448\.png/, d['picture']
+    filename = Digest::MD5.hexdigest(m.url.parameterize) + '.png'
+    assert_match /\/screenshots\/#{filename}$/, data['screenshot']
   end
 
   test "should get relative canonical URL parsed from html tags" do
@@ -1892,7 +1895,7 @@ class MediaTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     data = m.as_json
-    filename = url.parameterize + '.png'
+    filename = Digest::MD5.hexdigest(m.url.parameterize) + '.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
     assert File.exists?(path)
     assert_equal 0, Rails.cache.read(id)['screenshot_taken']
@@ -1915,7 +1918,7 @@ class MediaTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     data = m.as_json
-    filename = url.parameterize + '.png'
+    filename = Digest::MD5.hexdigest(url.parameterize) + '.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
     assert File.exists?(path)
 

@@ -10,7 +10,7 @@ class SaveScreenshotWorkerTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     data = m.as_json
-    filename = url.parameterize + '.png'
+    filename = Digest::MD5.hexdigest(url.parameterize) + '.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
     assert File.exists?(path)
     assert_equal 0, Rails.cache.read(id)['screenshot_taken']
