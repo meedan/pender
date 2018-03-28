@@ -5,8 +5,8 @@ class SaveScreenshotWorker
     
   def save(url, picture, settings, tab, script = '')
     t = Time.now.to_i.to_s
-    tmp = self.url_hash + '-' + t + '.png'
-    path = File.join(Rails.root, 'public', 'screenshots', self.image_filename)
+    tmp = Media.url_hash(url) + '-' + t + '.png'
+    path = File.join(Rails.root, 'public', 'screenshots', Media.image_filename(url))
     output_file = File.join(Rails.root, 'public', 'screenshots', tmp)
 
     fetcher = Chromeshot::Screenshot.new debug_port: CONFIG['chrome_debug_port']

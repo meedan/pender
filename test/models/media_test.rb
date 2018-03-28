@@ -698,7 +698,7 @@ class MediaTest < ActiveSupport::TestCase
     filename = Digest::MD5.hexdigest(m.url.parameterize) + '.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
     assert File.exists?(path)
-    assert_match /\/screenshots\/https-xkcd-com-1479.png$/, d['picture']
+    assert_match /\/screenshots\/#{filename}$/, d['picture']
   end
 
   test "should parse meta tags as fallback 2" do
@@ -716,7 +716,7 @@ class MediaTest < ActiveSupport::TestCase
     filename = Digest::MD5.hexdigest(m.url.parameterize) + '.png'
     path = File.join(Rails.root, 'public', 'screenshots', filename)
     assert File.exists?(path)
-    assert_match /\/screenshots\/#{filename}$/, data['screenshot']
+    assert_match /\/screenshots\/#{filename}$/, d['screenshot']
   end
 
   test "should parse Facebook photo on page album" do
@@ -825,7 +825,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
     filename = Digest::MD5.hexdigest(m.url.parameterize) + '.png'
-    assert_match /\/screenshots\/#{filename}$/, data['screenshot']
+    assert_match /\/screenshots\/#{filename}$/, d['screenshot']
   end
 
   test "should get relative canonical URL parsed from html tags" do
