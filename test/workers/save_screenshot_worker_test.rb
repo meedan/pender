@@ -10,15 +10,14 @@ class SaveScreenshotWorkerTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     data = m.as_json
-    filename = url.parameterize + '.png'
-    path = File.join(Rails.root, 'public', 'screenshots', filename)
+    path = File.join(Rails.root, 'public', 'screenshots', Media.image_filename(url))
     assert File.exists?(path)
     assert_equal 0, Rails.cache.read(id)['screenshot_taken']
     assert_nil Rails.cache.read(id)['webhook_called']
     
     w = SaveScreenshotWorker.new
     w.perform
-    
+
     dimensions = IO.read(path)[0x10..0x18].unpack('NN')
     assert dimensions[1] > 2000
     assert_equal 1, Rails.cache.read(id)['screenshot_taken']

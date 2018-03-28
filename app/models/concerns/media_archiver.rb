@@ -75,5 +75,13 @@ module MediaArchiver
       end
       true
     end
+
+    def url_hash(url)
+      Digest::MD5.hexdigest(url.parameterize)
+    end
+
+    def image_filename(url)
+       url_hash(url) + '.png'
+    end
   end
 end

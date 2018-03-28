@@ -4,10 +4,9 @@ class SaveScreenshotWorker
   include Sidekiq::Worker
     
   def save(url, picture, settings, tab, script = '')
-    filename = url.parameterize + '.png'
     t = Time.now.to_i.to_s
-    tmp = url.parameterize + '-' + t + '.png'
-    path = File.join(Rails.root, 'public', 'screenshots', filename)
+    tmp = Media.url_hash(url) + '-' + t + '.png'
+    path = File.join(Rails.root, 'public', 'screenshots', Media.image_filename(url))
     output_file = File.join(Rails.root, 'public', 'screenshots', tmp)
 
     fetcher = Chromeshot::Screenshot.new debug_port: CONFIG['chrome_debug_port']
