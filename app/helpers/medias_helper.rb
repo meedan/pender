@@ -82,4 +82,8 @@ module MediasHelper
       media.data[field] = HTMLEntities.new.decode(media.data[field])
     end
   end
+
+  def decoded_uri(url)
+    URI.decode(url)
+  end
 end

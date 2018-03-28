@@ -2056,6 +2056,7 @@ class MediaTest < ActiveSupport::TestCase
     path = File.join(Rails.root, 'public', 'screenshots', filename)
     assert File.exists?(path)
     assert_match /\/screenshots\/#{filename}$/, data['screenshot']
+    assert data['error'].nil?
   end
 
 end

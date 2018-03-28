@@ -170,7 +170,7 @@ class Media
   # Update the media `url` with the url found after all redirections
 
   def follow_redirections
-    self.url = self.add_scheme(URI.decode(self.url.strip))
+    self.url = self.add_scheme(decoded_uri(self.url.strip))
     attempts = 0
     code = '301'
     path = []
@@ -219,7 +219,7 @@ class Media
   def get_html(header_options = {})
     html = ''
     begin
-      OpenURI.open_uri(Media.parse_url(self.url), header_options) do |f|
+      OpenURI.open_uri(Media.parse_url(decoded_uri(self.url)), header_options) do |f|
         f.binmode
         html = f.read
       end
