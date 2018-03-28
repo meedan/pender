@@ -2045,4 +2045,17 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', data['username']
   end
 
+  test "should use md5 hash on screenshot filename" do
+    Media.any_instance.unstub(:archive_to_screenshot)
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    url = 'https://www.madamasr.com/ar/2018/03/13/feature/%D8%B3%D9%8A%D8%A7%D8%B3%D8%A9/%D9%82%D8%B1%D8%A7%D8%A1%D8%A9-%D9%81%D9%8A-%D8%AC%D8%B1%D8%A7%D8%A6%D9%85-%D8%A7%D9%84%D9%85%D8%B9%D9%84%D9%88%D9%85%D8%A7%D8%AA-%D8%AA%D9%82%D9%86%D9%8A%D9%86-%D9%84%D9%84%D8%AD%D8%AC'
+    m = create_media url: url, request: request
+    data = m.as_json
+    filename = Digest::MD5.hexdigest(url.parameterize) + '.png'
+    path = File.join(Rails.root, 'public', 'screenshots', filename)
+    assert File.exists?(path)
+    assert_match /\/screenshots\/#{filename}$/, data['screenshot']
+  end
+
 end

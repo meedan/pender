@@ -26,6 +26,14 @@ module MediaArchiver
     false
   end
 
+  def url_hash
+    Digest::MD5.hexdigest(self.url.parameterize)
+  end
+
+  def image_filename
+    url_hash + '.png'
+  end
+
   module ClassMethods
     def declare_archiver(name, patterns, modifier)
       ARCHIVERS[name] = { patterns: patterns, modifier: modifier }
