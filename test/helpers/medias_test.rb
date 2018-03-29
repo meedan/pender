@@ -3,7 +3,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 class MediasHelperTest < ActionView::TestCase
   def setup
     super
-    @request = ActionController::TestRequest.new
+    @request = ActionController::TestRequest.new 
     @request.host = 'foo.bar'
     @request
   end
@@ -14,8 +14,8 @@ class MediasHelperTest < ActionView::TestCase
   end
 
   test "should get embed URL replacing only the first occurrence of medias" do
-    @request.path = '/api/medias.html?url=https://speakbridge.io/medias/embed/viber/1/403'
-    assert_equal '<script src="http://foo.bar/api/medias.js?url=https://speakbridge.io/medias/embed/viber/1/403" type="text/javascript"></script>', embed_url
+    @request.path = '/api/medias.html?url=https://new.speakbridge.io/medias/embed/viber/1/403'
+    assert_equal '<script src="http://foo.bar/api/medias.js?url=https://new.speakbridge.io/medias/embed/viber/1/403" type="text/javascript"></script>', embed_url
   end
 
   test "should get embed URL with refresh" do
