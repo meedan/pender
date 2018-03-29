@@ -11,93 +11,86 @@ module MediaFacebookProfile
     )
   end
 
-  def facebook_user_fields
-    fields = %w(
-      link        name                first_name     id            last_name    picture              timezone
-      albums      books               events         family        games        groups               likes
-      movies      music               photos         tagged_places television   videos               feed
-      about       age_range           birthday       cover         currency     education            website
-      email       favorite_athletes   favorite_teams gender        hometown     inspirational_people interested_in
-      is_verified languages           locale         location      middle_name  name_format          political
-      quotes      relationship_status religion       sports        updated_time verified
-    )
-    fields
-  end
-
-  def facebook_page_fields
-    fields = %w(
-      id                  about            awards         bio              birthday             built                 can_checkin
-      category            category_list    checkins       company_overview contact_address      context               country_page_likes
-      cover               current_location description    display_subtext  emails               founded               general_info
-      general_manager     genre            hometown       hours            is_community_page    photos                is_published
-      is_unclaimed        is_verified      keywords       leadgen_tos_accepted link             location              picture
-      name                network          new_like_count parent_page      personal_info        phone                 press_contact
-      talking_about_count username         voip_info      website          were_here_count      written_by            events
-      likes               locations
-    )
-    fields << 'fan_count' if CONFIG['facebook_api_version'].to_s === 'v2.6'
-    fields
-  end
-
-  def facebook_client
-    Koala.config.api_version = CONFIG['facebook_api_version'] || 'v2.5'
-    Koala::Facebook::API.new CONFIG['facebook_auth_token']
-  end
-
   def get_data_from_facebook
     data = {}
     id = self.get_facebook_id_from_url
-    client = self.facebook_client
-    self.data[:raw][:api] = {}
     # Try to parse as a user profile first
     begin
-      object = client.get_object(id, { fields: self.facebook_user_fields }, { method: 'post' })
-      self.data[:raw][:api] = object
+      self.parse_facebook_user
       data['subtype'] = 'user'
     # If it fails, try to parse as a page
     rescue
-      object = client.get_object(id, { fields: self.facebook_page_fields }, { method: 'post' })
-      self.data[:raw][:api] = object
+      begin
+        self.parse_facebook_page
+      rescue
+        self.parse_facebook_legacy_page
+      end
       data['subtype'] = 'page'
     end
     data['published_at'] = ''
     data
   end
 
-  def data_from_facebook_profile
-    handle_exceptions(self, Koala::Facebook::ClientError, :fb_error_message, :fb_error_code) do
-      begin
-        self.data.merge! self.get_data_from_facebook
-      rescue Koala::Facebook::ClientError => e
-        Rails.logger.info "[Facebook Profile] Parsing `#{url}`: Error Code: #{e.fb_error_code} Subcode #{e.fb_error_subcode} Message: #{e.fb_error_message}"
-        Airbrake.notify(e) if Airbrake.configuration.api_key && e.fb_error_code == 190
-        raise e
-      end
+  def get_facebook_profile_html
+    if @html.nil?
+      body = Net::HTTP.get_response(URI(URI.escape(self.url)))
+      @html = body.gsub('<!--', '').gsub('-->', '')
     end
+    @html
+  end
+
+  def parse_facebook_user
+    html = self.get_facebook_profile_html
+    page = Nokogiri::HTML(html)
+
+    self.data['name'] = page.css('#fb-timeline-cover-name').first.text
+    bio = page.css('#pagelet_bio span').last
+    self.data['description'] = bio ? bio.text : ''
+    self.data['picture'] = page.css('.img.profilePic.img').first.attr('src')
+  end
+
+  def parse_facebook_page
+    html = self.get_facebook_profile_html
+    page = Nokogiri::HTML(html)
+    match = html.match(/"name":"([^"]+)","pageID":"([^"]+)","username":([^,]+),"usernameEditDialogProfilePictureURI":"([^"]+)"/)
+    json = JSON.parse('{' + match[0] + '}')
+    
+    self.data['name'] = json['name']
+    self.data['username'] = json['username']
+    self.data['description'] = page.css('meta[name=description]').first.attr('content').gsub(/.*talking about this. /, '')
+    self.data['picture'] = json['usernameEditDialogProfilePictureURI']
+  end
+
+  def parse_facebook_legacy_page
+    html = self.get_facebook_profile_html
+    page = Nokogiri::HTML(html)
+
+    bio = page.css('blockquote .text_exposed_root').first
+    self.data['description'] = bio ? bio.text : ''
+    pic = page.css('img.scaledImageFitWidth').first
+    self.data['picture'] = pic.attr('src') if pic
+    name = page.css('.profileLink').first
+    self.data['name'] = name.text if name
+  end
+
+  def data_from_facebook_profile
+    self.data.merge! self.get_data_from_facebook
     self.get_facebook_likes
     self.data.merge!({
       username: self.get_facebook_username,
-      title: get_info_from_data('api', data, 'name'),
-      description: get_info_from_data('api', data, 'bio', 'about', 'description'),
-      author_url: get_info_from_data('api', data, 'link'),
-      author_picture: self.facebook_picture,
-      author_name: get_info_from_data('api', data, 'name'),
-      picture: self.facebook_picture
+      title: self.data['name'],
+      description: self.data['description'],
+      author_url: self.url,
+      author_picture: self.data['picture'],
+      author_name: self.data['name'],
+      picture: self.data['picture']
     })
   end
 
   def get_facebook_likes
-    likes = self.data['raw']['api']['likes'].to_s
-    self.data['likes'] = likes.match(/^[0-9]+$/).nil? ? self.data['raw']['api']['fan_count'] : likes
-  end
-
-  def facebook_picture
-    data = self.data['raw']['api']
-    picture = ''
-    if data['picture'] && data['picture']['data'] && data['picture']['data']['url']
-      picture = data['picture']['data']['url']
-    end
-    picture
+    html = self.get_facebook_profile_html
+    page = Nokogiri::HTML(html)
+    self.data['likes'] = page.css('#PagesLikesCountDOMID span').text.gsub(/ .*/, '').gsub(/[^0-9]/, '')
   end
 
   def get_facebook_username
@@ -111,7 +104,7 @@ module MediaFacebookProfile
     if username === 'pages'
       username = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/pages\/([^\/]+)\/([^\/\?]+).*/)[2]
     elsif username.to_i > 0 || username === 'profile.php'
-      username = self.data['raw']['api']['name']
+      username = self.data['username']
     end
     username
   end
