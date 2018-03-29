@@ -56,7 +56,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://new.speakbridge.io/medias/embed/viber/1/403'
+    url = 'https://speakbridge.io/medias/embed/viber/1/403'
     get :index, url: url, refresh: '1', format: :html
     name = Digest::MD5.hexdigest(url)
     cache_file = File.join('public', 'cache', Rails.env, "#{name}.html" )
@@ -69,7 +69,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should not ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://new.speakbridge.io/medias/embed/viber/1/403'
+    url = 'https://speakbridge.io/medias/embed/viber/1/403'
     name = Digest::MD5.hexdigest(url)
     cache_file = File.join('public', 'cache', Rails.env, "#{name}.html" )
     get :index, url: url, refresh: '0', format: :html
@@ -355,19 +355,19 @@ class MediasControllerTest < ActionController::TestCase
     id2 = Media.get_id(url2)
     cachefile1 = File.join('public', 'cache', Rails.env, "#{id1}.html")
     cachefile2 = File.join('public', 'cache', Rails.env, "#{id2}.html")
-    
+
     assert !File.exist?(cachefile1)
     assert !File.exist?(cachefile2)
     assert_nil Rails.cache.read(id1)
     assert_nil Rails.cache.read(id2)
-    
+
     get :index, url: url1
     get :index, url: url2
     assert File.exist?(cachefile1)
     assert File.exist?(cachefile2)
     assert_not_nil Rails.cache.read(id1)
     assert_not_nil Rails.cache.read(id2)
-    
+
     delete :delete, url: [url1, url2], format: 'json'
     assert_response :success
     assert !File.exist?(cachefile1)
@@ -478,7 +478,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should redirect and remove unsupported parameters if format is HTML and URL is the only supported parameter provided" do
     url = 'https://twitter.com/caiosba/status/923697122855096320'
-    
+
     get :index, url: url, foo: 'bar', format: :html
     assert_response 302
     assert_equal 'api/medias.html?url=https%3A%2F%2Ftwitter.com%2Fcaiosba%2Fstatus%2F923697122855096320', @response.redirect_url.split('/', 4).last
