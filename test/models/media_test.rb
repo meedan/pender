@@ -2074,4 +2074,18 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:twitter_client)
   end
 
+  test "should handle errors when call parse" do
+    Media.any_instance.unstub(:archive_to_screenshot)
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    url = 'http://example.com'
+    m = create_media url: url, request: request
+    %w(oembed_item instagram_profile instagram_item page_item dropbox_item bridge_item facebook_item).each do |parser|
+      Media.any_instance.stubs("data_from_#{parser}").raises(StandardError)
+      data = m.as_json
+      assert_equal "StandardError: StandardError", data['error']['message']
+      Media.any_instance.unstub("data_from_#{parser}")
+    end
+  end
+
 end

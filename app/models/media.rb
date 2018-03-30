@@ -70,7 +70,9 @@ class Media
 
   def as_json(options = {})
     Rails.cache.fetch(Media.get_id(self.original_url), options) do
-      self.parse
+      handle_exceptions(self, StandardError) do
+        self.parse
+      end
       self.archive
       self.data.merge(Media.required_fields(self)).with_indifferent_access
     end
