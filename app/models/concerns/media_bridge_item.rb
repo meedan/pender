@@ -6,7 +6,7 @@ module MediaBridgeItem
   end
 
   def data_from_bridge_item
-    handle_exceptions(self, RuntimeError) do
+    handle_exceptions(self, StandardError) do
       self.parse_from_bridge_html
       self.data.merge!({
         html: html_for_bridge_item,

@@ -10,7 +10,7 @@ module MediaInstagramItem
   def data_from_instagram_item
     id = self.url.match(INSTAGRAM_URL)[2]
 
-    handle_exceptions(self, RuntimeError) do
+    handle_exceptions(self, StandardError) do
       self.get_instagram_data(id.to_s)
       data = self.data
       self.data.merge!({

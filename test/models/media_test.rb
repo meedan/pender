@@ -1057,7 +1057,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal 'Emerson T. Brooking and P. W. Singer', d['username']
     assert_equal 'https://www.theatlantic.com', d['author_url']
-    assert_equal 'https://cdn.theatlantic.com/assets/media/img/2016/10/WEL_Singer_SocialWar_opener_ALT/facebook.jpg?1475683228', d['picture']
+    assert_match /https:\/\/cdn.theatlantic.com\/assets\/media\/img\/2016\/10\/WEL_Singer_SocialWar_opener_ALT\/facebook.jpg/, d['picture']
   end
 
   test "should parse url 2" do
@@ -2060,6 +2060,32 @@ class MediaTest < ActiveSupport::TestCase
     assert File.exists?(path)
     assert_match /\/screenshots\/#{filename}$/, data['screenshot']
     assert data['error'].nil?
+  end
+
+  test "should handle error when cannot get twitter url" do
+    Media.any_instance.unstub(:archive_to_screenshot)
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    Media.any_instance.stubs(:twitter_client).raises(Twitter::Error::Forbidden)
+    url = 'http://www.yallakora.com/ar/news/342470/%D8%A7%D8%AA%D8%AD%D8%A7%D8%AF-%D8%A7%D9%84%D9%83%D8%B1%D8%A9-%D8%B9%D9%86-%D8%A3%D8%B2%D9%85%D8%A9-%D8%A7%D9%84%D8%B3%D8%B9%D9%8A%D8%AF-%D9%84%D8%A7%D8%A8%D8%AF-%D9%85%D9%86-%D8%AD%D9%84-%D9%85%D8%B9-%D8%A7%D9%84%D8%B2%D9%85%D8%A7%D9%84%D9%83/2504'
+    m = create_media url: url, request: request
+    data = m.as_json
+    assert data['error'].nil?
+    Media.any_instance.unstub(:twitter_client)
+  end
+
+  test "should handle errors when call parse" do
+    Media.any_instance.unstub(:archive_to_screenshot)
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    url = 'http://example.com'
+    m = create_media url: url, request: request
+    %w(oembed_item instagram_profile instagram_item page_item dropbox_item bridge_item facebook_item).each do |parser|
+      Media.any_instance.stubs("data_from_#{parser}").raises(StandardError)
+      data = m.as_json
+      assert_equal "StandardError: StandardError", data['error']['message']
+      Media.any_instance.unstub("data_from_#{parser}")
+    end
   end
 
 end
