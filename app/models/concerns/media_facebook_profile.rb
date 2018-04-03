@@ -12,70 +12,101 @@ module MediaFacebookProfile
   end
 
   def get_data_from_facebook
+    page = self.get_facebook_profile_page
+
+    if page.blank?
+      return { error: { message: 'Not Found' } }
+    end
+
     data = {}
-    id = self.get_facebook_id_from_url
     # Try to parse as a user profile first
     begin
-      self.parse_facebook_user
+      data = self.parse_facebook_user
       data['subtype'] = 'user'
     # If it fails, try to parse as a page
     rescue
       begin
-        self.parse_facebook_page
+        data = self.parse_facebook_page
       rescue
-        self.parse_facebook_legacy_page
+        data = self.parse_facebook_legacy_page
       end
       data['subtype'] = 'page'
     end
+    data['id'] = self.get_facebook_id_from_url
+
+    error = self.get_facebook_profile_error
+    data['error'] = error if error
+    
+    data['likes'] = self.get_facebook_likes
+    
     data['published_at'] = ''
     data
   end
 
+  def get_facebook_profile_error
+    page = self.get_facebook_profile_page
+    title = page.css('meta[property="og:title"]')
+    if title.present? && title.attr('content') && title.attr('content').value == 'Log In or Sign Up to View'
+      { message: 'Login required to see this profile' }
+    end
+  end
+
   def get_facebook_profile_html
     if @html.nil?
-      body = Net::HTTP.get_response(URI(URI.escape(self.url)))
-      @html = body.gsub('<!--', '').gsub('-->', '')
+      @html = self.get_html(self.html_options).to_s
     end
     @html
   end
 
-  def parse_facebook_user
-    html = self.get_facebook_profile_html
-    page = Nokogiri::HTML(html)
+  def get_facebook_profile_page
+    if @page.nil?
+      @page = self.get_html(self.html_options)
+    end
+    @page
+  end
 
-    self.data['name'] = page.css('#fb-timeline-cover-name').first.text
+  def parse_facebook_user
+    page = self.get_facebook_profile_page
+
+    data = {}
+    data['name'] = page.css('#fb-timeline-cover-name').first.text
     bio = page.css('#pagelet_bio span').last
-    self.data['description'] = bio ? bio.text : ''
-    self.data['picture'] = page.css('.img.profilePic.img').first.attr('src')
+    data['description'] = bio ? bio.text : ''
+    data['picture'] = page.css('.img.profilePic.img').first.attr('src')
+    data
   end
 
   def parse_facebook_page
     html = self.get_facebook_profile_html
-    page = Nokogiri::HTML(html)
+    page = self.get_facebook_profile_page
     match = html.match(/"name":"([^"]+)","pageID":"([^"]+)","username":([^,]+),"usernameEditDialogProfilePictureURI":"([^"]+)"/)
     json = JSON.parse('{' + match[0] + '}')
     
-    self.data['name'] = json['name']
-    self.data['username'] = json['username']
-    self.data['description'] = page.css('meta[name=description]').first.attr('content').gsub(/.*talking about this. /, '')
-    self.data['picture'] = json['usernameEditDialogProfilePictureURI']
+    data = {}
+    data['name'] = json['name']
+    data['username'] = json['username']
+    data['description'] = page.css('meta[name=description]').first.attr('content').gsub(/.*talking about this. /, '')
+    data['picture'] = json['usernameEditDialogProfilePictureURI']
+    data
   end
 
   def parse_facebook_legacy_page
-    html = self.get_facebook_profile_html
-    page = Nokogiri::HTML(html)
+    page = self.get_facebook_profile_page
 
+    data = {}
     bio = page.css('blockquote .text_exposed_root').first
-    self.data['description'] = bio ? bio.text : ''
+    data['description'] = bio ? bio.text : ''
     pic = page.css('img.scaledImageFitWidth').first
-    self.data['picture'] = pic.attr('src') if pic
+    data['picture'] = pic.attr('src') if pic
     name = page.css('.profileLink').first
-    self.data['name'] = name.text if name
+    name2 = page.css('h1[itemprop=name]').first
+    data['name'] = name.text unless name.nil?
+    data['name'] = name2.text if name.nil? && !name2.nil?
+    data
   end
 
   def data_from_facebook_profile
     self.data.merge! self.get_data_from_facebook
-    self.get_facebook_likes
     self.data.merge!({
       username: self.get_facebook_username,
       title: self.data['name'],
@@ -88,9 +119,8 @@ module MediaFacebookProfile
   end
 
   def get_facebook_likes
-    html = self.get_facebook_profile_html
-    page = Nokogiri::HTML(html)
-    self.data['likes'] = page.css('#PagesLikesCountDOMID span').text.gsub(/ .*/, '').gsub(/[^0-9]/, '')
+    page = self.get_facebook_profile_page
+    page.css('#PagesLikesCountDOMID span').text.gsub(/ .*/, '').gsub(/[^0-9]/, '')
   end
 
   def get_facebook_username

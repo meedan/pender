@@ -310,9 +310,9 @@ class MediaTest < ActiveSupport::TestCase
       media = create_media url: url
       data = media.as_json
       assert_equal 'https://www.facebook.com/caiosba', data['url']
-      assert_equal 'Caio Sacramento', data['title']
+      assert_match /Caio Sacramento/, data['title']
       assert_equal 'caiosba', data['username']
-      assert_equal 'https://www.facebook.com/app_scoped_user_id/100001147915899/', data['author_url']
+      assert_equal 'https://www.facebook.com/caiosba', data['author_url']
       assert_equal 'facebook', data['provider']
       assert_equal 'user', data['subtype']
       assert_not_nil data['description']
@@ -325,7 +325,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://facebook.com/caiosba'
     data = m.as_json
     assert_equal 'https://www.facebook.com/caiosba', data['url']
-    assert_equal 'Caio Sacramento', data['title']
+    assert_match /Caio Sacramento/, data['title']
     assert_equal 'caiosba', data['username']
     assert_equal 'facebook', data['provider']
     assert_equal 'user', data['subtype']
@@ -344,21 +344,19 @@ class MediaTest < ActiveSupport::TestCase
   # http://errbit.test.meedan.net/apps/576218088583c6f1ea000231/problems/57a1bf968583c6f1ea000c01
   # https://mantis.meedan.com/view.php?id=4913
   test "should parse numeric Facebook profile 2" do
-    variations = %w(
-      https://www.facebook.com/noha.n.daoud
-      https://facebook.com/515336093
-    )
-    variations.each do |url|
-      media = Media.new(url: url)
-      data = media.as_json
-      assert_equal 'Noha Nazieh Daoud', data['title']
-      assert_equal 'https://www.facebook.com/app_scoped_user_id/515336093/', data['author_url']
-      assert_equal 'facebook', data['provider']
-      assert_equal 'user', data['subtype']
-      assert_not_nil data['description']
-      assert_not_nil data['picture']
-      assert_not_nil data['published_at']
-    end
+    url = 'https://www.facebook.com/noha.n.daoud'
+    media = Media.new(url: url)
+    data = media.as_json
+    assert_equal 'Not Found', data['error']['message']
+  end
+
+  # http://errbit.test.meedan.net/apps/576218088583c6f1ea000231/problems/57a1bf968583c6f1ea000c01
+  # https://mantis.meedan.com/view.php?id=4913
+  test "should parse numeric Facebook profile 3" do
+    url = 'https://facebook.com/515336093'
+    media = Media.new(url: url)
+    data = media.as_json
+    assert_equal 'Login required to see this profile', data['error']['message']
   end
 
   test "should parse tweet" do
@@ -1594,19 +1592,6 @@ class MediaTest < ActiveSupport::TestCase
 
     assert_equal 'Tico-Santa-Cruz', data[:username]
     assert_equal 'Tico Santa Cruz', data[:title]
-    assert !data[:picture].blank?
-  end
-
-  test "should store data of a page returned by facebook API" do
-    m = create_media url: 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
-    data = m.as_json
-    assert data['raw']['api'].is_a? Hash
-    assert !data['raw']['api'].empty?
-
-    assert_equal 'Meedan', data[:username]
-    assert_equal 'Meedan', data[:title]
-    assert_match /Meedan is a non-profit social technology company/, data[:description]
-    assert !data[:likes].blank?
     assert !data[:picture].blank?
   end
 
