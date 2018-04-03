@@ -92,10 +92,23 @@ module MediaFacebookItem
 
   def get_facebook_info_from_metadata
     get_metatags(self)
-    metadata = self.get_opengraph_metadata
-    self.data['author_name'] = metadata['title']
-    self.data['text'] = metadata['description']
-    self.data['photos'] = metadata['picture'].nil? ? [] : [metadata['picture']]
+    metadata = self.get_opengraph_metadata || {}
+    self.data['metadata'] = metadata
+    self.data['author_name'] = metadata['title'].nil? ? self.get_facebook_title_from_html : metadata['title']
+    self.data['text'] = metadata['description'].nil? ? self.get_facebook_description_from_html : metadata['description']
+    self.data['photos'] = metadata['picture'].nil? ? self.get_facebook_photos_from_html : [metadata['picture']]
+  end
+
+  def get_facebook_description_from_html
+    self.doc.css('span[data-testid="event-permalink-details"]').text unless self.url.match(EVENT_URL).nil?
+  end
+
+  def get_facebook_title_from_html
+    self.doc.css('#pageTitle').text
+  end
+
+  def get_facebook_photos_from_html
+    self.doc.css('.scaledImageFitHeight').collect{ |i| i['src'] }
   end
 
   def get_facebook_content_from_html
@@ -108,6 +121,10 @@ module MediaFacebookItem
     if content.nil?
       meta_description = self.doc.at_css('meta[name=description]')
       text = meta_description ? meta_description.attr('content') : ''
+      if text.blank?
+        caption = self.doc.at_css('.fbPhotoCaptionText')
+        text = caption.text if caption
+      end
     end
     text = content.inner_html.gsub(/<[^>]+>/, '') unless content.nil?
     self.data['text'] = text.to_s.gsub('See Translation', ' ')
@@ -120,15 +137,25 @@ module MediaFacebookItem
   end
 
   def get_facebook_owner_name_from_html
-    return unless self.data['author_name'].blank?
+    event_name = self.get_facebook_event_name_from_html
+    current_name = self.data['author_name']
     user_name = self.doc.to_s.match(/ownerName:"([^"]+)"/)
-    self.data['author_name'] = user_name.nil? ? 'Not Identified' : user_name[1]
+    self.data['author_name'] = event_name.nil? ? (user_name.nil? ? (current_name.blank? ? 'Not Identified' : current_name) : user_name[1]) : event_name
+  end
+
+  def get_facebook_event_name_from_html
+    event_name = self.doc.at_css('div[data-testid="event_permalink_feature_line"]')
+    event_name.nil? ? nil : event_name.attr('content')
   end
 
   def get_facebook_published_time_from_html
     return if self.doc.nil?
     time = self.doc.at_css('span.timestampContent')
-    self.data['published_at'] = Time.parse(time.inner_html) unless time.nil?
+    begin
+      self.data['published_at'] = Time.parse(time.inner_html) unless time.nil?
+    rescue ArgumentError
+      self.data['published_at'] = Time.at(time.parent.attr('data-utime').to_i) unless time.nil?
+    end
   end
 
   def get_facebook_url_from_html
@@ -139,7 +166,12 @@ module MediaFacebookItem
   def get_facebook_media_count_from_html
     text = self.doc.to_s.gsub(/<[^>]+>/, '')
     media = text.match(/added ([0-9]+) new photos/)
-    self.data['media_count'] = media.nil? ? 0 : media[1].to_i
+    if media.nil? && (!text.match(/added a new photo/).nil? || !self.url.match(/\/photos\//).nil?)
+      self.data['media_count'] = 1
+    else
+      self.data['media_count'] = media.nil? ? 0 : media[1].to_i
+      self.data['media_count'] = (self.data['photos'] - [self.data['metadata']['picture']]).size if self.data['media_count'] == 0
+    end
   end
 
   def html_for_facebook_post
@@ -177,7 +209,7 @@ module MediaFacebookItem
         picture: self.data['photos'].first,
         html: self.html_for_facebook_post,
         author_name: self.data['author_name'],
-        author_url: 'http://facebook.com/' + self.data['user_uuid']
+        author_url: 'http://facebook.com/' + self.data['user_uuid'].to_s
       })
     end
   end
