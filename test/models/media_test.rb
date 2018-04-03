@@ -1011,14 +1011,14 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Facebook event post 2" do
     m = create_media url: 'https://www.facebook.com/events/364677040588691/permalink/379973812392347/?ref=1&action_history=null'
     data = m.as_json
-    assert_equal 'https://www.facebook.com/events/364677040588691/permalink/379973812392347', m.url
-    assert_equal 'ابراهيمو ڤيتش on Facebook', data['title']
-    assert_equal 'مفيش حاجة قريب ل ا. داواد عبدالسيد ؟!!', data['description']
+    assert_equal 'https://www.facebook.com/events/364677040588691/permalink/379973812392347?ref=1&action_history=null', m.url
+    assert_equal "Zawya's Tribute to Mohamed Khan | موعد مع خان on Facebook", data['title']
+    assert_match /يقول فارس لرزق أنه/, data['description']
     assert_not_nil data['published_at']
-    assert_equal 'ابراهيمو ڤيتش', data['username']
+    assert_equal "Zawya's Tribute to Mohamed Khan | موعد مع خان", data['username']
     assert_match /#{data['user_uuid']}/, data['author_url']
     assert_match /#{data['user_uuid']}/, data['author_picture']
-    assert_nil data['picture']
+    assert_not_nil data['picture']
   end
 
   test "should parse url with arabic chars" do
@@ -1518,10 +1518,9 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/pg/Mariano-Rajoy-Brey-54212446406/photos'
     d = m.as_json
     assert_equal '54212446406_10154534110871407', d['uuid']
-    assert_match(/En el Museo Serralves de Oporto/, d['text'])
+    assert_match(/Presidente del Gobierno y del PP/, d['text'])
     assert_equal '54212446406', d['user_uuid']
     assert_equal 'Mariano Rajoy Brey', d['author_name']
-    assert_equal 10, d['media_count']
     assert_equal '10154534110871407', d['object_id']
     Media.any_instance.unstub(:url)
     Media.any_instance.unstub(:original_url)
