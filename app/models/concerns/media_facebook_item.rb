@@ -74,92 +74,9 @@ module MediaFacebookItem
     CGI.parse(uri.query.to_s)
   end
 
-  def get_object_from_facebook(*fields)
-    fields = "fields=#{fields.join(',')}&" unless fields.blank?
-    uri = URI("https://graph.facebook.com/v2.6/#{self.data['uuid']}?#{fields}access_token=#{CONFIG['facebook_auth_token']}")
-    response = Net::HTTP.get_response(uri)
-    if response.code.to_i === 200
-      JSON.parse(response.body)
-    else
-      response = JSON.parse(response.body)
-      Airbrake.notify(Exception.new(response['error']['message'])) if response['error']['code'] == 190 && Airbrake.configuration.api_key
-      nil
-    end
-  end
-
-  def parse_from_facebook_api
-    object = self.get_object_from_facebook(api_fields)
-    if object.nil?
-      false
-    else
-      self.data['raw']['api'] = object
-      self.data['text'] = get_text_from_object(object)
-      self.data['published_at'] = object['created_time'] || object['updated_time']
-      self.data['author_name'] = object['name'] || object['from']['name']
-      if self.url.match(EVENT_URL).nil?
-        self.data['user_uuid'] = object['from']['id'] if self.data['user_uuid'].blank?
-        get_facebook_picture(self.data['user_uuid'])
-      else
-        self.data['user_uuid'] = object['owner']['id']
-      end
-      get_url_from_object(object)
-
-      self.parse_facebook_media(object)
-
-      true
-    end
-  end
-
-  def api_fields
-    fields = ['id', 'type']
-    if self.url.match(EVENT_URL).nil?
-      fields += ['message', 'created_time', 'from', 'story', 'full_picture', 'link', 'permalink_url']
-    else
-      fields += ['owner', 'updated_time', 'description', 'name']
-    end
-    fields
-  end
-
-  def get_text_from_object(object)
-    object['message'] || object['story'] || object['description'] || ''
-  end
-
-  def get_url_from_object(object)
-    return unless ['video', 'photo', 'status'].include?(object['type'])
-    self.url = if object['type'] == 'video'
-                 object['link']
-               elsif object['type'] == 'status'
-                 object['permalink_url']
-               elsif object['type'] == 'photo'
-                 object['permalink_url'].match(/album\.php/) ? object['link'] : object['permalink_url']
-               end
-    self.url = Media.normalize_url(self.url)
-  end
-
   def get_facebook_picture(id)
     return if id.blank?
     self.data['author_picture'] = 'https://graph.facebook.com/' + id + '/picture'
-  end
-
-  def parse_facebook_media(object)
-    external_gif = parse_gif_from_external_link(object)
-    media_count = 0
-    media_count = 1 if object['type'] === 'photo' || external_gif
-    story = object['story'].to_s.match(/.* added ([0-9]+) new photos.*/)
-    media_count = story[1].to_i unless story.nil?
-    picture = external_gif || object['full_picture']
-    self.data['photos'] = picture.blank? ? [] : [picture]
-    self.data['media_count'] = media_count
-  end
-
-  def parse_gif_from_external_link(object)
-    return unless object['type'] === 'link'
-    if object['link'].match(/^https?:\/\/([^\.]+\.)?(giphy\.com|gph\.is)\/.*/)
-      self.data['link'] = object['link']
-      uri = URI.parse(object['full_picture'])
-      params = parse_uri(uri)
-      params['url'].first
-    end
   end
 
   def parse_from_facebook_html
@@ -250,7 +167,7 @@ module MediaFacebookItem
     self.screenshot_script = 'function closeLoginModal(){if(document.getElementById("headerArea")){document.getElementById("headerArea").style.display="none";}else{setTimeout(closeLoginModal,1000);}}closeLoginModal();'
     handle_exceptions(self, RuntimeError) do
       self.parse_facebook_uuid
-      self.parse_from_facebook_html unless self.parse_from_facebook_api
+      self.parse_from_facebook_html
       self.data['text'].strip! if self.data['text']
       self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
       self.data.merge!({
@@ -269,5 +186,4 @@ module MediaFacebookItem
     uri = Media.parse_url(self.url)
     "https://www.facebook.com/plugins/post/oembed.json/?url=#{uri}"
   end
-
 end
