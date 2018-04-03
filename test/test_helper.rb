@@ -39,6 +39,20 @@ class ActiveSupport::TestCase
     Media.any_instance.stubs(:archive_to_archive_is).returns(nil)
     Media.any_instance.stubs(:archive_to_video_vault).returns(nil)
     Media.any_instance.stubs(:archive_to_archive_org).returns(nil)
+    Media.any_instance.unstub(:parse)
+    OpenURI.unstub(:open_uri)
+    Twitter::REST::Client.any_instance.unstub(:user)
+    Twitter::REST::Client.any_instance.unstub(:status)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:notify)
+    Media.any_instance.unstub(:url)
+    Media.any_instance.unstub(:original_url)
+    Media.any_instance.unstub(:data_from_page_item)
+    Media.any_instance.unstub(:oembed_get_data_from_url)
+    Media.any_instance.unstub(:doc)
   end
 
   # This will run after any test
