@@ -1055,7 +1055,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal 'Emerson T. Brooking and P. W. Singer', d['username']
     assert_equal 'https://www.theatlantic.com', d['author_url']
-    assert_equal 'https://cdn.theatlantic.com/assets/media/img/2016/10/WEL_Singer_SocialWar_opener_ALT/facebook.jpg?1475683228', d['picture']
+    assert_equal 'https://cdn.theatlantic.com/assets/media/img/2016/10/WEL_Singer_SocialWar_opener_ALT/facebook.jpg?1522411773', d['picture']
   end
 
   test "should parse url 2" do
@@ -1587,8 +1587,6 @@ class MediaTest < ActiveSupport::TestCase
   test "should store data of a profile returned by facebook API" do
     m = create_media url: 'https://www.facebook.com/profile.php?id=100008161175765&fref=ts'
     data = m.as_json
-    assert data['raw']['api'].is_a? Hash
-    assert !data['raw']['api'].empty?
 
     assert_equal 'Tico-Santa-Cruz', data[:username]
     assert_equal 'Tico Santa Cruz', data[:title]
