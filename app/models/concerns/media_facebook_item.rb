@@ -119,16 +119,23 @@ module MediaFacebookItem
   def get_facebook_text_from_html
     return unless self.data['text'].blank? && !self.doc.nil?
     content = self.get_facebook_content_from_html
+    text = nil
     if content.nil?
-      meta_description = self.doc.at_css('meta[name=description]')
-      text = meta_description ? meta_description.attr('content') : ''
-      if text.blank?
-        caption = self.doc.at_css('.fbPhotoCaptionText')
-        text = caption.text if caption
-      end
+      text = self.get_facebook_text_from_meta
+    else
+      text = content.inner_html.gsub(/<[^>]+>/, '')
     end
-    text = content.inner_html.gsub(/<[^>]+>/, '') unless content.nil?
     self.data['text'] = text.to_s.gsub('See Translation', ' ')
+  end
+
+  def get_facebook_text_from_meta
+    meta_description = self.doc.at_css('meta[name=description]')
+    text = meta_description ? meta_description.attr('content') : ''
+    if text.blank?
+      caption = self.doc.at_css('.fbPhotoCaptionText')
+      text = caption.text if caption
+    end
+    text
   end
 
   def get_facebook_user_info_from_html
@@ -208,12 +215,16 @@ module MediaFacebookItem
         username: self.get_facebook_username || self.data['author_name'],
         title: self.data['author_name'] + ' on Facebook',
         description: self.data['text'] || self.data['description'],
-        picture: self.data['photos'].nil? ? '' : self.data['photos'].first,
+        picture: self.set_facebook_picture,
         html: self.html_for_facebook_post,
         author_name: self.data['author_name'],
         author_url: 'http://facebook.com/' + self.data['user_uuid'].to_s
       })
     end
+  end
+
+  def set_facebook_picture
+    self.data['photos'].nil? ? '' : self.data['photos'].first
   end
 
   def facebook_oembed_url
