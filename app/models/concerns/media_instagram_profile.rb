@@ -10,7 +10,7 @@ module MediaInstagramProfile
   def data_from_instagram_profile
     username = self.url.match(INSTAGRAM_PROFILE_URL)[2]
 
-    handle_exceptions(self, RuntimeError) do
+    handle_exceptions(self, StandardError) do
       self.data.merge!(self.data_from_instagram_html)
     end
 

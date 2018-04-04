@@ -198,7 +198,7 @@ module MediaFacebookItem
   # First method
   def data_from_facebook_item
     self.screenshot_script = 'function closeLoginModal(){if(document.getElementById("headerArea")){document.getElementById("headerArea").style.display="none";}else{setTimeout(closeLoginModal,1000);}}closeLoginModal();'
-    handle_exceptions(self, RuntimeError) do
+    handle_exceptions(self, StandardError) do
       self.parse_facebook_uuid
       self.parse_from_facebook_html
       self.data['text'].strip! if self.data['text']

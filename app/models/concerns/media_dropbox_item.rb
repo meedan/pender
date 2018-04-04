@@ -11,7 +11,7 @@ module MediaDropboxItem
   end
 
   def data_from_dropbox_item
-    handle_exceptions(self, RuntimeError) do
+    handle_exceptions(self, StandardError) do
       self.parse_from_dropbox_html
       self.data['title'] = get_title_from_url if data['title'].blank?
       self.data['description'] = 'Shared with Dropbox' if data['description'].blank?

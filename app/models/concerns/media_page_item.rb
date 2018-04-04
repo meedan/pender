@@ -10,7 +10,7 @@ module MediaPageItem
       self.doc = self.get_html({ allow_redirections: :all })
       get_metatags(self)
     end
-    handle_exceptions(self, RuntimeError) do
+    handle_exceptions(self, StandardError) do
       self.data = self.page_get_data_from_url
       if self.data[:picture].blank?
         self.data[:picture] = self.screenshot_path

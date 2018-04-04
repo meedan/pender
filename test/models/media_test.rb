@@ -2011,6 +2011,27 @@ class MediaTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
+  test "should archive Arabics url to Archive.org" do
+    Media.any_instance.unstub(:archive_to_archive_org)
+    a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
+    urls = ['https://www.madamasr.com/ar/2018/03/13/feature/%D8%B3%D9%8A%D8%A7%D8%B3%D8%A9/%D9%82%D8%B1%D8%A7%D8%A1%D8%A9-%D9%81%D9%8A-%D8%AC%D8%B1%D8%A7%D8%A6%D9%85-%D8%A7%D9%84%D9%85%D8%B9%D9%84%D9%88%D9%85%D8%A7%D8%AA-%D8%AA%D9%82%D9%86%D9%8A%D9%86-%D9%84%D9%84%D8%AD%D8%AC', 'http://www.yallakora.com/ar/news/342470/%D8%A7%D8%AA%D8%AD%D8%A7%D8%AF-%D8%A7%D9%84%D9%83%D8%B1%D8%A9-%D8%B9%D9%86-%D8%A3%D8%B2%D9%85%D8%A9-%D8%A7%D9%84%D8%B3%D8%B9%D9%8A%D8%AF-%D9%84%D8%A7%D8%A8%D8%AF-%D9%85%D9%86-%D8%AD%D9%84-%D9%85%D8%B9-%D8%A7%D9%84%D8%B2%D9%85%D8%A7%D9%84%D9%83/2504']
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+
+    assert_nothing_raised do
+      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: {})
+      m = create_media url: urls[0], key: a
+      data = m.as_json
+
+      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
+      m = create_media url: urls[1], key: a
+      data = m.as_json
+    end
+
+    WebMock.disable!
+  end
+
   test "should validate author_url when taken from twitter metatags" do
     url = 'http://lnphil.blogspot.com.br/2018/01/villar-at-duterte-nagsanib-pwersa-para.html'
     m = create_media url: url
@@ -2031,6 +2052,32 @@ class MediaTest < ActiveSupport::TestCase
     assert File.exists?(path)
     assert_match /\/screenshots\/#{filename}$/, data['screenshot']
     assert data['error'].nil?
+  end
+
+  test "should handle error when cannot get twitter url" do
+    Media.any_instance.unstub(:archive_to_screenshot)
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    Media.any_instance.stubs(:twitter_client).raises(Twitter::Error::Forbidden)
+    url = 'http://www.yallakora.com/ar/news/342470/%D8%A7%D8%AA%D8%AD%D8%A7%D8%AF-%D8%A7%D9%84%D9%83%D8%B1%D8%A9-%D8%B9%D9%86-%D8%A3%D8%B2%D9%85%D8%A9-%D8%A7%D9%84%D8%B3%D8%B9%D9%8A%D8%AF-%D9%84%D8%A7%D8%A8%D8%AF-%D9%85%D9%86-%D8%AD%D9%84-%D9%85%D8%B9-%D8%A7%D9%84%D8%B2%D9%85%D8%A7%D9%84%D9%83/2504'
+    m = create_media url: url, request: request
+    data = m.as_json
+    assert data['error'].nil?
+    Media.any_instance.unstub(:twitter_client)
+  end
+
+  test "should handle errors when call parse" do
+    Media.any_instance.unstub(:archive_to_screenshot)
+    request = 'http://localhost'
+    request.expects(:base_url).returns('http://localhost')
+    url = 'http://example.com'
+    m = create_media url: url, request: request
+    %w(oembed_item instagram_profile instagram_item page_item dropbox_item bridge_item facebook_item).each do |parser|
+      Media.any_instance.stubs("data_from_#{parser}").raises(StandardError)
+      data = m.as_json
+      assert_equal "StandardError: StandardError", data['error']['message']
+      Media.any_instance.unstub("data_from_#{parser}")
+    end
   end
 
 end
