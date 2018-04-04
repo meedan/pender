@@ -18,7 +18,8 @@ module MediaArchiveOrgArchiver
     def send_to_archive_org(url, key_id, attempts = 1)
       Media.give_up('archive_org', url, key_id, attempts) and return
 
-      uri = URI.parse("https://web.archive.org/save/#{url}")
+      encoded_uri = URI.encode(URI.decode(url))
+      uri = URI.parse("https://web.archive.org/save/#{encoded_uri}")
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
       request = Net::HTTP::Get.new(uri.request_uri)
