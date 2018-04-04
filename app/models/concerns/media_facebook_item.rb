@@ -119,12 +119,7 @@ module MediaFacebookItem
   def get_facebook_text_from_html
     return unless self.data['text'].blank? && !self.doc.nil?
     content = self.get_facebook_content_from_html
-    text = nil
-    if content.nil?
-      text = self.get_facebook_text_from_meta
-    else
-      text = content.inner_html.gsub(/<[^>]+>/, '')
-    end
+    text = content.nil? ? self.get_facebook_text_from_meta : content.inner_html.gsub(/<[^>]+>/, '')
     self.data['text'] = text.to_s.gsub('See Translation', ' ')
   end
 
