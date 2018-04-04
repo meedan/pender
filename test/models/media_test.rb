@@ -622,7 +622,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Facebook event url" do
     m = create_media url: 'https://www.facebook.com/events/1090503577698748'
     d = m.as_json
-    assert_equal 'Nancy Ajram in Stella Di Mare Music Festival on Facebook', d['title']
+    assert_equal 'Nancy Ajram on Facebook', d['title']
     assert_equal 'Nancy Ajram will be performing in Stella Di Mare, September 13th, 2016 in Egypt. For tickets and information please contact 19565.', d['description']
     assert_nil d['picture']
     assert_not_nil d['published_at']
@@ -646,7 +646,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'New Quoted Pictures Everyday on Facebook', d['title']
     assert_not_nil d['description']
     assert_match /giphy.gif/, d['photos'].first
-    assert_equal 1, d['media_count']
   end
 
   test "should parse twitter metatags" do
@@ -968,7 +967,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'teste637621352', data['username']
     assert_equal 'http://facebook.com/749262715138323', data['author_url']
     assert_equal 'https://graph.facebook.com/749262715138323/picture', data['author_picture']
-    assert_nil data['picture']
   end
 
   test "should parse Facebook livemap" do
@@ -984,10 +982,10 @@ class MediaTest < ActiveSupport::TestCase
     variations.each do |url|
       m = create_media url: url, request: request
       data = m.as_json
-      assert_equal 'Not Identified on Facebook', data['title']
+      assert_equal 'Facebook Live Map on Facebook', data['title']
       assert_equal 'Explore live videos from around the world.', data['description']
       assert_not_nil data['published_at']
-      assert_equal 'Not Identified', data['username']
+      assert_equal 'Facebook Live Map', data['username']
       assert_equal 'http://facebook.com/', data['author_url']
       assert_equal '', data['author_picture']
       assert_nil data['picture']
@@ -1011,10 +1009,10 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/events/364677040588691/permalink/379973812392347/?ref=1&action_history=null'
     data = m.as_json
     assert_equal 'https://www.facebook.com/events/364677040588691/permalink/379973812392347?ref=1&action_history=null', m.url
-    assert_equal "Zawya's Tribute to Mohamed Khan | موعد مع خان on Facebook", data['title']
+    assert_equal 'Zawya on Facebook', data['title']
     assert_match /يقول فارس لرزق أنه/, data['description']
     assert_not_nil data['published_at']
-    assert_equal "Zawya's Tribute to Mohamed Khan | موعد مع خان", data['username']
+    assert_equal 'Zawya', data['username']
     assert_match /#{data['user_uuid']}/, data['author_url']
     assert_match /#{data['user_uuid']}/, data['author_picture']
     assert_not_nil data['picture']
@@ -1054,7 +1052,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal 'Emerson T. Brooking and P. W. Singer', d['username']
     assert_equal 'https://www.theatlantic.com', d['author_url']
-    assert_equal 'https://cdn.theatlantic.com/assets/media/img/2016/10/WEL_Singer_SocialWar_opener_ALT/facebook.jpg?1522411773', d['picture']
+    assert_match /https:\/\/cdn\.theatlantic\.com\/assets\/media\/img\/2016\/10\/WEL_Singer_SocialWar_opener_ALT\/facebook\.jpg/, d['picture']
   end
 
   test "should parse url 2" do
@@ -1763,7 +1761,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://noticias.uol.com.br', d['author_url']
-    assert_equal 'Cotidiano', d['author_name']
+    assert_equal '@UOL', d['author_name']
     assert_not_nil d['picture']
     assert_nil d['error']
   end
@@ -1788,12 +1786,12 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'item', d['type']
     assert_equal 'page', d['provider']
-    assert_match /UOL Notícias:/, d['title']
+    assert_match /Acompanhe as últimas notícias do Brasil e do mundo/, d['title']
     assert_not_nil d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://noticias.uol.com.br', d['author_url']
-    assert_equal 'UOL Notícias', d['author_name']
+    assert_equal '@UOL', d['author_name']
     assert_not_nil d['picture']
     assert_nil d['error']
   end

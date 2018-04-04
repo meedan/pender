@@ -81,6 +81,7 @@ module MediaFacebookItem
 
   def parse_from_facebook_html
     self.doc = self.get_html(html_options)
+    return if self.doc.nil?
     self.get_facebook_info_from_metadata
     self.get_facebook_text_from_html
     self.get_facebook_owner_name_from_html
@@ -202,11 +203,12 @@ module MediaFacebookItem
       self.parse_from_facebook_html
       self.data['text'].strip! if self.data['text']
       self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
+      self.data['author_name'] = 'Not Identified' if self.data['author_name'].blank?
       self.data.merge!({
         username: self.get_facebook_username || self.data['author_name'],
         title: self.data['author_name'] + ' on Facebook',
         description: self.data['text'] || self.data['description'],
-        picture: self.data['photos'].first,
+        picture: self.data['photos'].nil? ? '' : self.data['photos'].first,
         html: self.html_for_facebook_post,
         author_name: self.data['author_name'],
         author_url: 'http://facebook.com/' + self.data['user_uuid'].to_s
