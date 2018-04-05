@@ -222,8 +222,10 @@ class Media
     html = ''
     begin
       OpenURI.open_uri(Media.parse_url(decoded_uri(self.url)), header_options) do |f|
-        f.binmode
+        enc = Encoding.default_external
+        Encoding.default_external = f.charset || Encoding::UTF_8
         html = f.read
+        Encoding.default_external = enc
       end
       html = preprocess_html(html)
       Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
@@ -238,10 +240,11 @@ class Media
   end
 
   def html_options
-    options = { allow_redirections: :safe }
+    options = { allow_redirections: :safe, proxy: nil }
     credentials = self.get_http_auth(Media.parse_url(self.url))
     options[:http_basic_authentication] = credentials
-    options['User-Agent'] = 'Mozilla/5.0 (Windows NT 5.2; rv:2.0.1) Gecko/20100101 Firefox/4.0.1'
+    options['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
+    options['Accept'] = '*/*'
     options['Accept-Language'] = 'en'
     options
   end

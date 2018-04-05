@@ -97,8 +97,7 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://www.facebook.com/blah_blah', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_match /Koala::Facebook::ClientError: Unsupported get request/, data['error']['message']
-    assert_equal 100, data['error']['code']
+    assert_match 'Login required to see this profile', data['error']['message']
     assert_equal 'facebook', data['provider']
     assert_equal 'profile', data['type']
     assert_not_nil data['embed_tag']
@@ -178,9 +177,7 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://www.facebook.com/non-sense-stuff-892173891273', format: :html
     assert_response 200
 
-    assert_match(/Koala::Facebook::ClientError: Unsupported get request/, assigns(:media).data['error']['message'])
-    assert_no_match(/Koala::Facebook::ClientError: Unsupported get request/, response.inspect)
-
+    assert_match('Login required to see this profile', assigns(:media).data['error']['message'])
   end
 
   test "should return message with HTML error 2" do

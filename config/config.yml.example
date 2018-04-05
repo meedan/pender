@@ -6,9 +6,6 @@ development: &default
   twitter_consumer_secret:
   twitter_access_token:
   twitter_access_token_secret:
-  facebook_auth_token: # It needs to be a longer token... check scripts/facebook-longer-token.sh for instructions
-  facebook_api_version: 'v2.6'
-  facebook_app_id:
   timeout: 5 # In seconds
   cc_deville_host:
   cc_deville_token:

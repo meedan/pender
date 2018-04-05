@@ -11,93 +11,116 @@ module MediaFacebookProfile
     )
   end
 
-  def facebook_user_fields
-    fields = %w(
-      link        name                first_name     id            last_name    picture              timezone
-      albums      books               events         family        games        groups               likes
-      movies      music               photos         tagged_places television   videos               feed
-      about       age_range           birthday       cover         currency     education            website
-      email       favorite_athletes   favorite_teams gender        hometown     inspirational_people interested_in
-      is_verified languages           locale         location      middle_name  name_format          political
-      quotes      relationship_status religion       sports        updated_time verified
-    )
-    fields
-  end
-
-  def facebook_page_fields
-    fields = %w(
-      id                  about            awards         bio              birthday             built                 can_checkin
-      category            category_list    checkins       company_overview contact_address      context               country_page_likes
-      cover               current_location description    display_subtext  emails               founded               general_info
-      general_manager     genre            hometown       hours            is_community_page    photos                is_published
-      is_unclaimed        is_verified      keywords       leadgen_tos_accepted link             location              picture
-      name                network          new_like_count parent_page      personal_info        phone                 press_contact
-      talking_about_count username         voip_info      website          were_here_count      written_by            events
-      likes               locations
-    )
-    fields << 'fan_count' if CONFIG['facebook_api_version'].to_s === 'v2.6'
-    fields
-  end
-
-  def facebook_client
-    Koala.config.api_version = CONFIG['facebook_api_version'] || 'v2.5'
-    Koala::Facebook::API.new CONFIG['facebook_auth_token']
-  end
-
   def get_data_from_facebook
+    page = self.get_facebook_profile_page
+
+    if page.blank?
+      return { error: { message: 'Not Found' } }
+    end
+
     data = {}
-    id = self.get_facebook_id_from_url
-    client = self.facebook_client
-    self.data[:raw][:api] = {}
     # Try to parse as a user profile first
     begin
-      object = client.get_object(id, { fields: self.facebook_user_fields }, { method: 'post' })
-      self.data[:raw][:api] = object
+      data = self.parse_facebook_user
       data['subtype'] = 'user'
     # If it fails, try to parse as a page
     rescue
-      object = client.get_object(id, { fields: self.facebook_page_fields }, { method: 'post' })
-      self.data[:raw][:api] = object
+      begin
+        data = self.parse_facebook_page
+      rescue
+        data = self.parse_facebook_legacy_page
+      end
       data['subtype'] = 'page'
     end
+    data['id'] = self.get_facebook_id_from_url
+
+    error = self.get_facebook_profile_error
+    data['error'] = error if error
+    
+    data['likes'] = self.get_facebook_likes
+    
     data['published_at'] = ''
     data
   end
 
-  def data_from_facebook_profile
-    handle_exceptions(self, Koala::Facebook::ClientError, :fb_error_message, :fb_error_code) do
-      begin
-        self.data.merge! self.get_data_from_facebook
-      rescue Koala::Facebook::ClientError => e
-        Rails.logger.info "[Facebook Profile] Parsing `#{url}`: Error Code: #{e.fb_error_code} Subcode #{e.fb_error_subcode} Message: #{e.fb_error_message}"
-        Airbrake.notify(e) if Airbrake.configuration.api_key && e.fb_error_code == 190
-        raise e
-      end
+  def get_facebook_profile_error
+    page = self.get_facebook_profile_page
+    title = page.css('meta[property="og:title"]')
+    if title.present? && title.attr('content') && title.attr('content').value == 'Log In or Sign Up to View'
+      { message: 'Login required to see this profile' }
     end
-    self.get_facebook_likes
+  end
+
+  def get_facebook_profile_html
+    if @html.nil?
+      @html = self.get_html(self.html_options).to_s
+    end
+    @html
+  end
+
+  def get_facebook_profile_page
+    if @page.nil?
+      @page = self.get_html(self.html_options)
+    end
+    @page
+  end
+
+  def parse_facebook_user
+    page = self.get_facebook_profile_page
+
+    data = {}
+    data['name'] = page.css('#fb-timeline-cover-name').first.text
+    bio = page.css('#pagelet_bio span').last
+    data['description'] = bio ? bio.text : ''
+    data['picture'] = page.css('.img.profilePic.img').first.attr('src')
+    data
+  end
+
+  def parse_facebook_page
+    html = self.get_facebook_profile_html
+    page = self.get_facebook_profile_page
+    match = html.match(/"name":"([^"]+)","pageID":"([^"]+)","username":([^,]+),"usernameEditDialogProfilePictureURI":"([^"]+)"/)
+    json = JSON.parse('{' + match[0] + '}')
+    
+    data = {}
+    data['name'] = json['name']
+    data['username'] = json['username']
+    data['description'] = page.css('meta[name=description]').first.attr('content').gsub(/.*talking about this. /, '')
+    data['picture'] = json['usernameEditDialogProfilePictureURI']
+    data
+  end
+
+  def parse_facebook_legacy_page
+    page = self.get_facebook_profile_page
+
+    data = {}
+    bio = page.css('blockquote .text_exposed_root').first
+    data['description'] = bio ? bio.text : ''
+    pic = page.css('img.scaledImageFitWidth').first
+    data['picture'] = pic.attr('src') if pic
+    name = page.css('.profileLink').first
+    name2 = page.css('h1[itemprop=name]').first
+    data['name'] = name.text unless name.nil?
+    data['name'] = name2.text if name.nil? && !name2.nil?
+    data
+  end
+
+  def data_from_facebook_profile
+    self.data.merge! self.get_data_from_facebook
     self.data.merge!({
       username: self.get_facebook_username,
-      title: get_info_from_data('api', data, 'name'),
-      description: get_info_from_data('api', data, 'bio', 'about', 'description'),
-      author_url: get_info_from_data('api', data, 'link'),
-      author_picture: self.facebook_picture,
-      author_name: get_info_from_data('api', data, 'name'),
-      picture: self.facebook_picture
+      title: self.data['name'],
+      description: self.data['description'],
+      author_url: self.url,
+      author_picture: self.data['picture'],
+      author_name: self.data['name'],
+      picture: self.data['picture']
     })
   end
 
   def get_facebook_likes
-    likes = self.data['raw']['api']['likes'].to_s
-    self.data['likes'] = likes.match(/^[0-9]+$/).nil? ? self.data['raw']['api']['fan_count'] : likes
-  end
-
-  def facebook_picture
-    data = self.data['raw']['api']
-    picture = ''
-    if data['picture'] && data['picture']['data'] && data['picture']['data']['url']
-      picture = data['picture']['data']['url']
-    end
-    picture
+    page = self.get_facebook_profile_page
+    page.css('#PagesLikesCountDOMID span').text.gsub(/ .*/, '').gsub(/[^0-9]/, '')
   end
 
   def get_facebook_username
@@ -111,7 +134,7 @@ module MediaFacebookProfile
     if username === 'pages'
       username = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/pages\/([^\/]+)\/([^\/\?]+).*/)[2]
     elsif username.to_i > 0 || username === 'profile.php'
-      username = self.data['raw']['api']['name']
+      username = self.data['username']
     end
     username
   end
