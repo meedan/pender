@@ -222,10 +222,8 @@ class Media
     html = ''
     begin
       OpenURI.open_uri(Media.parse_url(decoded_uri(self.url)), header_options) do |f|
-        enc = Encoding.default_external
-        Encoding.default_external = f.charset || Encoding::UTF_8
-        html = f.read.encode('UTF-8', invalid: :replace, replace: '?')
-        Encoding.default_external = enc
+        f.binmode
+        html = f.read
       end
       html = preprocess_html(html)
       Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
