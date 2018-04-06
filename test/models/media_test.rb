@@ -2080,4 +2080,10 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
+  test "should parse website" do
+    url = 'http://www.acdc.com'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'Homepage', data['title']
+  end
 end

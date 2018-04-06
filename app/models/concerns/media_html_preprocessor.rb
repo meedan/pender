@@ -14,7 +14,7 @@ module MediaHtmlPreprocessor
 
   def sharethefacts_replace_element(html, link, uuid)
     source = "https://dhpikd1t89arn.cloudfront.net/html-#{uuid}.html"
-    content = open(source).read.force_encoding(::Encoding::UTF_8)
+    content = open(source).read
     content = "<div>#{content}</div>"
     html.gsub(link[0], content)
   end
