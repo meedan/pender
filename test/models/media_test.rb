@@ -1473,7 +1473,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match(/En el Museo Serralves de Oporto/, d['text'])
     assert_equal '54212446406', d['user_uuid']
     assert_equal 'Mariano Rajoy Brey', d['author_name']
-    assert_equal 24, d['media_count']
+    assert d['media_count'] > 20
     assert_equal '10154534110871407', d['object_id']
     assert_equal 'https://www.facebook.com/media/set/?set=a.10154534110871407.1073742048.54212446406&type=3', m.url
   end
