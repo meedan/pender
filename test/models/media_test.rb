@@ -2086,4 +2086,16 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'Homepage', data['title']
   end
+
+  test "should have a transitive relation between normalized URLs" do
+    url = 'https://www.facebook.com/quoted.pictures/photos/a.128828073875334.28784.128791873878954/1096134023811396/?type=3&theater'
+    m = create_media url: url
+    data = m.as_json
+    url = 'https://www.facebook.com/quoted.pictures/photos/a.128828073875334.28784.128791873878954/1096134023811396/?type=3'
+    assert_equal url, data['url']
+
+    m = create_media url: url
+    data = m.as_json
+    assert_equal url, data['url']
+  end
 end
