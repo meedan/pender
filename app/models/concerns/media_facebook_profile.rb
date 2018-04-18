@@ -67,7 +67,6 @@ module MediaFacebookProfile
 
   def parse_facebook_user
     page = self.get_facebook_profile_page
-    puts "Page on line 71: #{page}"
 
     data = {}
     data['name'] = page.css('#fb-timeline-cover-name').first.text
