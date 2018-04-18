@@ -71,8 +71,9 @@ module MediaFacebookProfile
     data = {}
     data['name'] = page.css('#fb-timeline-cover-name').first.text
     bio = page.css('#pagelet_bio span').last
-    data['description'] = bio ? bio.text : ''
-    data['picture'] = page.css('.img.profilePic.img').first.attr('src')
+    desc = page.css('.profileText').last
+    data['description'] = bio ? bio.text : (desc ? desc.text : '')
+    data['picture'] = page.css('.profilePicThumb img').first.attr('src')
     data
   end
 
@@ -109,13 +110,19 @@ module MediaFacebookProfile
     self.data.merge! self.get_data_from_facebook
     self.data.merge!({
       username: self.get_facebook_username,
-      title: self.data['name'],
+      title: self.get_facebook_name,
       description: self.data['description'],
       author_url: self.url,
       author_picture: self.data['picture'],
       author_name: self.data['name'],
       picture: self.data['picture']
     })
+  end
+
+  def get_facebook_name
+    page = self.get_facebook_profile_page
+    title = page.css('meta[property="og:title"]')
+    self.data['name'].blank? ? title.attr('content').value : self.data['name']
   end
 
   def get_facebook_likes
