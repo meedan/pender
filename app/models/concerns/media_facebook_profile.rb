@@ -67,6 +67,7 @@ module MediaFacebookProfile
 
   def parse_facebook_user
     page = self.get_facebook_profile_page
+    puts "Page on line 71: #{page}"
 
     data = {}
     data['name'] = page.css('#fb-timeline-cover-name').first.text
@@ -121,8 +122,10 @@ module MediaFacebookProfile
 
   def get_facebook_name
     page = self.get_facebook_profile_page
-    title = page.css('meta[property="og:title"]')
-    self.data['name'].blank? ? title.attr('content').value : self.data['name']
+    unless page.nil?
+      title = page.css('meta[property="og:title"]')
+      self.data['name'].blank? ? title.attr('content').value : self.data['name']
+    end
   end
 
   def get_facebook_likes

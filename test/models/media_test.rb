@@ -1381,13 +1381,13 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should redirect to HTTPS if available and not already HTTPS" do
-    m = create_media url: 'http://ironmaiden.com'
-    assert_equal 'https://ironmaiden.com/', m.url
+    m = create_media url: 'http://imotorhead.com'
+    assert_equal 'https://imotorhead.com/', m.url
   end
 
   test "should not redirect to HTTPS if available and already HTTPS" do
-    m = create_media url: 'https://ironmaiden.com'
-    assert_equal 'https://ironmaiden.com/', m.url
+    m = create_media url: 'https://imotorhead.com'
+    assert_equal 'https://imotorhead.com/', m.url
   end
 
   test "should not redirect to HTTPS if not available" do
