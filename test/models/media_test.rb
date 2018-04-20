@@ -291,7 +291,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nothing_raised do
       m = create_media url: 'http://www.almasryalyoum.com/node/517699', request: request
       data = m.as_json
-      assert_match /https?:\/\/www.almasryalyoum.com\/editor\/details\/968/, data['url']
+      assert_equal 'https://d2g42djnbwvv63.cloudfront.net/node/517699', data['url']
     end
   end
 
@@ -623,7 +623,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/events/1090503577698748'
     d = m.as_json
     assert_equal 'Nancy Ajram on Facebook', d['title']
-    assert_equal 'Nancy Ajram will be performing in Stella Di Mare, September 13th, 2016 in Egypt. For tickets and information please contact 19565.', d['description']
+    assert_not_nil d['description']
     assert_nil d['picture']
     assert_not_nil d['published_at']
     assert_match /1090503577698748/, d['author_picture']
