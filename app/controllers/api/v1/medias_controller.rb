@@ -220,7 +220,7 @@ module Api
 
       def is_url?
         uri = URI.parse(URI.encode(@url))
-        !uri.host.nil?
+        !uri.host.nil? && uri.userinfo.nil?
       end
 
       def strip_params
