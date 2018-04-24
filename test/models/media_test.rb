@@ -291,7 +291,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nothing_raised do
       m = create_media url: 'http://www.almasryalyoum.com/node/517699', request: request
       data = m.as_json
-      assert_equal 'https://d2g42djnbwvv63.cloudfront.net/node/517699', data['url']
+      assert_equal 'https://www.almasryalyoum.com/editor/details/968', data['url']
     end
   end
 
@@ -791,7 +791,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.reddit.com/r/Art/comments/58a8kp/emotions_language_youngjoo_namgung_ai_livesurface/'
     d = m.as_json
     assert_match /emotion's language, Youngjoo Namgung/, d['title']
-    assert_match /.* points and .* comments so far on reddit/, d['description']
+    assert_match /.* points and .* so far on reddit/, d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://www.reddit.com', d['author_url']
