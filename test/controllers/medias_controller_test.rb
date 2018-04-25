@@ -489,4 +489,13 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: url, format: :html
     assert_response 200
   end
+
+  test "should not parse url with userinfo" do
+    authenticate_with_token
+    url = 'http://noha@meedan.com'
+    get :index, url: url, format: :json
+    assert_response 400
+    assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
+  end
+
 end

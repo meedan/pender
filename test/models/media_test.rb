@@ -291,7 +291,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nothing_raised do
       m = create_media url: 'http://www.almasryalyoum.com/node/517699', request: request
       data = m.as_json
-      assert_equal 'https://www.almasryalyoum.com/editor/details/968', data['url']
+      assert_match /https:\/\/www.almasryalyoum.com\/editor\/details\/968/, data['url']
     end
   end
 
@@ -1763,21 +1763,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://noticias.uol.com.br', d['author_url']
     assert_equal '@UOL', d['author_name']
     assert_not_nil d['picture']
-    assert_nil d['error']
-  end
-
-  test "should parse url with redirection https -> http 2" do
-    m = create_media url: 'https://www.nature.com/articles/s41562-017-0132'
-    d = m.as_json
-    assert_equal 'item', d['type']
-    assert_equal 'page', d['provider']
-    assert_equal 'Limited individual attention and online virality of low-quality inform', d['title']
-    assert_not_nil d['description']
-    assert_not_nil d['published_at']
-    assert_equal '', d['username']
-    assert_equal 'https://www.nature.com', d['author_url']
-    assert_equal '@NatureHumBehav', d['author_name']
-    assert_match /image-assets\/s41562-017-0132-f1.jpg/,  d['picture']
     assert_nil d['error']
   end
 
