@@ -2083,4 +2083,19 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal url, data['url']
   end
+
+  test "should parse medium posts" do
+    url = 'https://medium.com/darius-foroux/how-to-retain-more-from-the-books-you-read-in-5-simple-steps-700d90653a41'
+    m = create_media url: url
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal 'page', d['provider']
+    assert_equal 'How To Retain More From The Books You Read In 5 Simple Steps', d['title']
+    assert_equal 'Don’t read more. Read smarter.', d['description']
+    assert_equal '@DariusForoux', d['username']
+    assert_equal 'https://twitter.com/DariusForoux', d['author_url']
+    assert_not_nil d['picture']
+    assert_nil d['error']
+  end
+
 end
