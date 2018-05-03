@@ -129,7 +129,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return error message on hash if url does not exist 5" do
     authenticate_with_token
-    get :index, url: 'http://foo.com/blah_blah', format: :json
+    get :index, url: 'http://example.com/blah_blah', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
     assert_equal 'RuntimeError: Could not parse this media', data['error']['message']
@@ -165,7 +165,7 @@ class MediasControllerTest < ActionController::TestCase
   test "should return error message on hash if url does not exist 8" do
     Media.any_instance.stubs(:as_json).raises(RuntimeError)
     authenticate_with_token
-    get :index, url: 'http://foo.com/blah_blah', format: :json
+    get :index, url: 'http://example.com/', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
     assert_equal 'RuntimeError', data['error']['message']
@@ -182,7 +182,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return message with HTML error 2" do
     File.stubs(:read).raises
-    get :index, url: 'http://foo.com/blah_blah', format: :html
+    get :index, url: 'http://example.com/', format: :html
     assert_response 200
 
     assert_match /Could not parse this media/, response.body
