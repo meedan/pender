@@ -7,6 +7,7 @@ module MediaSchemaOrg
     if !microdata.items.empty?
       self.data[:schema] ||= {}.with_indifferent_access
       microdata.items.each do |item|
+        next if item.type.nil?
         type = schema_type(item.type)
         add_schema_to_data(self, schema_mapping(item.to_h.with_indifferent_access), type) if type
       end
