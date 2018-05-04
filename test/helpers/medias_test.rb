@@ -23,12 +23,24 @@ class MediasHelperTest < ActionView::TestCase
     assert_equal '<script src="http://foo.bar/api/medias.js?refresh=1&url=http://twitter.com/meedan" type="text/javascript"></script>', embed_url
   end
 
-  test "should not crash if jsonld content is not valid" do
-    JSON.stubs(:parse).raises(JSON::ParserError)
+  test "should not crash if jsonld content is null" do
     m = create_media url: 'https://www.facebook.com/dina.samak/posts/10153679232246949'
     assert_nothing_raised do
       get_jsonld_data(m)
     end
+  end
+
+  test "should not crash if jsonld content is not valid" do
+    JSON.stubs(:parse).raises(JSON::ParserError)
+    m = create_media url: 'http://www.example.com'
+    doc = ''
+    open('test/data/page-with-json-ld.html') { |f| doc = f.read }
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
+    m.data = Media.minimal_data(m)
+    assert_nothing_raised do
+      m.get_jsonld_data(m)
+    end
+    Media.any_instance.unstub(:doc)
     JSON.unstub(:parse)
   end
 end
