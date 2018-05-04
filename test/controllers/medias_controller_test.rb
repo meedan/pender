@@ -417,8 +417,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return invalid url when the certificate has error" do
     url = 'https://www.poynter.org/2017/european-policy-makers-are-not-done-with-facebook-google-and-fake-news-just-yet/465809/'
-    uri = URI.parse(URI.encode(url))
-    Media.stubs(:request_uri).with(uri, 'Head').raises(OpenSSL::SSL::SSLError)
+    Media.stubs(:request_uri).with(url, 'Head').raises(OpenSSL::SSL::SSLError)
 
     authenticate_with_token
     get :index, url: url, format: :json
@@ -431,8 +430,7 @@ class MediasControllerTest < ActionController::TestCase
   test "should return invalid url if has SSL Error on follow_redirections" do
     url = 'https://asdfglkjh.ee'
     Media.stubs(:validate_url).with(url).returns(true)
-    uri = URI.parse(URI.encode(url))
-    Media.stubs(:request_uri).with(uri, 'Head').raises(OpenSSL::SSL::SSLError)
+    Media.stubs(:request_uri).with(url, 'Head').raises(OpenSSL::SSL::SSLError)
 
     authenticate_with_token
     get :index, url: url, format: :json

@@ -1175,7 +1175,7 @@ class MediaTest < ActiveSupport::TestCase
     OpenURI.stubs(:open_uri).raises(Errno::ECONNRESET)
     m = create_media url: url
     assert_nothing_raised do
-      m.send(:get_html, m.send(:html_options))
+      m.send(:get_html, Media.send(:html_options, m.url))
     end
     OpenURI.unstub(:open_uri)
   end
@@ -1332,10 +1332,10 @@ class MediaTest < ActiveSupport::TestCase
   test "should handle zlib error when opening a url" do
     m = create_media url: 'https://ca.yahoo.com'
     parsed_url = Media.parse_url( m.url)
-    header_options = m.send(:html_options)
+    header_options = Media.send(:html_options, m.url)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Zlib::DataError)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
-    m.send(:get_html, m.send(:html_options))
+    m.send(:get_html, Media.send(:html_options, m.url))
     OpenURI.unstub(:open_uri)
   end
 
@@ -1346,7 +1346,7 @@ class MediaTest < ActiveSupport::TestCase
 
     m = create_media url: 'https://www.scmp.com/news/china/diplomacy-defence/article/2110488/china-tries-build-bigger-bloc-stop-brics-crumbling'
     parsed_url = Media.parse_url(m.url)
-    header_options = m.send(:html_options)
+    header_options = Media.send(:html_options, m.url)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises('redirection forbidden')
     Airbrake.configuration.stubs(:api_key).returns('token')
 
