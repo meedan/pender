@@ -417,20 +417,20 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return invalid url when the certificate has error" do
     url = 'https://www.poynter.org/2017/european-policy-makers-are-not-done-with-facebook-google-and-fake-news-just-yet/465809/'
-    Media.stubs(:request_uri).with(url, 'Head').raises(OpenSSL::SSL::SSLError)
+    Media.stubs(:request_url).with(url, 'Head').raises(OpenSSL::SSL::SSLError)
 
     authenticate_with_token
     get :index, url: url, format: :json
     assert_response 400
     assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
 
-    Media.unstub(:request_uri)
+    Media.unstub(:request_url)
   end
 
   test "should return invalid url if has SSL Error on follow_redirections" do
     url = 'https://asdfglkjh.ee'
     Media.stubs(:validate_url).with(url).returns(true)
-    Media.stubs(:request_uri).with(url, 'Head').raises(OpenSSL::SSL::SSLError)
+    Media.stubs(:request_url).with(url, 'Head').raises(OpenSSL::SSL::SSLError)
 
     authenticate_with_token
     get :index, url: url, format: :json
@@ -438,7 +438,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
 
     Media.unstub(:validate_url)
-    Media.unstub(:request_uri)
+    Media.unstub(:request_url)
   end
 
   test "should parse Facebook user profile with normalized urls" do

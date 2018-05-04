@@ -109,7 +109,7 @@ class Media
     begin
       uri = URI.parse(URI.encode(url))
       return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
-      Media.request_uri(url, 'Head')
+      Media.request_url(url, 'Head')
     rescue OpenSSL::SSL::SSLError, URI::InvalidURIError, SocketError => e
       Rails.logger.warn "Could not access url: #{e.message}"
       return false
@@ -204,17 +204,21 @@ class Media
   def request_media_url
     response = nil
     Retryable.retryable(tries: 3, sleep: 1) do
-      response = Media.request_uri(self.url, 'Head')
+      response = Media.request_url(self.url, 'Head')
     end
     response
   end
 
-  def self.request_uri(url, verb = 'Get')
+  def self.request_url(url, verb = 'Get')
     uri = Media.parse_url(url)
+    Media.request_uri(uri, verb)
+  end
+
+  def self.request_uri(uri, verb)
     http = Net::HTTP.new(uri.host, uri.port)
     http.read_timeout = CONFIG['timeout'] || 30
     http.use_ssl = uri.scheme == 'https'
-    user_agent = { 'User-Agent' => Media.html_options(url)['User-Agent']}
+    user_agent = { 'User-Agent' => Media.html_options(uri)['User-Agent']}
     request = "Net::HTTP::#{verb}".constantize.new(uri, user_agent)
     http.request(request)
   end
@@ -239,8 +243,9 @@ class Media
   end
 
   def self.html_options(url)
+    uri = url.is_a?(String) ? Media.parse_url(url) : url
     options = { allow_redirections: :safe, proxy: nil }
-    credentials = Media.get_http_auth(Media.parse_url(url))
+    credentials = Media.get_http_auth(uri)
     options[:http_basic_authentication] = credentials
     options['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
     options['Accept'] = '*/*'
@@ -288,7 +293,7 @@ class Media
       uri = URI.parse(self.url)
       unless (uri.kind_of?(URI::HTTPS))
         self.url.gsub!(/^http:/i, 'https:')
-        Media.request_uri(self.url, 'Head').value
+        Media.request_url(self.url, 'Head').value
       end
     rescue
       self.url.gsub!(/^https:/i, 'http:')

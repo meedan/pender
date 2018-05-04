@@ -150,7 +150,7 @@ module MediaFacebookProfile
 
   def get_facebook_id_from_url
     self.url = self.original_url if self.url.match(/^https:\/\/www\.facebook\.com\/login\.php\?/)
-    id = IdsPlease::Grabbers::Facebook.new(self.original_url, Media.request_uri(self.url).body.to_s).grab_link.network_id.to_i
+    id = IdsPlease::Grabbers::Facebook.new(self.original_url, Media.request_url(self.url).body.to_s).grab_link.network_id.to_i
     if id === 0
       patterns = [
         /^https:\/\/(www\.)?facebook\.com\/profile\.php\?id=([0-9]+)$/,
