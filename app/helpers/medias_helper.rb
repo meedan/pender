@@ -43,7 +43,7 @@ module MediasHelper
   def get_jsonld_data(media)
     return if media.doc.nil?
     tag = media.doc.at_css('script[type="application/ld+json"]')
-    unless tag.blank?
+    unless tag.blank? || tag.content == 'null'
       begin
         data = JSON.parse(tag.content)
         data = data[0] if data.is_a?(Array)
