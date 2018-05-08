@@ -105,7 +105,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return error message on hash if url does not exist 3" do
     authenticate_with_token
-    get :index, url: 'https://www.instagram.com/blih_blih/', format: :json
+    get :index, url: 'https://www.instagram.com/kjdahsjkdhasjdkhasjk/', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
     assert_equal 'RuntimeError: Could not parse this media', data['error']['message']
