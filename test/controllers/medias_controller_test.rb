@@ -129,7 +129,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return error message on hash if url does not exist 5" do
     authenticate_with_token
-    get :index, url: 'http://foo.com/blah_blah', format: :json
+    get :index, url: 'http://example.com/blah_blah', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
     assert_equal 'RuntimeError: Could not parse this media', data['error']['message']
@@ -165,7 +165,7 @@ class MediasControllerTest < ActionController::TestCase
   test "should return error message on hash if url does not exist 8" do
     Media.any_instance.stubs(:as_json).raises(RuntimeError)
     authenticate_with_token
-    get :index, url: 'http://foo.com/blah_blah', format: :json
+    get :index, url: 'http://example.com/', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
     assert_equal 'RuntimeError', data['error']['message']
@@ -182,7 +182,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return message with HTML error 2" do
     File.stubs(:read).raises
-    get :index, url: 'http://foo.com/blah_blah', format: :html
+    get :index, url: 'http://example.com/', format: :html
     assert_response 200
 
     assert_match /Could not parse this media/, response.body
@@ -417,22 +417,20 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return invalid url when the certificate has error" do
     url = 'https://www.poynter.org/2017/european-policy-makers-are-not-done-with-facebook-google-and-fake-news-just-yet/465809/'
-    uri = URI.parse(URI.encode(url))
-    Media.stubs(:request_uri).with(uri, 'Head').raises(OpenSSL::SSL::SSLError)
+    Media.stubs(:request_url).with(url, 'Head').raises(OpenSSL::SSL::SSLError)
 
     authenticate_with_token
     get :index, url: url, format: :json
     assert_response 400
     assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
 
-    Media.unstub(:request_uri)
+    Media.unstub(:request_url)
   end
 
   test "should return invalid url if has SSL Error on follow_redirections" do
     url = 'https://asdfglkjh.ee'
     Media.stubs(:validate_url).with(url).returns(true)
-    uri = URI.parse(URI.encode(url))
-    Media.stubs(:request_uri).with(uri, 'Head').raises(OpenSSL::SSL::SSLError)
+    Media.stubs(:request_url).with(url, 'Head').raises(OpenSSL::SSL::SSLError)
 
     authenticate_with_token
     get :index, url: url, format: :json
@@ -440,7 +438,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
 
     Media.unstub(:validate_url)
-    Media.unstub(:request_uri)
+    Media.unstub(:request_url)
   end
 
   test "should parse Facebook user profile with normalized urls" do

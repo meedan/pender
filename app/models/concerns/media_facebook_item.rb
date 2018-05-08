@@ -38,7 +38,7 @@ module MediaFacebookItem
 
   def get_facebook_user_id_from_url
     return unless self.url.match(EVENT_URL).nil?
-    user_id = IdsPlease::Grabbers::Facebook.new(self.url, Media.request_uri(Media.parse_url(self.url)).body.to_s).grab_link.network_id
+    user_id = IdsPlease::Grabbers::Facebook.new(self.url, Media.request_url(self.url).body.to_s).grab_link.network_id
     if user_id.blank?
       uri = URI.parse(self.url)
       params = parse_uri(uri)
@@ -80,7 +80,7 @@ module MediaFacebookItem
   end
 
   def parse_from_facebook_html
-    self.doc = self.get_html(html_options)
+    self.doc = self.get_html(Media.html_options(self.url))
     return if self.doc.nil?
     self.get_facebook_info_from_metadata
     self.get_facebook_text_from_html
