@@ -1091,14 +1091,14 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse bridge url" do
-    m = create_media url: 'https://new.speakbridge.io/medias/embed/viber/1/403'
+    m = create_media url: 'https://speakbridge.io/medias/embed/viber/1/403'
     d = m.as_json
     assert_equal 'Translations of Viberهل يحتوي هذا الطعام على لحم الخنزير؟', d['title']
     assert_equal 'هل يحتوي هذا الطعام على لحم الخنزير؟', d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
     assert_equal '', d['author_url']
-    assert_equal 'https://new.speakbridge.io/medias/embed/viber/1/403.png', d['picture']
+    assert_equal 'https://speakbridge.io/medias/embed/viber/1/403.png', d['picture']
   end
 
   test "should parse facebook url without identified pattern as item" do

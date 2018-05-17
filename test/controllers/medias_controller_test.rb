@@ -56,7 +56,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://new.speakbridge.io/medias/embed/viber/1/403'
+    url = 'https://speakbridge.io/medias/embed/viber/1/403'
     get :index, url: url, refresh: '1', format: :html
     name = Digest::MD5.hexdigest(url)
     cache_file = File.join('public', 'cache', Rails.env, "#{name}.html" )
@@ -69,7 +69,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should not ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://new.speakbridge.io/medias/embed/viber/1/403'
+    url = 'https://speakbridge.io/medias/embed/viber/1/403'
     name = Digest::MD5.hexdigest(url)
     cache_file = File.join('public', 'cache', Rails.env, "#{name}.html" )
     get :index, url: url, refresh: '0', format: :html
