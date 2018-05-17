@@ -11,7 +11,7 @@ class ScreenshotWorker
 
   def perform(url, picture, key_id, script = '')
     saver = Chromeshot::Screenshot.new debug_port: CONFIG['chrome_debug_port']
-    tab = saver.load_page_in_new_tab(url: url)
+    tab = saver.load_page_in_new_tab(url: url.gsub('%23', '#'))
     raise 'Could not open tab' if tab.blank?
     key = ApiKey.where(id: key_id).last
     settings = key ? key.application_settings.with_indifferent_access : {}
