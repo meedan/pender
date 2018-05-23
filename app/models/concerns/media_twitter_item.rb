@@ -22,6 +22,7 @@ module MediaTwitterItem
 
   def data_from_twitter_item
     self.url = self.url.gsub(/(%23|#)!\//, '')
+    self.replace_subdomain_pattern
     parts = self.url.match(URL)
     user, id = parts['user'], parts['id']
     handle_twitter_exceptions do
