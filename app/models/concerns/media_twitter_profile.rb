@@ -3,8 +3,13 @@ require 'pender_exceptions'
 module MediaTwitterProfile
   extend ActiveSupport::Concern
 
+  URLS = [
+    /^https?:\/\/(www\.)?twitter\.com\/([^\/]+)$/,
+    /^https?:\/\/(0|m|mobile)\.twitter\.com\/([^\/]+)$/
+  ]
+
   included do
-    Media.declare('twitter_profile', [/^https?:\/\/(www\.)?twitter\.com\/([^\/]+)$/])
+    Media.declare('twitter_profile', URLS)
   end
 
   def twitter_client
@@ -17,6 +22,7 @@ module MediaTwitterProfile
   end
 
   def data_from_twitter_profile
+    self.replace_subdomain_pattern
     username = self.get_twitter_username
     self.data[:raw][:api] = {}
     handle_twitter_exceptions do
@@ -48,5 +54,9 @@ module MediaTwitterProfile
 
   def get_twitter_username
     self.url.match(/^https?:\/\/(www\.)?twitter\.com\/([^\/]+)$/)[2]
+  end
+
+  def replace_subdomain_pattern
+    self.url.gsub!(/:\/\/.*\.twitter\./, '://twitter.')
   end
 end

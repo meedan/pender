@@ -2111,4 +2111,64 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '@globalvoices', d['author_name']
     assert_not_nil d['published_at']
   end
+
+  test "should parse twitter profile urls with mobile pattern" do
+    expected = 'https://twitter.com/meedan'
+    variations = %w(
+      0.twitter.com/meedan
+      m.twitter.com/meedan
+      mobile.twitter.com/meedan
+    )
+    variations.each do |url|
+      m = Media.new(url: url)
+      data = m.as_json
+      assert_equal expected, m.url
+      assert_equal 'twitter', data['provider']
+      assert_equal 'profile', data['type']
+      assert_equal 'meedan', data['title']
+      assert_equal '@meedan', data['username']
+      assert_equal 'meedan', data['author_name']
+      assert_not_nil data['description']
+      assert_not_nil data['picture']
+      assert_not_nil data['published_at']
+      assert_nil data['error']
+    end
+  end
+
+  test "should parse tweet urls with mobile pattern" do
+    expected = 'https://twitter.com/meedan/status/998945357001314304'
+    variations = %w(
+      0.twitter.com/meedan/status/998945357001314304
+      m.twitter.com/meedan/status/998945357001314304
+      mobile.twitter.com/meedan/status/998945357001314304
+    )
+    variations.each do |url|
+      m = Media.new(url: url)
+      data = m.as_json
+      assert_equal expected, m.url
+      assert_equal 'twitter', data['provider']
+      assert_equal 'item', data['type']
+      assert_match /A guide to anti-misinformation/, data['title']
+      assert_equal '@meedan', data['username']
+      assert_equal 'meedan', data['author_name']
+      assert_not_nil data['description']
+      assert_not_nil data['published_at']
+      assert_nil data['error']
+    end
+  end
+
+  test "should parse posts from twitter subdomains as page" do
+    variations = %w(
+      https://blog.twitter.com
+      https://blog.twitter.com/official/en_us/topics/events/2018/Embrace-Ramadan-with-various-Twitter-only-activations.html
+      https://business.twitter.com
+      https://business.twitter.com/en/blog/4-tips-Tweeting-live-events.html
+    )
+    variations.each do |url|
+      m = Media.new(url: url)
+      data = m.as_json
+      assert_equal 'page', data['provider']
+    end
+  end
+
 end
