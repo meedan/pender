@@ -573,11 +573,11 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '09/2016', d['published_at'].strftime('%m/%Y')
     assert_equal 'item', d['type']
     assert_equal 'Escape on Facebook', d['title']
-    assert_equal 'Photos by Ahmed Tarek Bayoumi', d['description']
+    assert_equal 'Escape added a new photo.', d['description']
     assert_match /423930480981426/, d['author_picture']
-    assert d['photos'].size > 10
+    assert_equal 1, d['photos'].size
     assert_match /^https:/, d['picture']
-    assert_equal '1204090389632094', d['object_id']
+    assert_equal '1204094906298309', d['object_id']
   end
 
   test "should parse Facebook pure text post url" do
@@ -894,7 +894,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should parse facebook url with a photo album" do
     expected = {
-      url: 'https://www.facebook.com/Classic.mou/posts/613639338813733',
+      url: 'https://www.facebook.com/Classic.mou/photos/a.136991166478555.1073741828.136985363145802/613639175480416/?type=3',
       title: 'Classic on Facebook',
       username: 'Classic.mou',
       author_name: 'Classic',
@@ -911,8 +911,8 @@ class MediaTest < ActiveSupport::TestCase
       data = media.as_json
       expected.each do |key, value|
         assert_equal value, data[key]
-        assert_match /613639042147096_5586727492554773434/, data[:picture]
-        assert_match /خلال افتتاح معرض لفساتين الزفاف بالسويد اليوم تم عرض جميع فساتين زفاف/, data[:description]
+        assert_match /613639175480416_2497518582358260577/, data[:picture]
+        assert_match /Classic added a new photo/, data[:description]
       end
     end
   end
