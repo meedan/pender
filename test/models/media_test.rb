@@ -1871,24 +1871,66 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive_to_screenshot)
     a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
     url = 'https://checkmedia.org/caio-screenshots/project/1121/media/8390'
-    id = Media.get_id(url)
+    filename = Media.image_filename(url)
+    path = File.join(Rails.root, 'public', 'screenshots', filename)
+    FileUtils.rm_rf path
+
     m = create_media url: url, key: a
     data = m.as_json
-    filename = Digest::MD5.hexdigest(url.parameterize) + '.png'
-    path = File.join(Rails.root, 'public', 'screenshots', filename)
     assert File.exists?(path)
 
-    CONFIG['archiver_skip_hosts'] = 'checkmedia.org'
-
+    CONFIG['archiver_skip_hosts'] = {'checkmedia.org' => 'all'}
+    %w(screenshot archive_org archive_is video_vault).each do |archiver|
+      Media.any_instance.stubs("archive_to_#{archiver}".to_sym).never
+    end
     url = 'https://checkmedia.org/caio-screenshots/project/1121/media/8390?hide_tasks=1'
-    id = Media.get_id(url)
+    filename = Media.image_filename(url)
+    path = File.join(Rails.root, 'public', 'screenshots', filename)
+    FileUtils.rm_rf path
+
     m = create_media url: url, key: a
     data = m.as_json
-    filename = url.parameterize + '.png'
-    path = File.join(Rails.root, 'public', 'screenshots', filename)
     assert !File.exists?(path)
 
     CONFIG['archiver_skip_hosts'] = config
+    %w(screenshot archive_org archive_is video_vault).each do |archiver|
+      Media.any_instance.unstub("archive_to_#{archiver}".to_sym)
+    end
+  end
+
+  test "should skip specific archivers" do
+    config = CONFIG['archiver_skip_hosts']
+
+    CONFIG['archiver_skip_hosts'] = ''
+    %w(screenshot archive_org archive_is video_vault).each do |archiver|
+      Media.any_instance.unstub("archive_to_#{archiver}".to_sym)
+    end
+
+    a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
+    url = 'https://speakbridge.io/medias/embed/viber/1/403'
+    filename = Media.image_filename(url)
+    path = File.join(Rails.root, 'public', 'screenshots', filename)
+    FileUtils.rm_rf path
+
+    m = create_media url: url, key: a
+    data = m.as_json
+    assert File.exists?(path)
+
+    Rails.cache.delete(Media.get_id(url))
+    CONFIG['archiver_skip_hosts'] = { "speakbridge.io" => "archive_org,archive_is,video_vault"}
+    %w(archive_org archive_is video_vault).each do |archiver|
+      Media.any_instance.stubs("archive_to_#{archiver}".to_sym).never
+    end
+    FileUtils.rm_rf path
+
+    m = create_media url: url, key: a
+    data = m.as_json
+    assert File.exists?(path)
+
+    CONFIG['archiver_skip_hosts'] = config
+    %w(screenshot archive_org archive_is video_vault).each do |archiver|
+      Media.any_instance.unstub("archive_to_#{archiver}".to_sym)
+    end
   end
 
   test "should archive to Video Vault" do

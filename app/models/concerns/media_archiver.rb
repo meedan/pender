@@ -5,10 +5,10 @@ module MediaArchiver
 
   def archive
     url = self.url
-    self.skip_archive_if_needed and return
 
     ARCHIVERS.each do |name, rule|
       rule[:patterns].each do |pattern|
+        next if self.skip_archive_if_needed(name)
         if (rule[:modifier] == :only && !pattern.match(url).nil?) || (rule[:modifier] == :except && pattern.match(url).nil?)
           self.send("archive_to_#{name}")
         end
@@ -16,12 +16,15 @@ module MediaArchiver
     end
   end
 
-  def skip_archive_if_needed
+  def skip_archive_if_needed(archiver)
     url = self.url
-    skip = CONFIG['archiver_skip_hosts']
-    unless skip.blank?
+    hosts = CONFIG['archiver_skip_hosts']
+    unless hosts.blank?
       host = begin URI.parse(url).host rescue '' end
-      return true if skip.split(',').include?(host)
+      if !hosts[host].blank?
+        skip = hosts[host]
+        return true if skip.split(',').include?(archiver) || skip == 'all'
+      end
     end
     false
   end
