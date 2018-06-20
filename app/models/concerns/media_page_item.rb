@@ -12,9 +12,7 @@ module MediaPageItem
     end
     handle_exceptions(self, StandardError) do
       self.data = self.page_get_data_from_url
-      if self.data[:picture].blank?
-        self.data[:picture] = self.screenshot_path
-      else
+      unless self.data[:picture].blank?
         self.data[:picture] = self.add_scheme(self.data[:picture])
       end
       self.data.merge!({

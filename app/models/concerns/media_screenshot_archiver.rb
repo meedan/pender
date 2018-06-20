@@ -1,10 +1,6 @@
 module MediaScreenshotArchiver
   extend ActiveSupport::Concern
 
-  included do
-    Media.declare_archiver('screenshot', [/^.*$/], :only)
-  end
-
   def screenshot_script=(script)
     @screenshot_script = script
   end

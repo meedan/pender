@@ -680,7 +680,6 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse meta tags as fallback" do
-    Media.any_instance.unstub(:archive_to_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'https://xkcd.com/1479', request: request
@@ -690,15 +689,10 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
-
-    filename = Digest::MD5.hexdigest(m.url.parameterize) + '.png'
-    path = File.join(Rails.root, 'public', 'screenshots', filename)
-    assert File.exists?(path)
-    assert_match /\/screenshots\/#{filename}$/, d['picture']
+    assert_equal '', d['picture']
   end
 
   test "should parse meta tags as fallback 2" do
-    Media.any_instance.unstub(:archive_to_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'http://ca.ios.ba/', request: request
@@ -708,11 +702,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'http://ca.ios.ba', d['author_url']
-
-    filename = Digest::MD5.hexdigest(m.url.parameterize) + '.png'
-    path = File.join(Rails.root, 'public', 'screenshots', filename)
-    assert File.exists?(path)
-    assert_match /\/screenshots\/#{filename}$/, d['screenshot']
+    assert_equal '', d['picture']
   end
 
   test "should parse Facebook photo on page album" do
@@ -810,7 +800,6 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should store the picture address" do
-    Media.any_instance.unstub(:archive_to_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'http://xkcd.com/448/', request: request
@@ -820,8 +809,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
-    filename = Digest::MD5.hexdigest(m.url.parameterize) + '.png'
-    assert_match /\/screenshots\/#{filename}$/, d['screenshot']
+    assert_equal '', d['screenshot']
   end
 
   test "should get relative canonical URL parsed from html tags" do
@@ -1537,7 +1525,6 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should keep port when building author_url if port is not 443 or 80" do
-    Media.any_instance.stubs(:archive_to_screenshot).returns('')
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)
@@ -1555,7 +1542,6 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: url
     assert_equal 'https://meedan.com', m.send(:top_url, m.url)
 
-    Media.any_instance.unstub(:archive_to_screenshot)
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_canonical_url)
     Media.any_instance.unstub(:try_https)
@@ -1843,39 +1829,16 @@ class MediaTest < ActiveSupport::TestCase
     assert_no_match /&amp;/, data['title']
   end
 
-  test "should take full screenshot, update cache and call webhook" do
-    Media.any_instance.unstub(:archive_to_screenshot)
-    a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
-    url = 'https://twitter.com/marcouza'
-    id = Media.get_id(url)
-    m = create_media url: url, key: a
-    data = m.as_json
-    filename = Digest::MD5.hexdigest(m.url.parameterize) + '.png'
-    path = File.join(Rails.root, 'public', 'screenshots', filename)
-    assert File.exists?(path)
-    assert_equal 0, Rails.cache.read(id)['screenshot_taken']
-    assert_nil Rails.cache.read(id)['webhook_called']
-    sleep 70 # Wait enough for the scheduler
-    dimensions = IO.read(path)[0x10..0x18].unpack('NN')
-    assert dimensions[1] > 2000
-    assert_equal 1, Rails.cache.read(id)['screenshot_taken']
-    assert_equal 1, Rails.cache.read(id)['webhook_called']
-  end
-
   test "should skip screenshots" do
     config = CONFIG['archiver_skip_hosts']
 
     CONFIG['archiver_skip_hosts'] = ''
 
-    Media.any_instance.unstub(:archive_to_screenshot)
     a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
     url = 'https://checkmedia.org/caio-screenshots/project/1121/media/8390'
     id = Media.get_id(url)
     m = create_media url: url, key: a
     data = m.as_json
-    filename = Digest::MD5.hexdigest(url.parameterize) + '.png'
-    path = File.join(Rails.root, 'public', 'screenshots', filename)
-    assert File.exists?(path)
 
     CONFIG['archiver_skip_hosts'] = 'checkmedia.org'
 
@@ -1883,9 +1846,6 @@ class MediaTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     data = m.as_json
-    filename = url.parameterize + '.png'
-    path = File.join(Rails.root, 'public', 'screenshots', filename)
-    assert !File.exists?(path)
 
     CONFIG['archiver_skip_hosts'] = config
   end
@@ -2024,22 +1984,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', data['username']
   end
 
-  test "should use md5 hash on screenshot filename" do
-    Media.any_instance.unstub(:archive_to_screenshot)
-    request = 'http://localhost'
-    request.expects(:base_url).returns('http://localhost')
-    url = 'https://www.madamasr.com/ar/2018/03/13/feature/%D8%B3%D9%8A%D8%A7%D8%B3%D8%A9/%D9%82%D8%B1%D8%A7%D8%A1%D8%A9-%D9%81%D9%8A-%D8%AC%D8%B1%D8%A7%D8%A6%D9%85-%D8%A7%D9%84%D9%85%D8%B9%D9%84%D9%88%D9%85%D8%A7%D8%AA-%D8%AA%D9%82%D9%86%D9%8A%D9%86-%D9%84%D9%84%D8%AD%D8%AC'
-    m = create_media url: url, request: request
-    data = m.as_json
-    filename = Digest::MD5.hexdigest(url.parameterize) + '.png'
-    path = File.join(Rails.root, 'public', 'screenshots', filename)
-    assert File.exists?(path)
-    assert_match /\/screenshots\/#{filename}$/, data['screenshot']
-    assert data['error'].nil?
-  end
-
   test "should handle error when cannot get twitter url" do
-    Media.any_instance.unstub(:archive_to_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     Media.any_instance.stubs(:twitter_client).raises(Twitter::Error::Forbidden)
@@ -2051,7 +1996,6 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should handle errors when call parse" do
-    Media.any_instance.unstub(:archive_to_screenshot)
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     url = 'http://example.com'
