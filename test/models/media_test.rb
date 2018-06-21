@@ -385,7 +385,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal "This post is only to test.\n\nEsto es una publicación para testar solamente.", d['text']
     assert_equal '749262715138323', d['user_uuid']
     assert_equal 'Teste', d['author_name']
-    assert_equal 1, d['media_count']
+    assert_equal 0, d['media_count']
     assert_equal '1028416870556238', d['object_id']
     assert_equal '11/2015', d['published_at'].strftime("%m/%Y")
   end
@@ -484,7 +484,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['picture']
     assert_match /^https/, d['author_picture']
     assert_kind_of Array, d['photos']
-    assert_equal 1, d['media_count']
+    assert_equal 0, d['media_count']
     assert_equal 1, d['photos'].size
 
     m = create_media url: 'https://www.facebook.com/johnwlai/posts/10101205465813840?pnref=story'
