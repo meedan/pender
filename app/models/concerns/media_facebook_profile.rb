@@ -139,7 +139,7 @@ module MediaFacebookProfile
       /^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+)/
     ]
     username = compare_patterns(URI.decode(self.url), patterns)
-    return if ['events', 'livemap', 'live'].include? username
+    return if ['events', 'livemap', 'live', 'story.php'].include? username
     if username === 'pages'
       username = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/pages\/([^\/]+)\/([^\/\?]+).*/)[2]
     elsif username.to_i > 0 || username === 'profile.php'

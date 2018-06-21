@@ -51,7 +51,9 @@ module MediaFacebookItem
 
   def get_facebook_post_id_from_url
     uri = URI.parse(self.url)
-    id = uri.path.split('/').last
+    parts = uri.path.split('/')
+    id = parts.last
+    id = parts[parts.size - 2] if id == 'posts'
     mapping = { 'photo.php' => 'fbid', 'permalink.php' => 'story_fbid', 'story.php' => 'story_fbid', 'set' => 'set', 'photos' => 'album_id' }
     id = self.get_facebook_post_id_from_uri_params(id, uri, mapping[id]) if mapping.keys.include?(id)
     id = '' if ['livemap', 'map'].include?(id)
@@ -142,7 +144,7 @@ module MediaFacebookItem
   def get_facebook_owner_name_from_html
     event_name = self.get_facebook_event_name_from_html
     current_name = self.data['author_name']
-    user_name = self.doc.to_s.match(/ownerName:"([^"]+)"/)
+    user_name = self.doc.to_s.match(/"?ownerName"?:"([^"]+)"/)
     self.data['author_name'] = event_name.nil? ? (user_name.nil? ? (current_name.blank? ? 'Not Identified' : current_name) : user_name[1]) : event_name
   end
 
