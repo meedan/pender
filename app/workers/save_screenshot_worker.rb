@@ -25,6 +25,7 @@ class SaveScreenshotWorker
   end
 
   def perform
+    return unless defined?(Chromeshot::Screenshot)
     redis = PenderRedis.new.redis 
     job = redis.lpop('pender-screenshots-queue')
     unless job.nil?

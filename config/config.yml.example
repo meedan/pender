@@ -21,7 +21,6 @@ development: &default
       http_auth: username:password
     another.host:
       http_auth: username:password
-  chrome_debug_port: 9444
 
 test:
   <<: *default
