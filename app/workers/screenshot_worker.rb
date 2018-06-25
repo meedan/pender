@@ -10,6 +10,7 @@ class ScreenshotWorker
   end
 
   def perform(url, picture, key_id, script = '')
+    return unless defined?(Chromeshot::Screenshot)
     saver = Chromeshot::Screenshot.new debug_port: CONFIG['chrome_debug_port']
     tab = saver.load_page_in_new_tab(url: url.gsub('%23', '#'))
     raise 'Could not open tab' if tab.blank?

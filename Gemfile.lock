@@ -1,13 +1,4 @@
 GIT
-  remote: https://github.com/meedan/chromeshot
-  revision: 14ca00d176869dab436ea7f34ba02c8fc24dd13d
-  ref: 14ca00
-  branch: master
-  specs:
-    chromeshot (0.0.0)
-      mini_magick
-
-GIT
   remote: https://github.com/meedan/ids_please
   revision: 31b9e03fe7860d57697e9b6deec321bc7d7482f4
   ref: 31b9e0
@@ -114,7 +105,6 @@ GEM
     mida (0.4.0)
       addressable (~> 2.4)
       nokogiri (>= 1.6)
-    mini_magick (4.8.0)
     mini_mime (1.0.0)
     mini_portile2 (2.3.0)
     minitest (5.10.3)
@@ -264,7 +254,6 @@ DEPENDENCIES
   airbrake (= 4.3.3)
   awesome_print
   byebug
-  chromeshot!
   codeclimate-test-reporter (= 0.6.0)
   gem-licenses
   htmlentities
@@ -304,4 +293,4 @@ DEPENDENCIES
   yt (~> 0.25.5)
 
 BUNDLED WITH
-   1.16.1
+   1.16.2
