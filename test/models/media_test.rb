@@ -809,7 +809,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
-    assert_equal '', d['picture']
+    assert_equal '', d['screenshot']
   end
 
   test "should get relative canonical URL parsed from html tags" do

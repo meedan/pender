@@ -85,9 +85,7 @@ class Media
 
   def self.minimal_data(instance)
     data = {}
-    fields = %w(published_at username title description picture author_url author_picture author_name)
-    fields << 'screenshot' if defined?(Chromeshot::Screenshot)
-    fields.each do |field|
+    %w(published_at username title description picture author_url author_picture author_name screenshot).each do |field|
       data[field] = ''
     end
     data[:raw] = {}
