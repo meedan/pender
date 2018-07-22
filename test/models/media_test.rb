@@ -1477,7 +1477,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/pg/Mariano-Rajoy-Brey-54212446406/photos/?tab=album&album_id=10154534110871407'
     d = m.as_json
     assert_equal '54212446406_10154534110871407', d['uuid']
-    assert_match(/Presidente del Partido Popular/, d['text'])
+    assert_match(/Militante del Partido Popular/, d['text'])
     assert_equal '54212446406', d['user_uuid']
     assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert_equal '10154534110871407', d['object_id']
@@ -1502,7 +1502,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/pg/Mariano-Rajoy-Brey-54212446406/photos'
     d = m.as_json
     assert_equal '54212446406_10154534110871407', d['uuid']
-    assert_match(/Presidente del Partido Popular/, d['text'])
+    assert_match(/Militante del Partido Popular/, d['text'])
     assert_equal '54212446406', d['user_uuid']
     assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert_equal '10154534110871407', d['object_id']
