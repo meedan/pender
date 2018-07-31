@@ -3,7 +3,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '..', '..', 'lib', '
 
 class LapisWebhookTest < ActiveSupport::TestCase
   def setup
-    @lw = Lapis::Webhook.new('http://ca.ios.ba/', { foo: 'bar' }.to_json)
+    @lw = Lapis::Webhook.new('https://ca.ios.ba/', { foo: 'bar' }.to_json)
     super
   end
 

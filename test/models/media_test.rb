@@ -8,7 +8,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should have URL" do
     m = create_media url: 'http://ca.ios.ba/'
-    assert_equal 'http://ca.ios.ba/', m.url
+    assert_equal 'https://ca.ios.ba/', m.url
   end
 
   test "should parse YouTube user" do
@@ -215,18 +215,18 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should normalize URL" do
-    expected = 'http://ca.ios.ba/'
+    expected = 'https://ca.ios.ba/'
     variations = %w(
-      http://ca.ios.ba
+      https://ca.ios.ba
       ca.ios.ba
-      http://ca.ios.ba:80
-      http://ca.ios.ba//
-      http://ca.ios.ba/?
-      http://ca.ios.ba/#foo
-      http://ca.ios.ba/
-      http://ca.ios.ba
-      http://ca.ios.ba/foo/..
-      http://ca.ios.ba/?#
+      https://ca.ios.ba:443
+      https://ca.ios.ba//
+      https://ca.ios.ba/?
+      https://ca.ios.ba/#foo
+      https://ca.ios.ba/
+      https://ca.ios.ba
+      https://ca.ios.ba/foo/..
+      https://ca.ios.ba/?#
     )
     variations.each do |url|
       media = Media.new(url: url)
@@ -234,7 +234,7 @@ class MediaTest < ActiveSupport::TestCase
     end
 
     media = Media.new(url: 'http://ca.ios.ba/a%c3%82/%7Euser?a=b')
-    assert_equal 'http://ca.ios.ba/a%C3%82/~user?a=b', media.url
+    assert_equal 'https://ca.ios.ba/a%C3%82/~user?a=b', media.url
 
   end
 
@@ -242,7 +242,7 @@ class MediaTest < ActiveSupport::TestCase
     urls = %w(
       https://meedan.com/en/
       http://ios.ba/
-      http://ca.ios.ba/?foo=bar
+      https://ca.ios.ba/?foo=bar
     )
     urls.each do |url|
       media = Media.new(url: url)
@@ -701,7 +701,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Personal website of Caio Sacramento de Britto Almeida', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
-    assert_equal 'http://ca.ios.ba', d['author_url']
+    assert_equal 'https://ca.ios.ba', d['author_url']
     assert_equal '', d['picture']
   end
 
@@ -1379,8 +1379,8 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should not redirect to HTTPS if not available" do
-    m = create_media url: 'http://ca.ios.ba'
-    assert_equal 'http://ca.ios.ba/', m.url
+    m = create_media url: 'http://www.angra.net'
+    assert_equal 'http://angra.net/website', m.url
   end
 
   test "should parse dropbox video url" do

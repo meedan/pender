@@ -3,8 +3,8 @@ module MediaSchemaOrg
 
   def get_schema_data
     return if self.doc.nil?
-    microdata = Mida::Document.new(self.doc)
-    if !microdata.items.empty?
+    microdata = begin Mida::Document.new(self.doc) rescue nil end
+    if !microdata.nil? && !microdata.items.empty?
       self.data[:schema] ||= {}.with_indifferent_access
       microdata.items.each do |item|
         next if item.type.nil?
