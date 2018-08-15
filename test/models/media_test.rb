@@ -984,7 +984,11 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Facebook event post" do
     m = create_media url: 'https://www.facebook.com/events/364677040588691/permalink/376287682760960/?ref=1&action_history=null'
     data = m.as_json
-    assert_equal 'https://www.facebook.com/events/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691/', m.url
+    variations = %w(
+      https://www.facebook.com/events/364677040588691/permalink/376287682760960?ref=1&action_history=null
+      https://www.facebook.com/events/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691/
+    )
+    assert_includes variations, m.url
     assert_not_nil data['published_at']
     assert_match /#{data['user_uuid']}/, data['author_url']
     assert_match /^https:/, data['picture']
@@ -996,7 +1000,11 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse Facebook event post 2" do
     m = create_media url: 'https://www.facebook.com/events/364677040588691/permalink/379973812392347/?ref=1&action_history=null'
     data = m.as_json
-    assert_equal 'https://www.facebook.com/events/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691/', m.url
+    variations = %w(
+      https://www.facebook.com/events/364677040588691/permalink/379973812392347?ref=1&action_history=null
+      https://www.facebook.com/events/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691/
+    )
+    assert_includes variations, m.url
     assert_equal 'Zawya on Facebook', data['title']
     assert_match /يقول فارس لرزق أنه/, data['description']
     assert_not_nil data['published_at']
@@ -1989,7 +1997,7 @@ class MediaTest < ActiveSupport::TestCase
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
     Media.any_instance.stubs(:twitter_client).raises(Twitter::Error::Forbidden)
-    url = 'http://www.yallakora.com/ar/news/342470/%D8%A7%D8%AA%D8%AD%D8%A7%D8%AF-%D8%A7%D9%84%D9%83%D8%B1%D8%A9-%D8%B9%D9%86-%D8%A3%D8%B2%D9%85%D8%A9-%D8%A7%D9%84%D8%B3%D8%B9%D9%8A%D8%AF-%D9%84%D8%A7%D8%A8%D8%AF-%D9%85%D9%86-%D8%AD%D9%84-%D9%85%D8%B9-%D8%A7%D9%84%D8%B2%D9%85%D8%A7%D9%84%D9%83/2504'
+    url = 'http://www.yallakora.com/epl/2545/News/350853/%D9%85%D8%B5%D8%AF%D8%B1-%D9%84%D9%8A%D9%84%D8%A7-%D9%83%D9%88%D8%B1%D8%A9-%D9%84%D9%8A%D9%81%D8%B1%D8%A8%D9%88%D9%84-%D8%AD%D8%B0%D8%B1-%D8%B5%D9%84%D8%A7%D8%AD-%D9%88%D8%B2%D9%85%D9%84%D8%A7%D8%A1%D9%87-%D9%85%D9%86-%D8%AC%D9%85%D8%A7%D9%87%D9%8A%D8%B1-%D9%81%D9%8A%D8%AF%D9%8A%D9%88-%D8%A7%D9%84%D8%B3%D9%8A%D8%A7%D8%B1%D8%A9'
     m = create_media url: url, request: request
     data = m.as_json
     assert data['error'].nil?
