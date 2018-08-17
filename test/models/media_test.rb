@@ -1335,6 +1335,16 @@ class MediaTest < ActiveSupport::TestCase
     OpenURI.unstub(:open_uri)
   end
 
+  test "should handle zlib buffer error when opening a url" do
+    m = create_media url: 'https://www.businessdailyafrica.com/'
+    parsed_url = Media.parse_url( m.url)
+    header_options = Media.send(:html_options, m.url)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Zlib::BufError)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
+    m.send(:get_html, Media.send(:html_options, m.url))
+    OpenURI.unstub(:open_uri)
+  end
+
   test "should not notify Airbrake when it is a redirection from https to http" do
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
