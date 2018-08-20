@@ -234,7 +234,7 @@ class Media
       Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
     rescue OpenURI::HTTPError, Errno::ECONNRESET
       return nil
-    rescue Zlib::DataError
+    rescue Zlib::DataError, Zlib::BufError
       self.get_html(Media.html_options(self.url).merge('Accept-Encoding' => 'identity'))
     rescue RuntimeError => e
       Airbrake.notify(e) if !redirect_https_to_http?(header_options, e.message) && Airbrake.configuration.api_key
