@@ -442,9 +442,9 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3&theater'
     m = create_media url: 'https://www.facebook.com/photo.php?fbid=981302451896323&set=a.155912291102014.38637.100000497329098&type=3&theater'
     d = m.as_json
-    assert_equal '100000497329098_981302451896323', d['uuid']
+    assert_equal '155912291102014_981302451896323', d['uuid']
     assert_equal 'Kiko Loureiro added a new photo.', d['text']
-    assert_equal '100000497329098', d['user_uuid']
+    assert_equal '155912291102014', d['user_uuid']
     assert_equal 'Kiko Loureiro', d['author_name']
     assert_not_nil d['picture']
     assert_equal 1, d['media_count']
@@ -528,7 +528,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should return author_name and author_url for Facebook post" do
     m = create_media url: 'https://www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3&theater'
     d = m.as_json
-    assert_equal 'http://facebook.com/100000497329098', d['author_url']
+    assert_equal 'http://facebook.com/155912291102014', d['author_url']
     assert_equal 'Kiko Loureiro', d['author_name']
     assert_match /12144884_1195161923843707_2568663037890130414/, d['picture']
   end
@@ -863,11 +863,11 @@ class MediaTest < ActiveSupport::TestCase
   test "should get canonical URL from facebook object 2" do
     media = Media.new(url: 'https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406')
     media.as_json({ force: 1 })
-    assert_equal 'https://www.facebook.com/media/set/?set=a.10154534110871407.1073742048.54212446406&type=3', media.url
+    assert_equal 'https://www.facebook.com/media/set/?set=a.10154534110871407&type=3', media.url
   end
 
   test "should get canonical URL from facebook object 3" do
-    expected = 'https://www.facebook.com/media/set/?set=a.10154534110871407.1073742048.54212446406&type=3'
+    expected = 'https://www.facebook.com/media/set/?set=a.10154534110871407&type=3'
     variations = %w(
       https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407/?type=3
       https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3
@@ -881,7 +881,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should parse facebook url with a photo album" do
     expected = {
-      url: 'https://www.facebook.com/Classic.mou/photos/a.136991166478555.1073741828.136985363145802/613639175480416/?type=3',
+      url: 'https://www.facebook.com/Classic.mou/photos/a.136991166478555/613639175480416/?type=3',
       title: 'Classic on Facebook',
       username: 'Classic.mou',
       author_name: 'Classic',
@@ -1267,7 +1267,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should set url with the permalink_url returned by facebook api" do
     m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
     d = m.as_json
-    assert_equal 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3', m.url
+    assert_equal 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501/942167619246718/?type=3', m.url
   end
 
   test "should set url with the permalink_url returned by facebook api 2" do
@@ -1290,7 +1290,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'http://facebook.com/136985363145802', d['author_url']
     assert_equal 'https://graph.facebook.com/136985363145802/picture', d['author_picture']
     assert_match /16473884_666508790193454_8112186335057907723/, d['picture']
-    assert_equal 'https://www.facebook.com/Classic.mou/photos/a.136991166478555.1073741828.136985363145802/666508790193454/?type=3', m.url
+    assert_equal 'https://www.facebook.com/Classic.mou/photos/a.136991166478555/666508790193454/?type=3', m.url
   end
 
   test "should parse pages when the scheme is missing on oembed url" do
@@ -1481,7 +1481,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert d['media_count'] > 20
     assert_equal '10154534110871407', d['object_id']
-    assert_equal 'https://www.facebook.com/media/set/?set=a.10154534110871407.1073742048.54212446406&type=3', m.url
+    assert_equal 'https://www.facebook.com/media/set/?set=a.10154534110871407&type=3', m.url
   end
 
   test "should get all information of a truncated tweet" do
@@ -1505,13 +1505,13 @@ class MediaTest < ActiveSupport::TestCase
   test "should support facebook pattern with album" do
     m = create_media url: 'https://www.facebook.com/album.php?fbid=10154534110871407&id=54212446406&aid=1073742048'
     d = m.as_json
-    assert_equal '54212446406_10154534110871407', d['uuid']
+    assert_equal '10154534110871407_10154534110871407', d['uuid']
     assert_match(/En el Museo Serralves de Oporto/, d['text'])
-    assert_equal '54212446406', d['user_uuid']
+    assert_equal '10154534110871407', d['user_uuid']
     assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert d['media_count'] > 20
     assert_equal '10154534110871407', d['object_id']
-    assert_equal 'https://www.facebook.com/media/set/?set=a.10154534110871407.1073742048.54212446406&type=3', m.url
+    assert_equal 'https://www.facebook.com/media/set/?set=a.10154534110871407&type=3', m.url
   end
 
   test "should get facebook data from original_url when url fails" do
@@ -2038,7 +2038,7 @@ class MediaTest < ActiveSupport::TestCase
     url = 'https://www.facebook.com/quoted.pictures/photos/a.128828073875334.28784.128791873878954/1096134023811396/?type=3&theater'
     m = create_media url: url
     data = m.as_json
-    url = 'https://www.facebook.com/quoted.pictures/photos/a.128828073875334.28784.128791873878954/1096134023811396/?type=3'
+    url = 'https://www.facebook.com/quoted.pictures/photos/a.128828073875334/1096134023811396/?type=3'
     assert_equal url, data['url']
 
     m = create_media url: url
