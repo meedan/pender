@@ -50,6 +50,7 @@ module MediaPageItem
       data['author_url'] = data['username']
       data.delete('username')
     end
+    data['published_at'] = verify_published_time(data['published_at']) unless data['published_at'].blank?
     data
   end
 

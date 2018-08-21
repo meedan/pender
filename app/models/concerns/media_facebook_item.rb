@@ -156,11 +156,7 @@ module MediaFacebookItem
   def get_facebook_published_time_from_html
     return if self.doc.nil?
     time = self.doc.at_css('span.timestampContent')
-    begin
-      self.data['published_at'] = Time.parse(time.inner_html) unless time.nil?
-    rescue ArgumentError
-      self.data['published_at'] = Time.at(time.parent.attr('data-utime').to_i) unless time.nil?
-    end
+    self.data['published_at'] = verify_published_time(time.inner_html, time.parent.attr('data-utime')) unless time.nil?
   end
 
   def get_facebook_url_from_html

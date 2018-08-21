@@ -1056,7 +1056,7 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'Larry Sanders on brother Bernie and why Tony Blair was ‘destructive’', d['title']
     assert_match /The Green party candidate, who is fighting the byelection in David Cameron’s old seat/, d['description']
-    assert_match /2016-10/, d['published_at']
+    assert_match /2016-10/, d['published_at'].strftime('%Y-%m')
     assert_equal '@zoesqwilliams', d['username']
     assert_equal 'https://twitter.com/zoesqwilliams', d['author_url']
     assert_match /https:\/\/i.guim.co.uk\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, d['picture']
@@ -2130,6 +2130,15 @@ class MediaTest < ActiveSupport::TestCase
       m = Media.new(url: url)
       data = m.as_json
       assert_equal 'page', data['provider']
+    end
+  end
+
+  test "should convert published_time to time without error" do
+    url = 'https://www.pagina12.com.ar/136611-tecnologias-de-la-desinformacion'
+    m = Media.new(url: url)
+    data = m.as_json
+    assert_nothing_raised do
+      data['published_at'].to_time
     end
   end
 
