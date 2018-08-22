@@ -1059,7 +1059,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /2016-10/, d['published_at'].strftime('%Y-%m')
     assert_equal '@zoesqwilliams', d['username']
     assert_equal 'https://twitter.com/zoesqwilliams', d['author_url']
-    assert_match /https:\/\/i.guim.co.uk\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, d['picture']
+    assert_match /\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, d['picture']
   end
 
   test "should parse url 3" do
