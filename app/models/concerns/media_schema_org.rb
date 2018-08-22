@@ -2,7 +2,6 @@ module MediaSchemaOrg
   extend ActiveSupport::Concern
 
   def get_schema_data
-    return if self.doc.nil?
     microdata = begin Mida::Document.new(self.doc) rescue nil end
     if !microdata.nil? && !microdata.items.empty?
       self.data[:schema] ||= {}.with_indifferent_access

@@ -126,7 +126,7 @@ class Media
     self.data = Media.minimal_data(self)
     get_metatags(self)
     get_jsonld_data(self)
-    get_schema_data
+    get_schema_data unless self.doc.nil?
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|
