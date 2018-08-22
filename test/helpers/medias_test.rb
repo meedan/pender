@@ -43,4 +43,9 @@ class MediasHelperTest < ActionView::TestCase
     Media.any_instance.unstub(:doc)
     JSON.unstub(:parse)
   end
+
+  test 'should verify value on published_time and use second option if available' do
+    assert_equal '2018-08-21 00:19:25 +0000', verify_published_time('1534810765').to_s
+    assert_equal '2018-08-20 22:05:01 +0000', verify_published_time('1534810765', '1534802701').to_s
+  end
 end
