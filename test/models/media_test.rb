@@ -772,9 +772,14 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should get canonical URL parsed from html tags 3" do
+    doc = ''
+    open('test/data/page-with-url-on-tag.html') { |f| doc = f.read }
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
+
     media1 = create_media url: 'http://mulher30.com.br/2016/08/bom-dia-2.html'
     media2 = create_media url: 'http://mulher30.com.br/?p=6704&fake=123'
     assert_equal media1.url, media2.url
+    Media.any_instance.unstub(:doc)
   end
 
   test "should return success to any valid link" do
@@ -1059,7 +1064,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /2016-10/, d['published_at'].strftime('%Y-%m')
     assert_equal '@zoesqwilliams', d['username']
     assert_equal 'https://twitter.com/zoesqwilliams', d['author_url']
-    assert_match /https:\/\/i.guim.co.uk\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, d['picture']
+    assert_match /\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, d['picture']
   end
 
   test "should parse url 3" do
