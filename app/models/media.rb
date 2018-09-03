@@ -220,6 +220,7 @@ class Media
     http.use_ssl = uri.scheme == 'https'
     user_agent = { 'User-Agent' => Media.html_options(uri)['User-Agent']}
     request = "Net::HTTP::#{verb}".constantize.new(uri, user_agent)
+    request['Cookie'] = Media.set_cookies(uri)
     http.request(request)
   end
 
@@ -250,6 +251,7 @@ class Media
     options['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
     options['Accept'] = '*/*'
     options['Accept-Language'] = 'en'
+    options['Cookie'] = Media.set_cookies(uri)
     options
   end
 
@@ -303,4 +305,19 @@ class Media
   def redirect_https_to_http?(header_options, message)
     message.match('redirection forbidden') && header_options[:allow_redirections] != :all
   end
+
+  def self.set_cookies(uri)
+    begin
+      host = PublicSuffix.parse(uri.host).domain
+      cookies = []
+      CONFIG['cookies'].each do |domain, content|
+        next unless domain.match(host)
+        content.each { |k, v| cookies << "#{k}=#{v}" }
+      end
+      cookies.join('; ')
+    rescue
+      ''
+    end
+  end
+
 end
