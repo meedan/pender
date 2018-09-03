@@ -2147,4 +2147,10 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
+  test "should add cookie from cookie.txt on header if domain matches" do
+    url_no_cookie = 'http://ca.ios.ba/'
+    assert_equal "", Media.send(:html_options, url_no_cookie)['Cookie']
+    url_with_cookie = 'https://www.washingtonpost.com/politics/winter-is-coming-allies-fear-trump-isnt-prepared-for-gathering-legal-storm/2018/08/29/b07fc0a6-aba0-11e8-b1da-ff7faa680710_story.html'
+    assert_match "wp_devicetype=0", Media.send(:html_options, url_with_cookie)['Cookie']
+  end
 end
