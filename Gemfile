@@ -11,6 +11,9 @@ end
 group :profile do
   gem 'ruby-prof', '0.15.9'
 end
+group :test do
+  gem 'parallel_tests'
+end
 gem 'logstash-logger'
 gem 'webmock'
 gem 'mocha'

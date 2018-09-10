@@ -1,18 +1,30 @@
 language: ruby
-bundler_args: "--jobs 3 --retry 3 --without nothing"
+bundler_args: "--jobs 3 --retry 3 --without nothing --path=/tmp/bundler"
 before_install:
+- echo '# Some DNS cached entries below' | sudo tee -a /etc/hosts
+- for host in facebook.com twitter.com m.facebook.com www.facebook.com m.twitter.com youtube.com; do ping -c 1 $host | head -1 | sed "s/^[^(]\+(\([0-9\.]\+\).*/\1 $host/g" | sudo tee -a /etc/hosts; done
+- echo 'Hosts:' && cat /etc/hosts
+- export PATH=/tmp/bundler/ruby/2.3.0/bin:$PATH
+- export GEM_PATH=/tmp/bundler/ruby/2.3.0/gems:$GEM_PATH
 - sudo apt-get install redis-server
 - redis-server &
 - git clone https://${TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
+- rm -rf tmp/cache tmp/cache1 tmp/cache2 tmp/cache3 && mkdir -p tmp/cache tmp/cache1
+  tmp/cache2 tmp/cache3
 before_script:
 - d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}"; done
-- RAILS_ENV=test bundle exec rake db:migrate
 - bundle exec sidekiq -L /tmp/sidekiq-log.log -d
-script: bundle exec rake test:coverage
+- cd bin && ./setup-parallel-test-env && cd -
+script: bundle exec rake "parallel:test[3]"
 after_script:
 - cat tmp/performance.csv
+- bundle exec codeclimate-test-reporter
 rvm:
 - 2.3.1
+cache:
+  directories:
+  - "/tmp/bundler"
+  - tmp
 addons:
   code_climate:
     repo_token:

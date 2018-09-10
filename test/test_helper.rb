@@ -9,7 +9,7 @@ require 'sample_data'
 require 'pender_exceptions'
 require 'sidekiq/testing'
 require 'minitest/retry'
-# Minitest::Retry.use!
+Minitest::Retry.use!
 
 class Api::V1::TestController < Api::V1::BaseApiController
   before_filter :verify_payload!, only: [:notify]
@@ -33,9 +33,12 @@ class ActiveSupport::TestCase
   # This will run before any test
 
   def setup
+    # For debugging only: print the test name before it runs
+    # puts "#{self.class.name}::#{self.method_name}"
     Sidekiq::Testing.inline!
     Rails.cache.clear if File.exists?(File.join(Rails.root, 'tmp', 'cache'))
     FileUtils.rm_rf File.join(Rails.root, 'public', 'cache', 'test')
+    FileUtils.rm_rf(File.join(Rails.root, 'tmp', "cache<%= ENV['TEST_ENV_NUMBER'] %>", '*'))
     Rails.application.reload_routes!
     Media.any_instance.stubs(:archive_to_archive_is).returns(nil)
     Media.any_instance.stubs(:archive_to_video_vault).returns(nil)
