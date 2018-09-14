@@ -9,7 +9,7 @@ require 'sample_data'
 require 'pender_exceptions'
 require 'sidekiq/testing'
 require 'minitest/retry'
-# Minitest::Retry.use!
+Minitest::Retry.use!
 
 class Api::V1::TestController < Api::V1::BaseApiController
   before_filter :verify_payload!, only: [:notify]
