@@ -478,7 +478,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should return empty html on oembed when frame is not allowed" do
-    m = create_media url: 'https://martinoei.com/article/13371/%e9%81%b8%e6%b0%91%e7%99%bb%e8%a8%98-%e5%a4%b1%e7%ab%8a%e4%ba%8b%e4%bb%b6%e8%b6%8a%e8%a7%a3%e8%b6%8a%e4%bc%bcx%e6%aa%94%e6%a1%88'
+    m = create_media url: 'https://ca.ios.ba/files/meedan/frame?2'
     data = m.as_json
     assert_equal '', data['html']
   end

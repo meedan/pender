@@ -151,14 +151,15 @@ class FacebookItemTest < ActiveSupport::TestCase
     variations = %w(
       https://www.facebook.com/events/364677040588691/permalink/376287682760960?ref=1&action_history=null
       https://www.facebook.com/events/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691/
+      https://web.facebook.com/events/364677040588691/permalink/376287682760960?ref=1&action_history=null&_rdc=1&_rdr
     )
     assert_includes variations, m.url
     assert_not_nil data['published_at']
     assert_match /#{data['user_uuid']}/, data['author_url']
     assert_match /^https:/, data['picture']
     assert_equal 'Zawya on Facebook', data['title']
-    assert_match /لختامي من فيلم/, data['description']
     assert_equal 'Zawya', data['username']
+    assert_equal '', data['description']
   end
 
   test "should parse Facebook event post 2" do
@@ -167,15 +168,16 @@ class FacebookItemTest < ActiveSupport::TestCase
     variations = %w(
       https://www.facebook.com/events/364677040588691/permalink/379973812392347?ref=1&action_history=null
       https://www.facebook.com/events/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691/
+      https://web.facebook.com/events/364677040588691/permalink/379973812392347?ref=1&action_history=null&_rdc=1&_rdr
     )
     assert_includes variations, m.url
     assert_equal 'Zawya on Facebook', data['title']
-    assert_match /يقول فارس لرزق أنه/, data['description']
     assert_not_nil data['published_at']
     assert_equal 'Zawya', data['username']
     assert_match /#{data['user_uuid']}/, data['author_url']
     assert_match /#{data['user_uuid']}/, data['author_picture']
     assert_not_nil data['picture']
+    assert_equal '', data['description']
   end
 
   test "should parse url 4" do
