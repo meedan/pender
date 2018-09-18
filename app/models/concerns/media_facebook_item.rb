@@ -175,7 +175,8 @@ module MediaFacebookItem
     end
   end
 
-  def html_for_facebook_post
+  def html_for_facebook_post(username)
+    return '' if username == 'groups'
     '<script>
     window.fbAsyncInit = function() {
       FB.init({
@@ -204,12 +205,13 @@ module MediaFacebookItem
       self.data['text'].strip! if self.data['text']
       self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
       self.data['author_name'] = 'Not Identified' if self.data['author_name'].blank?
+      username = self.get_facebook_username || self.data['author_name']
       self.data.merge!({
-        username: self.get_facebook_username || self.data['author_name'],
+        username: username,
         title: self.data['author_name'] + ' on Facebook',
         description: self.data['text'] || self.data['description'],
         picture: self.set_facebook_picture,
-        html: self.html_for_facebook_post,
+        html: self.html_for_facebook_post(username),
         author_name: self.data['author_name'],
         author_url: 'http://facebook.com/' + self.data['user_uuid'].to_s
       })
