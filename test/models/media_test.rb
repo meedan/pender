@@ -148,7 +148,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://www.reddit.com', d['author_url']
-    assert_match /https:\/\/i.redditmedia.com\/Y5ijHvqlYPzBHOAxWEf4PgcXQWwo2JSLeF7gZ5ZXl5E.png/, d['picture']
+    assert_match /https:\/\/preview.redd.it\/dj1nk467nfsx.png/, d['picture']
   end
 
   test "should return success to any valid link 2" do
