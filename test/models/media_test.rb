@@ -148,7 +148,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://www.reddit.com', d['author_url']
-    assert_match /https:\/\/i.redditmedia.com\/Y5ijHvqlYPzBHOAxWEf4PgcXQWwo2JSLeF7gZ5ZXl5E.png/, d['picture']
+    assert_match /https:\/\/preview.redd.it\/dj1nk467nfsx.png/, d['picture']
   end
 
   test "should return success to any valid link 2" do
@@ -831,5 +831,13 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal "", Media.send(:html_options, url_no_cookie)['Cookie']
     url_with_cookie = 'https://www.washingtonpost.com/politics/winter-is-coming-allies-fear-trump-isnt-prepared-for-gathering-legal-storm/2018/08/29/b07fc0a6-aba0-11e8-b1da-ff7faa680710_story.html'
     assert_match "wp_devicetype=0", Media.send(:html_options, url_with_cookie)['Cookie']
+  end
+
+  test "should return empty html when is post from FB group" do
+    m = create_media url: 'https://www.facebook.com/groups/976472102413753/permalink/2013383948722558/'
+    data = m.as_json
+    assert_equal 'facebook', data['provider']
+    assert_equal 'groups', data['username']
+    assert_equal '', data['html']
   end
 end
