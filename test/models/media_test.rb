@@ -731,19 +731,15 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should archive Arabics url to Archive.org" do
     Media.any_instance.unstub(:archive_to_archive_org)
-    a = create_api_key application_settings: { 'webhook_url': 'http://requestbin.fullcontact.com/1n09ftf1', 'webhook_token': 'test' }
-    urls = ['https://www.madamasr.com/ar/2018/03/13/feature/%D8%B3%D9%8A%D8%A7%D8%B3%D8%A9/%D9%82%D8%B1%D8%A7%D8%A1%D8%A9-%D9%81%D9%8A-%D8%AC%D8%B1%D8%A7%D8%A6%D9%85-%D8%A7%D9%84%D9%85%D8%B9%D9%84%D9%88%D9%85%D8%A7%D8%AA-%D8%AA%D9%82%D9%86%D9%8A%D9%86-%D9%84%D9%84%D8%AD%D8%AC', 'http://www.yallakora.com/ar/news/342470/%D8%A7%D8%AA%D8%AD%D8%A7%D8%AF-%D8%A7%D9%84%D9%83%D8%B1%D8%A9-%D8%B9%D9%86-%D8%A3%D8%B2%D9%85%D8%A9-%D8%A7%D9%84%D8%B3%D8%B9%D9%8A%D8%AF-%D9%84%D8%A7%D8%A8%D8%AF-%D9%85%D9%86-%D8%AD%D9%84-%D9%85%D8%B9-%D8%A7%D9%84%D8%B2%D9%85%D8%A7%D9%84%D9%83/2504']
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'http://www.yallakora.com/ar/news/342470/%D8%A7%D8%AA%D8%AD%D8%A7%D8%AF-%D8%A7%D9%84%D9%83%D8%B1%D8%A9-%D8%B9%D9%86-%D8%A3%D8%B2%D9%85%D8%A9-%D8%A7%D9%84%D8%B3%D8%B9%D9%8A%D8%AF-%D9%84%D8%A7%D8%A8%D8%AF-%D9%85%D9%86-%D8%AD%D9%84-%D9%85%D8%B9-%D8%A7%D9%84%D8%B2%D9%85%D8%A7%D9%84%D9%83/2504'
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
     WebMock.disable_net_connect!(allow: allowed_sites)
 
     assert_nothing_raised do
-      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: {})
-      m = create_media url: urls[0], key: a
-      data = m.as_json
-
       WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
-      m = create_media url: urls[1], key: a
+      m = create_media url: url, key: a
       data = m.as_json
     end
 
