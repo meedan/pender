@@ -15,6 +15,7 @@ module MediaTwitterItem
     rescue Twitter::Error::TooManyRequests => e
       raise Pender::ApiLimitReached.new(e.rate_limit.reset_in)
     rescue Twitter::Error => error
+      Airbrake.notify(error) if Airbrake.configuration.api_key
       self.data.merge!(error: { message: "#{error.class}: #{error.message}", code: error.code })
       return
     end
@@ -67,6 +68,7 @@ module MediaTwitterItem
     begin
       self.twitter_client.user(username).url.to_s
     rescue Twitter::Error => e
+      Airbrake.notify(e) if Airbrake.configuration.api_key
       Rails.logger.info "[Twitter URL] Cannot get twitter url of #{username}: #{e.class} - #{e.message}"
       nil
     end

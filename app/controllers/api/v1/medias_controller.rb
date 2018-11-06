@@ -51,7 +51,8 @@ module Api
           (render_url_invalid and return true) unless valid_url?
           begin
             @media = Media.new(url: @url, request: request, key: @key)
-          rescue OpenSSL::SSL::SSLError
+          rescue OpenSSL::SSL::SSLError => e
+            Airbrake.notify(e) if Airbrake.configuration.api_key
             render_url_invalid and return true
           end
         end and return true
@@ -70,6 +71,7 @@ module Api
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
         rescue StandardError => e
+          Airbrake.notify(e) if Airbrake.configuration.api_key
           data = get_error_data({ message: e.message, code: 'UNKNOWN' })
           data.merge!(@data) unless @data.blank?
           data.merge!(@media.data) unless @media.blank?
