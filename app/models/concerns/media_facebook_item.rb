@@ -175,8 +175,14 @@ module MediaFacebookItem
     end
   end
 
+  def render_facebook_embed?(username)
+    privacy_error = self.get_facebook_privacy_error(self.doc) if self.doc
+    self.data['error'] = privacy_error if privacy_error
+    username != 'groups' && !privacy_error && self.url.match(EVENT_URL).nil?
+  end
+
   def html_for_facebook_post(username)
-    return '' if username == 'groups'
+    return '' unless render_facebook_embed?(username)
     '<script>
     window.fbAsyncInit = function() {
       FB.init({

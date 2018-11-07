@@ -34,7 +34,7 @@ module MediaFacebookProfile
     end
     data['id'] = self.get_facebook_id_from_url
 
-    error = self.get_facebook_profile_error
+    error = self.get_facebook_privacy_error
     data['error'] = error if error
     
     data['likes'] = self.get_facebook_likes
@@ -43,8 +43,8 @@ module MediaFacebookProfile
     data
   end
 
-  def get_facebook_profile_error
-    page = self.get_facebook_profile_page
+  def get_facebook_privacy_error(doc = nil)
+    page = doc || self.get_facebook_profile_page
     title = page.css('meta[property="og:title"]')
     if title.present? && title.attr('content') && title.attr('content').value == 'Log In or Sign Up to View'
       { message: 'Login required to see this profile' }
