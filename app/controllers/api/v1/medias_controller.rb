@@ -52,7 +52,7 @@ module Api
           begin
             @media = Media.new(url: @url, request: request, key: @key)
           rescue OpenSSL::SSL::SSLError => e
-            Airbrake.notify(e) if Airbrake.configuration.api_key
+            notify_airbrake(e)
             render_url_invalid and return true
           end
         end and return true
@@ -71,7 +71,7 @@ module Api
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
         rescue StandardError => e
-          Airbrake.notify(e) if Airbrake.configuration.api_key
+          notify_airbrake(e)
           data = get_error_data({ message: e.message, code: 'UNKNOWN' })
           data.merge!(@data) unless @data.blank?
           data.merge!(@media.data) unless @media.blank?
@@ -133,7 +133,7 @@ module Api
           render_timeout(true, true) { render_oembed(@media.as_json({ force: @refresh }), @media)}
         rescue StandardError => e
           data = @media.nil? ? {} : @media.data
-          Airbrake.notify(e) if Airbrake.configuration.api_key
+          notify_airbrake(e)
           render_media(data.merge(error: { message: e.message, code: 'UNKNOWN' }))
         end
       end
@@ -232,6 +232,10 @@ module Api
         if (url_params & supported_params) == ['url'] && url_params.size > 1
           redirect_to(host: CONFIG['public_url'], action: :index, format: :html, url: params[:url]) and return
         end
+      end
+
+      def notify_airbrake(e)
+        Airbrake.notify(e) if Airbrake.configuration.api_key
       end
     end
   end
