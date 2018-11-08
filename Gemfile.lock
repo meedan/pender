@@ -62,7 +62,7 @@ GEM
     connection_pool (2.2.1)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
-    crass (1.0.3)
+    crass (1.0.4)
     daemons (1.2.5)
     debug_inspector (0.0.3)
     docile (1.1.5)
@@ -73,7 +73,7 @@ GEM
     et-orbi (1.0.8)
       tzinfo
     eventmachine (1.2.5)
-    ffi (1.9.18)
+    ffi (1.9.25)
     gem-licenses (0.2.1)
     globalid (0.4.1)
       activesupport (>= 4.2.0)
@@ -94,7 +94,7 @@ GEM
     logstash-event (1.2.02)
     logstash-logger (0.25.1)
       logstash-event (~> 1.2)
-    loofah (2.2.2)
+    loofah (2.2.3)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
     mail (2.7.0)
@@ -115,7 +115,7 @@ GEM
     multi_json (1.12.2)
     multipart-post (2.0.0)
     naught (1.1.0)
-    nokogiri (1.8.2)
+    nokogiri (1.8.5)
       mini_portile2 (~> 2.3.0)
     open_uri_redirections (0.2.1)
     parallel (1.12.1)
@@ -262,11 +262,11 @@ DEPENDENCIES
   htmlentities
   ids_please!
   logstash-logger
-  loofah (= 2.2.2)
+  loofah (= 2.2.3)
   mida
   minitest-retry
   mocha
-  nokogiri (= 1.8.2)
+  nokogiri (= 1.8.5)
   open_uri_redirections
   parallel_tests
   pg
@@ -297,4 +297,4 @@ DEPENDENCIES
   yt (~> 0.25.5)
 
 BUNDLED WITH
-   1.16.4
+   1.16.5
