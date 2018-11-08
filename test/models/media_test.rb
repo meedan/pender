@@ -828,11 +828,18 @@ class MediaTest < ActiveSupport::TestCase
     assert_match "wp_devicetype=0", Media.send(:html_options, url_with_cookie)['Cookie']
   end
 
-  test "should return empty html when is post from FB group" do
-    m = create_media url: 'https://www.facebook.com/groups/976472102413753/permalink/2013383948722558/'
-    data = m.as_json
-    assert_equal 'facebook', data['provider']
-    assert_equal 'groups', data['username']
-    assert_equal '', data['html']
+  test "should return empty html when FB url cannot be embedded" do
+    urls = %w(
+      https://www.facebook.com/groups/976472102413753/permalink/2013383948722558/
+      https://www.facebook.com/caiosba/posts/1913749825339929
+      https://www.facebook.com/events/331430157280289
+    )
+    urls.each do |url|
+      m = create_media url: url
+      data = m.as_json
+      assert_equal 'facebook', data['provider']
+      assert_equal '', data['html']
+    end
   end
+
 end
