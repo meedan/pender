@@ -113,10 +113,14 @@ module Api
       end
 
       def render_as_html
-        if @refresh || !File.exist?(cache_path)
-          save_cache
+        begin
+          if @refresh || !File.exist?(cache_path)
+            save_cache
+          end
+          render text: File.read(cache_path), status: 200
+        rescue
+          render html: 'Could not parse this media'
         end
-        render text: File.read(cache_path), status: 200
       end
 
       def render_as_js
