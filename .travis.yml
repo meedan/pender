@@ -15,7 +15,7 @@ before_script:
 - d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}"; done
 - bundle exec sidekiq -L /tmp/sidekiq-log.log -d
 - cd bin && ./setup-parallel-test-env && cd -
-script: bundle exec rake "parallel:test[3]"
+script: bundle exec ruby -Itest test/controllers/medias_controller_test.rb -n test_should_ask_to_refresh_cache_with_html_format
 after_script:
 - cat tmp/performance.csv
 - bundle exec codeclimate-test-reporter
