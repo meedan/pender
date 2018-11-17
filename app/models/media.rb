@@ -235,6 +235,7 @@ class Media
       html = preprocess_html(html)
       Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
     rescue OpenURI::HTTPError, Errno::ECONNRESET
+      Airbrake.notify(e) if Airbrake.configuration.api_key
       return nil
     rescue Zlib::DataError, Zlib::BufError
       self.get_html(Media.html_options(self.url).merge('Accept-Encoding' => 'identity'))
