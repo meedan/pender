@@ -16,11 +16,17 @@ development: &default
   redis_database: 1
   archiver_skip_hosts: 'checkmedia.org'
   video_vault_token: ''
+  proxy_host:
+  proxy_port:
+  proxy_user_prefix:
+  proxy_password:
   hosts:
     one.host:
       http_auth: username:password
     another.host:
       http_auth: username:password
+    yet.another.host:
+      country: cc
 
 test:
   <<: *default
