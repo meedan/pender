@@ -835,4 +835,26 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'groups', data['username']
     assert_equal '', data['html']
   end
+
+  test "should use proxy for some domains" do
+    config = CONFIG['hosts']
+    
+    CONFIG['hosts'] = { 'time.com' => { 'country' => 'gb' } }
+    m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
+    data = m.as_json
+    assert_equal 'http://time.com', data['title'] 
+
+    CONFIG['hosts'] = config
+  end
+
+  test "should use proxy for some domains 2" do
+    config = CONFIG['hosts']
+    
+    CONFIG['hosts'] = { 'time.com' => { 'country' => 'us' } }
+    m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
+    data = m.as_json
+    assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title'] 
+    
+    CONFIG['hosts'] = config
+  end
 end

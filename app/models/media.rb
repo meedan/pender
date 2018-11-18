@@ -215,6 +215,19 @@ class Media
     Media.request_uri(uri, verb)
   end
 
+  def self.get_proxy(url)
+    require 'uri'
+    uri = URI(url)
+    ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG[config].blank? }
+    country = nil
+    if CONFIG['hosts'] && CONFIG['hosts'][uri.host] && CONFIG['hosts'][uri.host]['country']
+      country = CONFIG['hosts'][uri.host]['country']
+    end
+    return nil if country.nil?
+    proxy_user = CONFIG['proxy_user_prefix'] + '-' + country
+    ["http://#{CONFIG['proxy_host']}:#{CONFIG['proxy_port']}", proxy_user, CONFIG['proxy_pass']]
+  end
+
   def self.request_uri(uri, verb)
     http = Net::HTTP.new(uri.host, uri.port)
     http.read_timeout = CONFIG['timeout'] || 30
@@ -228,7 +241,10 @@ class Media
   def get_html(header_options = {})
     html = ''
     begin
-      OpenURI.open_uri(Media.parse_url(decoded_uri(self.url)), header_options) do |f|
+      proxy = Media.get_proxy(self.url)
+      options = header_options
+      options = { proxy_http_basic_authentication: proxy } if options
+      OpenURI.open_uri(Media.parse_url(decoded_uri(self.url)), options) do |f|
         f.binmode
         html = f.read
       end
@@ -260,7 +276,7 @@ class Media
     credentials = nil
     unless CONFIG['hosts'].nil?
       config = CONFIG['hosts'][uri.host]
-      unless config.nil?
+      if !config.nil? && config.has_key?('http_auth')
         credentials = config['http_auth'].split(':')
       end
     end
