@@ -243,7 +243,7 @@ class Media
     begin
       proxy = Media.get_proxy(self.url)
       options = header_options
-      options = { proxy_http_basic_authentication: proxy } if options
+      options = { proxy_http_basic_authentication: proxy } if proxy
       OpenURI.open_uri(Media.parse_url(decoded_uri(self.url)), options) do |f|
         f.binmode
         html = f.read
