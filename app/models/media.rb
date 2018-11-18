@@ -220,9 +220,7 @@ class Media
     uri = URI.parse(URI.encode(url))
     ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG[config].blank? }
     country = nil
-    if CONFIG['hosts'] && CONFIG['hosts'][uri.host] && CONFIG['hosts'][uri.host]['country']
-      country = CONFIG['hosts'][uri.host]['country']
-    end
+    country = CONFIG['hosts'][uri.host]['country'] if CONFIG['hosts'] && CONFIG['hosts'][uri.host] && CONFIG['hosts'][uri.host]['country']
     return nil if country.nil?
     proxy_user = CONFIG['proxy_user_prefix'] + '-' + country
     ["http://#{CONFIG['proxy_host']}:#{CONFIG['proxy_port']}", proxy_user, CONFIG['proxy_pass']]
@@ -277,9 +275,7 @@ class Media
     credentials = nil
     unless CONFIG['hosts'].nil?
       config = CONFIG['hosts'][uri.host]
-      if !config.nil? && config.has_key?('http_auth')
-        credentials = config['http_auth'].split(':')
-      end
+      credentials = config['http_auth'].split(':') if !config.nil? && config.has_key?('http_auth')
     end
     credentials
   end
