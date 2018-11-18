@@ -250,7 +250,7 @@ class Media
       end
       html = preprocess_html(html)
       Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
-    rescue OpenURI::HTTPError, Errno::ECONNRESET
+    rescue OpenURI::HTTPError, Errno::ECONNRESET => e
       Airbrake.notify(e) if Airbrake.configuration.api_key
       return nil
     rescue Zlib::DataError, Zlib::BufError
