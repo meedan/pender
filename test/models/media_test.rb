@@ -863,4 +863,37 @@ class MediaTest < ActiveSupport::TestCase
     
     CONFIG['hosts'] = config
   end
+
+  test "should not replace sharethefacts url if the sharethefacts js is not present" do
+    urls = %w(
+      https://twitter.com/sharethefact/status/1067835775000215553
+      https://twitter.com/factcheckdotorg
+    )
+    urls.each do |url|
+      m = Media.new url: url
+      Media.any_instance.stubs(:sharethefacts_replace_element).returns('replaced data')
+      assert_nothing_raised do
+        assert_no_match /replaced data/, m.send(:get_html, Media.send(:html_options, m.url))
+        m.as_json
+      end
+      Media.any_instance.unstub(:sharethefacts_replace_element)
+    end
+  end
+
+  test "should match correctly the share the facts url when preprocess html" do
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+
+    m = Media.new url: 'http://www.example.com'
+    html = '<a href="https://t.co/tLSGfdxUQr" data-expanded-url="http://factcheck.sharethefacts.co/share/0636d2f1-39c5-45b8-b061-db61b4fd0024" ><span class="tco-ellipsis"></span><span class="invisible">http://</span><span class="js-display-url">factcheck.sharethefacts.co/share/0636d2f1</span><span class="invisible">-39c5-45b8-b061-db61b4fd0024</span><span class="tco-ellipsis"><span class="invisible">&nbsp;</span>…</span></a>'
+    sharethefacts = 'mock'
+    OpenURI.expects(:open_uri).with(URI.parse("https://dhpikd1t89arn.cloudfront.net/html-0636d2f1-39c5-45b8-b061-db61b4fd0024.html")).returns(sharethefacts)
+    sharethefacts.stubs(:read).returns('share the facts')
+    assert_equal '<div>share the facts</div>', m.find_sharethefacts_links(html)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    OpenURI.unstub(:open_uri)
+  end
 end
