@@ -533,7 +533,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://noticias.uol.com.br', d['author_url']
-    assert_equal '@UOL', d['author_name']
+    assert_equal 'UOLNoticias @UOL', d['author_name']
     assert_not_nil d['picture']
     assert_nil d['error']
   end
@@ -548,7 +548,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://noticias.uol.com.br', d['author_url']
-    assert_equal '@UOL', d['author_name']
+    assert_equal 'UOLNoticias @UOL', d['author_name']
     assert_not_nil d['picture']
     assert_nil d['error']
   end
