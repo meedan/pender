@@ -415,7 +415,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'Nancy Ajram on Facebook', d['title']
     assert_not_nil d['description']
-    assert_nil d['picture']
+    assert_match /^http/, d['picture']
     assert_not_nil d['published_at']
     assert_match /1090503577698748/, d['author_picture']
   end
