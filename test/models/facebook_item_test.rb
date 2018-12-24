@@ -134,14 +134,14 @@ class FacebookItemTest < ActiveSupport::TestCase
     variations.each do |url|
       m = create_media url: url, request: request
       data = m.as_json
-      assert_equal 'Facebook Live Map on Facebook', data['title']
-      assert_equal 'Explore live videos from around the world.', data['description']
+      assert_match /facebook\.com\/watch/, m.url
+      assert_equal 'Facebook Watch on Facebook', data['title']
+      assert_equal '', data['description']
       assert_not_nil data['published_at']
-      assert_equal 'Facebook Live Map', data['username']
+      assert_equal 'Facebook Watch', data['username']
       assert_equal 'http://facebook.com/', data['author_url']
       assert_equal '', data['author_picture']
       assert_nil data['picture']
-      assert_equal 'https://www.facebook.com/live/discover/map/', m.url
     end
   end
 
