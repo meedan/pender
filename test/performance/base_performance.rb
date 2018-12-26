@@ -8,6 +8,11 @@ class BasePerformance < ActionDispatch::PerformanceTest
     :alpha
   end
 
+  def run
+    super
+    ::Minitest::Result.from self
+  end
+
   def setup
     @provider = nil
     @type = nil
