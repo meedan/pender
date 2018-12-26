@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-gem 'rails', '4.2.7.1'
+gem 'rails', '4.2.11'
 gem 'sqlite3'
 gem 'pg'
 group :development, :test do
@@ -48,3 +48,5 @@ gem 'loofah', '2.2.3'
 gem 'rails-html-sanitizer', '1.0.4'
 gem 'minitest-retry'
 gem 'sprockets', '3.7.2'
+gem 'activejob', '4.2.11'
+gem 'rack', '>= 1.6.11'
