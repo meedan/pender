@@ -312,7 +312,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/teste637621352/posts/2194142813983632'
     d = m.as_json
     assert_match /^https/, d['author_picture']
-    assert_match /47341215_2194142583983655_1786262029229621248/, d['picture']
+    assert_match /47376693_2194142610650319_8987181756499099648/, d['picture']
     assert_kind_of Array, d['photos']
     assert_equal 2, d['media_count']
     assert_equal 1, d['photos'].size

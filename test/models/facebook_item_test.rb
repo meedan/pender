@@ -159,7 +159,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /^https:/, data['picture']
     assert_equal 'Zawya on Facebook', data['title']
     assert_equal 'Zawya', data['username']
-    assert_equal '832 Went · 2.5K Interested', data['description']
+    assert_equal '831 Went · 2.5K Interested', data['description']
   end
 
   test "should parse Facebook event post 2" do
@@ -177,7 +177,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /#{data['user_uuid']}/, data['author_url']
     assert_match /#{data['user_uuid']}/, data['author_picture']
     assert_not_nil data['picture']
-    assert_equal '832 Went · 2.5K Interested', data['description']
+    assert_equal '831 Went · 2.5K Interested', data['description']
   end
 
   test "should parse url 4" do
