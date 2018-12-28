@@ -314,7 +314,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_match /^https/, d['author_picture']
     assert_match /47376693_2194142610650319_8987181756499099648/, d['picture']
     assert_kind_of Array, d['photos']
-    assert_equal 2, d['media_count']
+    assert_equal 1, d['media_count']
     assert_equal 1, d['photos'].size
   end
 
