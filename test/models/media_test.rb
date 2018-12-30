@@ -608,7 +608,7 @@ class MediaTest < ActiveSupport::TestCase
 
     CONFIG['archiver_skip_hosts'] = ''
 
-    a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://checkmedia.org/caio-screenshots/project/1121/media/8390'
     id = Media.get_id(url)
     m = create_media url: url, key: a
@@ -629,7 +629,7 @@ class MediaTest < ActiveSupport::TestCase
     CONFIG['video_vault_token'] = '123456'
 
     Media.any_instance.unstub(:archive_to_video_vault)
-    a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/marcouza/status/875424957613920256'
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'www.bravenewtech.org' }
@@ -648,7 +648,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should archive to Archive.is" do
     Media.any_instance.unstub(:archive_to_archive_is)
-    a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     urls = ['https://twitter.com/marcouza/status/875424957613920256', 'https://twitter.com/marcouza/status/863907872421412864', 'https://twitter.com/marcouza/status/863876311428861952']
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'archive.is' }
@@ -709,7 +709,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should archive to Archive.org" do
     Media.any_instance.unstub(:archive_to_archive_org)
-    a = create_api_key application_settings: { 'webhook_url': 'https://webhook.site/19cfeb40-3d06-41b8-8378-152fe12e29a8', 'webhook_token': 'test' }
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     urls = ['https://twitter.com/marcouza/status/875424957613920256', 'https://twitter.com/marcouza/status/863907872421412864']
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
