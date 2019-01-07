@@ -68,7 +68,7 @@ module MediaTwitterItem
     begin
       self.twitter_client.user(username).url.to_s
     rescue Twitter::Error => e
-      Airbrake.notify(e) if Airbrake.configuration.api_key
+      Airbrake.notify(e, { url: self.url, username: username }) if Airbrake.configuration.api_key
       Rails.logger.info "[Twitter URL] Cannot get twitter url of #{username}: #{e.class} - #{e.message}"
       nil
     end
