@@ -120,10 +120,11 @@ module MediaFacebookProfile
   end
 
   def get_facebook_name
+    return self.data['name'] unless self.data['name'].blank?
     page = self.get_facebook_profile_page
     unless page.nil?
       title = page.css('meta[property="og:title"]')
-      self.data['name'].blank? ? title.attr('content').value : self.data['name']
+      title.present? && title.attr('content') ? title.attr('content').value : page.at_css('title').content
     end
   end
 

@@ -450,4 +450,17 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 'http://facebook.com/355665009819', d['author_url']
     assert_not_nil d['published_at']
   end
+
+  test "should get Facebook name when metatag is not present" do
+    m = create_media url: 'https://www.facebook.com/ironmaiden/'
+    doc = ''
+    open('test/data/fb-page-without-og-title-metatag.html') { |f| doc = f.read }
+    Media.any_instance.stubs(:get_facebook_profile_page).returns(Nokogiri::HTML(doc))
+
+    d = m.as_json
+    assert d['error'].nil?
+    assert_equal 'Page without `og:title` defined', d['title']
+    Media.any_instance.unstub(:get_facebook_profile_page)
+  end
+
 end
