@@ -159,7 +159,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /^https:/, data['picture']
     assert_equal 'Zawya on Facebook', data['title']
     assert_equal 'Zawya', data['username']
-    assert_equal '831 Went · 2.5K Interested', data['description']
   end
 
   test "should parse Facebook event post 2" do
@@ -177,7 +176,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /#{data['user_uuid']}/, data['author_url']
     assert_match /#{data['user_uuid']}/, data['author_picture']
     assert_not_nil data['picture']
-    assert_equal '831 Went · 2.5K Interested', data['description']
   end
 
   test "should parse url 4" do
@@ -324,12 +322,13 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should support facebook pattern with pg" do
     m = create_media url: 'https://www.facebook.com/pg/Mariano-Rajoy-Brey-54212446406/photos/?tab=album&album_id=10154534110871407'
     d = m.as_json
+    assert_equal 'item', d['type']
     assert_equal '54212446406_10154534110871407', d['uuid']
     assert_match(/Militante del Partido Popular/, d['text'])
     assert_equal '54212446406', d['user_uuid']
     assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert_equal '10154534110871407', d['object_id']
-    assert_equal 'https://www.facebook.com/Mariano-Rajoy-Brey-54212446406/photos', m.url
+    assert_equal 'https://www.facebook.com/pages/category/Politician/Mariano-Rajoy-Brey-54212446406/photos/', m.url
   end
 
   test "should support facebook pattern with album" do
