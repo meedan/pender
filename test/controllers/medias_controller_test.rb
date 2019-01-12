@@ -206,7 +206,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return default oEmbed format" do
-    get :index, url: 'http://twitter.com/caiosba', format: :oembed
+    get :index, url: 'https://twitter.com/CommitStrip', format: :oembed
     assert_response :success
   end
 
@@ -222,7 +222,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should render default HTML if not provided by oEmbed" do
-    get :index, url: 'http://twitter.com/caiosba', format: :html
+    get :index, url: 'https://twitter.com/check', format: :html
     assert_response :success
     assert_match /pender-title/, response.body
   end
@@ -247,7 +247,7 @@ class MediasControllerTest < ActionController::TestCase
   test "should return timeout error" do
     stub_configs({ 'timeout' => 0.001 })
     authenticate_with_token
-    get :index, url: 'http://twitter.com/caiosba', format: :json
+    get :index, url: 'https://twitter.com/IronMaiden', format: :json
     assert_response 200
     assert_equal 'Timeout', JSON.parse(@response.body)['data']['error']['message']
   end

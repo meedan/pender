@@ -4,7 +4,7 @@ module MediaFacebookProfile
   included do
     Media.declare('facebook_profile',
       [
-        /^https?:\/\/([^\.]+\.)?facebook\.com\/(pages|people)\/([^\/]+)\/([^\/\?]+).*$/,
+        /^https?:\/\/([^\.]+\.)?facebook\.com\/(pages|people)\/([^\/]+)\/([^\/\?]+)((?!\/photos\/?).)*$/,
         /^https?:\/\/(www\.)?facebook\.com\/profile\.php\?id=([0-9]+).*$/,
         /^https?:\/\/([^\.]+\.)?facebook\.com\/(?!(permalink\.php|story\.php|photo\.php|livemap|watch))([^\/\?]+)\/?(\?.*)*$/
       ]
@@ -120,10 +120,11 @@ module MediaFacebookProfile
   end
 
   def get_facebook_name
+    return self.data['name'] unless self.data['name'].blank?
     page = self.get_facebook_profile_page
     unless page.nil?
       title = page.css('meta[property="og:title"]')
-      self.data['name'].blank? ? title.attr('content').value : self.data['name']
+      title.present? && title.attr('content') ? title.attr('content').value : page.at_css('title').content
     end
   end
 

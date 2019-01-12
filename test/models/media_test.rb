@@ -828,6 +828,13 @@ class MediaTest < ActiveSupport::TestCase
     assert_match "wp_devicetype=0", Media.send(:html_options, url_with_cookie)['Cookie']
   end
 
+  test "should rescue error on set_cookies" do
+    uri = Media.parse_url('http://ca.ios.ba/')
+    PublicSuffix.stubs(:parse).with(uri.host).raises
+    assert_equal "", Media.set_cookies(uri)
+    PublicSuffix.unstub(:parse)
+  end
+
   test "should return empty html when FB url cannot be embedded" do
     urls = %w(
       https://www.facebook.com/groups/976472102413753/permalink/2013383948722558/
@@ -895,5 +902,15 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:get_canonical_url)
     Media.any_instance.unstub(:try_https)
     OpenURI.unstub(:open_uri)
+  end
+
+  test "should get html again if doc is nil" do
+    m = Media.new url: 'http://www.example.com'
+    doc = m.send(:get_html, Media.html_options(m.url))
+    Media.any_instance.stubs(:get_html).with(Media.send(:html_options, m.url)).returns(nil)
+    Media.any_instance.stubs(:get_html).with({allow_redirections: :all}).returns(doc)
+    m.as_json
+    assert_not_nil m.doc
+    Media.any_instance.unstub(:get_html)
   end
 end
