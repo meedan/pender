@@ -913,4 +913,16 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil m.doc
     Media.any_instance.unstub(:get_html)
   end
+
+  test "should update media cache" do
+    url = 'http://www.example.com'
+    id = Media.get_id(url)
+    m = create_media url: url
+    m.as_json
+
+    assert_equal({}, Rails.cache.read(id)['archives'])
+    Media.update_cache(url, { archives: { 'archive_org' => 'new-data' } })
+    assert_equal({'archive_org' => 'new-data'}, Rails.cache.read(id)['archives'])
+  end
+
 end
