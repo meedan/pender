@@ -55,8 +55,8 @@ GEM
     buftok (0.2.0)
     builder (3.2.3)
     byebug (9.1.0)
-    codeclimate-test-reporter (0.6.0)
-      simplecov (>= 0.7.1, < 1.0.0)
+    codeclimate-test-reporter (1.0.8)
+      simplecov (<= 0.13)
     concurrent-ruby (1.1.4)
     connection_pool (2.2.1)
     crack (0.4.3)
@@ -198,7 +198,7 @@ GEM
       sidekiq (>= 3)
       tilt (>= 1.4.0)
     simple_oauth (0.3.1)
-    simplecov (0.15.1)
+    simplecov (0.13.0)
       docile (~> 1.1.0)
       json (>= 1.8, < 3)
       simplecov-html (~> 0.10.0)
@@ -257,7 +257,7 @@ DEPENDENCIES
   airbrake (= 4.3.3)
   awesome_print
   byebug
-  codeclimate-test-reporter (= 0.6.0)
+  codeclimate-test-reporter (= 1.0.8)
   gem-licenses
   htmlentities
   ids_please!
@@ -287,7 +287,7 @@ DEPENDENCIES
   sass-rails
   sidekiq
   sidekiq-scheduler
-  simplecov
+  simplecov (= 0.13.0)
   sprockets (= 3.7.2)
   sqlite3
   swagger-docs (= 0.1.9)
@@ -298,4 +298,4 @@ DEPENDENCIES
   yt (~> 0.25.5)
 
 BUNDLED WITH
-   1.17.1
+   1.17.3
