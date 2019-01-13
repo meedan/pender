@@ -77,11 +77,13 @@ module MediaArchiver
     end
 
     def url_hash(url)
-      Digest::MD5.hexdigest(url.parameterize)
+      ## Screenshots are disabled
+      # Digest::MD5.hexdigest(url.parameterize)
     end
 
     def image_filename(url)
-       url_hash(url) + '.png'
+      ## Screenshots are disabled
+      # url_hash(url) + '.png'
     end
   end
 end
