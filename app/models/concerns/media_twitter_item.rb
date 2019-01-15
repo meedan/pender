@@ -64,7 +64,7 @@ module MediaTwitterItem
   end
 
   def twitter_author_url(username)
-    return if username.blank?
+    return if username.blank? || username == '@username'
     begin
       self.twitter_client.user(username).url.to_s
     rescue Twitter::Error => e
