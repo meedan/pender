@@ -925,4 +925,18 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal({'archive_org' => 'new-data'}, Rails.cache.read(id)['archives'])
   end
 
+  test "should not send errbit error when twitter username is a default" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta name='twitter:title' content='Page with default Twitter username'><br/><meta name='twitter:creator' content='@username'>"))
+    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:notify).never
+
+    m = create_media url: 'https://www.thedailysentry.net/2018/11/duterte-to-parojinogs-i-will-wipe-you.html'
+    m.data = Media.minimal_data(m)
+    m.get_metatags(m)
+    assert_equal 'Page with default Twitter username', m.get_twitter_metadata['title']
+
+    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:notify)
+    Media.any_instance.unstub(:doc)
+  end
 end

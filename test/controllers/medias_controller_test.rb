@@ -257,7 +257,7 @@ class MediasControllerTest < ActionController::TestCase
     Twitter::Error::TooManyRequests.any_instance.stubs(:rate_limit).returns(OpenStruct.new(reset_in: 123))
 
     authenticate_with_token
-    get :index, url: 'http://twitter.com/caiosba', format: :json
+    get :index, url: 'https://twitter.com/anxiaostudio', format: :json
     assert_response 429
     assert_equal 123, JSON.parse(@response.body)['data']['message']
 
