@@ -235,7 +235,7 @@ module Api
       end
 
       def notify_airbrake(e)
-        Airbrake.notify(e) if Airbrake.configuration.api_key
+        Airbrake.notify(e, parameters: {url: @url}) if Airbrake.configuration.api_key
       end
     end
   end
