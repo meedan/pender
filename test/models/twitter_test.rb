@@ -89,11 +89,11 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should parse valid link with blank spaces" do
-    m = create_media url: ' https://twitter.com/anxiaostudio/status/788095322496995328 '
+    m = create_media url: ' https://twitter.com/anxiaostudio/status/1082711489276866561 '
     d = m.as_json
-    assert_equal 'https://twitter.com/anxiaostudio/status/788095322496995328', m.url
-    assert_equal '@andybudd @jennifermjones cc @blinkpopshift', d['title']
-    assert_equal '@andybudd @jennifermjones cc @blinkpopshift', d['description']
+    assert_equal 'https://twitter.com/anxiaostudio/status/1082711489276866561', m.url
+    assert_match '#MemesToMovements is out today! Thank you @CJR for hosting an excerpt from my chapter on how memes played a role in overcoming censorship and disinformation about smog in China: https://t.co/jB2HY9Yj3U', d['title']
+    assert_match '#MemesToMovements is out today! Thank you @CJR for hosting an excerpt from my chapter on how memes played a role in overcoming censorship and disinformation about smog in China: https://t.co/jB2HY9Yj3U', d['description']
     assert_not_nil d['published_at']
     assert_equal '@anxiaostudio', d['username']
     assert_equal 'https://twitter.com/anxiaostudio', d['author_url']

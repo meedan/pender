@@ -209,7 +209,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['author_name']
     assert_equal 0, d['media_count']
     assert_equal '1028416870556238', d['object_id']
-    assert_equal '11/2015', d['published_at'].strftime("%m/%Y")
+    assert_equal '12/2018', d['published_at'].strftime("%m/%Y")
   end
 
   test "should create Facebook post from page photo URL" do
@@ -245,7 +245,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['author_name']
     assert_equal 2, d['media_count']
     assert_equal '1028795030518422', d['object_id']
-    assert_equal '11/2015', d['published_at'].strftime("%m/%Y")
+    assert_equal '12/2018', d['published_at'].strftime("%m/%Y")
   end
 
   test "should create Facebook post from user photos URL" do
