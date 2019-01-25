@@ -232,4 +232,15 @@ class TwitterTest < ActiveSupport::TestCase
     data = m.as_json
     assert_no_match /&amp;/, data['title']
   end
+
+  test "add error on media data when cannot find status" do
+    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:notify)
+    m = create_media url: 'https://twitter.com/caiosba/status/123456789'
+    data = m.as_json
+
+    assert_match(/Twitter::Error::NotFound/, data['error']['message'])
+    Airbrake.unstub(:notify)
+    Airbrake.configuration.unstub(:api_key)
+  end
 end
