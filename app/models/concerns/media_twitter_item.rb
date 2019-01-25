@@ -15,7 +15,7 @@ module MediaTwitterItem
     rescue Twitter::Error::TooManyRequests => e
       raise Pender::ApiLimitReached.new(e.rate_limit.reset_in)
     rescue Twitter::Error => error
-      Airbrake.notify(error) if Airbrake.configuration.api_key
+      Airbrake.notify(error, parameters: { url: self.url }) if Airbrake.configuration.api_key && !self.doc.nil?
       self.data.merge!(error: { message: "#{error.class}: #{error.message}", code: error.code })
       return
     end
@@ -26,33 +26,35 @@ module MediaTwitterItem
     self.replace_subdomain_pattern
     parts = self.url.match(URL)
     user, id = parts['user'], parts['id']
+    self.data['raw']['api'] = {}
     handle_twitter_exceptions do
       self.data['raw']['api'] = self.twitter_client.status(id, tweet_mode: 'extended').as_json
-      self.data.merge!({
-        username: '@' + user,
-        title: get_info_from_data('api', data, 'text', 'full_text').gsub(/\s+/, ' '),
-        description: get_info_from_data('api', data, 'text', 'full_text'),
-        picture: self.twitter_item_picture,
-        author_picture: self.twitter_author_picture,
-        published_at: self.data['raw']['api']['created_at'],
-        html: html_for_twitter_item,
-        author_name: self.data['raw']['api']['user']['name'],
-        author_url: self.twitter_author_url(user) || top_url(self.url)
-      })
     end
+    self.data.merge!({
+      username: '@' + user,
+      title: get_info_from_data('api', data, 'text', 'full_text').gsub(/\s+/, ' '),
+      description: get_info_from_data('api', data, 'text', 'full_text'),
+      picture: self.twitter_item_picture,
+      author_picture: self.twitter_author_picture,
+      published_at: get_info_from_data('api', data, 'created_at'),
+      html: html_for_twitter_item,
+      author_name: self.data.dig('raw', 'api', 'user', 'name'),
+      author_url: self.twitter_author_url(user) || top_url(self.url)
+    })
   end
 
   def twitter_author_picture
-    self.data['raw']['api']['user']['profile_image_url_https'].gsub('_normal', '')
+    picture_url = self.data.dig('raw', 'api', 'user', 'profile_image_url_https')
+    picture_url.gsub('_normal', '') if picture_url
   end
 
   def twitter_item_picture
-    unless self.data['raw']['api']['entities']['media'].nil?
-      self.data['raw']['api']['entities']['media'][0]['media_url_https'] || self.data['raw']['api']['entities']['media'][0]['media_url']
-    end
+    item_media = self.data.dig('raw', 'api', 'entities', 'media')
+    (item_media.dig(0, 'media_url_https') || item_media.dig(0, 'media_url')) if item_media
   end
 
   def html_for_twitter_item
+    return '' if self.doc.nil?
     '<blockquote class="twitter-tweet">' +
     '<a href="' + self.url + '"></a>' +
     '</blockquote>' +
