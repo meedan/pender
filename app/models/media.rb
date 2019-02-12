@@ -121,6 +121,12 @@ class Media
     Digest::MD5.hexdigest(Media.normalize_url(url))
   end
 
+  def self.html_cache_path(id)
+    dir = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env)
+    FileUtils.mkdir_p(dir) unless File.exist?(dir)
+    File.join(dir, "#{id}.html")
+  end
+
   protected
 
   def parse

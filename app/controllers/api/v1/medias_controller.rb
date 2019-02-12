@@ -39,7 +39,7 @@ module Api
           Rails.cache.delete(@id)
           cc_url = CONFIG['public_url'] + '/api/medias.html?url=' + url
           CcDeville.clear_cache_for_url(cc_url)
-          FileUtils.rm_f(cache_path)
+          FileUtils.rm_f(Media.html_cache_path(@id))
         end
         render json: { type: 'success' }, status: 200
       end
@@ -114,10 +114,10 @@ module Api
 
       def render_as_html
         begin
-          if @refresh || !File.exist?(cache_path)
+          if @refresh || !File.exist?(Media.html_cache_path(@id))
             save_cache
           end
-          render text: File.read(cache_path), status: 200
+          render text: File.read(Media.html_cache_path(@id)), status: 200
         rescue
           render html: 'Could not parse this media'
         end
@@ -155,18 +155,12 @@ module Api
         av.assign(locals.merge({ request: request, id: @id, media: @media }))
         ActionView::Base.send :include, MediasHelper
         content = av.render(template: "medias/#{template}.html.erb", layout: 'layouts/application.html.erb')
-        File.atomic_write(cache_path) { |file| file.write(content) }
+        File.atomic_write(Media.html_cache_path(@id)) { |file| file.write(content) }
         clear_upstream_cache if @refresh
       end
 
       def should_serve_external_embed?(data)
         !data['html'].blank? && (data['url'] =~ /^https:/ || Rails.env.development?)
-      end
-
-      def cache_path
-        dir = File.join('public', 'cache', Rails.env)
-        FileUtils.mkdir_p(dir) unless File.exist?(dir)
-        File.join(dir, "#{@id}.html")
       end
 
       def valid_url?
@@ -192,7 +186,7 @@ module Api
       end
 
       def clear_html_cache
-        FileUtils.rm_f cache_path
+        FileUtils.rm_f Media.html_cache_path(@id)
         url = public_url(request).gsub(/medias(\.[a-z]+)?\?/, 'medias.html?')
         CcDeville.clear_cache_for_url(url)
       end

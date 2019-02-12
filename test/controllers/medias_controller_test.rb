@@ -35,7 +35,7 @@ class MediasControllerTest < ActionController::TestCase
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html
     name = Digest::MD5.hexdigest('https://twitter.com/caiosba/status/742779467521773568')
-    cache_file = File.join('public', 'cache', Rails.env, "#{name}.html" )
+    cache_file = Media.html_cache_path(name)
     assert File.exist?(cache_file)
     sleep 1
     get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json
@@ -59,7 +59,7 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://speakbridge.io/medias/embed/viber/1/403'
     get :index, url: url, refresh: '1', format: :html
     name = Digest::MD5.hexdigest(url)
-    cache_file = File.join('public', 'cache', Rails.env, "#{name}.html" )
+    cache_file = Media.html_cache_path(name)
     first_parsed_at = File.mtime(cache_file)
     sleep 1
     get :index, url: url, refresh: '1', format: :html
@@ -71,7 +71,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     url = 'https://speakbridge.io/medias/embed/viber/1/403'
     name = Digest::MD5.hexdigest(url)
-    cache_file = File.join('public', 'cache', Rails.env, "#{name}.html" )
+    cache_file = Media.html_cache_path(name)
     get :index, url: url, refresh: '0', format: :html
     first_parsed_at = File.mtime(cache_file)
     sleep 1
@@ -350,9 +350,8 @@ class MediasControllerTest < ActionController::TestCase
     url2 = 'https://twitter.com/caiosba/status/742779467521773568'
     id1 = Media.get_id(url1)
     id2 = Media.get_id(url2)
-    cachefile1 = File.join('public', 'cache', Rails.env, "#{id1}.html")
-    cachefile2 = File.join('public', 'cache', Rails.env, "#{id2}.html")
-    
+    cachefile1 = Media.html_cache_path(id1)
+    cachefile2 = Media.html_cache_path(id2)
     assert !File.exist?(cachefile1)
     assert !File.exist?(cachefile2)
     assert_nil Rails.cache.read(id1)
