@@ -164,7 +164,7 @@ module Api
       end
 
       def cache_path
-        dir = File.join('public', 'cache', Rails.env)
+        dir = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env)
         FileUtils.mkdir_p(dir) unless File.exist?(dir)
         File.join(dir, "#{@id}.html")
       end
