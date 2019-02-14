@@ -72,7 +72,7 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_equal data[:raw][:api]['channel_title'], data['username']
     assert_equal data[:raw][:api]['description'], data['description']
     assert_equal data[:raw][:api]['title'], data['title']
-    assert_equal data[:raw][:api]['thumbnail_url'], data['picture']
+    assert_equal data[:raw][:api]['thumbnails']['maxres']['url'], data['picture']
     assert_equal data[:raw][:api]['embed_html'], data['html']
     assert_equal data[:raw][:api]['channel_title'], data['author_name']
     assert_equal 'https://www.youtube.com/channel/' + data[:raw][:api]['channel_id'], data['author_url']
@@ -118,4 +118,32 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_equal 'ironmaiden', data['raw']['oembed']['author_name']
     assert_equal 'Iron Maiden', data['raw']['oembed']['title']
   end
+
+  test "should get all thumbnails available and set the highest resolution as picture for item" do
+    urls = {
+      'https://www.youtube.com/watch?v=yyougTzksw8' => { available: ['default', 'high', 'medium'], best: 'high' },
+      'https://www.youtube.com/watch?v=8Rd5diO16yM' => { available: ['default', 'high', 'medium', 'standard'], best: 'standard' },
+      'https://www.youtube.com/watch?v=WxnN05vOuSM' => { available: ['default', 'high', 'medium', 'standard', 'maxres'], best: 'maxres' }
+    }
+    urls.each_pair do |url, thumbnails|
+      m = create_media url: url
+      data = m.as_json
+      assert_equal thumbnails[:available].sort, data[:raw][:api]['thumbnails'].keys.sort
+      assert_equal data[:raw][:api]['thumbnails'][thumbnails[:best]]['url'], data['picture']
+    end
+  end
+
+  test "should get all thumbnails available and set the highest resolution as picture for profile" do
+    urls = {
+      'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ' => { available: ['default', 'high', 'medium'], best: 'high' },
+      'https://www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQ' => { available: ['default', 'high', 'medium'], best: 'high' }
+    }
+    urls.each_pair do |url, thumbnails|
+      m = create_media url: url
+      data = m.as_json
+      assert_equal thumbnails[:available].sort, data[:raw][:api]['thumbnails'].keys.sort
+      assert_equal data[:raw][:api]['thumbnails'][thumbnails[:best]]['url'], data['picture']
+    end
+  end
+
 end
