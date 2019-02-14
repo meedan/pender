@@ -8,31 +8,35 @@ module MediaYoutubeProfile
   def youtube_profile_direct_attributes
     %w(
       comment_count
+      country
       description
       title
       published_at
       subscriber_count
       video_count
       view_count
-      thumbnail_url
+      thumbnails
     )
   end
 
   def data_from_youtube_profile
     channel = Yt::Channel.new url: self.url
+    video_data = channel.snippet.data
+    video_statistics = channel.statistics_set.data
 
     self.data[:raw][:api] = {}
     self.youtube_profile_direct_attributes.each do |attr|
-      self.data[:raw][:api][attr] = channel.send(attr)
+      camel_attr = attr.camelize(:lower)
+      self.data[:raw][:api][attr] = attr.match('count') ? video_statistics.dig(camel_attr) : video_data.dig(camel_attr)
     end
 
     self.data.merge!({
       title: self.data[:raw][:api][:title].to_s,
       description: self.data[:raw][:api][:description].to_s,
       published_at: self.data[:raw][:api][:published_at],
-      picture: self.data[:raw][:api][:thumbnail_url].to_s,
-      author_picture: self.data[:raw][:api][:thumbnail_url].to_s,
-      country: channel.snippet.data['country'],
+      picture: self.get_youtube_thumbnail,
+      author_picture: self.get_youtube_thumbnail,
+      country: self.data[:raw][:api][:country],
       username: self.get_youtube_username || '',
       subtype: self.get_youtube_subtype,
       author_name: self.data[:raw][:api][:title].to_s,
