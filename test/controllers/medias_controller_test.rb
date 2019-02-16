@@ -495,4 +495,67 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
   end
 
+  test "should archive on all archivers when no parameter is sent" do
+    Media.any_instance.unstub(:archive_to_archive_is)
+    Media.any_instance.unstub(:archive_to_archive_org)
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| !['archive.is', 'web.archive.org'].include?(uri.host) }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
+    WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
+
+    authenticate_with_token(a)
+    url = 'https://twitter.com/meedan/status/1095693211681673218'
+    get :index, url: url, format: :json
+    id = Media.get_id(url)
+    assert_equal({"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}}, Rails.cache.read(id)[:archives])
+
+    WebMock.disable!
+  end
+
+  test "should not archive when parameter is none" do
+    Media.any_instance.unstub(:archive_to_archive_is)
+    Media.any_instance.unstub(:archive_to_archive_org)
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| !['archive.is', 'web.archive.org'].include?(uri.host) }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
+    WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
+
+    authenticate_with_token(a)
+    url = 'https://twitter.com/meedan/status/1095035775736078341'
+    get :index, url: url, archivers: 'none', format: :json
+    id = Media.get_id(url)
+    assert_equal({}, Rails.cache.read(id)[:archives])
+
+    WebMock.disable!
+  end
+
+  [['archive_is'], ['archive_org'], ['archive_is', 'archive_org'], [' archive_is ', ' archive_org ']].each do |archivers|
+    test "should archive on `#{archivers}`" do
+      Media.any_instance.unstub(:archive_to_archive_is)
+      Media.any_instance.unstub(:archive_to_archive_org)
+      a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+      WebMock.enable!
+      allowed_sites = lambda{ |uri| !['archive.is', 'web.archive.org'].include?(uri.host) }
+      WebMock.disable_net_connect!(allow: allowed_sites)
+      WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
+      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
+      archived = {"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}}
+
+      authenticate_with_token(a)
+      url = 'https://twitter.com/meedan/status/1095035552221540354'
+      get :index, url: url, archivers: archivers.join(','), format: :json
+      id = Media.get_id(url)
+      archivers.each do |archiver|
+        archiver.strip!
+        assert_equal(archived[archiver], Rails.cache.read(id)[:archives][archiver])
+      end
+
+      WebMock.disable!
+    end
+  end
+
 end

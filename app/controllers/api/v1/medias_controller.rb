@@ -20,6 +20,7 @@ module Api
         (render_url_invalid; return) unless is_url?
 
         @refresh = params[:refresh] == '1'
+        @archivers = params[:archivers]
         @id = Media.get_id(@url)
 
         (render_uncached_media and return) if @refresh || Rails.cache.read(@id).nil?
@@ -67,7 +68,7 @@ module Api
         @request = request
         begin
           clear_html_cache if @refresh
-          render_timeout(true) { render_media(@media.as_json({ force: @refresh })) and return }
+          render_timeout(true) { render_media(@media.as_json({ force: @refresh, archivers: @archivers })) and return }
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
         rescue StandardError => e
@@ -130,7 +131,7 @@ module Api
 
       def render_as_oembed
         begin
-          render_timeout(true, true) { render_oembed(@media.as_json({ force: @refresh }), @media)}
+          render_timeout(true, true) { render_oembed(@media.as_json({ force: @refresh, archivers: @archivers }), @media)}
         rescue StandardError => e
           data = @media.nil? ? {} : @media.data
           notify_airbrake(e)
@@ -142,7 +143,7 @@ module Api
         av = ActionView::Base.new(Rails.root.join('app', 'views'))
         template = locals = nil
         cache = Rails.cache.read(@id)
-        data = cache && !@refresh ? cache : @media.as_json({ force: @refresh })
+        data = cache && !@refresh ? cache : @media.as_json({ force: @refresh, archivers: @archivers })
 
         if should_serve_external_embed?(data)
           locals = { html: data['html'].html_safe }

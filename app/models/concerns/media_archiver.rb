@@ -3,11 +3,13 @@ module MediaArchiver
 
   ARCHIVERS = {}
 
-  def archive
+  def archive(archivers = nil)
     url = self.url
-    self.skip_archive_if_needed and return
+    self.skip_archive_if_needed(archivers) and return
+    archivers = self.filter_archivers(archivers)
 
     ARCHIVERS.each do |name, rule|
+      next unless archivers.include?(name)
       rule[:patterns].each do |pattern|
         if (rule[:modifier] == :only && !pattern.match(url).nil?) || (rule[:modifier] == :except && pattern.match(url).nil?)
           self.send("archive_to_#{name}")
@@ -16,7 +18,8 @@ module MediaArchiver
     end
   end
 
-  def skip_archive_if_needed
+  def skip_archive_if_needed(archivers)
+    return true if archivers == 'none'
     url = self.url
     skip = CONFIG['archiver_skip_hosts']
     unless skip.blank?
@@ -24,6 +27,15 @@ module MediaArchiver
       return true if skip.split(',').include?(host)
     end
     false
+  end
+
+  def filter_archivers(archivers)
+    archivers = archivers.nil? ? ARCHIVERS.keys : archivers.split(',').map(&:strip)
+    id = Media.get_id(url)
+    data = Rails.cache.read(id)
+    return archivers if data.nil? || data.dig(:archives).nil?
+    keys = data[:archives].keys if data[:archives]
+    archivers -= keys
   end
 
   module ClassMethods
