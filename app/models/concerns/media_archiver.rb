@@ -8,8 +8,7 @@ module MediaArchiver
     self.skip_archive_if_needed(archivers) and return
     archivers = self.filter_archivers(archivers)
 
-    ARCHIVERS.each do |name, rule|
-      next unless archivers.include?(name)
+    ARCHIVERS.slice(*archivers).each do |name, rule|
       rule[:patterns].each do |pattern|
         if (rule[:modifier] == :only && !pattern.match(url).nil?) || (rule[:modifier] == :except && pattern.match(url).nil?)
           self.send("archive_to_#{name}")
@@ -34,8 +33,7 @@ module MediaArchiver
     id = Media.get_id(url)
     data = Rails.cache.read(id)
     return archivers if data.nil? || data.dig(:archives).nil?
-    keys = data[:archives].keys if data[:archives]
-    archivers -= keys
+    archivers - data[:archives].keys
   end
 
   module ClassMethods

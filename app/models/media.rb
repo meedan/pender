@@ -71,9 +71,7 @@ class Media
   def as_json(options = {})
     archivers = options.delete(:archivers)
     Rails.cache.fetch(Media.get_id(self.original_url), options) do
-      handle_exceptions(self, StandardError) do
-        self.parse
-      end
+      handle_exceptions(self, StandardError) { self.parse }
       self.data.merge(Media.required_fields(self)).with_indifferent_access
     end
     self.archive(archivers)
