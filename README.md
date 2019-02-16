@@ -129,7 +129,7 @@ An oEmbed representation of the item, e.g.:
     "description": "",
     "published_at": "2009-03-06T00:44:31.000Z",
     "picture": "https://yt3.ggpht.com/-MPd3Hrn0msk/AAAAAAAAAAI/AAAAAAAAAAA/I1ftnn68v8U/s88-c-k-no/photo.jpg",
-    "username: "MeedanTube",
+    "username": "MeedanTube",
     "author_url": "https://www.youtube.com/user/MeedanTube",
     "author_name": "MeedanTube",
     "raw": {
