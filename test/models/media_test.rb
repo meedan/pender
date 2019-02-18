@@ -718,7 +718,8 @@ class MediaTest < ActiveSupport::TestCase
     Net::HTTP.any_instance.stubs(:request).returns('success')
 
     assert_equal 'success', Media.request_url(url, 'Head')
-    Net::HTTP::Head.any_instance.unstub(:new)
+    Net::HTTP::Head.unstub(:new)
+    Net::HTTP.any_instance.unstub(:request)
   end
 
   test "should convert published_time to time without error" do
