@@ -23,7 +23,7 @@ namespace :lapis do
         api_key.access_token = key_name
         api_key.expire_at = api_key.expire_at.since(100.years)
         if ENV['RAILS_ENV'] == 'development'
-          api_key.application_settings = {:webhook_url=>"http://api:3000/api/project_medias/webhook", :webhook_token=>"somethingsecret"}
+          api_key.application_settings = {:webhook_url=>"http://api:3000/api/webhooks/keep", :webhook_token=>"somethingsecret"}
         end
         api_key.save!
         puts "Created a new API key for #{app} with access token #{api_key.access_token} and that expires at #{api_key.expire_at}"
