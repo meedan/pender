@@ -939,4 +939,128 @@ class MediaTest < ActiveSupport::TestCase
     Airbrake.unstub(:notify)
     Media.any_instance.unstub(:doc)
   end
+
+  test "should update media with error when archive to Archive.org fails" do
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    Media.any_instance.stubs(:archive)
+
+    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:notify)
+
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    urls = {
+      'https://www.facebook.com/permalink.php?story_fbid=1649526595359937&id=100009078379548' => {code: '404', message: 'Not Found'},
+      'http://localhost:3333/unreachable-url' => {code: '403', message: 'Forbidden'},
+      'http://www.dutertenewsupdate.info/2018/01/duterte-turned-philippines-into.html' => {code: '502', message: 'Bad Gateway'}
+    }
+
+    assert_nothing_raised do
+      urls.each_pair do |url, data|
+        m = Media.new url: url
+        m.as_json
+        assert m.data.dig('archives', 'archive_org').nil?
+        WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', status: [data[:code], data[:message]], headers: {})
+        Media.send_to_archive_org(url.to_s, a.id, 20)
+        id = Media.get_id(url)
+        media_data = Rails.cache.read(id)
+        assert_equal({"message"=>I18n.t(:could_not_archive, error_message: data[:message]), "code"=>data[:code]}, media_data.dig('archives', 'archive_org', 'error'))
+      end
+    end
+
+    WebMock.disable!
+    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:notify)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
+    Media.any_instance.unstub(:archive)
+  end
+
+  test "should raise error and update media when unexpected response from Archive.is" do
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'archive.is' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    Media.any_instance.stubs(:archive)
+
+    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:notify)
+
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    urls = ['http://www.unexistent-page.html', 'http://localhost:3333/unreachable-url']
+
+    urls.each do |url|
+      assert_raise RuntimeError do
+        m = Media.new url: url
+        m.as_json
+        assert m.data.dig('archives', 'archive_is').nil?
+        WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', status: ['200', 'OK'], headers: {})
+        Media.send_to_archive_is(url.to_s, a.id, 20)
+        id = Media.get_id(url)
+        media_data = Rails.cache.read(id)
+        assert_equal({"message"=>I18n.t(:could_not_archive, error_message: data[:message]), "code"=>data[:code]}, media_data.dig('archives', 'archive_is', 'error'))
+      end
+    end
+
+    WebMock.disable!
+    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:notify)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
+    Media.any_instance.unstub(:archive)
+  end
+
+  test "should update media with error when archive to Archive.is fails" do
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'archive.is' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    Media.any_instance.stubs(:archive)
+
+    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:notify)
+
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    urls = {
+      'http://www.dutertenewsupdate.info/2018/01/duterte-turned-philippines-into.html' => {code: '200', message: 'OK'}
+    }
+
+    assert_nothing_raised do
+      urls.each_pair do |url, data|
+        m = Media.new url: url
+        m.as_json
+        assert m.data.dig('archives', 'archive_is').nil?
+        WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', status: [data[:code], data[:message]], headers: { refresh: '0;url=http://archive.is/k5yFO'})
+        Media.send_to_archive_is(url.to_s, a.id, 20)
+        id = Media.get_id(url)
+        media_data = Rails.cache.read(id)
+        assert_equal({"message"=>I18n.t(:could_not_archive, error_message: data[:message]), "code"=>data[:code]}, media_data.dig('archives', 'archive_is', 'error'))
+      end
+    end
+
+    WebMock.disable!
+    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:notify)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
+    Media.any_instance.unstub(:archive)
+  end
+
 end
