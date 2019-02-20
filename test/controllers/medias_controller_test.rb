@@ -495,4 +495,19 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
   end
 
+  test "should return timeout error with minimal data if cannot parse url" do
+    stub_configs({ 'timeout' => 0.1 })
+    url = 'https://changescamming.net/halalan-2019/maria-ressa-to-bong-go-um-attend-ka-ng-senatorial-debate-di-yung-nagtatapon-ka-ng-pera'
+    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:notify).never
+
+    authenticate_with_token
+    get :index, url: url, refresh: '1', format: :json
+    assert_response 200
+    Media.minimal_data(OpenStruct.new(url: url)).except(:parsed_at).each_pair do |key, value|
+      assert_equal value, JSON.parse(@response.body)['data'][key]
+    end
+    assert_equal({"message"=>"Timeout", "code"=>"TIMEOUT"}, JSON.parse(@response.body)['data']['error'])
+    Airbrake.unstub(:notify)
+  end
 end

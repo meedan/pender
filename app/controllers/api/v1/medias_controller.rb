@@ -71,8 +71,8 @@ module Api
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
         rescue StandardError => e
-          notify_airbrake(e)
           data = get_error_data({ message: e.message, code: 'UNKNOWN' })
+          notify_airbrake(e, data)
           data.merge!(@data) unless @data.blank?
           data.merge!(@media.data) unless @media.blank?
           render_media(data)
@@ -84,7 +84,6 @@ module Api
         if !data.nil? && !@refresh
           render_timeout_media(data, must_render, oembed) and return true
         end
-
         begin
           Timeout::timeout(timeout_value) { yield }
         rescue Timeout::Error
@@ -102,6 +101,7 @@ module Api
       end
 
       def render_media(data)
+        data ||= @data
         json = { type: 'media' }
         json[:data] = data.merge({ embed_tag: embed_url(request) })
         render json: json, status: 200
@@ -133,8 +133,9 @@ module Api
           render_timeout(true, true) { render_oembed(@media.as_json({ force: @refresh }), @media)}
         rescue StandardError => e
           data = @media.nil? ? {} : @media.data
-          notify_airbrake(e)
-          render_media(data.merge(error: { message: e.message, code: 'UNKNOWN' }))
+          data.merge!(error: { message: e.message, code: 'UNKNOWN' })
+          notify_airbrake(e, data)
+          render_media(data)
         end
       end
 
@@ -234,8 +235,8 @@ module Api
         end
       end
 
-      def notify_airbrake(e)
-        Airbrake.notify(e, parameters: {url: @url}) if Airbrake.configuration.api_key
+      def notify_airbrake(e, extra_info = {})
+        Airbrake.notify(e, parameters: {url: @url}.merge(extra_info)) if Airbrake.configuration.api_key
       end
     end
   end
