@@ -72,6 +72,10 @@ Get parseable data for a given URL, that can be a post or a profile, from differ
 
 * `url`: URL to be parsed/rendered _(required)_
 * `refresh`: boolean to indicate that Pender should re-fetch and re-parse the URL if it already exists in its cache _(optional)_
+* `archivers`: list of archivers to target. Possible values:
+  * empty: the URL will be archived in all available archivers
+  * `none`: the URL will not be archived
+  * string with a list of archives separated by commas: the URL will be archived only on specified archivers
 
 **Response**
 
@@ -124,9 +128,18 @@ An oEmbed representation of the item, e.g.:
     "title": "MeedanTube",
     "description": "",
     "published_at": "2009-03-06T00:44:31.000Z",
-    "thumbnail_url": "https://yt3.ggpht.com/-MPd3Hrn0msk/AAAAAAAAAAI/AAAAAAAAAAA/I1ftnn68v8U/s88-c-k-no/photo.jpg",
-    "view_count": 29101,
-    "subscriber_count": 137
+    "picture": "https://yt3.ggpht.com/-MPd3Hrn0msk/AAAAAAAAAAI/AAAAAAAAAAA/I1ftnn68v8U/s88-c-k-no/photo.jpg",
+    "username": "MeedanTube",
+    "author_url": "https://www.youtube.com/user/MeedanTube",
+    "author_name": "MeedanTube",
+    "raw": {
+      "metatags": [],
+      "oembed": {},
+      "api": {}
+    },
+    "schema": {},
+    "html": "",
+    "embed_tag": <embed_tag>
   }
 }
 ```
