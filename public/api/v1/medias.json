@@ -24,6 +24,14 @@
               "type": "integer",
               "description": "Force a refresh from the URL instead of the cache",
               "required": false
+            },
+            {
+              "paramType": "query",
+              "name": "archivers",
+              "type": "string",
+              "description": "List of archivers to target. Can be empty, `none` or a list of archives separated by commas",
+              "required": false
+
             }
           ],
           "responseMessages": [
