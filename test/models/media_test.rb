@@ -711,18 +711,15 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil d['error']
   end
 
-  test "should parse globalvoices url" do
-    url = 'https://globalvoices.org/2018/05/01/kidnapping-and-murders-as-ecuador-and-colombias-border-crisis-heightens'
-    m = Media.new url: url
-    d = m.as_json
-    assert_equal 'Kidnapping and murders as Ecuador and Colombia’s border crisis heightens · Global Voices', d['title']
-    assert_equal 'Reaching a peace agreement that puts an end to one of the oldest conflicts in the hemisphere is complicated by the murder of three members of the newspaper El Comercio.', d['description']
-    assert_equal '@sobretematicas', d['username']
-    assert_equal 'https://es.globalvoices.org/wp-content/uploads/2018/04/NosFaltan3-641x450.jpg', d['picture']
-    assert_equal 'https://twitter.com/sobretematicas', d['author_url']
-    assert_equal 'https://es.globalvoices.org/wp-content/uploads/2018/04/NosFaltan3-641x450.jpg', d['author_picture']
-    assert_equal '@globalvoices', d['author_name']
-    assert_not_nil d['published_at']
+  test "should request URL with User-Agent on header" do
+    url = 'https://globalvoices.org/2019/02/16/nigeria-postpones-2019-general-elections-hours-before-polls-open-citing-logistics-and-operations-concerns'
+    uri = Media.parse_url url
+    Net::HTTP::Head.stubs(:new).with(uri, {'User-Agent' => Media.html_options(uri)['User-Agent']}).once.returns({})
+    Net::HTTP.any_instance.stubs(:request).returns('success')
+
+    assert_equal 'success', Media.request_url(url, 'Head')
+    Net::HTTP::Head.unstub(:new)
+    Net::HTTP.any_instance.unstub(:request)
   end
 
   test "should convert published_time to time without error" do
