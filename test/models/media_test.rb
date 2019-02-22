@@ -893,7 +893,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive)
   end
 
-  test "should raise error and update media when unexpected response from Archive.is" do
+  test "should not raise error and update media when unexpected response from Archive.is" do
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'archive.is' }
     WebMock.disable_net_connect!(allow: allowed_sites)
@@ -910,15 +910,16 @@ class MediaTest < ActiveSupport::TestCase
     urls = ['http://www.unexistent-page.html', 'http://localhost:3333/unreachable-url']
 
     urls.each do |url|
-      assert_raise RuntimeError do
+      assert_nothing_raised do
         m = Media.new url: url
         m.as_json
         assert m.data.dig('archives', 'archive_is').nil?
-        WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', status: ['200', 'OK'], headers: {})
+        response = { code: '200', message: 'OK' }
+        WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', status: [response[:code], response[:message]], headers: {})
         Media.send_to_archive_is(url.to_s, a.id, 20)
         id = Media.get_id(url)
         media_data = Rails.cache.read(id)
-        assert_equal({"message"=>I18n.t(:could_not_archive, error_message: data[:message]), "code"=>data[:code]}, media_data.dig('archives', 'archive_is', 'error'))
+        assert_equal({"message"=>I18n.t(:could_not_archive, error_message: response[:message]), "code"=> response[:code]}, media_data.dig('archives', 'archive_is', 'error'))
       end
     end
 
