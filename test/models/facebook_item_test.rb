@@ -41,11 +41,11 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should get canonical URL from facebook object 2" do
     media = Media.new(url: 'https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406')
     media.as_json({ force: 1 })
-    assert_equal 'https://www.facebook.com/media/set/?set=a.10154534110871407&type=3', media.url
+    assert_equal 'https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406', media.url
   end
 
   test "should get canonical URL from facebook object 3" do
-    expected = 'https://www.facebook.com/media/set/?set=a.10154534110871407&type=3'
+    expected = 'https://www.facebook.com/54212446406/photos/a.10154534110871407/10154534111016407/?type=3'
     variations = %w(
       https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407/?type=3
       https://www.facebook.com/54212446406/photos/a.10154534110871407.1073742048.54212446406/10154534111016407?type=3
@@ -290,7 +290,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal 'http://facebook.com/136985363145802', d['author_url']
     assert_equal 'https://graph.facebook.com/136985363145802/picture', d['author_picture']
     assert_match /16473884_666508790193454_8112186335057907723/, d['picture']
-    assert_equal 'https://www.facebook.com/Classic.mou/photos/a.136991166478555/666508790193454/?type=3', m.url
+    assert_equal 'https://www.facebook.com/Classic.mou/posts/666508790193454:0', m.url
   end
 
   test "should parse Facebook post from user profile and get username and name" do
@@ -316,7 +316,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert d['media_count'] > 20
     assert_equal '10154534110871407', d['object_id']
-    assert_equal 'https://www.facebook.com/media/set/?set=a.10154534110871407&type=3', m.url
+    assert_equal 'https://www.facebook.com/media/set?set=a.10154534110871407.1073742048.54212446406&type=3', m.url
   end
 
   test "should support facebook pattern with pg" do
@@ -340,7 +340,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal 'Mariano Rajoy Brey', d['author_name']
     assert d['media_count'] > 20
     assert_equal '10154534110871407', d['object_id']
-    assert_equal 'https://www.facebook.com/media/set/?set=a.10154534110871407&type=3', m.url
+    assert_equal 'https://www.facebook.com/media/set?set=a.10154534110871407', m.url
   end
 
   test "should get facebook data from original_url when url fails" do
