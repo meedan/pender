@@ -74,7 +74,7 @@ class TwitterTest < ActiveSupport::TestCase
     assert_equal 'ZB8T0193', d['title']
     assert_match /Explore .* photos on Flickr!/, d['description']
     assert_equal '', d['published_at']
-    assert_equal 'https://c2.staticflickr.com/4/3123/2341623661_7c99f48bbf_b.jpg', d['picture']
+    assert_match /https:\/\/.*staticflickr.com\/.*3123\/2341623661_7c99f48bbf_b.jpg/, d['picture']
     assert_equal 'https://www.flickr.com/photos/bees/', d['author_url']
   end
 
