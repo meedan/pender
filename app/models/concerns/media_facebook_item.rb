@@ -98,13 +98,18 @@ module MediaFacebookItem
     get_metatags(self)
     metadata = self.get_opengraph_metadata || {}
     self.data['metadata'] = metadata
-    self.data['author_name'] = metadata['title'].nil? ? self.get_facebook_title_from_html : metadata['title']
+    self.data['author_name'] = metadata['title'].nil? ? self.get_facebook_author_name_from_html : metadata['title']
     self.data['text'] = metadata['description'].nil? ? self.get_facebook_description_from_html : metadata['description']
     self.data['photos'] = metadata['picture'].nil? ? self.get_facebook_photos_from_html : [metadata['picture']]
   end
 
   def get_facebook_description_from_html
     self.doc.css('span[data-testid="event-permalink-details"]').text unless self.url.match(EVENT_URL).nil?
+  end
+
+  def get_facebook_author_name_from_html
+    author_link = self.doc.css('.fbPhotoAlbumActionList a')
+    author_link.blank? ? self.get_facebook_title_from_html : author_link.text
   end
 
   def get_facebook_title_from_html
