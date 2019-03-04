@@ -54,7 +54,6 @@ class ActiveSupport::TestCase
     FileUtils.rm_rf(File.join(Rails.root, 'tmp', "cache<%= ENV['TEST_ENV_NUMBER'] %>", '*'))
     Rails.application.reload_routes!
     Media.any_instance.stubs(:archive_to_archive_is).returns(nil)
-    Media.any_instance.stubs(:archive_to_video_vault).returns(nil)
     Media.any_instance.stubs(:archive_to_archive_org).returns(nil)
     Media.any_instance.unstub(:parse)
     OpenURI.unstub(:open_uri)
@@ -81,7 +80,6 @@ class ActiveSupport::TestCase
     Media.any_instance.unstub(:parse)
     Media.any_instance.unstub(:as_json)
     Media.any_instance.unstub(:archive_to_archive_is)
-    Media.any_instance.unstub(:archive_to_video_vault)
     Media.any_instance.unstub(:archive_to_archive_org)
     CONFIG.unstub(:[])
   end
