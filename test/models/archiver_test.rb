@@ -346,4 +346,10 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
+  test "return the enabled archivers" do
+    assert_equal ['archive_is', 'archive_org'].sort, Media.enabled_archivers('archive_is', 'archive_org').keys
+    Media::ARCHIVERS['archive_org'][:enabled] = false
+    assert_equal ['archive_is'].sort, Media.enabled_archivers('archive_is', 'archive_org').keys
+    Media::ARCHIVERS['archive_org'][:enabled] = true
+  end
 end

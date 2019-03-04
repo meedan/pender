@@ -8,8 +8,7 @@ module MediaArchiver
     self.skip_archive_if_needed(archivers) and return
     archivers = self.filter_archivers(archivers)
 
-    ARCHIVERS.slice(*archivers).each do |name, rule|
-      next unless rule[:enabled]
+    Media.enabled_archivers(*archivers).each do |name, rule|
       rule[:patterns].each do |pattern|
         if (rule[:modifier] == :only && !pattern.match(url).nil?) || (rule[:modifier] == :except && pattern.match(url).nil?)
           self.send("archive_to_#{name}")
@@ -86,6 +85,10 @@ module MediaArchiver
         @webhook_called = true
       end
       true
+    end
+
+    def enabled_archivers(*archivers)
+      ARCHIVERS.slice(*archivers).select { |_name, rule| rule[:enabled] }
     end
 
     def url_hash(url)
