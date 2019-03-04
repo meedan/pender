@@ -2,7 +2,7 @@ module MediaArchiveIsArchiver
   extend ActiveSupport::Concern
 
   included do
-    Media.declare_archiver('archive_is', [/^.*$/], :only)
+    Media.declare_archiver('archive_is', [/^.*$/], :only, false)
   end
 
   def archive_to_archive_is
