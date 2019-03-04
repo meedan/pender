@@ -9,6 +9,7 @@ module MediaArchiver
     archivers = self.filter_archivers(archivers)
 
     ARCHIVERS.slice(*archivers).each do |name, rule|
+      next unless rule[:enabled]
       rule[:patterns].each do |pattern|
         if (rule[:modifier] == :only && !pattern.match(url).nil?) || (rule[:modifier] == :except && pattern.match(url).nil?)
           self.send("archive_to_#{name}")
@@ -37,8 +38,8 @@ module MediaArchiver
   end
 
   module ClassMethods
-    def declare_archiver(name, patterns, modifier)
-      ARCHIVERS[name] = { patterns: patterns, modifier: modifier }
+    def declare_archiver(name, patterns, modifier, enabled = true)
+      ARCHIVERS[name] = { patterns: patterns, modifier: modifier, enabled: enabled }
     end
 
     def give_up(archiver, url, key_id, attempts, response = {})

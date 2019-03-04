@@ -69,6 +69,7 @@ class ActiveSupport::TestCase
     Media.any_instance.unstub(:data_from_page_item)
     Media.any_instance.unstub(:oembed_get_data_from_url)
     Media.any_instance.unstub(:doc)
+    Media::ARCHIVERS['archive_is'][:enabled] = true
   end
 
   # This will run after any test
@@ -81,6 +82,7 @@ class ActiveSupport::TestCase
     Media.any_instance.unstub(:as_json)
     Media.any_instance.unstub(:archive_to_archive_is)
     Media.any_instance.unstub(:archive_to_archive_org)
+    Media::ARCHIVERS['archive_is'][:enabled] = false
     CONFIG.unstub(:[])
   end
 
