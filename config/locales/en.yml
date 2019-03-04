@@ -21,3 +21,6 @@
 
 en:
   could_not_archive: "Could not archive: '%{error_message}'"
+  url_not_valid: 'The URL is not valid'
+  unauthorized: 'Unauthorized'
+  parameters_missing: 'Parameters missing'

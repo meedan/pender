@@ -102,4 +102,20 @@ module MediasHelper
       time2.nil? ? Time.at(time1.to_i) : Time.at(time2.to_i)
     end
   end
+
+  def is_url?(url)
+    uri = URI.parse(URI.encode(url))
+    !uri.host.nil? && uri.userinfo.nil?
+  end
+
+  def get_error_data(error_data, media, url, id)
+    data = media.nil? ? Media.minimal_data(OpenStruct.new(url: url)) : media.data
+    data = data.merge(error: error_data)
+    Rails.cache.write(id, data)
+    data
+  end
+
+  def get_timeout_data(media, url, id)
+    get_error_data({ message: 'Timeout', code: 'TIMEOUT' }, media, url, id)
+  end
 end

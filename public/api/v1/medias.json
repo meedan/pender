@@ -109,6 +109,64 @@
           "nickname": "Api::V1::Medias#index"
         },
         {
+          "summary": "Get the metadata of a list of URLs and archive it",
+          "notes": "Create background jobs to parse each URL and notify the caller with the result",
+          "parameters": [
+            {
+              "paramType": "query",
+              "name": "url",
+              "type": "string",
+              "description": "URL(s) to be parsed. Can be an array of URLs, a single URL or a list of URLs separated by a commas\n",
+              "required": true
+            },
+            {
+              "paramType": "query",
+              "name": "refresh",
+              "type": "integer",
+              "description": "Force a refresh from the URL instead of the cache. Will be applied to all URLs",
+              "required": false
+            },
+            {
+              "paramType": "query",
+              "name": "archivers",
+              "type": "string",
+              "description": "List of archivers to target. Can be empty, `none` or a list of archives separated by commas. Will be applied to all URLs",
+              "required": false
+            }
+          ],
+          "responseMessages": [
+            {
+              "code": 200,
+              "responseModel": {
+                "query": {
+                  "url": [
+                    "https://www.youtube.com/user/MeedanTube",
+                    "https://twitter.com/meedan"
+                  ]
+                },
+                "headers": {
+                  "x-Pender-Token": "test"
+                }
+              },
+              "message": "Enqueued URLs"
+            },
+            {
+              "code": 401,
+              "responseModel": {
+                "query": {
+                  "url": [
+                    "https://www.youtube.com/user/MeedanTube",
+                    "https://twitter.com/meedan"
+                  ]
+                }
+              },
+              "message": "Access denied"
+            }
+          ],
+          "method": "post",
+          "nickname": "Api::V1::Medias#bulk"
+        },
+        {
           "summary": "Delete cache for given URL(s)",
           "notes": "Delete cache for the URL(s) passed as parameter, you can use the HTTP verbs DELETE or PURGE",
           "parameters": [
