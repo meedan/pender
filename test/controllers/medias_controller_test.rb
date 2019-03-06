@@ -574,6 +574,20 @@ class MediasControllerTest < ActionController::TestCase
     end
   end
 
+  test "should show the urls that couldn't be enqueued when bulk parsing" do
+    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
+    a = create_api_key application_settings: webhook_info
+    authenticate_with_token(a)
+    url1 = 'https://twitter.com/check/status/1102991340294557696'
+    url2 = 'https://twitter.com/dimalb/status/1102928768673423362'
+    MediaParserWorker.stubs(:perform_async).with(url1, a.id, false, nil)
+    MediaParserWorker.stubs(:perform_async).with(url2, a.id, false, nil).raises(RuntimeError)
+    post :bulk, url: [url1, url2], format: :json
+    assert_response :success
+    assert_equal({"enqueued"=>[url1], "failed"=>[url2]}, JSON.parse(@response.body)['data'])
+    MediaParserWorker.unstub(:perform_async)
+  end
+
   test "should enqueue, parse and notify with error when invalid url" do
     webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
     a = create_api_key application_settings: webhook_info
@@ -622,6 +636,50 @@ class MediasControllerTest < ActionController::TestCase
     post :bulk, url: url, format: :json
     assert_response :success
     assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
+    Media.unstub(:notify_webhook)
+    Media.unstub(:minimal_data)
+  end
+
+  test "should return data with error message if can't parse" do
+    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
+    url = 'https://twitter.com/meedan/status/1102990605339316224'
+    parse_error = { error: { "message"=>"RuntimeError: RuntimeError", "code"=>5}}
+    required_fields = Media.required_fields(OpenStruct.new(url: url))
+    Media.stubs(:required_fields).returns(required_fields)
+
+    Media.stubs(:notify_webhook).with('media_parsed', url, parse_error.merge(required_fields).with_indifferent_access, webhook_info)
+    Media.any_instance.stubs(:parse).raises(RuntimeError)
+    a = create_api_key application_settings: webhook_info
+    authenticate_with_token(a)
+    post :bulk, url: url, format: :json
+    assert_response :success
+    assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
+    Media.any_instance.unstub(:parse)
+    Media.unstub(:notify_webhook)
+    Media.unstub(:required_fields)
+  end
+
+  test "should return data with error message if can't instantiate" do
+    Sidekiq::Testing.fake!
+    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
+    url = 'https://twitter.com/meedan/status/1102990605339316224'
+    a = create_api_key application_settings: webhook_info
+    authenticate_with_token(a)
+
+    assert_equal 0, MediaParserWorker.jobs.size
+    post :bulk, url: url, format: :json
+    assert_response :success
+    assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
+    assert_equal 1, MediaParserWorker.jobs.size
+
+    parse_error = { error: { "message"=>"OpenSSL::SSL::SSLError", "code"=>'UNKNOWN'}}
+    minimal_data = Media.minimal_data(OpenStruct.new(url: url))
+    Media.stubs(:minimal_data).returns(minimal_data)
+    Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(parse_error), webhook_info)
+    Media.any_instance.stubs(:get_canonical_url).raises(OpenSSL::SSL::SSLError)
+    MediaParserWorker.drain
+
+    Media.any_instance.unstub(:get_canonical_url)
     Media.unstub(:notify_webhook)
     Media.unstub(:minimal_data)
   end
