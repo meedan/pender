@@ -982,4 +982,12 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil data['error']
   end
 
+  test "should follow redirections of path relative urls" do
+    url = 'https://www.yousign.org/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358'
+    assert_nothing_raised do
+      m = create_media url: url
+      data = m.as_json
+      assert_equal 'https://www.yousign.org/404.php?notfound=/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358', m.url
+    end
+  end
 end
