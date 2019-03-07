@@ -195,7 +195,8 @@ class Media
   def set_url_from_location(response, path)
     if %w(301 302).include?(response.code)
       self.url = response.header['location']
-      if self.url =~ /^\//
+      if self.url !~ /^https?:/
+        self.url.prepend('/') unless self.url.match(/^\//)
         previous = path.last.match(/^https?:\/\/[^\/]+/)[0]
         self.url = previous + self.url
       end
