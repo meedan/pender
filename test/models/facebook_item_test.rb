@@ -431,7 +431,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal 'Mohamed Nanabhay', d['author_name']
     assert_equal 'nanabhay', d['username']
     assert_equal 'https://graph.facebook.com/735450245/picture', d['author_picture']
-    assert_equal 0, d['media_count']
+    assert_equal 1, d['media_count']
     assert_not_nil d['picture']
   end
 

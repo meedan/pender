@@ -171,12 +171,11 @@ module MediaFacebookItem
   end
 
   def get_facebook_media_count_from_html
-    text = self.doc.to_s.gsub(/<[^>]+>/, '')
-    media = text.match(/added ([0-9]+) new photos/)
-    if media.nil? && (!text.match(/added a new photo/).nil? || !self.url.match(/\/photos\//).nil?)
+    media = self.doc.css('a > div.uiScaledImageContainer')
+    if media.empty? && !self.url.match(/\/photos\//).nil?
       self.data['media_count'] = 1
     else
-      self.data['media_count'] = media.nil? ? 0 : media[1].to_i
+      self.data['media_count'] = media.empty? ? 0 : media.size
       self.data['media_count'] = (self.data['photos'] - [self.data['metadata']['picture']]).size if self.data['media_count'] == 0
     end
   end
