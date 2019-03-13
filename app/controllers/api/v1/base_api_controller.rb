@@ -71,7 +71,7 @@ module Api
       end
 
       def render_unauthorized
-        render_error 'Unauthorized', 'UNAUTHORIZED', 401
+        render_error I18n.t(:unauthorized), 'UNAUTHORIZED', 401
       end
 
       # def render_unknown_error
@@ -83,7 +83,7 @@ module Api
       # end
 
       def render_parameters_missing
-        render_error 'Parameters missing', 'MISSING_PARAMETERS'
+        render_error I18n.t(:parameters_missing), 'MISSING_PARAMETERS'
       end
 
       # def render_not_found
@@ -99,7 +99,7 @@ module Api
       # end
 
       def render_url_invalid
-        render_error 'The URL is not valid', 'INVALID_VALUE'
+        render_error I18n.t(:url_not_valid), 'INVALID_VALUE'
       end
     end
   end

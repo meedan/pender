@@ -11,16 +11,16 @@ module Api
 
       skip_before_filter :authenticate_from_token!, if: proc { request.format.html? || request.format.js? || request.format.oembed? }
       before_action :strip_params, only: :index, if: proc { request.format.html? }
+      before_action :get_params, only: [:index, :bulk]
       before_action :lock_url, only: :index
       after_action :allow_iframe, :unlock_url, only: :index
 
       def index
         @url = params[:url]
-        (render_parameters_missing; return) if @url.blank?
-        (render_url_invalid; return) unless is_url?
 
-        @refresh = params[:refresh] == '1'
-        @archivers = params[:archivers]
+        (render_parameters_missing; return) if @url.blank?
+        (render_url_invalid; return) unless is_url?(@url)
+
         @id = Media.get_id(@url)
 
         (render_uncached_media and return) if @refresh || Rails.cache.read(@id).nil?
@@ -43,6 +43,23 @@ module Api
           FileUtils.rm_f(cache_path)
         end
         render json: { type: 'success' }, status: 200
+      end
+
+      def bulk
+        return unless request.format.json?
+        urls = params[:url].is_a?(Array) ? params[:url] : params[:url].split(',').map(&:strip)
+        result = { enqueued: [], failed: []}
+        urls.each do |url|
+          begin
+            @url = url
+            MediaParserWorker.perform_async(url, @key.id, @refresh, @archivers)
+            result[:enqueued] << url
+          rescue StandardError => e
+            Airbrake.notify(e, parameters: {url: url}) if Airbrake.configuration.api_key
+            result[:failed] << url
+          end
+        end
+        render_success 'success', result
       end
 
       private
@@ -72,7 +89,7 @@ module Api
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
         rescue StandardError => e
-          data = get_error_data({ message: e.message, code: 'UNKNOWN' })
+          data = get_error_data({ message: e.message, code: 'UNKNOWN' }, @media, @url, @id)
           notify_airbrake(e, data)
           data.merge!(@data) unless @data.blank?
           data.merge!(@media.data) unless @media.blank?
@@ -88,7 +105,7 @@ module Api
         begin
           Timeout::timeout(timeout_value) { yield }
         rescue Timeout::Error
-          @data = get_timeout_data
+          @data = get_timeout_data(nil, @url, @id)
           render_timeout_media(@data, must_render) and return true
         end
 
@@ -182,17 +199,6 @@ module Api
         CcDeville.clear_cache_for_url(url_no_refresh) if url != url_no_refresh
       end
 
-      def get_error_data(error_data)
-        data = @media.nil? ? Media.minimal_data(OpenStruct.new(url: @url)) : @media.data
-        data = data.merge(error: error_data)
-        Rails.cache.write(@id, data)
-        data
-      end
-
-      def get_timeout_data
-        get_error_data({ message: 'Timeout', code: 'TIMEOUT' })
-      end
-
       def clear_html_cache
         FileUtils.rm_f cache_path
         url = public_url(request).gsub(/medias(\.[a-z]+)?\?/, 'medias.html?')
@@ -222,11 +228,6 @@ module Api
         @locker
       end
 
-      def is_url?
-        uri = URI.parse(URI.encode(@url))
-        !uri.host.nil? && uri.userinfo.nil?
-      end
-
       def strip_params
         rails_params = ['id', 'action', 'controller', 'format']
         supported_params = ['url', 'refresh', 'maxwidth', 'maxheight', 'version']
@@ -234,6 +235,11 @@ module Api
         if (url_params & supported_params) == ['url'] && url_params.size > 1
           redirect_to(host: CONFIG['public_url'], action: :index, format: :html, url: params[:url]) and return
         end
+      end
+
+      def get_params
+        @refresh = params[:refresh] == '1'
+        @archivers = params[:archivers]
       end
 
       def notify_airbrake(e, extra_info = {})
