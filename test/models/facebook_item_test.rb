@@ -150,7 +150,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     variations = %w(
       https://www.facebook.com/events/364677040588691/permalink/376287682760960?ref=1&action_history=null
-      https://www.facebook.com/events/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691/
+      https://www.facebook.com/events/zawya/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691/
       https://web.facebook.com/events/364677040588691/permalink/376287682760960?ref=1&action_history=null&_rdc=1&_rdr
     )
     assert_includes variations, m.url
@@ -166,7 +166,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     variations = %w(
       https://www.facebook.com/events/364677040588691/permalink/379973812392347?ref=1&action_history=null
-      https://www.facebook.com/events/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691/
+      https://www.facebook.com/events/zawya/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691/
       https://web.facebook.com/events/364677040588691/permalink/379973812392347?ref=1&action_history=null&_rdc=1&_rdr
     )
     assert_includes variations, m.url
