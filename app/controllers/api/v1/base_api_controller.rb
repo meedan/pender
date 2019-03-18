@@ -3,13 +3,22 @@ require 'error_codes'
 module Api
   module V1
     class BaseApiController < ApplicationController
+      include BaseDoc
+
       before_filter :remove_empty_params_and_headers
       before_filter :set_custom_response_headers
       before_filter :authenticate_from_token!
-      # Verify payload for webhook methods
-      # before_filter :verify_payload!
 
       respond_to :json
+
+      def about
+        archivers = Media.enabled_archivers(*Media::ARCHIVERS.keys)
+        info = {
+          name: "Keep",
+          archivers: archivers.map {|a| {key: a[0], label: a[0].gsub('_', '.').capitalize }}
+        }
+        render_success 'about', info
+      end
 
       private
 
@@ -20,24 +29,6 @@ module Api
         (render_unauthorized and return false) if @key.nil?
       end
 
-      def verify_payload!
-        begin
-          payload = request.raw_post
-          if verify_signature(payload)
-            @payload = JSON.parse(payload)
-          else
-            render_unauthorized and return
-          end
-        rescue
-          render_error('Could not verify payload', 'UNKNOWN') and return
-        end
-      end
-
-      def verify_signature(payload)
-        signature = 'sha1=' + OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), CONFIG['secret_token'].to_s, payload)
-        Rack::Utils.secure_compare(signature, request.headers['X-Signature'].to_s)
-      end
-  
       def get_params
         params.reject{ |k, _v| ['id', 'action', 'controller', 'format'].include?(k) }
       end

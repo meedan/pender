@@ -22,10 +22,20 @@ module MediasDoc
       response 409, 'URL already being processed', { query: { url: url }, headers: authed }
     end
 
+    swagger_api :delete do
+      summary 'Delete cache for given URL(s)'
+      notes 'Delete cache for the URL(s) passed as parameter, you can use the HTTP verbs DELETE or PURGE'
+      param :query, :url, :string, :required, 'URL(s) whose cache should be delete... can be an array of URLs, a single URL or a list of URLs separated by a space'
+      authed = { CONFIG['authorization_header'] => 'test' }
+      url = 'https://www.youtube.com/user/MeedanTube'
+      response :ok, 'Success', { query: { url: url }, headers: authed }
+      response 401, 'Access denied', { query: { url: url } }
+    end
+
     swagger_api :bulk do
       summary 'Get the metadata of a list of URLs and archive it'
       notes 'Create background jobs to parse each URL and notify the caller with the result'
-      param :query, :url, :string, :required, 'URL(s) to be parsed. Can be an array of URLs, a single URL or a list of URLs separated by a commas
+      param :query, :url, :string, :required, 'URL(s) to be parsed. Can be an array of URLs, a single URL or a list of URLs separated by commas
 '
       param :query, :refresh, :integer, :optional, 'Force a refresh from the URL instead of the cache. Will be applied to all URLs'
       param :query, :archivers, :string, :optional, 'List of archivers to target. Can be empty, `none` or a list of archives separated by commas. Will be applied to all URLs'

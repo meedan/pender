@@ -219,7 +219,7 @@ class Media
   def self.get_proxy(url)
     require 'uri'
     uri = URI.parse(URI.encode(url))
-    ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG[config].blank? }
+    ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG.dig(config).blank? }
     country = nil
     country = CONFIG['hosts'][uri.host]['country'] if CONFIG['hosts'] && CONFIG['hosts'][uri.host] && CONFIG['hosts'][uri.host]['country']
     return nil if country.nil?

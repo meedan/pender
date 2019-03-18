@@ -4,6 +4,10 @@
   "basePath": "/",
   "apis": [
     {
+      "path": "api/v1/base_api.{format}",
+      "description": "BaseApi"
+    },
+    {
       "path": "api/v1/medias.{format}",
       "description": "Medias"
     }

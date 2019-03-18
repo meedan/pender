@@ -8,7 +8,7 @@ class CcDeville
   end
 
   def self.clear_cache_for_url(url)
-    if CONFIG['cc_deville_host'].present? && CONFIG['cc_deville_token'].present?
+    if CONFIG.dig('cc_deville_host') && CONFIG.dig('cc_deville_token')
       cc = CcDeville.new(CONFIG['cc_deville_host'], CONFIG['cc_deville_token'], CONFIG['cc_deville_httpauth'])
       cc.clear_cache(url)
     end
