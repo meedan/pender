@@ -161,7 +161,7 @@ module MediaFacebookItem
 
   def get_facebook_published_time_from_html
     return if self.doc.nil?
-    time = self.doc.at_css('span.timestampContent')
+    time = self.doc.css('div.userContentWrapper').at_css('span.timestampContent')
     self.data['published_at'] = verify_published_time(time.inner_html, time.parent.attr('data-utime')) unless time.nil?
   end
 

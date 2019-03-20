@@ -684,4 +684,28 @@ class MediasControllerTest < ActionController::TestCase
     Media.unstub(:minimal_data)
   end
 
+  test "should remove empty parameters" do
+    get :index, empty: '', notempty: 'Something'
+    assert !@controller.params.keys.include?('empty')
+    assert @controller.params.keys.include?('notempty')
+  end
+
+  test "should remove empty headers" do
+    @request.headers['X-Empty'] = ''
+    @request.headers['X-Not-Empty'] = 'Something'
+    get :index
+    assert @request.headers['X-Empty'].nil?
+    assert !@request.headers['X-Not-Empty'].nil?
+  end
+
+  test "should return build as a custom header" do
+    get :index
+    assert_not_nil @response.headers['X-Build']
+  end
+
+  test "should return default api version as a custom header" do
+    get :index
+    assert_match /v1$/, @response.headers['Accept']
+  end
+
 end

@@ -34,7 +34,7 @@ models_complete.svg:
 
 api.txt:
 	echo "API Endpoints - `LANG=en_US date --utc`" > api.txt
-	$(RAKE) routes | sed 's/.*\([PGD]\)/\1/g' | sed 's/(.:format).*//g' | grep -v Pattern | sort | nl >> api.txt
+	$(RAKE) routes | sed 's/.*\(POST\|GET\|DELETE\)/\1/g' | sed 's/(.:format).*//g' | grep -v Pattern | sort | nl >> api.txt
 
 licenses.csv:
 	$(RAKE) lapis:licenses > licenses.csv

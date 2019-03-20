@@ -1,3 +1,5 @@
-API Endpoints - Wed Jun  7 20:28:54 UTC 2017
-     1	GE /api/medias
-     2	GET          /api/medias
+API Endpoints - Tue Mar 19 21:30:44 UTC 2019
+     1	DELETE|PURGE /api/medias
+     2	GET          /api/about
+     3	GET          /api/medias
+     4	POST         /api/medias
