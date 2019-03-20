@@ -12,13 +12,13 @@ class BaseApiControllerTest < ActionController::TestCase
 
   test "should filter parameters" do
     authenticate_with_token
-    get :about, foo: 'bar'
+    get :about, foo: 'bar', format: :json
     assert_equal ['foo'], @controller.send(:get_params).keys
   end
 
   test "should return enabled archivers and name" do
     authenticate_with_token
-    get :about
+    get :about, format: :json
     assert_response :success
     response = JSON.parse(@response.body)
     assert_equal 'about', response['type']
@@ -26,7 +26,7 @@ class BaseApiControllerTest < ActionController::TestCase
     assert_equal [{"key"=>"archive_is", "label"=>"Archive.is"}, {"key"=>"archive_org", "label"=>"Archive.org"}], response['data']['archivers']
 
     Media::ARCHIVERS['archive_is'][:enabled] = false
-    get :about
+    get :about, format: :json
     response = JSON.parse(@response.body)
     assert_equal 'about', response['type']
     assert_equal 'Keep', response['data']['name']
