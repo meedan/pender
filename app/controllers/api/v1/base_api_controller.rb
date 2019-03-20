@@ -12,6 +12,7 @@ module Api
       respond_to :json
 
       def about
+        return unless request.format.json?
         archivers = Media.enabled_archivers(*Media::ARCHIVERS.keys)
         info = {
           name: "Keep",

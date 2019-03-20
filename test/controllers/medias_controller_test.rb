@@ -684,12 +684,6 @@ class MediasControllerTest < ActionController::TestCase
     Media.unstub(:minimal_data)
   end
 
-  test "should filter parameters" do
-    authenticate_with_token
-    get :index, foo: 'bar'
-    assert_equal ['foo'], @controller.send(:get_params).keys
-  end
-
   test "should remove empty parameters" do
     get :index, empty: '', notempty: 'Something'
     assert !@controller.params.keys.include?('empty')
