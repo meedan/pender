@@ -15,6 +15,7 @@ Use this method to get the archivers enabled on this application
   "type": "about",
   "data": {
     "name": "Keep",
+    "version": "v0.68.0",
     "archivers": [
       {
         "key": "archive_org",

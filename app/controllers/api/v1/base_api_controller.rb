@@ -16,7 +16,8 @@ module Api
         archivers = Media.enabled_archivers(*Media::ARCHIVERS.keys)
         info = {
           name: "Keep",
-          archivers: archivers.map {|a| {key: a[0], label: a[0].gsub('_', '.').capitalize }}
+          version: VERSION,
+          archivers: archivers.map {|a| {key: a[0], label: a[0].tr('_', '.').capitalize }}
         }
         render_success 'about', info
       end
