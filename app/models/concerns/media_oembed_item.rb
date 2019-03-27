@@ -85,6 +85,7 @@ module MediaOembedItem
     iframe_tag = html.at_css('iframe')
     unless iframe_tag.nil? || iframe_tag.attr('src').nil?
       uri = URI.parse(iframe_tag.attr('src'))
+      return if uri.hostname.match(/^(www\.)?youtube\.com/)
       response = Net::HTTP.get_response(uri)
       if !response.nil? && response.code == '200'
         if ['DENY', 'SAMEORIGIN'].include? response.header['X-Frame-Options']
