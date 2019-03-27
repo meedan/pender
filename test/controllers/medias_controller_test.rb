@@ -708,4 +708,10 @@ class MediasControllerTest < ActionController::TestCase
     assert_match /v1$/, @response.headers['Accept']
   end
 
+  test "should add data title on embed title metatag" do
+    get :index, url: 'https://twitter.com/meedan/status/1110219801295765504', format: :html
+    assert_response :success
+    assert_match("<title>@InternetFF Our Meedani @WafHeikal will be...</title>", response.body)
+  end
+
 end

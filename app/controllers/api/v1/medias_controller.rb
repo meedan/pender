@@ -162,9 +162,9 @@ module Api
         template = locals = nil
         cache = Rails.cache.read(@id)
         data = cache && !@refresh ? cache : @media.as_json({ force: @refresh, archivers: @archivers })
-
         if should_serve_external_embed?(data)
-          locals = { html: data['html'].html_safe }
+          title = data['title'].truncate(50, separator: ' ')
+          locals = { html: data['html'].html_safe, title: title }
           template = 'custom'
         else
           locals = { data: data }
