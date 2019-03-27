@@ -94,10 +94,8 @@ module MediaOembedItem
       uri = URI.parse(iframe_tag.attr('src'))
       return if uri.hostname.match(/^(www\.)?youtube\.com/)
       response = Net::HTTP.get_response(uri)
-      if !response.nil? && response.code == '200'
-        if ['DENY', 'SAMEORIGIN'].include? response.header['X-Frame-Options']
-          self.data[:raw][:oembed][:html] = ''
-        end
+      if response&.code&.to_s == '200' && ['DENY', 'SAMEORIGIN'].include?(response.header['X-Frame-Options'])
+        self.data[:raw][:oembed][:html] = ''
       end
     end
   end
