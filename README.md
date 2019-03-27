@@ -60,6 +60,43 @@ Other applications can communicate with this service (and test this communicatio
 
 To make requests to the API, you must set a request header with the value of the configuration option `authorization_header` - by default, this is `X-Pender-Token`. The value of that header should be the API key that you have generated using `bundle exec rake lapis:api_keys:create`, or any API key that was given to you.
 
+#### GET /api/about
+
+Use this method in order to get the archivers enabled on this application
+
+**Parameters**
+
+
+**Response**
+
+200: Information about the application
+```json
+{
+  "type": "about",
+  "data": {
+    "name": "Keep",
+    "version": "v0.68.0",
+    "archivers": [
+      {
+        "key": "archive_org",
+        "label": "Archive.org"
+      }
+    ]
+  }
+}
+```
+
+401: Access denied
+```json
+{
+  "type": "error",
+  "data": {
+    "message": "Unauthorized",
+    "code": 1
+  }
+}
+```
+
 #### GET /api/medias.format
 
 Get parseable data for a given URL, that can be a post or a profile, from different providers. `format` can be one of the following, see responses below:
@@ -72,6 +109,10 @@ Get parseable data for a given URL, that can be a post or a profile, from differ
 
 * `url`: URL to be parsed/rendered _(required)_
 * `refresh`: boolean to indicate that Pender should re-fetch and re-parse the URL if it already exists in its cache _(optional)_
+* `archivers`: list of archivers to target. Possible values:
+  * empty: the URL will be archived in all available archivers
+  * `none`: the URL will not be archived
+  * string with a list of archives separated by commas: the URL will be archived only on specified archivers
 
 **Response**
 
@@ -124,9 +165,18 @@ An oEmbed representation of the item, e.g.:
     "title": "MeedanTube",
     "description": "",
     "published_at": "2009-03-06T00:44:31.000Z",
-    "thumbnail_url": "https://yt3.ggpht.com/-MPd3Hrn0msk/AAAAAAAAAAI/AAAAAAAAAAA/I1ftnn68v8U/s88-c-k-no/photo.jpg",
-    "view_count": 29101,
-    "subscriber_count": 137
+    "picture": "https://yt3.ggpht.com/-MPd3Hrn0msk/AAAAAAAAAAI/AAAAAAAAAAA/I1ftnn68v8U/s88-c-k-no/photo.jpg",
+    "username": "MeedanTube",
+    "author_url": "https://www.youtube.com/user/MeedanTube",
+    "author_name": "MeedanTube",
+    "raw": {
+      "metatags": [],
+      "oembed": {},
+      "api": {}
+    },
+    "schema": {},
+    "html": "",
+    "embed_tag": <embed_tag>
   }
 }
 ```
@@ -182,6 +232,46 @@ An oEmbed representation of the item, e.g.:
   "data": {
     "message": "This URL is already being processed. Please try again in a few seconds.",
     "code": 9
+  }
+}
+```
+
+#### POST /api/medias
+
+Create background jobs to parse each URL and notify the caller with the result
+
+**Parameters**
+
+* `url`: URL(s) to be parsed. Can be an array of URLs, a single URL or a list of URLs separated by a commas
+ _(required)_
+* `refresh`: Force a refresh from the URL instead of the cache. Will be applied to all URLs
+* `archivers`: List of archivers to target. Can be empty, `none` or a list of archives separated by commas. Will be applied to all URLs
+
+**Response**
+
+200: Enqueued URLs
+```json
+{
+  "type": "success",
+  "data": {
+    "enqueued": [
+      "https://www.youtube.com/user/MeedanTube",
+      "https://twitter.com/meedan"
+    ],
+    "failed": [
+
+    ]
+  }
+}
+```
+
+401: Access denied
+```json
+{
+  "type": "error",
+  "data": {
+    "message": "Unauthorized",
+    "code": 1
   }
 }
 ```

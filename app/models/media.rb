@@ -69,17 +69,17 @@ class Media
   end
 
   def as_json(options = {})
+    archivers = options.delete(:archivers)
     Rails.cache.fetch(Media.get_id(self.original_url), options) do
-      handle_exceptions(self, StandardError) do
-        self.parse
-      end
-      self.archive
+      handle_exceptions(self, StandardError) { self.parse }
       self.data.merge(Media.required_fields(self)).with_indifferent_access
     end
+    self.archive(archivers)
+    Rails.cache.read(Media.get_id(self.original_url))
   end
 
   # Parsers and archivers
-  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaVideoVaultArchiver, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg].each do |concern|
+  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg].each do |concern|
     include concern
   end
 
@@ -195,7 +195,8 @@ class Media
   def set_url_from_location(response, path)
     if %w(301 302).include?(response.code)
       self.url = response.header['location']
-      if self.url =~ /^\//
+      if self.url !~ /^https?:/
+        self.url.prepend('/') unless self.url.match(/^\//)
         previous = path.last.match(/^https?:\/\/[^\/]+/)[0]
         self.url = previous + self.url
       end
@@ -218,7 +219,7 @@ class Media
   def self.get_proxy(url)
     require 'uri'
     uri = URI.parse(URI.encode(url))
-    ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG[config].blank? }
+    ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG.dig(config).blank? }
     country = nil
     country = CONFIG['hosts'][uri.host]['country'] if CONFIG['hosts'] && CONFIG['hosts'][uri.host] && CONFIG['hosts'][uri.host]['country']
     return nil if country.nil?

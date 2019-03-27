@@ -495,4 +495,217 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
   end
 
+  test "should return timeout error with minimal data if cannot parse url" do
+    stub_configs({ 'timeout' => 0.1 })
+    url = 'https://changescamming.net/halalan-2019/maria-ressa-to-bong-go-um-attend-ka-ng-senatorial-debate-di-yung-nagtatapon-ka-ng-pera'
+    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:notify).never
+
+    authenticate_with_token
+    get :index, url: url, refresh: '1', format: :json
+    assert_response 200
+    Media.minimal_data(OpenStruct.new(url: url)).except(:parsed_at).each_pair do |key, value|
+      assert_equal value, JSON.parse(@response.body)['data'][key]
+    end
+    assert_equal({"message"=>"Timeout", "code"=>"TIMEOUT"}, JSON.parse(@response.body)['data']['error'])
+    Airbrake.unstub(:notify)
+  end
+
+  test "should archive on all archivers when no parameter is sent" do
+    Media.any_instance.unstub(:archive_to_archive_is)
+    Media.any_instance.unstub(:archive_to_archive_org)
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| !['archive.is', 'web.archive.org'].include?(uri.host) }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
+    WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
+
+    authenticate_with_token(a)
+    url = 'https://twitter.com/meedan/status/1095693211681673218'
+    get :index, url: url, format: :json
+    id = Media.get_id(url)
+    assert_equal({"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}}, Rails.cache.read(id)[:archives])
+
+    WebMock.disable!
+  end
+
+  test "should not archive when parameter is none" do
+    Media.any_instance.unstub(:archive_to_archive_is)
+    Media.any_instance.unstub(:archive_to_archive_org)
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| !['archive.is', 'web.archive.org'].include?(uri.host) }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
+    WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
+
+    authenticate_with_token(a)
+    url = 'https://twitter.com/meedan/status/1095035775736078341'
+    get :index, url: url, archivers: 'none', format: :json
+    id = Media.get_id(url)
+    assert_equal({}, Rails.cache.read(id)[:archives])
+
+    WebMock.disable!
+  end
+
+  [['archive_is'], ['archive_org'], ['archive_is', 'archive_org'], [' archive_is ', ' archive_org ']].each do |archivers|
+    test "should archive on `#{archivers}`" do
+      Media.any_instance.unstub(:archive_to_archive_is)
+      Media.any_instance.unstub(:archive_to_archive_org)
+      a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+      WebMock.enable!
+      allowed_sites = lambda{ |uri| !['archive.is', 'web.archive.org'].include?(uri.host) }
+      WebMock.disable_net_connect!(allow: allowed_sites)
+      WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
+      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
+      archived = {"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}}
+
+      authenticate_with_token(a)
+      url = 'https://twitter.com/meedan/status/1095035552221540354'
+      get :index, url: url, archivers: archivers.join(','), format: :json
+      id = Media.get_id(url)
+      archivers.each do |archiver|
+        archiver.strip!
+        assert_equal(archived[archiver], Rails.cache.read(id)[:archives][archiver])
+      end
+
+      WebMock.disable!
+    end
+  end
+
+  test "should show the urls that couldn't be enqueued when bulk parsing" do
+    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
+    a = create_api_key application_settings: webhook_info
+    authenticate_with_token(a)
+    url1 = 'https://twitter.com/check/status/1102991340294557696'
+    url2 = 'https://twitter.com/dimalb/status/1102928768673423362'
+    MediaParserWorker.stubs(:perform_async).with(url1, a.id, false, nil)
+    MediaParserWorker.stubs(:perform_async).with(url2, a.id, false, nil).raises(RuntimeError)
+    post :bulk, url: [url1, url2], format: :json
+    assert_response :success
+    assert_equal({"enqueued"=>[url1], "failed"=>[url2]}, JSON.parse(@response.body)['data'])
+    MediaParserWorker.unstub(:perform_async)
+  end
+
+  test "should enqueue, parse and notify with error when invalid url" do
+    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
+    a = create_api_key application_settings: webhook_info
+    authenticate_with_token(a)
+    url1 = 'http://invalid-url'
+    url2 = 'not-url'
+    Media.stubs(:notify_webhook).with('error', url1, { error: { message: I18n.t(:url_not_valid), code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') }}, webhook_info)
+    Media.stubs(:notify_webhook).with('error', url2, { error: { message: I18n.t(:url_not_valid), code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') }}, webhook_info)
+    post :bulk, url: [url1, url2], format: :json
+    assert_response :success
+    assert_equal({"enqueued"=>[url1, url2], "failed"=>[]}, JSON.parse(@response.body)['data'])
+    Media.unstub(:notify_webhook)
+  end
+
+  test "should parse multiple URLs sent as list" do
+    authenticate_with_token
+    url1 = 'https://twitter.com/meedan/status/1098927618626330625'
+    url2 = 'https://twitter.com/meedan/status/1098556958590816260'
+    id1 = Media.get_id(url1)
+    id2 = Media.get_id(url2)
+    assert_nil Rails.cache.read(id1)
+    assert_nil Rails.cache.read(id2)
+
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    authenticate_with_token(a)
+    post :bulk, url: "#{url1}, #{url2}", format: :json
+    assert_response :success
+    sleep 2
+    data1 = Rails.cache.read(id1)
+    assert_match /The Checklist: How Google Fights #Disinformation/, data1['title']
+    data2 = Rails.cache.read(id2)
+    assert_match /The internet is as much about affirmation as information/, data2['title']
+  end
+
+  test "should enqueue, parse and notify with error when timeout" do
+    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
+    a = create_api_key application_settings: webhook_info
+    authenticate_with_token(a)
+
+    url = 'https://ca.ios.ba/files/meedan/sleep.php'
+    timeout_error = { error: { "message"=>"Timeout", "code"=>"TIMEOUT"}}
+    minimal_data = Media.minimal_data(OpenStruct.new(url: url))
+    Media.stubs(:minimal_data).with(OpenStruct.new(url: url)).returns(minimal_data)
+
+    Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(timeout_error), webhook_info)
+    post :bulk, url: url, format: :json
+    assert_response :success
+    assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
+    Media.unstub(:notify_webhook)
+    Media.unstub(:minimal_data)
+  end
+
+  test "should return data with error message if can't parse" do
+    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
+    url = 'https://twitter.com/meedan/status/1102990605339316224'
+    parse_error = { error: { "message"=>"RuntimeError: RuntimeError", "code"=>5}}
+    required_fields = Media.required_fields(OpenStruct.new(url: url))
+    Media.stubs(:required_fields).returns(required_fields)
+
+    Media.stubs(:notify_webhook).with('media_parsed', url, parse_error.merge(required_fields).with_indifferent_access, webhook_info)
+    Media.any_instance.stubs(:parse).raises(RuntimeError)
+    a = create_api_key application_settings: webhook_info
+    authenticate_with_token(a)
+    post :bulk, url: url, format: :json
+    assert_response :success
+    assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
+    Media.any_instance.unstub(:parse)
+    Media.unstub(:notify_webhook)
+    Media.unstub(:required_fields)
+  end
+
+  test "should return data with error message if can't instantiate" do
+    Sidekiq::Testing.fake!
+    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
+    url = 'https://twitter.com/meedan/status/1102990605339316224'
+    a = create_api_key application_settings: webhook_info
+    authenticate_with_token(a)
+
+    assert_equal 0, MediaParserWorker.jobs.size
+    post :bulk, url: url, format: :json
+    assert_response :success
+    assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
+    assert_equal 1, MediaParserWorker.jobs.size
+
+    parse_error = { error: { "message"=>"OpenSSL::SSL::SSLError", "code"=>'UNKNOWN'}}
+    minimal_data = Media.minimal_data(OpenStruct.new(url: url))
+    Media.stubs(:minimal_data).returns(minimal_data)
+    Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(parse_error), webhook_info)
+    Media.any_instance.stubs(:get_canonical_url).raises(OpenSSL::SSL::SSLError)
+    MediaParserWorker.drain
+
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.unstub(:notify_webhook)
+    Media.unstub(:minimal_data)
+  end
+
+  test "should remove empty parameters" do
+    get :index, empty: '', notempty: 'Something'
+    assert !@controller.params.keys.include?('empty')
+    assert @controller.params.keys.include?('notempty')
+  end
+
+  test "should remove empty headers" do
+    @request.headers['X-Empty'] = ''
+    @request.headers['X-Not-Empty'] = 'Something'
+    get :index
+    assert @request.headers['X-Empty'].nil?
+    assert !@request.headers['X-Not-Empty'].nil?
+  end
+
+  test "should return build as a custom header" do
+    get :index
+    assert_not_nil @response.headers['X-Build']
+  end
+
+  test "should return default api version as a custom header" do
+    get :index
+    assert_match /v1$/, @response.headers['Accept']
+  end
+
 end

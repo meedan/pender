@@ -13,6 +13,10 @@ class MediasIntegrationTest < ActionDispatch::IntegrationTest
     assert_recognizes({ controller: 'api/v1/medias', action: 'index', format: 'json' }, { path: 'api/medias', method: :get })
   end
 
+  test "should recognize route to bulk parse" do
+    assert_recognizes({ controller: 'api/v1/medias', action: 'bulk', format: 'json' }, { path: 'api/medias', method: :post })
+  end
+
   test "should not recognize route to delete with other format" do
     begin
       assert_not Rails.application.routes.recognize_path('api/medias.html', { method: 'delete' })

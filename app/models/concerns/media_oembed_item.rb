@@ -25,11 +25,18 @@ module MediaOembedItem
     handle_exceptions(self, StandardError) do
       oembed_url = self.provider_oembed_url || self.get_oembed_url
       response = self.oembed_get_data_from_url(oembed_url)
-      if !response.nil? && response.code == '200' && !response.body.blank?
-        self.data[:raw][:oembed] = JSON.parse(response.body)
-        self.verify_oembed_html
-        return true
-      end
+      get_oembed_response(oembed_url, response)
+    end
+  end
+
+  def get_oembed_response(oembed_url, response)
+    return unless !response.nil? && response.code == '200' && !response.body.blank?
+    begin
+      self.data[:raw][:oembed] = JSON.parse(response.body)
+      self.verify_oembed_html
+      return true
+    rescue JSON::ParserError => error
+      Airbrake.notify(error, parameters: { oembed_url: oembed_url }) if Airbrake.configuration.api_key
     end
   end
 

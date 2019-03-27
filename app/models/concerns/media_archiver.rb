@@ -3,11 +3,12 @@ module MediaArchiver
 
   ARCHIVERS = {}
 
-  def archive
+  def archive(archivers = nil)
     url = self.url
-    self.skip_archive_if_needed and return
+    self.skip_archive_if_needed(archivers) and return
+    archivers = self.filter_archivers(archivers)
 
-    ARCHIVERS.each do |name, rule|
+    Media.enabled_archivers(*archivers).each do |name, rule|
       rule[:patterns].each do |pattern|
         if (rule[:modifier] == :only && !pattern.match(url).nil?) || (rule[:modifier] == :except && pattern.match(url).nil?)
           self.send("archive_to_#{name}")
@@ -16,7 +17,8 @@ module MediaArchiver
     end
   end
 
-  def skip_archive_if_needed
+  def skip_archive_if_needed(archivers)
+    return true if archivers == 'none'
     url = self.url
     skip = CONFIG['archiver_skip_hosts']
     unless skip.blank?
@@ -26,9 +28,17 @@ module MediaArchiver
     false
   end
 
+  def filter_archivers(archivers)
+    archivers = archivers.nil? ? ARCHIVERS.keys : archivers.split(',').map(&:strip)
+    id = Media.get_id(url)
+    data = Rails.cache.read(id)
+    return archivers if data.nil? || data.dig(:archives).nil?
+    archivers - data[:archives].keys
+  end
+
   module ClassMethods
-    def declare_archiver(name, patterns, modifier)
-      ARCHIVERS[name] = { patterns: patterns, modifier: modifier }
+    def declare_archiver(name, patterns, modifier, enabled = true)
+      ARCHIVERS[name] = { patterns: patterns, modifier: modifier, enabled: enabled }
     end
 
     def give_up(archiver, url, key_id, attempts, response = {})
@@ -75,6 +85,10 @@ module MediaArchiver
         @webhook_called = true
       end
       true
+    end
+
+    def enabled_archivers(*archivers)
+      ARCHIVERS.slice(*archivers).select { |_name, rule| rule[:enabled] }
     end
 
     def url_hash(url)

@@ -624,55 +624,6 @@ class MediaTest < ActiveSupport::TestCase
     CONFIG['archiver_skip_hosts'] = config
   end
 
-  test "should archive to Video Vault" do
-    config = CONFIG['video_vault_token']
-    CONFIG['video_vault_token'] = '123456'
-
-    Media.any_instance.unstub(:archive_to_video_vault)
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    url = 'https://twitter.com/marcouza/status/875424957613920256'
-    WebMock.enable!
-    allowed_sites = lambda{ |uri| uri.host != 'www.bravenewtech.org' }
-    WebMock.disable_net_connect!(allow: allowed_sites)
-    WebMock.stub_request(:any, 'https://www.bravenewtech.org/api/').to_return(body: { status: 203, package: '123456' }.to_json)
-    WebMock.stub_request(:any, 'https://www.bravenewtech.org/api/status.php').to_return(body: { location: 'http://videovault/123456' }.to_json)
-
-    assert_nothing_raised do
-      m = create_media url: url, key: a
-      data = m.as_json
-    end
-
-    CONFIG['video_vault_token'] = config
-    WebMock.disable!
-  end
-
-  test "should archive to Archive.is" do
-    Media.any_instance.unstub(:archive_to_archive_is)
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    urls = ['https://twitter.com/marcouza/status/875424957613920256', 'https://twitter.com/marcouza/status/863907872421412864', 'https://twitter.com/marcouza/status/863876311428861952']
-    WebMock.enable!
-    allowed_sites = lambda{ |uri| uri.host != 'archive.is' }
-    WebMock.disable_net_connect!(allow: allowed_sites)
-
-    assert_nothing_raised do
-      WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { refresh: '1' })
-      m = create_media url: urls[0], key: a
-      data = m.as_json
-
-      WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
-      m = create_media url: urls[1], key: a
-      data = m.as_json
-    end
-
-    assert_raises RuntimeError do
-      WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '')
-      m = create_media url: urls[2], key: a
-      data = m.as_json
-    end
-
-    WebMock.disable!
-  end
-
   test "should store ClaimReview schema" do
     url = 'http://www.politifact.com/truth-o-meter/statements/2017/aug/17/donald-trump/donald-trump-retells-pants-fire-claim-about-gen-pe'
     m = create_media url: url
@@ -705,44 +656,6 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'ClaimReview', data['schema']['ClaimReview'].first['@type']
     assert_equal ['@context', '@type', 'author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview'].first.keys.sort
-  end
-
-  test "should archive to Archive.org" do
-    Media.any_instance.unstub(:archive_to_archive_org)
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    urls = ['https://twitter.com/marcouza/status/875424957613920256', 'https://twitter.com/marcouza/status/863907872421412864']
-    WebMock.enable!
-    allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
-    WebMock.disable_net_connect!(allow: allowed_sites)
-
-    assert_nothing_raised do
-      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: {})
-      m = create_media url: urls[0], key: a
-      data = m.as_json
-
-      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
-      m = create_media url: urls[1], key: a
-      data = m.as_json
-    end
-
-    WebMock.disable!
-  end
-
-  test "should archive Arabics url to Archive.org" do
-    Media.any_instance.unstub(:archive_to_archive_org)
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    url = 'http://www.yallakora.com/ar/news/342470/%D8%A7%D8%AA%D8%AD%D8%A7%D8%AF-%D8%A7%D9%84%D9%83%D8%B1%D8%A9-%D8%B9%D9%86-%D8%A3%D8%B2%D9%85%D8%A9-%D8%A7%D9%84%D8%B3%D8%B9%D9%8A%D8%AF-%D9%84%D8%A7%D8%A8%D8%AF-%D9%85%D9%86-%D8%AD%D9%84-%D9%85%D8%B9-%D8%A7%D9%84%D8%B2%D9%85%D8%A7%D9%84%D9%83/2504'
-    WebMock.enable!
-    allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
-    WebMock.disable_net_connect!(allow: allowed_sites)
-
-    assert_nothing_raised do
-      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
-      m = create_media url: url, key: a
-      data = m.as_json
-    end
-
-    WebMock.disable!
   end
 
   test "should validate author_url when taken from twitter metatags" do
@@ -798,18 +711,15 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil d['error']
   end
 
-  test "should parse globalvoices url" do
-    url = 'https://globalvoices.org/2018/05/01/kidnapping-and-murders-as-ecuador-and-colombias-border-crisis-heightens'
-    m = Media.new url: url
-    d = m.as_json
-    assert_equal 'Kidnapping and murders as Ecuador and Colombia’s border crisis heightens · Global Voices', d['title']
-    assert_equal 'Reaching a peace agreement that puts an end to one of the oldest conflicts in the hemisphere is complicated by the murder of three members of the newspaper El Comercio.', d['description']
-    assert_equal '@sobretematicas', d['username']
-    assert_equal 'https://es.globalvoices.org/wp-content/uploads/2018/04/NosFaltan3-641x450.jpg', d['picture']
-    assert_equal 'https://twitter.com/sobretematicas', d['author_url']
-    assert_equal 'https://es.globalvoices.org/wp-content/uploads/2018/04/NosFaltan3-641x450.jpg', d['author_picture']
-    assert_equal '@globalvoices', d['author_name']
-    assert_not_nil d['published_at']
+  test "should request URL with User-Agent on header" do
+    url = 'https://globalvoices.org/2019/02/16/nigeria-postpones-2019-general-elections-hours-before-polls-open-citing-logistics-and-operations-concerns'
+    uri = Media.parse_url url
+    Net::HTTP::Head.stubs(:new).with(uri, {'User-Agent' => Media.html_options(uri)['User-Agent']}).once.returns({})
+    Net::HTTP.any_instance.stubs(:request).returns('success')
+
+    assert_equal 'success', Media.request_url(url, 'Head')
+    Net::HTTP::Head.unstub(:new)
+    Net::HTTP.any_instance.unstub(:request)
   end
 
   test "should convert published_time to time without error" do
@@ -983,7 +893,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive)
   end
 
-  test "should raise error and update media when unexpected response from Archive.is" do
+  test "should not raise error and update media when unexpected response from Archive.is" do
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'archive.is' }
     WebMock.disable_net_connect!(allow: allowed_sites)
@@ -1000,15 +910,16 @@ class MediaTest < ActiveSupport::TestCase
     urls = ['http://www.unexistent-page.html', 'http://localhost:3333/unreachable-url']
 
     urls.each do |url|
-      assert_raise RuntimeError do
+      assert_nothing_raised do
         m = Media.new url: url
         m.as_json
         assert m.data.dig('archives', 'archive_is').nil?
-        WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', status: ['200', 'OK'], headers: {})
+        response = { code: '200', message: 'OK' }
+        WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', status: [response[:code], response[:message]], headers: {})
         Media.send_to_archive_is(url.to_s, a.id, 20)
         id = Media.get_id(url)
         media_data = Rails.cache.read(id)
-        assert_equal({"message"=>I18n.t(:could_not_archive, error_message: data[:message]), "code"=>data[:code]}, media_data.dig('archives', 'archive_is', 'error'))
+        assert_equal({"message"=>I18n.t(:could_not_archive, error_message: response[:message]), "code"=> response[:code]}, media_data.dig('archives', 'archive_is', 'error'))
       end
     end
 
@@ -1063,4 +974,20 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive)
   end
 
+  test "should handle exception when oembed content is not a valid json" do
+    url = 'https://philippineslifestyle.com/flat-earth-theory-support-philippines'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'page', data['raw']['oembed']['provider_name']
+    assert_nil data['error']
+  end
+
+  test "should follow redirections of path relative urls" do
+    url = 'https://www.yousign.org/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358'
+    assert_nothing_raised do
+      m = create_media url: url
+      data = m.as_json
+      assert_equal 'https://www.yousign.org/404.php?notfound=/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358', m.url
+    end
+  end
 end

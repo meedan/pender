@@ -37,6 +37,7 @@ namespace :swagger do
             output.puts("**Parameters**")
             output.puts
 
+            op[:parameters] ||= []
             op[:parameters].each do |p|
               required = p[:required] ? ' _(required)_' : ''
               output.puts("* `#{p[:name]}`: #{p[:description]}#{required}")
@@ -52,7 +53,8 @@ namespace :swagger do
               output.puts "#{r[:code]}: #{r[:message]}"
               
               app = ActionDispatch::Integration::Session.new(Rails.application)
-              response = app.send(op[:method], '/' + api[:path], example[:query], example[:headers])
+              method = op[:method].to_s.split('|').first.to_sym
+              response = app.send(method, '/' + api[:path], example[:query], example[:headers])
               json = app.body.chomp
               object = nil
 

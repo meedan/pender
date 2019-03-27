@@ -1,7 +1,7 @@
 module MediaFacebookItem
   extend ActiveSupport::Concern
 
-  EVENT_URL = /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>[0-9]+)(?!.*permalink\/)/
+  EVENT_URL = /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>\w+)(?!.*permalink\/)/
 
   URLS = [
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/posts\/(?<id>[0-9]+).*/,
@@ -98,13 +98,18 @@ module MediaFacebookItem
     get_metatags(self)
     metadata = self.get_opengraph_metadata || {}
     self.data['metadata'] = metadata
-    self.data['author_name'] = metadata['title'].nil? ? self.get_facebook_title_from_html : metadata['title']
+    self.data['author_name'] = metadata['title'].nil? ? self.get_facebook_author_name_from_html : metadata['title']
     self.data['text'] = metadata['description'].nil? ? self.get_facebook_description_from_html : metadata['description']
     self.data['photos'] = metadata['picture'].nil? ? self.get_facebook_photos_from_html : [metadata['picture']]
   end
 
   def get_facebook_description_from_html
     self.doc.css('span[data-testid="event-permalink-details"]').text unless self.url.match(EVENT_URL).nil?
+  end
+
+  def get_facebook_author_name_from_html
+    author_link = self.doc.css('.fbPhotoAlbumActionList a')
+    author_link.blank? ? self.get_facebook_title_from_html : author_link.text
   end
 
   def get_facebook_title_from_html
@@ -156,7 +161,7 @@ module MediaFacebookItem
 
   def get_facebook_published_time_from_html
     return if self.doc.nil?
-    time = self.doc.at_css('span.timestampContent')
+    time = self.doc.css('div.userContentWrapper').at_css('span.timestampContent')
     self.data['published_at'] = verify_published_time(time.inner_html, time.parent.attr('data-utime')) unless time.nil?
   end
 
@@ -166,12 +171,11 @@ module MediaFacebookItem
   end
 
   def get_facebook_media_count_from_html
-    text = self.doc.to_s.gsub(/<[^>]+>/, '')
-    media = text.match(/added ([0-9]+) new photos/)
-    if media.nil? && (!text.match(/added a new photo/).nil? || !self.url.match(/\/photos\//).nil?)
+    media = self.doc.css('a > div.uiScaledImageContainer')
+    if media.empty? && !self.url.match(/\/photos\//).nil?
       self.data['media_count'] = 1
     else
-      self.data['media_count'] = media.nil? ? 0 : media[1].to_i
+      self.data['media_count'] = media.empty? ? 0 : media.size
       self.data['media_count'] = (self.data['photos'] - [self.data['metadata']['picture']]).size if self.data['media_count'] == 0
     end
   end
