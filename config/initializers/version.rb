@@ -1,4 +1,4 @@
-VERSION = 'v0.68.0'
+VERSION = 'v0.69.0'
 
 if ENV['RAILS_ENV'] == 'development'
   path = File.absolute_path(__FILE__)
