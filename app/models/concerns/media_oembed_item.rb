@@ -36,7 +36,7 @@ module MediaOembedItem
       self.verify_oembed_html
       return true
     rescue JSON::ParserError => error
-      Airbrake.notify(error, parameters: { oembed_url: oembed_url }) if Airbrake.configuration.api_key
+      Airbrake.notify(StandardError.new('Could not parse `oembed` data as JSON'), parameters: { url: self.url, oembed_url: oembed_url, response_body: response.body }) if Airbrake.configuration.api_key
     end
   end
 
