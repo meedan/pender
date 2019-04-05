@@ -23,7 +23,12 @@ module MediaYoutubeItem
 
     self.data[:raw][:api] = {}
     self.youtube_item_direct_attributes.each do |attr|
-      self.data[:raw][:api][attr] = video_data.dig(attr.camelize(:lower)) || video.send(attr)
+      self.data[:raw][:api][attr] =
+        begin
+          video_data.dig(attr.camelize(:lower)) || video.send(attr)
+        rescue
+          ''
+        end
     end
 
     data = self.data
@@ -43,6 +48,7 @@ module MediaYoutubeItem
 
   def get_youtube_thumbnail
     thumbnails = self.get_info_from_data('api', data, 'thumbnails')
+    return '' unless thumbnails.is_a?(Hash)
     ['maxres', 'standard', 'high', 'medium', 'default'].each do |size|
       return thumbnails.dig(size, 'url') unless thumbnails.dig(size).nil?
     end
