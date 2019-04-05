@@ -146,4 +146,18 @@ class YoutubeTest < ActiveSupport::TestCase
     end
   end
 
+  test "should not crash when parsing a deleted YouTube video" do
+    url = 'https://www.youtube.com/watch?v=6q_Tcyeq5fk&feature=youtu.be'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'YouTube', data['username']
+    assert_equal 'Deleted video', data['title']
+    assert_equal 'This video is unavailable.', data['description']
+    assert_equal 'https://www.youtube.com/channel/UCBR8-60-B28hp2BmDPdntcQ', data['author_url']
+    assert_equal '', data[:raw][:api]['thumbnails']
+    assert_equal '', data[:raw][:api]['embed_html']
+    assert_equal '', data['picture']
+    assert_equal '', data['html']
+  end
+
 end
