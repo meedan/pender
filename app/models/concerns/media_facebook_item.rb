@@ -183,7 +183,7 @@ module MediaFacebookItem
   def render_facebook_embed?(username)
     privacy_error = self.get_facebook_privacy_error(self.doc) if self.doc
     self.data['error'] = privacy_error if privacy_error
-    username != 'groups' && !privacy_error && self.url.match(EVENT_URL).nil?
+    !['groups', 'flx'].include?(username) && !privacy_error && self.url.match(EVENT_URL).nil?
   end
 
   def html_for_facebook_post(username)
