@@ -71,6 +71,7 @@ class TwitterTest < ActiveSupport::TestCase
   test "should parse twitter metatags" do
     m = create_media url: 'https://www.flickr.com/photos/bees/2341623661'
     d = m.as_json
+    puts d
     assert_equal 'ZB8T0193', d['title']
     assert_match /Explore .* photos on Flickr!/, d['description']
     assert_equal '', d['published_at']
