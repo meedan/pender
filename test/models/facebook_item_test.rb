@@ -446,4 +446,15 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal url, data['url']
   end
+
+  test "should not use fb embed if is a link to redirect" do
+    url = 'https://l.facebook.com/l.php?u=https://hindi.indiatvnews.com/paisa/business-1-07-cr-new-taxpayers-added-dropped-filers-down-at-25-22-lakh-in-fy18-630914&h=AT1WAU-mDHKigOgFNrUsxsS2doGO0_F5W9Yck7oYUx-IsYAHx8JqyHwO02-N0pX8UOlcplZO50px8mkTA1XNyKig8Z2CfX6t3Sh0bHtO9MYPtWqacCm6gOXs5lbC6VGMLjDALNXZ6vg&s=1'
+
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'Leaving Facebook', data['author_name']
+    assert_equal 'flx', data['username']
+    assert_equal '', data['html']
+  end
+
 end

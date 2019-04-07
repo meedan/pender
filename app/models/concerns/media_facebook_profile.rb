@@ -124,7 +124,13 @@ module MediaFacebookProfile
     page = self.get_facebook_profile_page
     unless page.nil?
       title = page.css('meta[property="og:title"]')
-      title.present? && title.attr('content') ? title.attr('content').value : page.at_css('title').content
+      if title.present? && title.attr('content')
+        title.attr('content').value
+      elsif page.at_css('title')
+        page.at_css('title').content
+      else
+        'Facebook'
+      end
     end
   end
 
