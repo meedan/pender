@@ -37,7 +37,7 @@ RUN useradd ${DEPLOYUSER} -s /bin/bash -m
 # deploy directory
 RUN mkdir -p ${DEPLOYDIR}/latest \
 	&& chown -R ${DEPLOYUSER}:www-data ${DEPLOYDIR} \
-	&& chmod 775 ${DEPLOYDIR} \
+	&& chmod -R 775 ${DEPLOYDIR} \
 	&& chmod g+s ${DEPLOYDIR}
 
 # copy and install the gems separately since they take so long to build 
