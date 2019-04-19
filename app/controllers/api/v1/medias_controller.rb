@@ -26,14 +26,7 @@ module Api
         (render_uncached_media and return) if @refresh || Rails.cache.read(@id).nil?
         respond_to do |format|
           list_formats.each do |f|
-            format.send(f) do
-              begin
-                send("render_as_#{f}")
-              rescue StandardError => e
-                notify_airbrake(e, { message: e.message, code: 'UNKNOWN' })
-                render_error e.message, 'UNKNOWN'
-              end
-            end
+            format.send(f) { handle_exceptions { send("render_as_#{f}") }}
           end
         end
       end
@@ -250,6 +243,15 @@ module Api
 
       def notify_airbrake(e, extra_info = {})
         Airbrake.notify(e, parameters: {url: @url}.merge(extra_info)) if Airbrake.configuration.api_key
+      end
+
+      def handle_exceptions
+        begin
+          yield
+        rescue StandardError => e
+          notify_airbrake(e, { message: e.message, code: 'UNKNOWN' })
+          render_error e.message, 'UNKNOWN'
+        end
       end
     end
   end
