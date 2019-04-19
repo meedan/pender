@@ -714,4 +714,18 @@ class MediasControllerTest < ActionController::TestCase
     assert_match("<title>@InternetFF Our Meedani @WafHeikal will be...</title>", response.body)
   end
 
+  test "should rescue and unlock url when raises error" do
+    authenticate_with_token
+    url = 'https://twitter.com/meedan/status/1118436001570086912'
+    assert !Semaphore.new(url).locked?
+    [:js, :json, :html, :oembed].each do |format|
+      @controller.stubs("render_as_#{format}".to_sym).raises(RuntimeError.new('error'))
+      get :index, url: url, format: format
+      assert !Semaphore.new(url).locked?
+      assert_response 400
+      assert_equal 'error', JSON.parse(response.body)['data']['message']
+      @controller.unstub("render_as_#{format}".to_sym)
+    end
+  end
+
 end

@@ -24,10 +24,16 @@ module Api
         @id = Media.get_id(@url)
 
         (render_uncached_media and return) if @refresh || Rails.cache.read(@id).nil?
-
         respond_to do |format|
           list_formats.each do |f|
-            format.send(f) { send("render_as_#{f}") }
+            format.send(f) do
+              begin
+                send("render_as_#{f}")
+              rescue StandardError => e
+                notify_airbrake(e, { message: e.message, code: 'UNKNOWN' })
+                render_error e.message, 'UNKNOWN'
+              end
+            end
           end
         end
       end
