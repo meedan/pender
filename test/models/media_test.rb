@@ -990,4 +990,18 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal 'https://www.yousign.org/404.php?notfound=/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358', m.url
     end
   end
+
+  test "should return error if URL is not safe" do
+    assert_raises Pender::UnsafeUrl do
+      m = create_media url: 'http://paytm.wishesrani.com/paytm-logo.png'
+      data = m.as_json
+      assert_equal 'UNSAFE', data['error']['code']
+    end
+  end
+
+  test "should not crash if can't check if URL is not safe" do
+    m = create_media url: 'https://meedan.com'
+    data = m.as_json
+    assert !data['error']
+  end
 end

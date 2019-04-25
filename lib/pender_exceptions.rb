@@ -8,4 +8,7 @@ module Pender
       @reset_in
     end
   end
+  
+  class UnsafeUrl < Exception
+  end
 end

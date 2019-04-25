@@ -20,6 +20,44 @@ module MediaPageItem
         author_picture: self.data[:picture]
       })
     end
+    self.check_if_safe
+  end
+
+  def check_if_safe
+    if self.unsafe?
+      self.data.merge!(error: { message: 'Unsafe URL', code: 'UNSAFE' })
+      raise Pender::UnsafeUrl
+    end
+  end
+
+  def unsafe?
+    return nil if CONFIG['google_api_key'].blank?
+    unsafe = false
+    [self.url, self.data['author_url'], self.data['author_picture'], self.data['picture']].each do |url|
+      next if url.blank? || unsafe
+      begin
+        http = Net::HTTP.new('safebrowsing.googleapis.com', 443)
+        http.use_ssl = true
+        req = Net::HTTP::Post.new('/v4/threatMatches:find?key=' + CONFIG['google_api_key'], 'Content-Type' => 'application/json')
+        req.body = {
+          client: {
+            clientId: 'pender',
+            clientVersion: VERSION
+          },
+          threatInfo: {
+            threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING', 'THREAT_TYPE_UNSPECIFIED', 'UNWANTED_SOFTWARE', 'POTENTIALLY_HARMFUL_APPLICATION'],
+            platformTypes: ['ANY_PLATFORM'],
+            threatEntryTypes: ['URL'],
+            threatEntries: [{ url: url }]
+          }
+        }.to_json
+        res = http.request(req)
+        unsafe = JSON.parse(res.body)['matches'].size > 0
+      rescue
+        unsafe = false
+      end
+    end
+    unsafe
   end
 
   def page_get_data_from_url

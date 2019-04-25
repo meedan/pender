@@ -728,4 +728,11 @@ class MediasControllerTest < ActionController::TestCase
     end
   end
 
+  test "should return error if URL is not safe" do
+    authenticate_with_token
+    url = 'http://paytm.wishesrani.com/paytm-logo.png'
+    get :index, url: url, format: 'json'
+    response = JSON.parse(@response.body)
+    assert_equal 'error', response['type']
+  end
 end

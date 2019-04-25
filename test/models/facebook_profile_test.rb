@@ -463,4 +463,8 @@ class FacebookProfileTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:get_facebook_profile_page)
   end
 
+  test "should fallback to default Facebook title" do
+    m = create_media url: 'https://ca.ios.ba/files/meedan/facebook.html'
+    assert_equal 'Facebook', m.get_facebook_name
+  end
 end

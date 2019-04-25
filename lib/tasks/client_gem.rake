@@ -36,6 +36,12 @@ namespace :lapis do
       f.puts(content)
       f.close
 
+      # Copy constants
+      const_file = File.join(basedir, 'constants.rb')
+      f = File.open(const_file, 'w+')
+      f.puts(File.read(File.join(Rails.root, 'lib', 'error_codes.rb')).gsub('LapisConstants', 'PenderClient'))
+      f.close
+
       # Update spec (metadata and dependencies)
       specfile = File.join(gem_snake_name, "#{gem_snake_name}.gemspec")
       content = File.read(specfile)
