@@ -87,7 +87,7 @@ module Api
           render_timeout(true) { render_media(@media.as_json({ force: @refresh, archivers: @archivers })) and return }
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
-        rescue Pender::UnsafeUrl => e
+        rescue Pender::UnsafeUrl
           render_error 'Unsafe URL', 'UNSAFE', 400
         rescue StandardError => e
           data = get_error_data({ message: e.message, code: 'UNKNOWN' }, @media, @url, @id)
