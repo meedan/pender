@@ -217,6 +217,7 @@ module MediaFacebookItem
       self.data['text'].strip! if self.data['text']
       self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
       self.data['author_name'] = 'Not Identified' if self.data['author_name'].blank?
+      self.get_original_post
       username = self.get_facebook_username || self.data['author_name']
       self.data.merge!({
         username: username,
@@ -230,7 +231,20 @@ module MediaFacebookItem
     end
   end
 
+  def get_original_post
+    return if self.doc.nil?
+    sharing_info = self.doc.css('div.userContentWrapper').at_css('h5 > span.fwn > span.fcg')
+    if sharing_info && sharing_info.text.match(/shared a/) && sharing_info.at_css('span.fwb')
+      original_post = absolute_url(sharing_info.css('> a').attr('href'))
+      media = Media.new(url: original_post)
+      data = media.as_json
+      self.data['original_post'] = data['url']
+      self.data['picture'] = data['picture']
+    end
+  end
+
   def set_facebook_picture
+    return self.data['picture'] unless self.data['picture'].blank?
     self.data['photos'].nil? ? '' : self.data['photos'].first
   end
 

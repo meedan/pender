@@ -457,4 +457,36 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal '', data['html']
   end
 
+  test "should get image from original post if is a shared content" do
+    image_name = '56652834_855107564821679_1272466202689536000'
+    original_url = 'https://www.facebook.com/krishnanand.singh.3323/posts/855107591488343'
+
+    m = create_media url: original_url.to_s
+    data = m.as_json
+    assert_nil data.dig('original_post')
+    assert_match image_name, data[:picture]
+
+    url = 'https://www.facebook.com/amansingh8005/posts/2277227559264498'
+    m = create_media url: url.to_s
+    data = m.as_json
+    assert_equal original_url, data.dig('original_post')
+    assert_match image_name, data[:picture]
+  end
+
+  test "should get image from original post if is a shared content 2" do
+    image_name = '32456133_1538581556252460_5832184448275185664'
+    original_url = 'https://www.facebook.com/dcc1968/posts/1538584976252118'
+
+    m = create_media url: original_url.to_s
+    data = m.as_json
+    assert_nil data.dig('original_post')
+    assert_match image_name, data[:picture]
+
+    url = 'https://www.facebook.com/danielafeitosa/posts/1862242233833668'
+    m = create_media url: url.to_s
+    data = m.as_json
+    assert_equal original_url, data.dig('original_post')
+    assert_match image_name, data[:picture]
+  end
+
 end
