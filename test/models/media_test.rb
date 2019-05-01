@@ -634,6 +634,15 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal ['@context', '@type', 'author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], claim_review.keys.sort
   end
 
+  test "should handle schema when type is an array" do
+    url = 'https://patents.google.com/patent/US6896907B2/en'
+    m = create_media url: url
+    data = m.as_json
+    article = data['schema']['ScholarlyArticle'].first
+    assert_equal 'patent', article['@type']
+    assert_equal 'http://schema.org', article['@context']
+  end
+
   test "should return nil on schema key if not found on page" do
     url = 'http://ca.ios.ba/'
     m = create_media url: url

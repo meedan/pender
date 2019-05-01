@@ -14,8 +14,12 @@ module MediaSchemaOrg
   end
 
   def schema_type(item_type)
-    type = item_type.match(/^https?:\/\/schema\.org\/(.*)/)
-    return type[1] if type
+    item_type = item_type.split if item_type.is_a?(String)
+    item_type.each do |item|
+      type = item.match(/^https?:\/\/schema\.org\/(.*)/)
+      return type[1] if type
+    end
+    nil
   end
 
   def schema_mapping(item)
@@ -38,7 +42,7 @@ module MediaSchemaOrg
 
   def check_type_pattern(key, value, schema)
     return schema unless key.to_sym == :type
-    schema['@type'] = schema_type(value) || value
+    schema['@type'] = schema_type(value) || (value.is_a?(Array) ? value.first : value)
     schema.delete(key)
     schema
   end
