@@ -18,17 +18,20 @@ module MediaYoutubeItem
   end
 
   def data_from_youtube_item
-    video = Yt::Video.new url: self.url
-    video_data = video.snippet.data
+    video = video_data = nil
 
+    begin
+      video = Yt::Video.new url: self.url
+      video_data = video.snippet.data
+    rescue Yt::Errors::NoItems
+      video = OpenStruct.new
+      video_data = { 'channelTitle' => 'YouTube', 'title' => 'Deleted video', 'description' => 'This video is unavailable.' }
+    end
+
+    self.data[:raw] ||= {}
     self.data[:raw][:api] = {}
     self.youtube_item_direct_attributes.each do |attr|
-      self.data[:raw][:api][attr] =
-        begin
-          video_data.dig(attr.camelize(:lower)) || video.send(attr)
-        rescue
-          ''
-        end
+      self.data[:raw][:api][attr] = video_data.dig(attr.camelize(:lower)) || video.send(attr) || ''
     end
 
     data = self.data
@@ -41,9 +44,14 @@ module MediaYoutubeItem
       html: data[:raw][:api]['embed_html'],
       author_name: data[:raw][:api]['channel_title'],
       author_picture: self.get_youtube_item_author_picture, 
-      author_url: 'https://www.youtube.com/channel/' + data[:raw][:api]['channel_id'],
+      author_url: self.get_youtube_item_author_url,
       published_at: data[:raw][:api]['published_at']
     })
+  end
+
+  def get_youtube_item_author_url
+    cid = data[:raw][:api]['channel_id']
+    cid.blank? ? '' : "https://www.youtube.com/channel/#{cid}"
   end
 
   def get_youtube_thumbnail
@@ -55,12 +63,15 @@ module MediaYoutubeItem
   end
 
   def get_youtube_item_author_picture
-    channel = Yt::Channel.new id: self.data[:raw][:api]['channel_id']
-    channel.thumbnail_url.to_s
+    begin
+      channel = Yt::Channel.new id: self.data[:raw][:api]['channel_id']
+      channel.thumbnail_url.to_s
+    rescue
+      ''
+    end
   end
 
   def youtube_oembed_url
     "https://www.youtube.com/oembed?format=json&url=#{self.url}"
   end
-
 end
