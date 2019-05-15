@@ -214,6 +214,8 @@ module MediaFacebookItem
     handle_exceptions(self, StandardError) do
       self.parse_facebook_uuid
       self.parse_from_facebook_html
+      description = self.data['text'] || self.data['description']
+      description.gsub!(/\s+/, ' ')
       self.data['text'].strip! if self.data['text']
       self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
       self.data['author_name'] = 'Not Identified' if self.data['author_name'].blank?
@@ -222,7 +224,7 @@ module MediaFacebookItem
       self.data.merge!({
         username: username,
         title: self.data['author_name'] + ' on Facebook',
-        description: self.data['text'] || self.data['description'],
+        description: description,
         picture: self.set_facebook_picture,
         html: self.html_for_facebook_post(username),
         author_name: self.data['author_name'],

@@ -136,7 +136,7 @@ class FacebookItemTest < ActiveSupport::TestCase
       data = m.as_json
       assert_match /facebook\.com\/watch/, m.url
       assert_equal 'Facebook Watch on Facebook', data['title']
-      assert_equal '', data['description']
+      assert_equal 'Original shows and popular videos in different categories from producers and creators you love', data['description']
       assert_not_nil data['published_at']
       assert_equal 'Facebook Watch', data['username']
       assert_equal 'http://facebook.com/', data['author_url']
