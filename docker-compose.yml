@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  postgresdb:
+    image: postgres:9.5
+    container_name: pender_pg
+    ports:
+      - "54320:5432"
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: pender_dev
+
+    networks:
+      - stack
+
+  redis_pender:
+    image: redis:4.0.0
+    container_name: redis_pender
+    ports:
+      - "6370:6379"
+    networks: ['stack']
+
+
+  pender:
+    image: pender
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pender
+    environment:
+      - SERVER_PORT=3000
+    depends_on:
+      - postgresdb
+      - redis_pender
+    ports:
+      - "3001:3000"
+    volumes:
+      - .:/app
+    networks:
+      - stack
+
+
+
+networks:
+  stack:
+    driver: bridge

@@ -29,3 +29,4 @@ dump.rdb
 config/initializers/errbit.rb.travis
 config/cookies.txt
 coverage
+.idea
