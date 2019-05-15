@@ -204,7 +204,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/teste637621352/posts/1028416870556238'
     d = m.as_json
     assert_equal '749262715138323_1028416870556238', d['uuid']
-    assert_equal "This post is only to test.\n\nEsto es una publicación para testar solamente.", d['text']
+    assert_equal "This post is only to test. Esto es una publicación para testar solamente.", d['text']
     assert_equal '749262715138323', d['user_uuid']
     assert_equal 'Teste', d['author_name']
     assert_equal 0, d['media_count']
