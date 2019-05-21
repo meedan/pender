@@ -141,7 +141,7 @@ class FacebookItemTest < ActiveSupport::TestCase
       assert_equal 'Facebook Watch', data['username']
       assert_equal 'http://facebook.com/', data['author_url']
       assert_equal '', data['author_picture']
-      assert_nil data['picture']
+      assert_not_nil data['picture']
     end
   end
 
