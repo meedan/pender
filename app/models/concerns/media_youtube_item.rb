@@ -14,6 +14,7 @@ module MediaYoutubeItem
       embed_html
       channel_title
       channel_id
+      duration
     )
   end
 
