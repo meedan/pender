@@ -15,6 +15,7 @@ module MediaYoutubeItem
       channel_title
       channel_id
       duration
+      id
     )
   end
 
