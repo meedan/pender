@@ -31,6 +31,7 @@ module MediaTwitterItem
       self.data['raw']['api'] = self.twitter_client.status(id, tweet_mode: 'extended').as_json
     end
     self.data.merge!({
+      external_id: id,
       username: '@' + user,
       title: get_info_from_data('api', data, 'text', 'full_text').gsub(/\s+/, ' '),
       description: get_info_from_data('api', data, 'text', 'full_text'),

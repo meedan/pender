@@ -467,4 +467,10 @@ class FacebookProfileTest < ActiveSupport::TestCase
     m = create_media url: 'https://ca.ios.ba/files/meedan/facebook.html'
     assert_equal 'Facebook', m.get_facebook_name
   end
+
+  test "should have external id for profile" do
+    m = create_media url: 'https://www.facebook.com/ironmaiden'
+    data = m.as_json
+    assert_equal 172685102050, data['external_id']
+  end
 end

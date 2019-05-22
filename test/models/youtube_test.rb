@@ -159,4 +159,16 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_equal '', data['picture']
     assert_equal '', data['html']
   end
+
+  test "should have external id for video" do
+    m = create_media url: 'https://www.youtube.com/watch?v=qMfu1GLVsiM'
+    data = m.as_json
+    assert_equal 'qMfu1GLVsiM', data['external_id']
+  end
+
+  test "should have external id for profile" do
+    m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
+    data = m.as_json
+    assert_equal 'UCaisXKBdNOYqGr2qOXCLchQ', data['external_id']
+  end
 end

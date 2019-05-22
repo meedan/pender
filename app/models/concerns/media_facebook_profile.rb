@@ -109,6 +109,7 @@ module MediaFacebookProfile
   def data_from_facebook_profile
     self.data.merge! self.get_data_from_facebook
     self.data.merge!({
+      external_id: self.data['id'] || '',
       username: self.get_facebook_username,
       title: self.get_facebook_name,
       description: self.data['description'],

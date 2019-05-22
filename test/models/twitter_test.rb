@@ -243,4 +243,16 @@ class TwitterTest < ActiveSupport::TestCase
     Airbrake.unstub(:notify)
     Airbrake.configuration.unstub(:api_key)
   end
+
+  test "should have external id for profile" do
+    m = create_media url: 'https://twitter.com/meedan'
+    data = m.as_json
+    assert_equal 'meedan', data['external_id']
+  end
+
+  test "should have external id for post" do
+    m = create_media url: 'https://twitter.com/meedan/status/1130872630674972673'
+    data = m.as_json
+    assert_equal '1130872630674972673', data['external_id']
+  end
 end

@@ -222,6 +222,7 @@ module MediaFacebookItem
       self.get_original_post
       username = self.get_facebook_username || self.data['author_name']
       self.data.merge!({
+        external_id: self.data['object_id'],
         username: username,
         title: self.data['author_name'] + ' on Facebook',
         description: description,

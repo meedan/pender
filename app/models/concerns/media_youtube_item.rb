@@ -39,6 +39,7 @@ module MediaYoutubeItem
     data = self.data
 
     self.data.merge!({
+      external_id: data[:raw][:api][:id],
       username: data[:raw][:api]['channel_title'],
       description: data[:raw][:api]['description'],
       title: data[:raw][:api]['title'],

@@ -488,5 +488,10 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal original_url, data.dig('original_post')
     assert_match image_name, data[:picture]
   end
-
+  
+  test "should have external id for post" do
+    m = create_media url: 'https://www.facebook.com/ironmaiden/posts/10156071020577051'
+    data = m.as_json
+    assert_equal '10156071020577051', data['external_id']
+  end
 end

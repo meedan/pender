@@ -1013,4 +1013,10 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert !data['error']
   end
+
+  test "should have external id" do
+    m = create_media url: 'http://ca.ios.ba/'
+    data = m.as_json
+    assert_equal '', data['external_id']
+  end
 end

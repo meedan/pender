@@ -32,6 +32,7 @@ module MediaTwitterProfile
     self.process_twitter_profile_images
 
     self.data.merge!({
+      external_id: username,
       username: '@' + username,
       title: self.data[:raw][:api][:name],
       author_name: self.data[:raw][:api][:name],

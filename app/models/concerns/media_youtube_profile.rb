@@ -24,13 +24,14 @@ module MediaYoutubeProfile
     video_data = channel.snippet.data
     video_statistics = channel.statistics_set.data
 
-    self.data[:raw][:api] = {}
+    self.data[:raw][:api] = { id: channel.id }
     self.youtube_profile_direct_attributes.each do |attr|
       camel_attr = attr.camelize(:lower)
       self.data[:raw][:api][attr] = attr.match('count') ? video_statistics.dig(camel_attr) : video_data.dig(camel_attr)
     end
 
     self.data.merge!({
+      external_id: data[:raw][:api][:id],
       title: self.data[:raw][:api][:title].to_s,
       description: self.data[:raw][:api][:description].to_s,
       published_at: self.data[:raw][:api][:published_at],

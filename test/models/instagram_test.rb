@@ -79,7 +79,18 @@ class InstagramTest < ActiveSupport::TestCase
   test "should not have the subkey json+ld if the tag is not present on page" do
     m = create_media url: 'https://www.instagram.com/emeliiejanssonn/'
     data = m.as_json
-
     assert data['raw']['json+ld'].nil?
+  end
+
+  test "should have external id for post" do
+    m = create_media url: 'https://www.instagram.com/p/BxxBzJmiR00/'
+    data = m.as_json
+    assert_equal 'BxxBzJmiR00', data['external_id']
+  end
+
+  test "should have external id for profile" do
+    m = create_media url: 'https://www.instagram.com/ironmaiden/'
+    data = m.as_json
+    assert_equal 'ironmaiden', data['external_id']
   end
 end 
