@@ -5,12 +5,7 @@ MAINTAINER Meedan <sysops@meedan.com>
 ENV RAILS_ENV development
 
 # install dependencies
-RUN apt-get update -qq && apt-get install -y redis-server imagemagick --no-install-recommends
-
-# nginx
-COPY ./nginx.development.conf /etc/nginx/sites-available/pender-development
-COPY ./nginx.test.conf /etc/nginx/sites-available/pender-test
-RUN rm /etc/nginx/sites-enabled/default
+RUN apt-get update -qq && apt-get install -y imagemagick --no-install-recommends
 
 # install our app
 RUN mkdir -p /app

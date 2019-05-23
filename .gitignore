@@ -18,7 +18,6 @@ tmp/restart.txt
 /.project
 public/cache
 public/screenshots
-config/config.yml.travis
 tmp/restart.txt
 tmp/puma-*
 tmp/profile
