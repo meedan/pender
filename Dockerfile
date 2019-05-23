@@ -11,7 +11,7 @@ RUN apt-get update -qq && apt-get install -y imagemagick --no-install-recommends
 RUN mkdir -p /app
 WORKDIR /app
 COPY Gemfile Gemfile.lock /app/
-RUN gem install bundler && bundle install --jobs 20 --retry 5
+RUN gem install bundler -v "< 2.0" && bundle install --jobs 20 --retry 5
 COPY . /app
 
 # startup
