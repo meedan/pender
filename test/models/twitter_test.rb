@@ -69,13 +69,17 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should parse twitter metatags" do
+    doc = nil
+    open('test/data/flickr.html') { |f| doc = f.read }
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(doc))
     m = create_media url: 'https://www.flickr.com/photos/bees/2341623661'
     d = m.as_json
     assert_equal 'ZB8T0193', d['title']
     assert_match /Explore .* photos on Flickr!/, d['description']
     assert_equal '', d['published_at']
     assert_match /https:\/\/.*staticflickr.com\/.*3123\/2341623661_7c99f48bbf_b.jpg/, d['picture']
-    assert_equal 'https://www.flickr.com/photos/bees/', d['author_url']
+    assert_match /www.flickr.com/, d['author_url']
+    Media.any_instance.unstub(:get_html)
   end
 
   test "should parse twitter metatags 2" do
