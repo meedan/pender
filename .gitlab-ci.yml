@@ -10,7 +10,7 @@ test:
   tags:
     - meedan
     - meedan-labs
-  allow_failure: true
+  #allow_failure: true
   stage: test
   variables:
     RAILS_ENV: "test"
