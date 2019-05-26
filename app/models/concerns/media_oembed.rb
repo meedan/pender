@@ -10,6 +10,7 @@ module MediaOembed
       %w(type provider).each { |key| self.data[key] = self.send(key.to_sym) }
       self.data['raw']['oembed'] = Media.default_oembed(self.data, url, maxwidth, maxheight) unless self.data_from_oembed_item
     end
+    self.data['author_name'] ||= self.data.dig('raw', 'oembed', 'author_name')
     self.data['raw']['oembed']
   end
 

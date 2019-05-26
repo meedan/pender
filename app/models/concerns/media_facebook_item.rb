@@ -108,7 +108,7 @@ module MediaFacebookItem
   end
 
   def get_facebook_author_name_from_html
-    author_link = self.doc.css('.fbPhotoAlbumActionList a')
+    author_link = self.doc.at_css('.fbPhotoAlbumActionList a') || self.doc.at_css('.uiHeaderTitle > a')
     author_link.blank? ? self.get_facebook_title_from_html : author_link.text
   end
 
@@ -117,7 +117,10 @@ module MediaFacebookItem
   end
 
   def get_facebook_photos_from_html
-    self.doc.css('.scaledImageFitHeight').collect{ |i| i['src'] }
+    photos = self.doc.css('.scaledImageFitHeight').collect{ |i| i['src'] }
+    twimg = self.doc.css('meta[property="twitter:image"]')
+    photos << twimg.attr('content').text unless twimg.blank?
+    photos
   end
 
   def get_facebook_content_from_html
