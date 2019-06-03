@@ -40,6 +40,7 @@
 #    1. Get media the json data
 #    2. If the page has an oEmbed url, request it and get the response
 #    2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media json data
+require 'pender_store'
 
 class Media
   include ActiveModel::Validations
@@ -70,12 +71,15 @@ class Media
 
   def as_json(options = {})
     archivers = options.delete(:archivers)
-    Rails.cache.fetch(Media.get_id(self.original_url), options) do
+    @store = Pender::Store.new(Media.get_id(self.original_url))
+    refresh = options.delete(:force)
+    if refresh || @store.read(:json).nil?
       handle_exceptions(self, StandardError) { self.parse }
-      self.data.merge(Media.required_fields(self)).with_indifferent_access
+      data = self.data.merge(Media.required_fields(self)).with_indifferent_access
+      @store.write(:json, data)
     end
     self.archive(archivers)
-    Rails.cache.read(Media.get_id(self.original_url))
+    @store.read(:json)
   end
 
   # Parsers and archivers

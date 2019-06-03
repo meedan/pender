@@ -31,7 +31,7 @@ module MediaArchiver
   def filter_archivers(archivers)
     archivers = archivers.nil? ? ARCHIVERS.keys : archivers.split(',').map(&:strip)
     id = Media.get_id(url)
-    data = Rails.cache.read(id)
+    data = Pender::Store.new(id).read(:json)
     return archivers if data.nil? || data.dig(:archives).nil?
     archivers - data[:archives].keys
   end
@@ -61,13 +61,14 @@ module MediaArchiver
 
     def update_cache(url, newdata)
       id = Media.get_id(url)
-      data = Rails.cache.read(id)
+      store = Pender::Store.new(id)
+      data = store.read(:json)
       unless data.blank?
         newdata.each do |key, value|
           data[key] = data[key].is_a?(Hash) ? data[key].merge(value) : value
         end
         data['webhook_called'] = @webhook_called ? 1 : 0
-        Rails.cache.write(id, data)
+        store.write(:json, data)
       end
     end
 

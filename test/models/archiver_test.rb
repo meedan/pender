@@ -115,8 +115,8 @@ class ArchiverTest < ActiveSupport::TestCase
         assert m.data.dig('archives', 'archive_org').nil?
         WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', status: [data[:code], data[:message]], headers: {})
         Media.send_to_archive_org(url.to_s, a.id, 20)
-        id = Media.get_id(url)
-        media_data = Rails.cache.read(id)
+        store = Pender::Store.new(Media.get_id(url))
+        media_data = store.read(:json)
         assert_equal({"message"=>I18n.t(:could_not_archive, error_message: data[:message]), "code"=>data[:code]}, media_data.dig('archives', 'archive_org', 'error'))
       end
     end
@@ -155,8 +155,8 @@ class ArchiverTest < ActiveSupport::TestCase
         response = { code: '200', message: 'OK' }
         WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', status: [response[:code], response[:message]], headers: {})
         Media.send_to_archive_is(url.to_s, a.id, 20)
-        id = Media.get_id(url)
-        media_data = Rails.cache.read(id)
+        store = Pender::Store.new(Media.get_id(url))
+        media_data = store.read(:json)
         assert_equal({"message"=>I18n.t(:could_not_archive, error_message: response[:message]), "code"=> response[:code]}, media_data.dig('archives', 'archive_is', 'error'))
       end
     end
@@ -196,8 +196,8 @@ class ArchiverTest < ActiveSupport::TestCase
         assert m.data.dig('archives', 'archive_is').nil?
         WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', status: [data[:code], data[:message]], headers: { refresh: '0;url=http://archive.is/k5yFO'})
         Media.send_to_archive_is(url.to_s, a.id, 20)
-        id = Media.get_id(url)
-        media_data = Rails.cache.read(id)
+        store = Pender::Store.new(Media.get_id(url))
+        media_data = store.read(:json)
         assert_equal({"message"=>I18n.t(:could_not_archive, error_message: data[:message]), "code"=>data[:code]}, media_data.dig('archives', 'archive_is', 'error'))
       end
     end
@@ -226,7 +226,7 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json
-    assert_equal({"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}}, Rails.cache.read(id)[:archives])
+    assert_equal({"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}}, Pender::Store.new(id).read(:json)[:archives])
     WebMock.disable!
   end
 
@@ -244,7 +244,7 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json(archivers: 'none')
-    assert_equal({}, Rails.cache.read(id)[:archives])
+    assert_equal({}, Pender::Store.new(id).read(:json)[:archives])
     WebMock.disable!
   end
 
@@ -265,7 +265,7 @@ class ArchiverTest < ActiveSupport::TestCase
       id = Media.get_id(url)
       m = create_media url: url, key: a
       m.as_json(archivers: archivers.join(','))
-      cached = Rails.cache.read(id)[:archives]
+      cached = Pender::Store.new(id).read(:json)[:archives]
       assert_equal archivers, cached.keys
       archivers.each do |archiver|
         assert_equal(archived[archiver], cached[archiver])
@@ -287,12 +287,13 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json(archivers: 'archive_is')
-    assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, Rails.cache.read(id)[:archives])
+    store = Pender::Store.new(id)
+    assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, store.read(:json)[:archives])
 
     WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/archiving' })
     m.as_json(force: true, archivers: 'archive_is, archive_org')
-    assert_equal({'archive_is' => {'location' => 'archive_is/second_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Rails.cache.read(id)[:archives])
+    assert_equal({'archive_is' => {'location' => 'archive_is/second_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, store.read(:json)[:archives])
     WebMock.disable!
   end
 
@@ -309,12 +310,13 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json(archivers: 'archive_is')
-    assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, Rails.cache.read(id)[:archives])
+    store = Pender::Store.new(id)
+    assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, store.read(:json)[:archives])
 
     WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/archiving' })
     m.as_json(archivers: 'archive_is, archive_org')
-    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Rails.cache.read(id)[:archives])
+    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, store.read(:json)[:archives])
     WebMock.disable!
   end
 
@@ -332,16 +334,17 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json(archivers: 'archive_is, archive_org')
-    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Rails.cache.read(id)[:archives])
+    store = Pender::Store.new(id)
+    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, store.read(:json)[:archives])
 
     WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/second_archiving' })
 
     m.as_json
-    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Rails.cache.read(id)[:archives])
+    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, store.read(:json)[:archives])
 
     m.as_json(archivers: 'none')
-    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Rails.cache.read(id)[:archives])
+    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, store.read(:json)[:archives])
 
     WebMock.disable!
   end
