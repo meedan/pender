@@ -774,7 +774,7 @@ class MediaTest < ActiveSupport::TestCase
     CONFIG['hosts'] = { 'time.com' => { 'country' => 'gb' } }
     m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
     data = m.as_json
-    assert_equal 'http://time.com', data['title'] 
+    assert_match /https?:\/\/time.com/, data['title']
 
     CONFIG['hosts'] = config
   end
