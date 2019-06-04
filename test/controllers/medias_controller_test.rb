@@ -660,7 +660,6 @@ class MediasControllerTest < ActionController::TestCase
     post :bulk, url: url, format: :json
     assert_response :success
     assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
-    @store = Pender::Store.new(Media.get_id(self.original_url))
     Media.any_instance.unstub(:parse)
     Media.unstub(:notify_webhook)
     Media.unstub(:required_fields)

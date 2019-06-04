@@ -104,7 +104,7 @@ class Media
       url: instance.url,
       provider: provider || 'page',
       type: type || 'item',
-      parsed_at: Time.now,
+      parsed_at: Time.now.to_s,
       favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, '')}"
     }
   end
