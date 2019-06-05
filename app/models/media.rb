@@ -70,16 +70,13 @@ class Media
   end
 
   def as_json(options = {})
-    archivers = options.delete(:archivers)
-    @store = Pender::Store.new(Media.get_id(self.original_url))
-    refresh = options.delete(:force)
-    if refresh || @store.read(:json).nil?
+    if options.delete(:force) || Pender::Store.read(Media.get_id(self.original_url), :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
       data = self.data.merge(Media.required_fields(self)).with_indifferent_access
-      @store.write(:json, data)
+      Pender::Store.write(Media.get_id(self.original_url), :json, data)
     end
-    self.archive(archivers)
-    @store.read(:json)
+    self.archive(options.delete(:archivers))
+    Pender::Store.read(Media.get_id(self.original_url), :json)
   end
 
   # Parsers and archivers

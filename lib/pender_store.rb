@@ -1,38 +1,35 @@
 module Pender
   class Store
 
-    def initialize(id)
-      raise ArgumentError.new('[Pender Store] Id must be present') unless id
-      @id = id
-    end
-
-    def store_path(type)
+    def self.store_path(id, type)
       dir = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env)
       FileUtils.mkdir_p(dir) unless File.exist?(dir)
-      File.join(dir, "#{@id}.#{type}")
+      File.join(dir, "#{id}.#{type}")
     end
 
-    def exist?(type)
-      File.exist?(store_path(type))
+    def self.exist?(id, type)
+      File.exist?(store_path(id, type))
     end
 
-    def read(type)
-      path = store_path(type)
-      File.exist?(path) ? load_file(type, path) : nil
+    def self.read(id, type)
+      path = store_path(id, type)
+      File.exist?(path) ? load_file(id, type, path) : nil
     end
 
-    def load_file(type, path)
+    def self.load_file(id, type, path)
       file = File.read(path)
       type == :json ? JSON.parse(file).with_indifferent_access : file
     end
 
-    def write(type, content)
+    def self.write(id, type, content)
       content = JSON.pretty_generate(content) if type == :json
-      File.atomic_write(store_path(type)) { |file| file.write(content) }
+      File.atomic_write(store_path(id, type)) { |file| file.write(content) }
     end
 
-    def delete(type)
-      FileUtils.rm_f(store_path(type))
+    def self.delete(id, *types)
+      types.each do |type|
+        FileUtils.rm_f(store_path(id, type))
+      end
     end
   end
 end
