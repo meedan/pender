@@ -706,18 +706,15 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'Homepage', data['title']
   end
 
-  test "should parse medium posts" do
+  test "should parse page when item on microdata doesn't have type" do
     url = 'https://medium.com/darius-foroux/how-to-retain-more-from-the-books-you-read-in-5-simple-steps-700d90653a41'
     m = create_media url: url
+    Mida::Document.stubs(:new).with(m.doc).returns(OpenStruct.new(items: [OpenStruct.new(id: 'id')]))
     d = m.as_json
     assert_equal 'item', d['type']
     assert_equal 'page', d['provider']
-    assert_equal 'How To Retain More From The Books You Read In 5 Simple Steps', d['title']
-    assert_equal 'Don’t read more. Read smarter.', d['description']
-    assert_equal '@DariusForoux', d['username']
-    assert_equal 'https://twitter.com/DariusForoux', d['author_url']
-    assert_not_nil d['picture']
     assert_nil d['error']
+    Mida::Document.unstub(:new)
   end
 
   test "should request URL with User-Agent on header" do
