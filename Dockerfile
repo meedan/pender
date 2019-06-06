@@ -5,7 +5,7 @@ MAINTAINER Meedan <sysops@meedan.com>
 ENV RAILS_ENV development
 
 # install dependencies
-RUN apt-get update -qq && apt-get install -y imagemagick --no-install-recommends
+RUN apt-get update -qq && apt-get install -y imagemagick inotify-tools --no-install-recommends
 
 # install our app
 RUN mkdir -p /app
