@@ -2,6 +2,7 @@ require 'timeout'
 require 'pender_exceptions'
 require 'cc_deville'
 require 'semaphore'
+require 'pender_store'
 
 module Api
   module V1
@@ -23,7 +24,7 @@ module Api
 
         @id = Media.get_id(@url)
 
-        (render_uncached_media and return) if @refresh || Rails.cache.read(@id).nil?
+        (render_uncached_media and return) if @refresh || Pender::Store.read(@id, :json).nil?
         respond_to do |format|
           list_formats.each do |f|
             format.send(f) { handle_exceptions { send("render_as_#{f}") }}
@@ -36,10 +37,9 @@ module Api
         urls = params[:url].is_a?(Array) ? params[:url] : params[:url].split(' ')
         urls.each do |url|
           @id = Media.get_id(url)
-          Rails.cache.delete(@id)
           cc_url = CONFIG['public_url'] + '/api/medias.html?url=' + url
           CcDeville.clear_cache_for_url(cc_url)
-          FileUtils.rm_f(cache_path)
+          Pender::Store.delete(@id, :json, :html)
         end
         render json: { type: 'success' }, status: 200
       end
@@ -99,7 +99,7 @@ module Api
       end
 
       def render_timeout(must_render, oembed = false)
-        data = Rails.cache.read(@id)
+        data = Pender::Store.read(@id, :json)
         if !data.nil? && !@refresh
           render_timeout_media(data, must_render, oembed) and return true
         end
@@ -133,10 +133,10 @@ module Api
 
       def render_as_html
         begin
-          if @refresh || !File.exist?(cache_path)
+          if @refresh || !Pender::Store.exist?(@id, :html)
             save_cache
           end
-          render text: File.read(cache_path), status: 200
+          render text: Pender::Store.read(@id, :html), status: 200
         rescue
           render html: 'Could not parse this media'
         end
@@ -161,7 +161,7 @@ module Api
       def save_cache
         av = ActionView::Base.new(Rails.root.join('app', 'views'))
         template = locals = nil
-        cache = Rails.cache.read(@id)
+        cache = Pender::Store.read(@id, :json)
         data = cache && !@refresh ? cache : @media.as_json({ force: @refresh, archivers: @archivers })
         if should_serve_external_embed?(data)
           title = data['title'].truncate(50, separator: ' ')
@@ -175,18 +175,13 @@ module Api
         av.assign(locals.merge({ request: request, id: @id, media: @media }))
         ActionView::Base.send :include, MediasHelper
         content = av.render(template: "medias/#{template}.html.erb", layout: 'layouts/application.html.erb')
-        File.atomic_write(cache_path) { |file| file.write(content) }
+
+        Pender::Store.write(@id, :html, content)
         clear_upstream_cache if @refresh
       end
 
       def should_serve_external_embed?(data)
         !data['html'].blank? && (data['url'] =~ /^https:/ || Rails.env.development?)
-      end
-
-      def cache_path
-        dir = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env)
-        FileUtils.mkdir_p(dir) unless File.exist?(dir)
-        File.join(dir, "#{@id}.html")
       end
 
       def valid_url?
@@ -201,7 +196,7 @@ module Api
       end
 
       def clear_html_cache
-        FileUtils.rm_f cache_path
+        Pender::Store.delete(@id, :html)
         url = public_url(request).gsub(/medias(\.[a-z]+)?\?/, 'medias.html?')
         CcDeville.clear_cache_for_url(url)
       end

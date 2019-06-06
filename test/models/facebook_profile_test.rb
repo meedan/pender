@@ -209,7 +209,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['author_name']
     assert_equal 0, d['media_count']
     assert_equal '1028416870556238', d['object_id']
-    assert_equal '11/2015', d['published_at'].strftime("%m/%Y")
+    assert_equal '11/2015', Time.parse(d['published_at']).strftime("%m/%Y")
   end
 
   test "should create Facebook post from page photo URL" do
@@ -221,7 +221,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['author_name']
     assert_equal 1, d['media_count']
     assert_equal '896869113711015', d['object_id']
-    assert_equal '03/2015', d['published_at'].strftime("%m/%Y")
+    assert_equal '03/2015', Time.parse(d['published_at']).strftime("%m/%Y")
   end
 
   test "should create Facebook post from page photo URL 2" do
@@ -232,7 +232,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['author_name']
     assert_equal 1, d['media_count']
     assert_equal '1028424567222135', d['object_id']
-    assert_equal '11/2015', d['published_at'].strftime("%m/%Y")
+    assert_equal '11/2015', Time.parse(d['published_at']).strftime("%m/%Y")
     assert_equal 'Teste added a new photo.', d['text']
   end
 
@@ -245,7 +245,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 'Teste', d['author_name']
     assert_equal 2, d['media_count']
     assert_equal '1028795030518422', d['object_id']
-    assert_equal '11/2015', d['published_at'].strftime("%m/%Y")
+    assert_equal '11/2015', Time.parse(d['published_at']).strftime("%m/%Y")
   end
 
   test "should create Facebook post from user photos URL" do
@@ -257,7 +257,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 'Mohamed Nanabhay', d['author_name']
     assert_equal 4, d['media_count']
     assert_equal '10156130657385246', d['object_id']
-    assert_equal '27/10/2015', d['published_at'].strftime("%d/%m/%Y")
+    assert_equal '27/10/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from user photo URL 2" do
@@ -271,7 +271,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_not_nil d['picture']
     assert_equal 1, d['media_count']
     assert_equal '981302451896323', d['object_id']
-    assert_equal '21/11/2014', d['published_at'].strftime("%d/%m/%Y")
+    assert_equal '21/11/2014', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from user photo URL 3" do
@@ -338,7 +338,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 'Kiko Loureiro', d['author_name']
     assert_equal 1, d['media_count']
     assert_equal '981302451896323', d['object_id']
-    assert_equal '21/11/2014', d['published_at'].strftime("%d/%m/%Y")
+    assert_equal '21/11/2014', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should return author_name and author_url for Facebook post" do
@@ -361,7 +361,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
   test "should parse Facebook photo post within an album url" do
     m = create_media url: 'https://www.facebook.com/ESCAPE.Egypt/photos/ms.c.eJxNk8d1QzEMBDvyQw79N2ZyaeD7osMIwAZKLGTUViod1qU~;DCBNHcpl8gfMKeR8bz2gH6ABlHRuuHYM6AdywPkEsH~;gqAjxqLAKJtQGZFxw7CzIa6zdF8j1EZJjXRgTzAP43XBa4HfFa1REA2nXugScCi3wN7FZpF5BPtaVDEBqwPNR60O9Lsi0nbDrw3KyaPCVZfqAYiWmZO13YwvSbtygCWeKleh9KEVajW8FfZz32qcUrNgA5wfkA4Xfh004x46d9gdckQt2xR74biSOegwIcoB9OW~_oVIxKML0JWYC0XHvDkdZy0oY5bgjvBAPwdBpRuKE7kZDNGtnTLoCObBYqJJ4Ky5FF1kfh75Gnyl~;Qxqsv.bps.a.1204090389632094.1073742218.423930480981426/1204094906298309/?type=3&theater'
     d = m.as_json
-    assert_equal '09/2016', d['published_at'].strftime('%m/%Y')
+    assert_equal '09/2016', Time.parse(d['published_at']).strftime('%m/%Y')
     assert_equal 'item', d['type']
     assert_match /Escape/, d['title']
     assert_match /Escape added a new photo./, d['description']
@@ -377,7 +377,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_match /Dina Samak/, d['title']
     assert_not_nil d['description']
     assert_not_nil d['author_picture']
-    assert_not_nil d['published_at']
+    assert_not_nil Time.parse(d['published_at'])
   end
 
   test "should parse Facebook video url from a page" do
@@ -387,7 +387,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_match /MATTHEW YOU ARE DRUNK...GO HOME!/, d['description']
     assert_equal 'item', d['type']
     assert_not_nil d['picture']
-    assert_not_nil d['published_at']
+    assert_not_nil Time.parse(d['published_at'])
   end
 
   test "should parse Facebook video url from a page 2" do
@@ -397,7 +397,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_match /On National Voter Registration Day/, d['description']
     assert_equal 'item', d['type']
     assert_not_nil d['picture']
-    assert_not_nil d['published_at']
+    assert_not_nil Time.parse(d['published_at'])
   end
 
   test "should parse Facebook video url from a profile" do
@@ -407,7 +407,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 'item', d['type']
     assert_match /14146479_10154242963196620_407850789/, d['picture']
     assert_not_nil d['author_picture']
-    assert_not_nil d['published_at']
+    assert_not_nil Time.parse(d['published_at'])
   end
 
   test "should parse Facebook event url" do
@@ -427,7 +427,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 'item', d['type']
     assert_match /54212446406/, d['author_picture']
     assert_match /14543767_10154534111016407_5167486558738906371/, d['picture']
-    assert_not_nil d['published_at']
+    assert_not_nil Time.parse(d['published_at'])
     assert_equal '10154534111016407', d['object_id']
   end
 
@@ -448,7 +448,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_match /355665009819/, d['author_picture']
     assert_match /28775016_10156244781319820_5084365624826658816/, d['picture']
     assert_equal 'http://facebook.com/355665009819', d['author_url']
-    assert_not_nil d['published_at']
+    assert_not_nil Time.parse(d['published_at'])
   end
 
   test "should get Facebook name when metatag is not present" do
