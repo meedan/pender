@@ -13,10 +13,10 @@ module Pender
 
     def self.read(id, type)
       path = store_path(id, type)
-      File.exist?(path) ? load_file(id, type, path) : nil
+      File.exist?(path) ? load_file(type, path) : nil
     end
 
-    def self.load_file(id, type, path)
+    def self.load_file(type, path)
       file = File.read(path)
       type == :json ? JSON.parse(file).with_indifferent_access : file
     end

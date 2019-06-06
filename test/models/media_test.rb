@@ -839,10 +839,9 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: url
     m.as_json
 
-    store = Pender::Store.new(id)
-    assert_equal({}, store.read(:json)['archives'])
+    assert_equal({}, Pender::Store.read(id, :json)['archives'])
     Media.update_cache(url, { archives: { 'archive_org' => 'new-data' } })
-    assert_equal({'archive_org' => 'new-data'}, store.read(:json)['archives'])
+    assert_equal({'archive_org' => 'new-data'}, Pender::Store.read(id, :json)['archives'])
   end
 
   test "should not send errbit error when twitter username is a default" do

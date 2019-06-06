@@ -393,7 +393,7 @@ class MediasControllerTest < ActionController::TestCase
     url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
     id = Digest::MD5.hexdigest(url)
     Media.stubs(:as_oembed).raises(StandardError)
-    Pender::Store.new(id).delete(:json)
+    Pender::Store.delete(id, :json)
     get :index, url: url, format: :oembed
     assert_response :success
     data = JSON.parse(response.body)['data']
@@ -405,13 +405,13 @@ class MediasControllerTest < ActionController::TestCase
     url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
     id = Digest::MD5.hexdigest(url)
 
-    assert_nil Pender::Store.new(id).read(:json)
+    assert_nil Pender::Store.read(id, :json)
     get :index, url: url, format: :oembed
     assert_not_nil assigns(:media)
     assert_response :success
     assert_nil JSON.parse(response.body)['error']
 
-    assert_not_nil Pender::Store.new(assigns(:id)).read(:json)
+    assert_not_nil Pender::Store.read(assigns(:id), :json)
     get :index, url: url, format: :oembed
     assert_response :success
     assert_nil JSON.parse(response.body)['error']
@@ -528,8 +528,7 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://twitter.com/meedan/status/1095693211681673218'
     get :index, url: url, format: :json
     id = Media.get_id(url)
-    store = Pender::Store.new(id)
-    assert_equal({"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}}, store.read(:json)[:archives])
+    assert_equal({"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}}, Pender::Store.read(id, :json)[:archives])
 
     WebMock.disable!
   end
@@ -548,7 +547,7 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://twitter.com/meedan/status/1095035775736078341'
     get :index, url: url, archivers: 'none', format: :json
     id = Media.get_id(url)
-    assert_equal({}, Pender::Store.new(id).read(:json)[:archives])
+    assert_equal({}, Pender::Store.read(id, :json)[:archives])
 
     WebMock.disable!
   end
@@ -569,10 +568,9 @@ class MediasControllerTest < ActionController::TestCase
       url = 'https://twitter.com/meedan/status/1095035552221540354'
       get :index, url: url, archivers: archivers.join(','), format: :json
       id = Media.get_id(url)
-      store = Pender::Store.new(id)
       archivers.each do |archiver|
         archiver.strip!
-        assert_equal(archived[archiver], store.read(:json)[:archives][archiver])
+        assert_equal(archived[archiver], Pender::Store.read(id, :json)[:archives][archiver])
       end
 
       WebMock.disable!
@@ -613,19 +611,17 @@ class MediasControllerTest < ActionController::TestCase
     url2 = 'https://twitter.com/meedan/status/1098556958590816260'
     id1 = Media.get_id(url1)
     id2 = Media.get_id(url2)
-    store1 = Pender::Store.new(id1)
-    store2 = Pender::Store.new(id2)
-    assert_nil store1.read(:json)
-    assert_nil store2.read(:json)
+    assert_nil Pender::Store.read(id1, :json)
+    assert_nil Pender::Store.read(id2, :json)
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     authenticate_with_token(a)
     post :bulk, url: "#{url1}, #{url2}", format: :json
     assert_response :success
     sleep 2
-    data1 = store1.read(:json)
+    data1 = Pender::Store.read(id1, :json)
     assert_match /The Checklist: How Google Fights #Disinformation/, data1['title']
-    data2 = store2.read(:json)
+    data2 = Pender::Store.read(id2, :json)
     assert_match /The internet is as much about affirmation as information/, data2['title']
   end
 
