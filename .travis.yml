@@ -7,7 +7,7 @@ before_install:
 - git clone https://${TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
 - docker-compose pull
 - docker-compose up -d
-- wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://pender:3200
+- wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
 - rm -rf tmp/cache tmp/cache1 tmp/cache2 tmp/cache3 && mkdir -p tmp/cache tmp/cache1
   tmp/cache2 tmp/cache3
 before_script:
