@@ -7,9 +7,9 @@ before_install:
 - export PATH=/tmp/bundler/ruby/2.3.0/bin:$PATH
 - export GEM_PATH=/tmp/bundler/ruby/2.3.0/gems:$GEM_PATH
 - git clone https://${TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
-- docker-compose -f docker-test.yml pull
-- docker-compose -f docker-test.yml up -d`
-- wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://127.0.0.1:13200
+- docker-compose pull
+- docker-compose up -d`
+- wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://127.0.0.1:3200
 - rm -rf tmp/cache tmp/cache1 tmp/cache2 tmp/cache3 && mkdir -p tmp/cache tmp/cache1
   tmp/cache2 tmp/cache3
 before_script:
@@ -17,7 +17,7 @@ before_script:
 - bundle exec sidekiq -L /tmp/sidekiq-log.log -d
 - cd bin && ./setup-parallel-test-env && cd -
 script:
-- docker-compose -f docker-test.yml exec pender.test bundle exec rake "parallel:test[3]"
+- docker-compose exec pender.test bundle exec rake "parallel:test[3]"
 after_script:
 - cat tmp/performance.csv
 - bundle exec codeclimate-test-reporter
