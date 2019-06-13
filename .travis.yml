@@ -1,30 +1,15 @@
-language: ruby
-bundler_args: "--jobs 3 --retry 3 --without nothing --path=/tmp/bundler"
 before_install:
-- echo '# Some DNS cached entries below' | sudo tee -a /etc/hosts
-- for host in facebook.com twitter.com m.facebook.com www.facebook.com m.twitter.com youtube.com; do ping -c 1 $host | head -1 | sed "s/^[^(]\+(\([0-9\.]\+\).*/\1 $host/g" | sudo tee -a /etc/hosts; done
-- echo 'Hosts:' && cat /etc/hosts
 - git clone https://${TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
-- docker-compose pull
-- docker-compose up -d
-- wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
-- rm -rf tmp/cache tmp/cache1 tmp/cache2 tmp/cache3 && mkdir -p tmp/cache tmp/cache1
-  tmp/cache2 tmp/cache3
-before_script:
 - d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}"; done
-- bundle exec sidekiq -L /tmp/sidekiq-log.log -d
-- cd bin && ./setup-parallel-test-env && cd -
+- docker-compose pull
+- docker-compose -f docker-compose.yml -f docker-test.yml up -d
+- wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
+- docker-compose exec pender test/setup-parallel
 script:
 - docker-compose exec pender bundle exec rake "parallel:test[3]"
 after_script:
-- cat tmp/performance.csv
-- bundle exec codeclimate-test-reporter
-rvm:
-- 2.3.1
-cache:
-  directories:
-  - "/tmp/bundler"
-  - tmp
+- docker-compose exec pender cat tmp/performance.csv
+- docker-compose exec pender bundle exec codeclimate-test-reporter
 addons:
   code_climate:
     repo_token:
