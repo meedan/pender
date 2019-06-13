@@ -9,13 +9,17 @@ before_install:
 - sudo apt-get install redis-server
 - redis-server &
 - git clone https://${TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
+- docker-compose pull
+- docker-compose up -d
+- wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://127.0.0.1:13200
 - rm -rf tmp/cache tmp/cache1 tmp/cache2 tmp/cache3 && mkdir -p tmp/cache tmp/cache1
   tmp/cache2 tmp/cache3
 before_script:
 - d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}"; done
 - bundle exec sidekiq -L /tmp/sidekiq-log.log -d
 - cd bin && ./setup-parallel-test-env && cd -
-script: bundle exec rake "parallel:test[3]"
+script:
+- docker-compose -f docker-test.yml exec pender.test bundle exec rake "parallel:test[3]"
 after_script:
 - cat tmp/performance.csv
 - bundle exec codeclimate-test-reporter
