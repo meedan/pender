@@ -4,12 +4,12 @@ before_install:
 - docker-compose build
 - docker-compose -f docker-compose.yml -f docker-test.yml up -d
 - wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
-- docker-compose exec pender test/setup-parallel
+- docker-compose -f docker-compose.yml -f docker-test.yml exec pender test/setup-parallel
 script:
-- docker-compose exec pender bundle exec rake "parallel:test[3]"
+- docker-compose -f docker-compose.yml -f docker-test.yml exec pender bundle exec rake "parallel:test[3]"
 after_script:
-- docker-compose exec pender cat tmp/performance.csv
-- docker-compose exec pender bundle exec codeclimate-test-reporter
+- docker-compose -f docker-compose.yml -f docker-test.yml exec pender cat tmp/performance.csv
+- docker-compose -f docker-compose.yml -f docker-test.yml exec pender bundle exec codeclimate-test-reporter
 addons:
   code_climate:
     repo_token:
