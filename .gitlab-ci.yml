@@ -20,7 +20,7 @@ test:
     - d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}"; done
     - docker-compose build
     - docker-compose -f docker-compose.yml -f docker-test.yml up -d
-    - wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
+    # - wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
     - docker-compose exec pender test/setup-parallel
     - docker-compose exec pender bundle exec rake "parallel:test[3]"
     - docker-compose exec pender cat tmp/performance.csv
