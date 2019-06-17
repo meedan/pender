@@ -1,4 +1,5 @@
 require 'timeout'
+require 'pender_store'
 
 class MediaParserWorker
   include Sidekiq::Worker
@@ -13,7 +14,7 @@ class MediaParserWorker
 
   def parse(url, key, refresh, archivers)
     id = Media.get_id(url)
-    cached = Rails.cache.read(id)
+    cached = Pender::Store.read(id, :json)
     data = {}
     type = 'media_parsed'
     media = nil

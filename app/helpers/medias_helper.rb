@@ -111,7 +111,7 @@ module MediasHelper
   def get_error_data(error_data, media, url, id)
     data = media.nil? ? Media.minimal_data(OpenStruct.new(url: url)) : media.data
     data = data.merge(error: error_data)
-    Rails.cache.write(id, data)
+    Pender::Store.write(id, :json, data)
     data
   end
 

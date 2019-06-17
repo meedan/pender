@@ -35,7 +35,6 @@ class ActiveSupport::TestCase
     # For debugging only: print the test name before it runs
     # puts "#{self.class.name}::#{self.method_name}"
     Sidekiq::Testing.inline!
-    Rails.cache.clear if File.exists?(File.join(Rails.root, 'tmp', 'cache'))
     FileUtils.rm_rf File.join(Rails.root, 'public', "cache#{ENV['TEST_ENV_NUMBER']}", 'test')
     FileUtils.rm_rf(File.join(Rails.root, 'tmp', "cache<%= ENV['TEST_ENV_NUMBER'] %>", '*'))
     Rails.application.reload_routes!

@@ -35,11 +35,13 @@ class MediasControllerTest < ActionController::TestCase
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html
     name = Digest::MD5.hexdigest('https://twitter.com/caiosba/status/742779467521773568')
-    cache_file = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{name}.html" )
-    assert File.exist?(cache_file)
+    html_cache_file = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{name}.html" )
+    json_cache_file = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{name}.json" )
+    assert File.exist?(html_cache_file)
+    assert File.exist?(json_cache_file)
     sleep 1
     get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json
-    assert !File.exist?(cache_file)
+    assert !File.exist?(html_cache_file)
     second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     assert second_parsed_at > first_parsed_at
   end
@@ -349,26 +351,28 @@ class MediasControllerTest < ActionController::TestCase
     url2 = 'https://twitter.com/caiosba/status/742779467521773568'
     id1 = Media.get_id(url1)
     id2 = Media.get_id(url2)
-    cachefile1 = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id1}.html" )
-    cachefile2 = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id2}.html" )
-    assert !File.exist?(cachefile1)
-    assert !File.exist?(cachefile2)
-    assert_nil Rails.cache.read(id1)
-    assert_nil Rails.cache.read(id2)
-    
+    html_cachefile1 = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id1}.html" )
+    json_cachefile1 = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id1}.json" )
+    html_cachefile2 = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id2}.html" )
+    json_cachefile2 = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id2}.json" )
+    assert !File.exist?(html_cachefile1)
+    assert !File.exist?(json_cachefile1)
+    assert !File.exist?(html_cachefile2)
+    assert !File.exist?(json_cachefile2)
+
     get :index, url: url1
     get :index, url: url2
-    assert File.exist?(cachefile1)
-    assert File.exist?(cachefile2)
-    assert_not_nil Rails.cache.read(id1)
-    assert_not_nil Rails.cache.read(id2)
-    
+    assert File.exist?(html_cachefile1)
+    assert File.exist?(json_cachefile1)
+    assert File.exist?(html_cachefile2)
+    assert File.exist?(json_cachefile2)
+
     delete :delete, url: [url1, url2], format: 'json'
     assert_response :success
-    assert !File.exist?(cachefile1)
-    assert !File.exist?(cachefile2)
-    assert_nil Rails.cache.read(id1)
-    assert_nil Rails.cache.read(id2)
+    assert !File.exist?(html_cachefile1)
+    assert !File.exist?(json_cachefile1)
+    assert !File.exist?(html_cachefile2)
+    assert !File.exist?(json_cachefile2)
   end
 
   test "should not clear cache if not authenticated" do
@@ -389,7 +393,7 @@ class MediasControllerTest < ActionController::TestCase
     url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
     id = Digest::MD5.hexdigest(url)
     Media.stubs(:as_oembed).raises(StandardError)
-    Rails.cache.delete(id)
+    Pender::Store.delete(id, :json)
     get :index, url: url, format: :oembed
     assert_response :success
     data = JSON.parse(response.body)['data']
@@ -401,13 +405,13 @@ class MediasControllerTest < ActionController::TestCase
     url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
     id = Digest::MD5.hexdigest(url)
 
-    assert_nil Rails.cache.read(id)
+    assert_nil Pender::Store.read(id, :json)
     get :index, url: url, format: :oembed
     assert_not_nil assigns(:media)
     assert_response :success
     assert_nil JSON.parse(response.body)['error']
 
-    assert_not_nil Rails.cache.read(assigns(:id))
+    assert_not_nil Pender::Store.read(assigns(:id), :json)
     get :index, url: url, format: :oembed
     assert_response :success
     assert_nil JSON.parse(response.body)['error']
@@ -524,7 +528,7 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://twitter.com/meedan/status/1095693211681673218'
     get :index, url: url, format: :json
     id = Media.get_id(url)
-    assert_equal({"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}}, Rails.cache.read(id)[:archives])
+    assert_equal({"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}}, Pender::Store.read(id, :json)[:archives])
 
     WebMock.disable!
   end
@@ -543,7 +547,7 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://twitter.com/meedan/status/1095035775736078341'
     get :index, url: url, archivers: 'none', format: :json
     id = Media.get_id(url)
-    assert_equal({}, Rails.cache.read(id)[:archives])
+    assert_equal({}, Pender::Store.read(id, :json)[:archives])
 
     WebMock.disable!
   end
@@ -566,7 +570,7 @@ class MediasControllerTest < ActionController::TestCase
       id = Media.get_id(url)
       archivers.each do |archiver|
         archiver.strip!
-        assert_equal(archived[archiver], Rails.cache.read(id)[:archives][archiver])
+        assert_equal(archived[archiver], Pender::Store.read(id, :json)[:archives][archiver])
       end
 
       WebMock.disable!
@@ -607,17 +611,17 @@ class MediasControllerTest < ActionController::TestCase
     url2 = 'https://twitter.com/meedan/status/1098556958590816260'
     id1 = Media.get_id(url1)
     id2 = Media.get_id(url2)
-    assert_nil Rails.cache.read(id1)
-    assert_nil Rails.cache.read(id2)
+    assert_nil Pender::Store.read(id1, :json)
+    assert_nil Pender::Store.read(id2, :json)
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     authenticate_with_token(a)
     post :bulk, url: "#{url1}, #{url2}", format: :json
     assert_response :success
     sleep 2
-    data1 = Rails.cache.read(id1)
+    data1 = Pender::Store.read(id1, :json)
     assert_match /The Checklist: How Google Fights #Disinformation/, data1['title']
-    data2 = Rails.cache.read(id2)
+    data2 = Pender::Store.read(id2, :json)
     assert_match /The internet is as much about affirmation as information/, data2['title']
   end
 
@@ -645,7 +649,6 @@ class MediasControllerTest < ActionController::TestCase
     parse_error = { error: { "message"=>"RuntimeError: RuntimeError", "code"=>5}}
     required_fields = Media.required_fields(OpenStruct.new(url: url))
     Media.stubs(:required_fields).returns(required_fields)
-
     Media.stubs(:notify_webhook).with('media_parsed', url, parse_error.merge(required_fields).with_indifferent_access, webhook_info)
     Media.any_instance.stubs(:parse).raises(RuntimeError)
     a = create_api_key application_settings: webhook_info
@@ -733,5 +736,19 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: url, format: 'json'
     response = JSON.parse(@response.body)
     assert_equal 'error', response['type']
+  end
+
+  test "should cache json and html on file" do
+    authenticate_with_token
+    url = 'https://twitter.com/meedan/status/1132948729424691201'
+    id = Media.get_id(url)
+    html = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id}.html" )
+    json = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id}.json" )
+    assert !File.exist?(html)
+    assert !File.exist?(json)
+
+    get :index, url: url, format: :html
+    assert File.exist?(html)
+    assert File.exist?(json)
   end
 end
