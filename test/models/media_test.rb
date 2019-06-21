@@ -654,9 +654,8 @@ class MediaTest < ActiveSupport::TestCase
     url = 'https://g1.globo.com/sp/sao-paulo/noticia/pf-indicia-haddad-por-caixa-2-em-campanha-para-a-prefeitura-de-sp.ghtml'
     m = create_media url: url
     data = m.as_json
-    assert_equal ["NewsArticle", "VideoObject", "WebPage"], data['schema'].keys.sort
+    assert_equal ['NewsArticle', 'WebPage'], data['schema'].keys.sort
     assert data['schema']['NewsArticle'].is_a? Array
-    assert data['schema']['VideoObject'].is_a? Array
   end
 
   test "should store ClaimReview schema after preprocess" do

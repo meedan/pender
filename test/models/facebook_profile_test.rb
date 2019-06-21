@@ -405,7 +405,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     d = m.as_json
     assert_match /Eddie Scott/, d['title']
     assert_equal 'item', d['type']
-    assert_match /14146479_10154242963196620_407850789/, d['picture']
+    assert_match /^http/, d['picture']
     assert_not_nil d['author_picture']
     assert_not_nil Time.parse(d['published_at'])
   end
