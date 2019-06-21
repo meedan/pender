@@ -6,33 +6,24 @@ stages:
 #  - deploy_live
 
 test:
-  image: meedan/ruby
+  image: docker:latest
+  services:
+    - docker:dind
   tags:
     - meedan
     - meedan-labs
-  #allow_failure: true
   stage: test
-  variables:
-    RAILS_ENV: "test"
   script:
-    - apt-get update
-    - apt-get install -y redis-server git sudo
-    - echo '# Some DNS cached entries below' | sudo tee -a /etc/hosts
-    - for host in facebook.com twitter.com m.facebook.com www.facebook.com m.twitter.com youtube.com; do ping -c 1 $host | head -1 | sed "s/^[^(]\+(\([0-9\.]\+\).*/\1 $host/g" | sudo tee -a /etc/hosts; done
-    - echo 'Hosts:' && cat /etc/hosts
-    #- export PATH=/tmp/bundler/ruby/2.3.0/bin:$PATH
-    #- export GEM_PATH=/tmp/bundler/ruby/2.3.0/gems:$GEM_PATH
-    - redis-server &
-    - git clone https://${GITHUB_TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
-    - rm -rf tmp/cache tmp/cache1 tmp/cache2 tmp/cache3 && mkdir -p tmp/cache tmp/cache1 tmp/cache2 tmp/cache3
-    - d=configurator/check/test/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}"; done
-    - bundle install --without nothing
-    - bundle exec sidekiq -L /tmp/sidekiq-log.log -d
-    - cd bin && ./setup-parallel-test-env && cd -
-    - bundle exec rake "parallel:test[3]"
-  #after_script:
-    #- cat tmp/performance.csv
-    # - bundle exec codeclimate-test-reporter
+    - apk add --no-cache curl wget git py-pip
+    - pip install docker-compose==1.23.2
+    - git clone -b feature/7591-s3-store https://${GITHUB_TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
+    - d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}"; done
+    - docker-compose build
+    - docker-compose -f docker-compose.yml -f docker-test.yml up -d
+    # - wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
+    - docker-compose exec -T pender test/setup-parallel
+    - docker-compose exec -T  pender bundle exec rake "parallel:test[3]"
+    - docker-compose exec -T pender cat tmp/performance.csv
 build_qa:
   image: docker:latest
   services:
