@@ -96,7 +96,9 @@ module MediaFacebookItem
 
   def get_facebook_info_from_metadata
     get_metatags(self)
-    metadata = self.get_opengraph_metadata || {}
+    og_metadata = self.get_opengraph_metadata || {}
+    tt_metadata = self.get_twitter_metadata || {}
+    metadata = og_metadata.merge(tt_metadata)
     self.data['metadata'] = metadata
     self.data['author_name'] = metadata['title'].nil? ? self.get_facebook_author_name_from_html : metadata['title']
     self.data['text'] = metadata['description'].nil? ? self.get_facebook_description_from_html : metadata['description']
@@ -118,8 +120,6 @@ module MediaFacebookItem
 
   def get_facebook_photos_from_html
     photos = self.doc.css('.scaledImageFitHeight').collect{ |i| i['src'] }
-    twimg = self.doc.css('meta[property="twitter:image"]')
-    photos << twimg.attr('content').text unless twimg.blank?
     photos
   end
 

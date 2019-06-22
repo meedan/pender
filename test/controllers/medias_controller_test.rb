@@ -35,13 +35,12 @@ class MediasControllerTest < ActionController::TestCase
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html
     name = Digest::MD5.hexdigest('https://twitter.com/caiosba/status/742779467521773568')
-    html_cache_file = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{name}.html" )
-    json_cache_file = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{name}.json" )
-    assert File.exist?(html_cache_file)
-    assert File.exist?(json_cache_file)
+    [:html, :json].each do |type|
+      assert Pender::Store.read(name, type), "#{name}.#{type} is missing"
+    end
     sleep 1
     get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json
-    assert !File.exist?(html_cache_file)
+    assert !Pender::Store.read(name, :html), "#{name}.html should not exist"
     second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     assert second_parsed_at > first_parsed_at
   end
@@ -60,25 +59,23 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     url = 'https://speakbridge.io/medias/embed/viber/1/403'
     get :index, url: url, refresh: '1', format: :html
-    name = Digest::MD5.hexdigest(url)
-    cache_file = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{name}.html" )
-    first_parsed_at = File.mtime(cache_file)
+    id = Digest::MD5.hexdigest(url)
+    first_parsed_at = Pender::Store.get(id, :html).last_modified
     sleep 1
     get :index, url: url, refresh: '1', format: :html
-    second_parsed_at = File.mtime(cache_file)
+    second_parsed_at = Pender::Store.get(id, :html).last_modified
     assert second_parsed_at > first_parsed_at
   end
 
   test "should not ask to refresh cache with html format" do
     authenticate_with_token
     url = 'https://speakbridge.io/medias/embed/viber/1/403'
-    name = Digest::MD5.hexdigest(url)
-    cache_file = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{name}.html" )
+    id = Digest::MD5.hexdigest(url)
     get :index, url: url, refresh: '0', format: :html
-    first_parsed_at = File.mtime(cache_file)
+    first_parsed_at = Pender::Store.get(id, :html).last_modified
     sleep 1
     get :index, url: url, format: :html
-    second_parsed_at = File.mtime(cache_file)
+    second_parsed_at = Pender::Store.get(id, :html).last_modified
     assert_equal first_parsed_at, second_parsed_at
   end
 
@@ -182,12 +179,15 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return message with HTML error 2" do
-    File.stubs(:read).raises
-    get :index, url: 'http://example.com/', format: :html
+    url = 'https://example.com'
+    id = Media.get_id(url)
+    Pender::Store.stubs(:read).with(id, :json)
+    Pender::Store.stubs(:read).with(id, :html).raises
+    get :index, url: url, format: :html
     assert_response 200
 
     assert_match /Could not parse this media/, response.body
-    File.unstub(:read)
+    Pender::Store.unstub(:read)
   end
 
   test "should be able to fetch JS without token" do
@@ -351,28 +351,27 @@ class MediasControllerTest < ActionController::TestCase
     url2 = 'https://twitter.com/caiosba/status/742779467521773568'
     id1 = Media.get_id(url1)
     id2 = Media.get_id(url2)
-    html_cachefile1 = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id1}.html" )
-    json_cachefile1 = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id1}.json" )
-    html_cachefile2 = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id2}.html" )
-    json_cachefile2 = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id2}.json" )
-    assert !File.exist?(html_cachefile1)
-    assert !File.exist?(json_cachefile1)
-    assert !File.exist?(html_cachefile2)
-    assert !File.exist?(json_cachefile2)
+    [:html, :json].each do |type|
+      [id1, id2].each do |id|
+        assert !Pender::Store.read(id, type), "#{id}.#{type} should not exist"
+      end
+    end
 
     get :index, url: url1
     get :index, url: url2
-    assert File.exist?(html_cachefile1)
-    assert File.exist?(json_cachefile1)
-    assert File.exist?(html_cachefile2)
-    assert File.exist?(json_cachefile2)
+    [:html, :json].each do |type|
+      [id1, id2].each do |id|
+        assert Pender::Store.read(id, type), "#{id}.#{type} is missing"
+      end
+    end
 
     delete :delete, url: [url1, url2], format: 'json'
     assert_response :success
-    assert !File.exist?(html_cachefile1)
-    assert !File.exist?(json_cachefile1)
-    assert !File.exist?(html_cachefile2)
-    assert !File.exist?(json_cachefile2)
+    [:html, :json].each do |type|
+      [id1, id2].each do |id|
+        assert !Pender::Store.read(id, type), "#{id}.#{type} is missing"
+      end
+    end
   end
 
   test "should not clear cache if not authenticated" do
@@ -475,7 +474,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should redirect and remove unsupported parameters if format is HTML and URL is the only supported parameter provided" do
     url = 'https://twitter.com/caiosba/status/923697122855096320'
-    
+
     get :index, url: url, foo: 'bar', format: :html
     assert_response 302
     assert_equal 'api/medias.html?url=https%3A%2F%2Ftwitter.com%2Fcaiosba%2Fstatus%2F923697122855096320', @response.redirect_url.split('/', 4).last
@@ -742,13 +741,13 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     url = 'https://twitter.com/meedan/status/1132948729424691201'
     id = Media.get_id(url)
-    html = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id}.html" )
-    json = File.join('public', "cache#{ENV['TEST_ENV_NUMBER']}", Rails.env, "#{id}.json" )
-    assert !File.exist?(html)
-    assert !File.exist?(json)
+    [:html, :json].each do |type|
+      assert !Pender::Store.read(id, type), "#{id}.#{type} should not exist"
+    end
 
     get :index, url: url, format: :html
-    assert File.exist?(html)
-    assert File.exist?(json)
+    [:html, :json].each do |type|
+      assert Pender::Store.read(id, type), "#{id}.#{type} is missing"
+    end
   end
 end
