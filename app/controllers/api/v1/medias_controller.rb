@@ -2,7 +2,6 @@ require 'timeout'
 require 'pender_exceptions'
 require 'cc_deville'
 require 'semaphore'
-require 'pender_store'
 
 module Api
   module V1

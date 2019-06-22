@@ -40,7 +40,6 @@
 #    1. Get media the json data
 #    2. If the page has an oEmbed url, request it and get the response
 #    2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media json data
-require 'pender_store'
 
 class Media
   include ActiveModel::Validations

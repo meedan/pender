@@ -3,7 +3,7 @@
 /db/*.sqlite3-journal
 db/schema.rb
 /log/*.log
-/tmp/cache
+/tmp/cache*
 /tmp/pids
 /tmp/sessions
 /tmp/sockets

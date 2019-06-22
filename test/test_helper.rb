@@ -35,8 +35,6 @@ class ActiveSupport::TestCase
     # For debugging only: print the test name before it runs
     # puts "#{self.class.name}::#{self.method_name}"
     Sidekiq::Testing.inline!
-    FileUtils.rm_rf File.join(Rails.root, 'public', "cache#{ENV['TEST_ENV_NUMBER']}", 'test')
-    FileUtils.rm_rf(File.join(Rails.root, 'tmp', "cache<%= ENV['TEST_ENV_NUMBER'] %>", '*'))
     Rails.application.reload_routes!
     Media.any_instance.stubs(:archive_to_archive_is).returns(nil)
     Media.any_instance.stubs(:archive_to_archive_org).returns(nil)
@@ -55,6 +53,7 @@ class ActiveSupport::TestCase
     Media.any_instance.unstub(:oembed_get_data_from_url)
     Media.any_instance.unstub(:doc)
     Media::ARCHIVERS['archive_is'][:enabled] = true
+    clear_bucket(create: true)
   end
 
   # This will run after any test
@@ -69,6 +68,17 @@ class ActiveSupport::TestCase
     Media.any_instance.unstub(:archive_to_archive_org)
     Media::ARCHIVERS['archive_is'][:enabled] = false
     CONFIG.unstub(:[])
+    clear_bucket
+  end
+
+  def clear_bucket(options = {})
+    resource = Aws::S3::Resource.new
+    bucket = resource.bucket(Pender::Store.bucket_name)
+    if bucket.exists?
+      bucket.objects.each { |obj| obj.delete }
+    else
+      bucket.create if options.dig(:create)
+    end
   end
 
   def authenticate_with_token(api_key = nil)
