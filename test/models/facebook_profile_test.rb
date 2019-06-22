@@ -446,7 +446,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_match /SCMP #FacebookLive/, d['description']
     assert_equal 'scmp', d['username']
     assert_match /355665009819/, d['author_picture']
-    assert_match /28775016_10156244781319820_5084365624826658816/, d['picture']
+    assert_match /14645700_10154584445939820_3787909207995449344/, d['picture']
     assert_equal 'http://facebook.com/355665009819', d['author_url']
     assert_not_nil Time.parse(d['published_at'])
   end
