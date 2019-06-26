@@ -11,6 +11,6 @@ Aws.config.update(
 
 resource = Aws::S3::Resource.new
 bucket = resource.bucket(Pender::Store.bucket_name)
-unless ENV['RAILS_ENV'] == 'test' || bucket.exists?
+unless bucket.exists?
   bucket.create
 end
