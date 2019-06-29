@@ -94,12 +94,15 @@ module MediaFacebookItem
     self.get_facebook_url_from_html
   end
 
-  def get_facebook_info_from_metadata
+  def get_facebook_metadata
     get_metatags(self)
     og_metadata = self.get_opengraph_metadata || {}
     tt_metadata = self.get_twitter_metadata || {}
-    metadata = og_metadata.merge(tt_metadata)
-    self.data['metadata'] = metadata
+    self.data['metadata'] = og_metadata.merge(tt_metadata)
+  end
+
+  def get_facebook_info_from_metadata
+    metadata = get_facebook_metadata
     self.data['author_name'] = self.get_facebook_author_name_from_html
     if (metadata['author_name'].nil? || !metadata['author_name'].match(/\A@?Facebook Watch\z/)) && !metadata['title'].nil?
       self.data['author_name'] = metadata['title']
