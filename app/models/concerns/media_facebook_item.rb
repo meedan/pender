@@ -94,13 +94,19 @@ module MediaFacebookItem
     self.get_facebook_url_from_html
   end
 
-  def get_facebook_info_from_metadata
+  def get_facebook_metadata
     get_metatags(self)
     og_metadata = self.get_opengraph_metadata || {}
     tt_metadata = self.get_twitter_metadata || {}
-    metadata = og_metadata.merge(tt_metadata)
-    self.data['metadata'] = metadata
-    self.data['author_name'] = metadata['title'].nil? ? self.get_facebook_author_name_from_html : metadata['title']
+    self.data['metadata'] = og_metadata.merge(tt_metadata)
+  end
+
+  def get_facebook_info_from_metadata
+    metadata = get_facebook_metadata
+    self.data['author_name'] = self.get_facebook_author_name_from_html
+    if (metadata['author_name'].nil? || !metadata['author_name'].match(/\A@?Facebook Watch\z/)) && !metadata['title'].nil?
+      self.data['author_name'] = metadata['title']
+    end
     self.data['text'] = metadata['description'].nil? ? self.get_facebook_description_from_html : metadata['description']
     self.data['photos'] = metadata['picture'].nil? ? self.get_facebook_photos_from_html : [metadata['picture']]
   end
@@ -110,7 +116,7 @@ module MediaFacebookItem
   end
 
   def get_facebook_author_name_from_html
-    author_link = self.doc.at_css('.fbPhotoAlbumActionList a') || self.doc.at_css('.uiHeaderTitle > a')
+    author_link = self.doc.at_css('.fbPhotoAlbumActionList a') || self.doc.at_css('.uiHeaderTitle > a') || self.doc.at_css('.userContentWrapper .profileLink')
     author_link.blank? ? self.get_facebook_title_from_html : author_link.text
   end
 

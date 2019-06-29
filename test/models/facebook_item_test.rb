@@ -26,18 +26,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal media2.url, media1.url
   end
 
-  test "should get canonical URL from facebook object" do
-    variations = {
-      'https://www.facebook.com/democrats/videos/10154268929856943' => 'https://www.facebook.com/democrats/videos/10154268929856943',
-      'https://www.facebook.com/democrats/posts/10154268929856943/' => 'https://www.facebook.com/democrats/videos/10154268929856943/'
-    }
-    variations.each do |url, expected|
-      media = Media.new(url: url)
-      media.as_json
-      assert_equal expected, media.url
-    end
-  end
-
   test "should get canonical URL from facebook object 2" do
     media = Media.new(url: 'https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406')
     media.as_json({ force: 1 })
