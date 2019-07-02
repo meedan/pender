@@ -873,11 +873,13 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should return error if URL is not safe" do
+    Media.any_instance.stubs(:unsafe?).returns(true)
     assert_raises Pender::UnsafeUrl do
-      m = create_media url: 'http://paytm.wishesrani.com/paytm-logo.png'
+      m = create_media url: 'http://example.com/paytm.wishesrani.com'
       data = m.as_json
       assert_equal 'UNSAFE', data['error']['code']
     end
+    Media.any_instance.unstub(:unsafe?)
   end
 
   test "should not crash if can't check if URL is not safe" do
