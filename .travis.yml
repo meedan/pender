@@ -7,7 +7,7 @@ before_install:
 - wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
 - docker-compose exec pender test/setup-parallel
 script:
-- docker-compose exec pender bundle exec ruby -Itest test/models/facebook_item_test.rb
+- docker-compose exec pender bundle exec rake "parallel:test[3]"
 after_script:
 - docker-compose exec pender cat tmp/performance.csv
 - docker-compose exec pender bundle exec codeclimate-test-reporter
