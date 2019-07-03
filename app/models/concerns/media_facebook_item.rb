@@ -25,6 +25,8 @@ module MediaFacebookItem
     Media.declare('facebook_item', URLS)
   end
 
+  attr_accessor :shared_content
+
   def parse_facebook_uuid
     self.url = self.url.gsub(/:\/\/m\.facebook\./, '://www.facebook.')
     self.get_facebook_post_id_from_url
@@ -244,11 +246,12 @@ module MediaFacebookItem
   end
 
   def get_original_post
-    return if self.doc.nil?
+    return if self.doc.nil? || self.shared_content
     sharing_info = self.doc.css('div.userContentWrapper').at_css('h5 > span.fwn > span.fcg')
-    if sharing_info && sharing_info.text.match(/shared a/) && sharing_info.at_css('span.fwb')
-      original_post = absolute_url(sharing_info.css('> a').attr('href'))
-      media = Media.new(url: original_post)
+    link = sharing_info.at_css('> a').attr('href') if sharing_info.at_css('> a')
+    if sharing_info && sharing_info.text.match(/shared a/) && sharing_info.at_css('span.fwb') && link
+      original_post = absolute_url(link)
+      media = Media.new(url: original_post, shared_content: true)
       data = media.as_json
       self.data['original_post'] = data['url']
       self.data['picture'] = data['picture']

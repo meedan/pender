@@ -477,6 +477,16 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match image_name, data[:picture]
   end
 
+  test "should not get original post if it's already parsing the original post" do
+    m = create_media url: 'https://www.facebook.com/groups/1863694297275556/'
+    data = m.as_json
+    original_post = data.dig('original_post')
+    assert_not_nil original_post
+
+    original = Media.new url: original_post
+    assert_nil original.as_json['original_post']
+  end
+
   test "should have external id for post" do
     m = create_media url: 'https://www.facebook.com/ironmaiden/posts/10156071020577051'
     data = m.as_json
