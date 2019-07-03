@@ -59,9 +59,7 @@ deploy_qa:
   script:
     - apk add --no-cache curl jq python py-pip git
     - pip install ecs-deploy==1.7.0
-    - git clone https://${GITHUB_TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
-    - source configurator/check/qa/pender/config/.env
-    - ecs deploy ecs-qa  qa-pender --image qa-pender-c $QA_ECR_API_BASE_URL:$CI_COMMIT_SHA -e qa-pender-c REDIS_HOST $REDIS_HOST -e qa-pender-c REDIS_PORT $REDIS_PORT -e qa-pender-c REDIS_DATABASE $REDIS_DATABASE -e qa-pender-c COOKIES $COOKIES -e qa-pender-c CACHE_DIR $CACHE_DIR -e qa-pender-c SCREENSHOTS_DIR $SCREENSHOTS_DIR  --timeout -1
+    - ecs deploy ecs-qa  qa-pender --image qa-pender-c $QA_ECR_API_BASE_URL:$CI_COMMIT_SHA  --timeout -1
     - echo "new Image was deployed $QA_ECR_API_BASE_URL:$CI_COMMIT_SHA"
   only:
     - develop
