@@ -230,7 +230,7 @@ module MediaFacebookItem
       self.data['text'].strip! if self.data['text']
       self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
       self.data['author_name'] = 'Not Identified' if self.data['author_name'].blank?
-      self.get_original_post
+      self.get_original_post unless self.doc.nil? || self.shared_content
       username = self.get_facebook_username || self.data['author_name']
       self.data.merge!({
         external_id: self.data['object_id'],
@@ -246,10 +246,10 @@ module MediaFacebookItem
   end
 
   def get_original_post
-    return if self.doc.nil? || self.shared_content
     sharing_info = self.doc.css('div.userContentWrapper').at_css('h5 > span.fwn > span.fcg')
+    return unless sharing_info
     link = sharing_info.at_css('> a').attr('href') if sharing_info.at_css('> a')
-    if sharing_info && sharing_info.text.match(/shared a/) && sharing_info.at_css('span.fwb') && link
+    if sharing_info.text.match(/shared a/) && sharing_info.at_css('span.fwb') && link
       original_post = absolute_url(link)
       media = Media.new(url: original_post, shared_content: true)
       data = media.as_json
