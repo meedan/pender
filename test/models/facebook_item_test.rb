@@ -123,6 +123,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     variations.each do |url|
       m = create_media url: url, request: request
       data = m.as_json
+      puts data
       assert_match /facebook\.com\/watch/, m.url
       assert_match /Facebook Watch/, data['title']
       assert_match /Original shows and popular videos in different categories from producers and creators you love/, data['description']
@@ -142,6 +143,7 @@ class FacebookItemTest < ActiveSupport::TestCase
       https://web.facebook.com/events/364677040588691/permalink/376287682760960?ref=1&action_history=null&_rdc=1&_rdr
     )
     assert_includes variations, m.url
+    puts data
     assert_not_nil data['published_at']
     assert_match /#{data['user_uuid']}/, data['author_url']
     assert_match /^https:/, data['picture']
@@ -440,6 +442,7 @@ class FacebookItemTest < ActiveSupport::TestCase
 
     m = create_media url: url
     data = m.as_json
+    puts data
     assert_equal 'Leaving Facebook', data['author_name']
     assert_equal 'flx', data['username']
     assert_equal '', data['html']
