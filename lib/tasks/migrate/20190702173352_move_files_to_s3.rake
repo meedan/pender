@@ -43,23 +43,31 @@ def copy_files(source, files)
   i = 0
   files.in_groups_of(1000, false).each do |batch|
     batch.each do |path|
-      id, type = send("get_#{source}_id_and_type", path)
-      unless Pender::Store.exist?(id, type)
-        content = send("get_#{source}_media", path, id)
-        Pender::Store.write(id, type, content)
+      begin
+        id, type = send("get_#{source}_id_and_type", path)
+        unless Pender::Store.exist?(id, type)
+          content = send("get_#{source}_media", path, id)
+          Pender::Store.write(id, type, content)
+        end
+        i += 1
+        print "#{i}/#{total}\r"
+        $stdout.flush
+      rescue StandardError => e
+        @failed[source] << {error: e, path: path}
       end
-      i += 1
-      print "#{i}/#{total}\r"
-      $stdout.flush
     end
   end
-  puts "[#{Time.now}] #{total} files copied from #{source} to S3."
+  failed_size = @failed[source].size
+  puts "[#{Time.now}] #{total - failed_size} files copied from #{source} to S3."
+  puts "[#{Time.now}]   Failed to copy #{failed_size} files."
 end
 
 namespace :pender do
   namespace :migrate do
     task move_files_to_s3: :environment do
+      @failed = {}
       [:filesystem, :cache].each do |source|
+        @failed[source] = []
         dir = send("#{source}_dir")
         unless File.exist?(dir)
           puts "Nothing to do for #{source}. #{dir} was not found"
@@ -68,6 +76,12 @@ namespace :pender do
         puts "[#{Time.now}] Verifying files on #{source} to move to S3..."
         files = send("get_#{source}_files", dir)
         copy_files(source, files)
+      end
+      @failed.each do |source, list|
+        next unless list.size > 0
+        list.each do |details|
+          puts details
+        end
       end
     end
   end
