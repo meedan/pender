@@ -8,7 +8,7 @@ module MediaOembedItem
 
   def post_process_oembed_data
     data = self.data
-    return if data[:error] || data[:raw][:oembed].nil?
+    return if data.dig(:error) || !Media.valid_raw_oembed?(data)
     data.merge({
       published_at: '',
       username: get_info_from_data('oembed', data, 'author_name'),
@@ -36,6 +36,7 @@ module MediaOembedItem
       self.verify_oembed_html
       return true
     rescue JSON::ParserError => error
+      self.data[:raw][:oembed] = { error: { message: error.message, code: 'INVALID_VALUE' } }
       Airbrake.notify(StandardError.new('Could not parse `oembed` data as JSON'), parameters: { url: self.url, oembed_url: oembed_url, error_message: error.message, response_body: response.body }) if Airbrake.configuration.api_key
     end
   end
