@@ -18,15 +18,17 @@ module Api
       def index
         @url = params[:url]
 
-        (render_parameters_missing; return) if @url.blank?
-        (render_url_invalid; return) unless is_url?(@url)
+        handle_exceptions do
+          (render_parameters_missing; return) if @url.blank?
+          (render_url_invalid; return) unless is_url?(@url)
 
-        @id = Media.get_id(@url)
+          @id = Media.get_id(@url)
 
-        (render_uncached_media and return) if @refresh || Pender::Store.read(@id, :json).nil?
-        respond_to do |format|
-          list_formats.each do |f|
-            format.send(f) { handle_exceptions { send("render_as_#{f}") }}
+          (render_uncached_media and return) if @refresh || Pender::Store.read(@id, :json).nil?
+          respond_to do |format|
+            list_formats.each do |f|
+              format.send(f) { send("render_as_#{f}") }
+            end
           end
         end
       end

@@ -729,6 +729,22 @@ class MediasControllerTest < ActionController::TestCase
     end
   end
 
+  test "should rescue and unlock url when raises error on store" do
+    authenticate_with_token
+    url = 'https://twitter.com/knowloitering/status/1140462371820826624'
+    assert !Semaphore.new(url).locked?
+    Pender::Store.stubs(:read).raises(RuntimeError.new('error'))
+    [:js, :json, :html, :oembed].each do |format|
+      assert_nothing_raised do
+        get :index, url: url, format: format
+        assert !Semaphore.new(url).locked?
+        assert_response 400
+        assert_equal 'error', JSON.parse(response.body)['data']['message']
+      end
+    end
+    Pender::Store.unstub(:read)
+  end
+
   test "should return error if URL is not safe" do
     authenticate_with_token
     url = 'http://paytm.wishesrani.com/paytm-logo.png'

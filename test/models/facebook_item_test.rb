@@ -478,7 +478,7 @@ class FacebookItemTest < ActiveSupport::TestCase
   end
 
   test "should not get original post if it's already parsing the original post" do
-    m = create_media url: 'https://www.facebook.com/groups/1863694297275556/'
+    m = create_media url: 'https://www.facebook.com/groups/1863694297275556/permalink/2193768444268138/'
     data = m.as_json
     original_post = data.dig('original_post')
     assert_not_nil original_post

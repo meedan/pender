@@ -1,4 +1,4 @@
-require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
+require_relative '../test_helper'
 require 'cc_deville'
 
 class MediaTest < ActiveSupport::TestCase
@@ -57,10 +57,18 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
-  test "should parse HTTP-authed URL" do
-    m = create_media url: 'https://qa.checkmedia.org/'
-    data = m.as_json
-    assert_equal 'Check', data['title']
+  test "should parse HTTP-authed URL including credentials on header" do
+    url = 'https://example.com/'
+    parsed_url = Media.parse_url url
+    m = Media.new url: url
+    header_options_without_auth = Media.send(:html_options, url)
+    assert_nil header_options_without_auth[:http_basic_authentication]
+    stub_configs({'hosts' => {"example.com"=>{"http_auth"=>"example:1234"}}})
+    header_options_with_auth = Media.send(:html_options, url)
+    assert_equal ['example', '1234'], header_options_with_auth[:http_basic_authentication]
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_auth).raises(RuntimeError.new('unauthorized'))
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options_with_auth)
+    assert_equal Nokogiri::HTML::Document, m.send(:get_html, Media.send(:html_options, m.url)).class
   end
 
   test "should parse opengraph metatags" do
@@ -79,12 +87,12 @@ class MediaTest < ActiveSupport::TestCase
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'https://xkcd.com/1479', request: request
     d = m.as_json
-    assert_equal 'xkcd: Troubleshooting', d['title']
+    assert_match /Troubleshooting/, d['title']
     assert_equal '', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://xkcd.com', d['author_url']
-    assert_equal '', d['picture']
+    assert_match /troubleshooting/, d['picture']
   end
 
   test "should parse meta tags as fallback 2" do
@@ -167,7 +175,7 @@ class MediaTest < ActiveSupport::TestCase
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'http://xkcd.com/448/', request: request
     d = m.as_json
-    assert_equal 'xkcd: Good Morning', d['title']
+    assert_match /Good Morning/, d['title']
     assert_equal '', d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
@@ -300,12 +308,12 @@ class MediaTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'item', d['type']
     assert_equal 'page', d['provider']
-    assert_equal 'Yahoo', d['title']
+    assert_match /Yahoo/, d['title']
     assert_not_nil d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
     assert_not_nil d['author_url']
-    assert_equal 'Yahoo', d['author_name']
+    assert_match /Yahoo/, d['author_name']
     assert_not_nil d['picture']
     assert_nil d['error']
   end
