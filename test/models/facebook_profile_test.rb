@@ -106,8 +106,12 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 'https://www.facebook.com/teste637621352/', data['author_url']
     assert_equal 'Facebook', data['provider_name']
     assert_equal 'https://www.facebook.com', data['provider_url']
-    assert_equal 552, data['width']
-    assert data['height'].nil?
+    assert_equal 300, data['width']
+    assert_equal 150, data['height']
+
+    json = Pender::Store.read(Media.get_id(url), :json)
+    assert_equal 552, json[:raw][:oembed][:width]
+    assert_nil json[:raw][:oembed][:height]
   end
 
   test "should parse Facebook with numeric id" do

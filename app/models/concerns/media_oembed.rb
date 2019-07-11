@@ -3,24 +3,24 @@ module MediaOembed
 
   def get_oembed_data(original_url = nil, maxwidth = nil, maxheight= nil)
     url = original_url || self.url
-    if !self.data['raw'].nil? && !self.data['raw']['oembed'].nil?
-      self.data['raw']['oembed'].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(url, maxwidth, maxheight))
+    if Media.valid_raw_oembed?(self.data)
+      self.data['oembed'] = self.data['raw']['oembed'].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(url, maxwidth, maxheight))
     else
       self.as_json if self.data.empty?
       %w(type provider).each { |key| self.data[key] = self.send(key.to_sym) }
-      self.data['raw']['oembed'] = Media.default_oembed(self.data, url, maxwidth, maxheight) unless self.data_from_oembed_item
+      self.data['oembed'] = self.data_from_oembed_item ? self.data['raw']['oembed'] : Media.default_oembed(self.data, url, maxwidth, maxheight)
     end
     self.data['author_name'] ||= self.data.dig('raw', 'oembed', 'author_name')
-    self.data['raw']['oembed']
+    self.data['oembed']
   end
 
   module ClassMethods
     def as_oembed(data, original_url, maxwidth, maxheight, instance = nil)
       return instance.send(:get_oembed_data, original_url, maxwidth, maxheight) if instance
-      if data[:raw].nil? || data[:raw][:oembed].nil?
+      if !Media.valid_raw_oembed?(data)
         Media.default_oembed(data, original_url, maxwidth, maxheight)
       else
-        data[:raw][:oembed].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(original_url, maxwidth, maxheight))
+        data[:oembed].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(original_url, maxwidth, maxheight))
       end
     end
 
@@ -45,6 +45,10 @@ module MediaOembed
 
     def default_oembed_html(src, maxwidth = 800, maxheight = 200)
       "<iframe src=\"#{src}\" width=\"#{maxwidth}\" height=\"#{maxheight}\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>"
+    end
+
+    def valid_raw_oembed?(data)
+      !data.dig('raw').nil? && !data.dig('raw', 'oembed').nil? && data.dig('raw', 'oembed', 'error').nil?
     end
   end
 end

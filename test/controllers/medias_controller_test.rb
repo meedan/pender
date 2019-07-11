@@ -400,6 +400,25 @@ class MediasControllerTest < ActionController::TestCase
     Media.unstub(:as_oembed)
   end
 
+  test "should return data from default oembed when raw oembed fails" do
+    oembed_response = 'mock'
+    oembed_response.stubs(:code).returns('200')
+    oembed_response.stubs(:body).returns('<br />\n<b>Warning</b>: {\"version\":\"1.0\"}')
+    Media.any_instance.stubs(:oembed_get_data_from_url).returns(oembed_response)
+    url = 'https://news.definitelyfilipino.net/posts/2019/06/girlfriend-pinagawaan-ng-tarpaulin-ang-boyfriend-na-umabot-sa-mythic-level-ng-mobile-legends/'
+    get :index, url: url, format: :oembed
+    json = Pender::Store.read(Digest::MD5.hexdigest(Media.normalize_url(url)), :json)
+    assert_nil json[:raw][:oembed]['title']
+    assert_match(/unexpected token/, json[:raw][:oembed]['error']['message'])
+    assert_match(/Definitely Filipino News/, json['oembed']['title'])
+
+    assert_response :success
+    oembed = JSON.parse(response.body)
+    assert_match(/Definitely Filipino News/, oembed['title'])
+
+    Media.any_instance.unstub(:oembed_get_data_from_url)
+  end
+
   test "should respond to oembed format when data is on cache" do
     url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
     id = Digest::MD5.hexdigest(url)

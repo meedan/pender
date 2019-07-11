@@ -114,9 +114,9 @@ class YoutubeTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
     data = m.as_json
 
-    assert data['raw']['oembed'].is_a? Hash
-    assert_equal 'ironmaiden', data['raw']['oembed']['author_name']
-    assert_equal 'Iron Maiden', data['raw']['oembed']['title']
+    assert_nil data['raw']['oembed']
+    assert_equal 'ironmaiden', data['oembed']['author_name']
+    assert_equal 'Iron Maiden', data['oembed']['title']
   end
 
   test "should get all thumbnails available and set the highest resolution as picture for item" do

@@ -397,18 +397,17 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/profile.php?id=100008161175765&fref=ts'
     data = m.as_json
 
-    assert data['raw']['oembed'].is_a? Hash
-    assert_equal 'Tico-Santa-Cruz', data['raw']['oembed']['author_name']
-    assert_equal 'Tico Santa Cruz', data['raw']['oembed']['title']
+    assert_nil data['raw']['oembed']
+    assert_equal 'Tico-Santa-Cruz', data['oembed']['author_name']
+    assert_equal 'Tico Santa Cruz', data['oembed']['title']
   end
 
   test "should store oembed data of a facebook page" do
     m = create_media url: 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
     data = m.as_json
-
-    assert data['raw']['oembed'].is_a? Hash
-    assert_equal 'Meedan', data['raw']['oembed']['author_name']
-    assert_equal 'Meedan', data['raw']['oembed']['title']
+    assert_nil data['raw']['oembed']
+    assert_equal 'Meedan', data['oembed']['author_name']
+    assert_equal 'Meedan', data['oembed']['title']
   end
 
   test "should create Facebook post from page post URL without login" do
