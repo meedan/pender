@@ -6,7 +6,7 @@ Aws.config.update(
   access_key_id: CONFIG.dig('storage', 'access_key'),
   secret_access_key: CONFIG.dig('storage', 'secret_key'),
   force_path_style: true,
-  region: 'us-east-1'
+  region: CONFIG.dig('storage', 'bucket_region')
 )
 
 resource = Aws::S3::Resource.new
