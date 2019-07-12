@@ -9,45 +9,46 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    actionmailer (4.2.11)
-      actionpack (= 4.2.11)
-      actionview (= 4.2.11)
-      activejob (= 4.2.11)
+    actionmailer (4.2.11.1)
+      actionpack (= 4.2.11.1)
+      actionview (= 4.2.11.1)
+      activejob (= 4.2.11.1)
       mail (~> 2.5, >= 2.5.4)
       rails-dom-testing (~> 1.0, >= 1.0.5)
-    actionpack (4.2.11)
-      actionview (= 4.2.11)
-      activesupport (= 4.2.11)
+    actionpack (4.2.11.1)
+      actionview (= 4.2.11.1)
+      activesupport (= 4.2.11.1)
       rack (~> 1.6)
       rack-test (~> 0.6.2)
       rails-dom-testing (~> 1.0, >= 1.0.5)
       rails-html-sanitizer (~> 1.0, >= 1.0.2)
-    actionview (4.2.11)
-      activesupport (= 4.2.11)
+    actionview (4.2.11.1)
+      activesupport (= 4.2.11.1)
       builder (~> 3.1)
       erubis (~> 2.7.0)
       rails-dom-testing (~> 1.0, >= 1.0.5)
       rails-html-sanitizer (~> 1.0, >= 1.0.3)
-    activejob (4.2.11)
-      activesupport (= 4.2.11)
+    activejob (4.2.11.1)
+      activesupport (= 4.2.11.1)
       globalid (>= 0.3.0)
-    activemodel (4.2.11)
-      activesupport (= 4.2.11)
+    activemodel (4.2.11.1)
+      activesupport (= 4.2.11.1)
       builder (~> 3.1)
-    activerecord (4.2.11)
-      activemodel (= 4.2.11)
-      activesupport (= 4.2.11)
+    activerecord (4.2.11.1)
+      activemodel (= 4.2.11.1)
+      activesupport (= 4.2.11.1)
       arel (~> 6.0)
-    activesupport (4.2.11)
+    activesupport (4.2.11.1)
       i18n (~> 0.7)
       minitest (~> 5.1)
       thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
-    addressable (2.5.2)
+    addressable (2.6.0)
       public_suffix (>= 2.0.2, < 4.0)
     airbrake (4.3.3)
       builder
       multi_json
+    ansi (1.5.0)
     arel (6.0.4)
     awesome_print (1.8.0)
     aws-eventstream (1.0.3)
@@ -771,7 +772,7 @@ GEM
     byebug (9.1.0)
     codeclimate-test-reporter (1.0.8)
       simplecov (<= 0.13)
-    concurrent-ruby (1.1.4)
+    concurrent-ruby (1.1.5)
     connection_pool (2.2.1)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
@@ -788,7 +789,7 @@ GEM
     eventmachine (1.2.5)
     ffi (1.9.25)
     gem-licenses (0.2.1)
-    globalid (0.4.1)
+    globalid (0.4.2)
       activesupport (>= 4.2.0)
     hashdiff (0.3.7)
     htmlentities (4.3.4)
@@ -819,8 +820,8 @@ GEM
     mida (0.4.0)
       addressable (~> 2.4)
       nokogiri (>= 1.6)
-    mini_mime (1.0.1)
-    mini_portile2 (2.3.0)
+    mini_mime (1.0.2)
+    mini_portile2 (2.4.0)
     minitest (5.11.3)
     minitest-retry (0.1.9)
       minitest (>= 5.0)
@@ -829,16 +830,16 @@ GEM
     multi_json (1.12.2)
     multipart-post (2.0.0)
     naught (1.1.0)
-    nokogiri (1.8.5)
-      mini_portile2 (~> 2.3.0)
+    nokogiri (1.10.3)
+      mini_portile2 (~> 2.4.0)
     open_uri_redirections (0.2.1)
     parallel (1.12.1)
     parallel_tests (2.22.1)
       parallel
     pg (0.21.0)
-    postrank-uri (1.0.23)
-      addressable (>= 2.3.0, < 2.6)
-      nokogiri (>= 1.6.1, < 1.9)
+    postrank-uri (1.0.24)
+      addressable (>= 2.4.0)
+      nokogiri (>= 1.8.0)
       public_suffix (>= 2.0.0, < 2.1)
     protected_attributes (1.1.4)
       activemodel (>= 4.0.1, < 5.0)
@@ -851,16 +852,16 @@ GEM
     rack-test (0.6.3)
       rack (>= 1.0)
     railroady (1.5.3)
-    rails (4.2.11)
-      actionmailer (= 4.2.11)
-      actionpack (= 4.2.11)
-      actionview (= 4.2.11)
-      activejob (= 4.2.11)
-      activemodel (= 4.2.11)
-      activerecord (= 4.2.11)
-      activesupport (= 4.2.11)
+    rails (4.2.11.1)
+      actionmailer (= 4.2.11.1)
+      actionpack (= 4.2.11.1)
+      actionview (= 4.2.11.1)
+      activejob (= 4.2.11.1)
+      activemodel (= 4.2.11.1)
+      activerecord (= 4.2.11.1)
+      activesupport (= 4.2.11.1)
       bundler (>= 1.3.0, < 2.0)
-      railties (= 4.2.11)
+      railties (= 4.2.11.1)
       sprockets-rails
     rails-deprecated_sanitizer (1.0.3)
       activesupport (>= 4.2.0.alpha)
@@ -871,9 +872,9 @@ GEM
     rails-html-sanitizer (1.0.4)
       loofah (~> 2.2, >= 2.2.2)
     rails-perftest (0.0.7)
-    railties (4.2.11)
-      actionpack (= 4.2.11)
-      activesupport (= 4.2.11)
+    railties (4.2.11.1)
+      actionpack (= 4.2.11.1)
+      activesupport (= 4.2.11.1)
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
     rake (12.3.2)
@@ -917,6 +918,10 @@ GEM
       docile (~> 1.1.0)
       json (>= 1.8, < 3)
       simplecov-html (~> 0.10.0)
+    simplecov-console (0.5.0)
+      ansi
+      simplecov
+      terminal-table
     simplecov-html (0.10.2)
     sprockets (3.7.2)
       concurrent-ruby (~> 1.0)
@@ -929,6 +934,8 @@ GEM
     swagger-docs (0.1.9)
       activesupport (>= 3, < 5)
       rails (>= 3, < 5)
+    terminal-table (1.8.0)
+      unicode-display_width (~> 1.1, >= 1.1.1)
     thin (1.7.2)
       daemons (~> 1.0, >= 1.0.9)
       eventmachine (~> 1.0, >= 1.0.4)
@@ -952,6 +959,7 @@ GEM
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.4)
+    unicode-display_width (1.6.0)
     web-console (2.3.0)
       activemodel (>= 4.0)
       binding_of_caller (>= 0.7.2)
@@ -968,7 +976,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activejob (= 4.2.11)
+  actionview (= 4.2.11.1)
+  activejob (= 4.2.11.1)
   airbrake (= 4.3.3)
   awesome_print
   aws-sdk (~> 3)
@@ -982,7 +991,7 @@ DEPENDENCIES
   mida
   minitest-retry
   mocha
-  nokogiri (= 1.8.5)
+  nokogiri (= 1.10.3)
   open_uri_redirections
   parallel_tests
   pg
@@ -993,7 +1002,7 @@ DEPENDENCIES
   rack-cors
   rack-protection (= 2.0.1)
   railroady
-  rails (= 4.2.11)
+  rails (= 4.2.11.1)
   rails-html-sanitizer (= 1.0.4)
   rails-perftest
   redis-namespace
@@ -1004,6 +1013,7 @@ DEPENDENCIES
   sidekiq
   sidekiq-scheduler
   simplecov (= 0.13.0)
+  simplecov-console
   sprockets (= 3.7.2)
   sqlite3
   swagger-docs (= 0.1.9)

@@ -766,10 +766,11 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return error if URL is not safe" do
     authenticate_with_token
-    url = 'http://paytm.wishesrani.com/paytm-logo.png'
+    url = 'http://malware.wicar.org/data/ms14_064_ole_xp.html' # More examples: https://www.wicar.org/test-malware.html
     get :index, url: url, format: 'json'
     response = JSON.parse(@response.body)
     assert_equal 'error', response['type']
+    assert_equal 'Unsafe URL', response['data']['message']
   end
 
   test "should cache json and html on file" do
@@ -784,5 +785,12 @@ class MediasControllerTest < ActionController::TestCase
     [:html, :json].each do |type|
       assert Pender::Store.read(id, type), "#{id}.#{type} is missing"
     end
+  end
+
+  test "should not throw nil error" do
+    authenticate_with_token
+    url = 'https://most-popular-lists.blogspot.com/2019/07/fishermen-diokno-were-fooled-us-into.html'
+    get :index, url: url, format: 'json'
+    assert_match /Fishermen/, JSON.parse(@response.body)['data']['title']
   end
 end

@@ -122,6 +122,7 @@ module Api
 
       def render_media(data)
         data ||= @data
+        data ||= {}
         json = { type: 'media' }
         json[:data] = data.merge({ embed_tag: embed_url(request) })
         render json: json, status: 200

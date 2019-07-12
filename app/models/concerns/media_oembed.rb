@@ -17,11 +17,7 @@ module MediaOembed
   module ClassMethods
     def as_oembed(data, original_url, maxwidth, maxheight, instance = nil)
       return instance.send(:get_oembed_data, original_url, maxwidth, maxheight) if instance
-      if !Media.valid_raw_oembed?(data)
-        Media.default_oembed(data, original_url, maxwidth, maxheight)
-      else
-        data[:oembed].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(original_url, maxwidth, maxheight))
-      end
+      !Media.valid_raw_oembed?(data) ? Media.default_oembed(data, original_url, maxwidth, maxheight) : data[:oembed].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(original_url, maxwidth, maxheight))
     end
 
     def default_oembed(data, original_url, maxwidth = nil, maxheight= nil)
