@@ -868,11 +868,11 @@ class MediaTest < ActiveSupport::TestCase
     oembed_response.stubs(:code).returns('200')
     oembed_response.stubs(:body).returns('<br />\n<b>Warning</b>: {\"version\":\"1.0\"}')
     Media.any_instance.stubs(:oembed_get_data_from_url).returns(oembed_response)
-    url = 'https://news.definitelyfilipino.net/posts/2019/06/girlfriend-pinagawaan-ng-tarpaulin-ang-boyfriend-na-umabot-sa-mythic-level-ng-mobile-legends/'
+    url = 'https://example.com'
     m = create_media url: url
     data = m.as_json
     assert_match(/unexpected token/, data[:raw][:oembed]['error']['message'])
-    assert_match(/Definitely Filipino News/, data['oembed']['title'])
+    assert_match(/Example Domain/, data['oembed']['title'])
     assert_equal 'page', data['oembed']['provider_name']
     Media.any_instance.unstub(:oembed_get_data_from_url)
   end
