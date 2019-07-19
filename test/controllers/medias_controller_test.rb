@@ -793,4 +793,16 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: url, format: 'json'
     assert_match /Fishermen/, JSON.parse(@response.body)['data']['title']
   end
+
+  test "should parse suspended Twitter profile" do
+    authenticate_with_token
+    
+    url = 'https://twitter.com/g9wuortn6sve9fn/status/940956917010259970'
+    get :index, url: url, format: 'json'
+    assert_response :success
+    
+    url = 'https://twitter.com/account/suspended'
+    get :index, url: url, format: 'json'
+    assert_response :success
+  end
 end
