@@ -8,17 +8,13 @@ test:
   image: docker:latest
   services:
     - docker:dind
-
-  variables:
-    DOCKER_HOST: tcp://localhost:2375
-
   tags:
     - meedan
     - meedan-labs
   stage: test
   script:
     - apk add --no-cache curl wget git py-pip
-    - pip install docker-compose==1.23.2
+    - pip install docker-compose
     - git clone https://${GITHUB_TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
     - d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}"; done
     - docker-compose build
