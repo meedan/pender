@@ -78,6 +78,7 @@ module MediaArchiver
         sig = 'sha1=' + OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), settings['webhook_token'], payload)
         headers = { 'Content-Type': 'text/json', 'X-Signature': sig }
         http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = uri.scheme == 'https'
         request = Net::HTTP::Post.new(uri.request_uri, headers)
         request.body = payload
         response = http.request(request)
