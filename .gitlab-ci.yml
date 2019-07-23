@@ -5,7 +5,7 @@ stages:
 
 
 test:
-  image: docker:latest
+  image: docker:18.09.8
   services:
     - docker:dind
   tags:
