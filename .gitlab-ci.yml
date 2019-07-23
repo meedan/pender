@@ -5,10 +5,9 @@ stages:
 
 
 test:
-  image: docker:18.09.8
+  image: docker:latest
   services:
     - docker:dind
-  allow_failure: true
   tags:
     - meedan
     - meedan-labs
@@ -86,7 +85,7 @@ build_live:
     - docker build  -f Dockerfile.production.aws -t "$ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA"  .
     - docker push "$ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA"
   only:
-    - develop
+    - master
 
 
 deploy_live:
@@ -105,4 +104,4 @@ deploy_live:
     - ecs deploy ecs-live  live-pender --image live-pender-c $ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA  --timeout -1
     - echo "new Image was deployed $ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA"
   only:
-    - develop
+    - master
