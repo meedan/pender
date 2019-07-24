@@ -916,4 +916,21 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal '', data['external_id']
   end
+
+  test "should not reach an infinite loop when parsing Twitter URL" do
+    class HttpRedirectionLoop < StandardError
+    end
+    Airbrake.stubs(:configuration).raises(HttpRedirectionLoop.new('Test'))
+    errors = 0
+    urls = ['https://twitter.com/com', 'https://twitter.com/hadialabdallah/status/846103320880201729', 'https://twitter.com/syriacivildefe/status/845714970147012608', 'https://twitter.com/SyriaCivilDefe/status/845714970147012608', 'https://twitter.com/Lachybe', 'https://twitter.com/ideas', 'https://twitter.com/psicojen', 'https://twitter.com/cfcffl', 'https://twitter.com/account/suspended', 'https://twitter.com/g9wuortn6sve9fn/status/940956917010259970']
+    urls.each do |url|
+      begin
+        Media.new url: url
+      rescue HttpRedirectionLoop
+        errors += 1
+      end
+    end
+    Airbrake.unstub(:configuration)
+    assert_equal 0, errors
+  end
 end
