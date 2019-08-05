@@ -32,7 +32,7 @@ module MediaFacebookItem
     self.get_facebook_post_id_from_url
     self.get_facebook_user_id_from_url
     if self.url.match(EVENT_URL).nil?
-      self.data['uuid'] = [self.data['user_uuid'], self.data['object_id']].reject(&:empty?).join('_')
+      self.data['uuid'] = [self.data['user_uuid'].to_s, self.data['object_id'].to_s].reject(&:empty?).join('_')
     else
       self.data['uuid'] = self.data['object_id']
       get_facebook_picture(self.data['object_id'])

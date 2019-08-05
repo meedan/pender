@@ -491,4 +491,10 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal '10156071020577051', data['external_id']
   end
+
+  test "should parse Facebook category page" do
+    m = create_media url: 'https://www.facebook.com/pages/category/Society---Culture-Website/PoporDezamagit/photos/'
+    data = m.as_json
+    assert_equal 'Popor dezamagit on Facebook', data[:title]
+  end
 end
