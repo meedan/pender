@@ -1,4 +1,4 @@
-require 'aws-sdk'
+require 'aws-sdk-s3'
 require 'pender_store'
 
 Aws.config.update(
