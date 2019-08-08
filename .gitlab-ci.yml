@@ -75,7 +75,6 @@ build_qa:
 deploy_qa:
   image: python:3-alpine
   stage: deploy
-  when: manual
   tags:
     - meedan
     - meedan-labs
