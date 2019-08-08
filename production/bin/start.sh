@@ -33,7 +33,8 @@ cd ${DEPLOYDIR}/current
 su ${DEPLOYUSER} -c 'bundle exec rake db:migrate'
 
 echo "starting sidekiq"
-su ${DEPLOYUSER} -c "bundle exec sidekiq -L log/sidekiq.log -d"
+#su ${DEPLOYUSER} -c "bundle exec sidekiq -L log/sidekiq.log -d"
+su ${DEPLOYUSER} -c "bundle exec sidekiq -d"
 
 cd -
 
