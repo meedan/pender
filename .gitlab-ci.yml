@@ -3,6 +3,7 @@ stages:
   - build
   - deploy
 
+
 test_all:
   image: docker:latest
   allow_failure: true
