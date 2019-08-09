@@ -265,7 +265,7 @@ class Media
     options = { allow_redirections: :safe, proxy: nil }
     credentials = Media.get_http_auth(uri)
     options[:http_basic_authentication] = credentials
-    options['User-Agent'] = 'Mozilla/5.0'
+    options['User-Agent'] = 'Mozilla/5.0 (X11)'
     options['Accept'] = '*/*'
     options['Accept-Language'] = 'en'
     options['Cookie'] = Media.set_cookies(uri)

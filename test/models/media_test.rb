@@ -933,4 +933,13 @@ class MediaTest < ActiveSupport::TestCase
     Airbrake.unstub(:configuration)
     assert_equal 0, errors
   end
+
+  test "should not reach the end of file caused by User-Agent" do
+    url = 'https://gnbc.news/9669/'
+    assert_nothing_raised do
+      m = Media.new url: url
+      data = m.as_json
+      assert_match /BREAKING NEWS/, data['title']
+    end
+  end
 end
