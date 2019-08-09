@@ -184,6 +184,8 @@ class FacebookProfileTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'José Silva', data['title']
     assert_equal 'José-Silva', data['username']
+    assert_match /^http/, data['picture']
+    assert_not_equal '', data['description'].to_s
   end
 
   # http://errbit.test.meedan.net/apps/576218088583c6f1ea000231/problems/57a1bf968583c6f1ea000c01
@@ -477,5 +479,11 @@ class FacebookProfileTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/ironmaiden'
     data = m.as_json
     assert_equal 172685102050, data['external_id']
+  end
+
+  test "should parse Facebook person profile" do
+    m = create_media url: 'https://facebook.com/caiosba'
+    data = m.as_json
+    assert_match /Caio/, data[:title]
   end
 end

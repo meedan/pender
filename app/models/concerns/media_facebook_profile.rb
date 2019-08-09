@@ -108,16 +108,25 @@ module MediaFacebookProfile
 
   def data_from_facebook_profile
     self.data.merge! self.get_data_from_facebook
+    picture = self.get_value_from_facebook_metatags(self.data['picture'], 'og:image')
     self.data.merge!({
       external_id: self.data['id'] || '',
       username: self.get_facebook_username,
-      title: self.get_facebook_name,
-      description: self.data['description'],
+      title: self.get_value_from_facebook_metatags(self.get_facebook_name, 'og:title'),
+      description: self.get_value_from_facebook_metatags(self.data['description'], 'og:description'),
       author_url: self.url,
-      author_picture: self.data['picture'],
+      author_picture: picture,
       author_name: self.data['name'],
-      picture: self.data['picture']
+      picture: picture
     })
+  end
+
+  def get_value_from_facebook_metatags(current, name)
+    return current unless current.blank?
+    tags = self.data.dig('raw', 'metatags') || []
+    value = nil
+    tags.each { |tag| value = tag['content'] if tag['property'] == name }
+    value
   end
 
   def get_facebook_name
