@@ -22,7 +22,7 @@ require 'sample_data'
 require 'pender_exceptions'
 require 'sidekiq/testing'
 require 'minitest/retry'
-Minitest::Retry.use!
+Minitest::Retry.use!(retry_count: 5)
 
 class ActiveSupport::TestCase
   ActiveRecord::Migration.check_pending!
