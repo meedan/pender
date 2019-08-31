@@ -878,7 +878,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should handle exception when oembed content is not a valid json" do
-    url = 'https://philippineslifestyle.com/flat-earth-theory-support-philippines'
+    url = 'https://web.archive.org/web/20190226023026/http://philippineslifestyle.com/flat-earth-theory-support-philippines/'
     m = create_media url: url
     data = m.as_json
     assert_equal 'page', data['oembed']['provider_name']
@@ -891,7 +891,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nothing_raised do
       m = create_media url: url
       data = m.as_json
-      assert_equal 'https://www.yousign.org/404.php?notfound=/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358', m.url
+      assert_equal 'https://www.yousign.org/v2_404.php?notfound=/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358', m.url
     end
   end
 
