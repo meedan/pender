@@ -1,0 +1,934 @@
+https://xkcd.com/1479
+  author_name: "xkcd" => "About"
+  published_at: "" => "null"
+  description: "" => "null"
+  provider: "page" => "xkcd"
+  favicon: "https://www.google.com/s2/favicons?domain_url=xkcd.com/1479/" => "https://xkcd.com/s/919f27.ico"
+=========================================
+https://meedan.com/en/check/
+  author_name: "Check" => "null"
+  published_at: "" => "null"
+  provider: "page" => "Verify breaking news online In progress Facebook-black Twitter-black False Facebook-black Twitter-black True Facebook-black Twitter-black"
+  url: "https://meedan.com/en/check/" => "http://meedan.com/en/check/"
+  favicon: "https://www.google.com/s2/favicons?domain_url=meedan.com/en/check/" => "https://meedan.com/images/favicons/favicon.ico?v=1"
+=========================================
+https://www.reddit.com/r/Art/comments/58a8kp/emotions_language_youngjoo_namgung_ai_livesurface/
+  author_name: "@reddit" => "philstein1"
+  published_at: "" => "2016-10-19T13:24:20.000Z"
+  description: "10,517 votes and 177 comments so far on Reddit" => "10,527 votes and 177 comments so far on Reddit"
+  provider: "page" => "reddit"
+  title: "r/Art - emotion's language, Youngjoo Namgung, AI & LiveSurface, '16" => "r/Art - emotion’s language, Youngjoo Namgung, AI & LiveSurface, ’16"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.reddit.com/r/Art/comments/58a8kp/emotions_language_youngjoo_namgung_ai_livesurface/" => "https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png"
+=========================================
+https://www.theguardian.com/politics/2016/oct/19/larry-sanders-on-brother-bernie-and-why-tony-blair-was-destructive
+  author_name: "@guardian" => "Zoe Williams"
+  published_at: "2016-10-19T16:32:18.000Z" => "2017-11-25T04:15:42.000Z"
+  picture: "https://i.guim.co.uk/img/media/d43d8d320520d7f287adab71fd3a1d337baf7516/0_945_3850_2310/master/3850.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctZGVmYXVsdC5wbmc&s=dd12a79334027decd1438a8120634c94" => "https://i.guim.co.uk/img/media/d43d8d320520d7f287adab71fd3a1d337baf7516/0_945_3850_2310/master/3850.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctZGVmYXVsdC5wbmc&enable=upscale&s=272f08704dcad5f40703327790081637"
+  provider: "page" => "the Guardian"
+  url: "https://www.theguardian.com/politics/2016/oct/19/larry-sanders-on-brother-bernie-and-why-tony-blair-was-destructive" => "http://www.theguardian.com/politics/2016/oct/19/larry-sanders-on-brother-bernie-and-why-tony-blair-was-destructive"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.theguardian.com/politics/2016/oct/19/larry-sanders-on-brother-bernie-and-why-tony-blair-was-destructive" => "https://assets.guim.co.uk/images/favicons/fee5e2d638d1c35f6d501fa397e53329/152x152.png"
+=========================================
+https://almanassa.com/ar/story/3164
+  author_name: "المنصة" => "أحمد إسماعيل"
+  published_at: "" => "2016-10-17T00:00:00.000Z"
+  description: "مرت الأيام التي تلت محاولة اغتيال العبادي دون أي جديد، ودون أن يجاب أي من الأسئلة المطروحة حول طبيعة المساومات التي جرت لتحديد موقف مشاركة القوات ذات الخلفيات الطائفية والعرقية المختلفة في معركة "تحرير الموصل"" => "مرت الأيام التي تلت محاولة اغتيال العبادي دون أي جديد، ودون أن يجاب أي من الأسئلة المطروحة حول طبيعة المساومات التي جرت لتحديد موقف مشاركة القوات ذات الخلفيات الطائفية والعرقية المختلفة في معركة ”تحرير الموصل”"
+  picture: "http:////almanassa.com/sites/default/files/irq_367110792_1469895703-bicubic.jpg" => "https://almanassa.com/sites/default/files/irq_367110792_1469895703-bicubic.jpg"
+  provider: "page" => "المنصة"
+  favicon: "https://www.google.com/s2/favicons?domain_url=almanassa.com/ar/story/3164" => "https://almanassa.com/sites/all/themes/checkdesk/assets/imgs/icons/favicon-32x32.png"
+=========================================
+https://speakbridge.io/medias/embed/viber/1/403
+  author_name: "" => "Translated by an xiao mina"
+  published_at: "" => "2017-08-29T00:00:00.000Z"
+  provider: "bridge" => "null"
+  favicon: "https://www.google.com/s2/favicons?domain_url=speakbridge.io/medias/embed/viber/1/403" => "https://speakbridge.io/favicon.ico"
+=========================================
+https://ca.yahoo.com/
+  author_name: "Yahoo" => "null"
+  published_at: "" => "null"
+  provider: "page" => "Yahoo"
+  url: "https://ca.yahoo.com" => "http://ca.yahoo.com"
+  favicon: "https://www.google.com/s2/favicons?domain_url=ca.yahoo.com" => "https://s.yimg.com/rz/l/favicon.ico"
+=========================================
+https://www.yahoo.com/
+  author_name: "Yahoo Brasil" => "null"
+  published_at: "" => "null"
+  provider: "page" => "Yahoo Brasil"
+  url: "https://br.yahoo.com" => "http://br.yahoo.com"
+  favicon: "https://www.google.com/s2/favicons?domain_url=br.yahoo.com" => "https://s.yimg.com/rz/l/favicon.ico"
+=========================================
+https://www.test.com
+  author_name: "" => "null"
+  published_at: "" => "null"
+  description: "" => "null"
+  picture: "" => "null"
+  provider: "page" => "null"
+  title: "" => "null"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.test.com/" => "null"
+=========================================
+https://ca.yahoo.com
+  author_name: "Yahoo" => "null"
+  published_at: "" => "null"
+  provider: "page" => "Yahoo"
+  url: "https://ca.yahoo.com" => "http://ca.yahoo.com"
+  favicon: "https://www.google.com/s2/favicons?domain_url=ca.yahoo.com" => "https://s.yimg.com/rz/l/favicon.ico"
+=========================================
+https://www.businessdailyafrica.com/
+  author_name: "@businessdailyafrica" => "BONFACE OTIENO | 3 hours ago"
+  published_at: "" => "2019-06-14T16:46:23.000Z"
+  provider: "page" => "Business Daily"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.businessdailyafrica.com/539444-539444-14qnefoz/index.html" => "https://www.businessdailyafrica.com/nationmedia/css/icons/dnmobile/apple-touch-icon-152x152.png"
+=========================================
+https://www.scmp.com/news/china/diplomacy-defence/article/2110488/china-tries-build-bigger-bloc-stop-brics-crumbling
+  author_name: "@SCMPNews" => "Liu Zhen"
+  published_at: "2017-09-10T10:32:00.000+08:00" => "2018-07-20T06:55:14.000Z"
+  provider: "page" => "South China Morning Post"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.scmp.com/news/china/diplomacy-defence/article/2110488/china-tries-build-bigger-bloc-stop-brics-crumbling" => "https://assets.i-scmp.com/static/img/icons/scmp-icon-256x256.png"
+=========================================
+https://imotorhead.com
+  author_name: "The Official Motörhead Website" => "null"
+  published_at: "" => "null"
+  description: "Motörhead's official site with news, band history, tattoo gallery, tour dates, photos, and links." => "Motörhead’s official site with news, band history, tattoo gallery, tour dates, photos, and links."
+  picture: "" => "https://imotorhead.com/mh/wp-content/themes/imotorhead/images/social_fb.png"
+  provider: "page" => "The Official Motörhead Website"
+  url: "https://imotorhead.com/" => "https://imotorhead.com"
+  favicon: "https://www.google.com/s2/favicons?domain_url=imotorhead.com/" => "https://imotorhead.com/mh/wp-content/themes/imotorhead/favicon.jpg"
+=========================================
+https://www.dropbox.com/s/2k0gocce8ry2xcx/videoplayback155.mp4?dl=0
+  author_name: "" => "null"
+  published_at: "" => "null"
+  provider: "dropbox" => "Dropbox"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.dropbox.com/s/2k0gocce8ry2xcx/videoplayback155.mp4?dl=0" => "https://cfl.dropboxstatic.com/static/images/logo_catalog/dropbox_webclip_152_m1.png"
+=========================================
+https://www.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg
+  author_name: "" => "null"
+  published_at: "" => "null"
+  provider: "dropbox" => "Dropbox"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg" => "https://cfl.dropboxstatic.com/static/images/logo_catalog/dropbox_webclip_152_m1.png"
+=========================================
+https://dl.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg
+  author_name: "" => "null"
+  published_at: "" => "null"
+  description: "Shared with Dropbox" => "null"
+  picture: "" => "null"
+  provider: "dropbox" => "null"
+  title: "b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg" => "b2604c14-8c7a-43e3-a286-dbb9e42bdf59"
+  favicon: "https://www.google.com/s2/favicons?domain_url=dl.dropboxusercontent.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg" => "null"
+=========================================
+https://www.dropbox.com/sh/748f94925f0gesq/AAAMSoRJyhJFfkupnAU0wXuva?dl=0
+  author_name: "" => "null"
+  published_at: "" => "null"
+  provider: "dropbox" => "Dropbox"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.dropbox.com/sh/748f94925f0gesq/AAAMSoRJyhJFfkupnAU0wXuva?dl=0" => "https://cfl.dropboxstatic.com/static/images/logo_catalog/dropbox_webclip_152_m1.png"
+=========================================
+https://ca.ios.ba/files/meedan/frame?2
+  author_name: "Caio" => "null"
+  published_at: "" => "null"
+  description: "" => "null"
+  picture: "" => "null"
+  provider: "page" => "null"
+  url: "https://ca.ios.ba/files/meedan/frame?2" => "https://ca.ios.ba/files/meedan/frame/?2"
+  favicon: "https://www.google.com/s2/favicons?domain_url=ca.ios.ba/files/meedan/frame?2" => "null"
+=========================================
+https://www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html
+  author_name: "By MICHAEL S. SCHMIDT and MATT APUZZO" => "Michael S. Schmidt"
+  published_at: "" => "2017-06-15T01:01:00.000Z"
+  picture: "https://static01.nyt.com/images/2017/06/15/us/15MUELLER/15MUELLER-videoSixteenByNineJumbo1600.jpg" => "https://static01.nyt.com/images/2017/06/15/us/15MUELLER/15MUELLER-facebookJumbo.jpg"
+  provider: "page" => "NYTimes"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html" => "https://www.nytimes.com/vi-assets/static-assets/apple-touch-icon-319373aaf4524d94d38aa599c56b8655.png"
+=========================================
+https://noticias.uol.com.br/cotidiano/ultimas-noticias/2017/07/18/nove-anos-apos-ser-condenado-por-moro-beira-mar-repete-trafico-em-presidio-federal.htm
+  author_name: "UOLNoticias @UOL" => "Flávio Costa"
+  published_at: "" => "2017-07-18T23:16:14.000Z"
+  description: "Para seus subordinados, ele é o "Menino", o "Pai", o "Av&o..." => "Para seus subordinados, ele é o “Menino”, o “Pai”, o “Avô”, o “Patrão”. A opinião pública o reconhece como o traficante mais famoso do Brasil. Já a Justiça o classific"
+  provider: "page" => "UOL"
+  favicon: "https://www.google.com/s2/favicons?domain_url=noticias.uol.com.br/cotidiano/ultimas-noticias/2017/07/18/nove-anos-apos-ser-condenado-por-moro-beira-mar-repete-trafico-em-presidio-federal.htm" => "https://conteudo.imguol.com.br/uolamp/UOL_logo_156x60.png"
+=========================================
+https://noticias.uol.com.br/
+  author_name: "UOLNoticias @UOL" => "null"
+  published_at: "" => "null"
+  description: "Acompanhe no UOL Notícias reportagens, fotos e vídeos sobre mundo, política, economia, tec..." => "Acompanhe as últimas notícias do Brasil e do mundo em áreas como política, economia, cotidiano, saúde, tecnologia, educação e mais. Veja ainda fotos, áudios, vídeos e reportagens especiais com recursos multimídia."
+  provider: "page" => "Notícias"
+  title: "Acompanhe as últimas notícias do Brasil e do mundo em áreas como política, economia, cotidiano, saúde, tecnologia, educação e mais. Veja ainda fotos, áudios, vídeos e reportagens especiais com recursos multimídia." => "UOL Notícias"
+  url: "https://noticias.uol.com.br/" => "https://noticias.uol.com.br"
+  favicon: "https://www.google.com/s2/favicons?domain_url=noticias.uol.com.br/" => "https://h.imguol.com/favicon.ico"
+=========================================
+https://politi.co/2j7qyT0
+  author_name: "@politico" => "JASON SCHWARTZ"
+  published_at: "" => "2017-09-07T08:11:57.000Z"
+  provider: "page" => "POLITICO"
+  favicon: "https://www.google.com/s2/favicons?domain_url=politi.co/2CPOy5o" => "https://www.politico.com/android-chrome-192x192.png"
+=========================================
+https://www.thedailysentry.net/2018/11/duterte-to-parojinogs-i-will-wipe-you.html
+  author_name: "@username" => "Oliver Natividad"
+  published_at: "" => "2018-11-28T15:00:00.000Z"
+  description: "Composite photos from m.inquirer.net and newsinfo.inquirer.net    Nito lamang Miyerkules ay muling binalaan ni Pangulong Rodrigo Duterte a..." => "Composite photos from m.inquirer.net and newsinfo.inquirer.net Nito lamang Miyerkules ay muling binalaan ni Pangulong Rodrigo Duterte a..."
+  picture: "https://3.bp.blogspot.com/-A-pQVXEDn2o/W_6xfW7MgMI/AAAAAAAACj0/88cALjf-B2QtGPVcByQuMNf50y8VzzaogCLcBGAs/s640/qwerty.png" => "https://3.bp.blogspot.com/-A-pQVXEDn2o/W_6xfW7MgMI/AAAAAAAACj0/88cALjf-B2QtGPVcByQuMNf50y8VzzaogCLcBGAs/w1200-h630-p-k-no-nu/qwerty.png"
+  provider: "page" => "The Daily Sentry"
+  title: "Duterte: "To the Parojinogs, I will wipe you from the face of the earth"" => "Duterte: “To the Parojinogs, I will wipe you from the face of the earth”"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.thedailysentry.net/2018/11/duterte-to-parojinogs-i-will-wipe-you.html" => "https://www.thedailysentry.net/favicon.ico"
+=========================================
+https://meedan.com
+  author_name: "Meedan" => "null"
+  published_at: "" => "null"
+  description: "A team of designers, technologists and journalists who focus on open source investigation of digital media and crowdsourced translation of social media." => "null"
+  picture: "http://meedan.com/images/logos/meedan-logo-600@2x.png" => "null"
+  provider: "page" => "null"
+  title: "Meedan" => "null"
+  favicon: "https://www.google.com/s2/favicons?domain_url=meedan.com/en/" => "null"
+=========================================
+https://twitter.com/caiosba
+  author_name: "Caio Almeida" => "caiosba"
+  published_at: "Sun Feb 22 00:22:58 +0000 2009" => "2009-01-01T03:00:00.000Z"
+  description: "Bachelor and Master on Computer Science (UFBA), senior software engineer at @meedan, free software passionate, beer hunter and Brazilian" => "Os Tweets mais recentes de Caio Almeida (@caiosba). Bachelor and Master on Computer Science (UFBA), senior software engineer at @meedan, free software passionate, beer hunter and Brazilian. Salvador - Bahia - Brazil"
+  picture: "https://pbs.twimg.com/profile_images/761634523809472512/9ln-qDZ6.jpg" => "https://pbs.twimg.com/profile_banners/21530857/1478968136/1500x500"
+  provider: "twitter" => "Twitter"
+  title: "Caio Almeida" => "Caio Almeida (@caiosba) | Twitter"
+  favicon: "https://www.google.com/s2/favicons?domain_url=twitter.com/caiosba" => "https://abs.twimg.com/icons/apple-touch-icon-192x192.png"
+=========================================
+https://twitter.com/meedan
+  published_at: "Fri Dec 12 00:14:45 +0000 2008" => "2008-01-01T03:00:00.000Z"
+  description: "Meedan builds digital tools for global journalism and translation. Designers & developers of @check and @speakbridge." => "Os Tweets mais recentes de meedan (@meedan). Meedan builds digital tools for global journalism and translation. Designers & developers of @check and @speakbridge. San Francisco"
+  picture: "https://pbs.twimg.com/profile_images/875455750557937664/HAjXGzZ2.jpg" => "https://pbs.twimg.com/profile_banners/18064767/1441153992/1500x500"
+  provider: "twitter" => "Twitter"
+  title: "meedan" => "meedan (@meedan) | Twitter"
+  favicon: "https://www.google.com/s2/favicons?domain_url=twitter.com/meedan" => "https://abs.twimg.com/icons/apple-touch-icon-192x192.png"
+=========================================
+https://twitter.com/caiosba/status/742779467521773568
+  author_name: "Caio Almeida" => "caiosba"
+  published_at: "Tue Jun 14 18:03:19 +0000 2016" => "2016-06-03T15:00:00.000Z"
+  description: "I'll be talking in @rubyconfbr this year! More details soon..." => "“I’ll be talking in @rubyconfbr this year! More details soon...”"
+  picture: "null" => "https://pbs.twimg.com/profile_images/761634523809472512/9ln-qDZ6_400x400.jpg"
+  provider: "twitter" => "Twitter"
+  title: "I'll be talking in @rubyconfbr this year! More details soon..." => "Caio Almeida on Twitter"
+  favicon: "https://www.google.com/s2/favicons?domain_url=twitter.com/caiosba/status/742779467521773568" => "https://abs.twimg.com/icons/apple-touch-icon-192x192.png"
+=========================================
+https://twitter.com/TheConfMalmo_AR/status/765474989277638657
+  author_name: "The Conf Arabic" => "TheConfMalmo_AR"
+  published_at: "Tue Aug 16 09:07:13 +0000 2016" => "2016-08-07T15:00:00.000Z"
+  description: "TT @TheConfMalmo بعد قليل! البث المباشر من حلقة "شخص إلى شخص" - طريق جديد للتواصل، ١١:٠٠ ... https://t.co/P9rVc2rSAA https://t.co/SxovAr4n7D" => "“TT @TheConfMalmo بعد قليل! البث المباشر من حلقة ”شخص إلى شخص” - طريق جديد للتواصل، ١١:٠٠ ... https://t.co/P9rVc2rSAA”"
+  picture: "https://pbs.twimg.com/media/Cp-DcfeWgAAcy7x.jpg" => "https://pbs.twimg.com/media/Cp-DcfeWgAAcy7x.jpg:large"
+  provider: "twitter" => "Twitter"
+  title: "TT @TheConfMalmo بعد قليل! البث المباشر من حلقة "شخص إلى شخص" - طريق جديد للتواصل، ١١:٠٠ ... https://t.co/P9rVc2rSAA https://t.co/SxovAr4n7D" => "The Conf Arabic on Twitter"
+  favicon: "https://www.google.com/s2/favicons?domain_url=twitter.com/TheConfMalmo_AR/status/765474989277638657" => "https://abs.twimg.com/icons/apple-touch-icon-192x192.png"
+=========================================
+https://twitter.com/realDonaldTrump/status/785148463868735488
+  author_name: "Donald J. Trump" => "realDonaldTrump"
+  published_at: "Sun Oct 09 16:02:35 +0000 2016" => "2019-09-10T12:02:00.000Z"
+  description: "LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary:
+https://t.co/n05rul4Ycw" => "“LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary:
+https://t.co/n05rul4Ycw”"
+  picture: "null" => "https://pbs.twimg.com/profile_images/874276197357596672/kUuht00m_400x400.jpg"
+  provider: "twitter" => "Twitter"
+  title: "LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary: https://t.co/n05rul4Ycw" => "Donald J. Trump on Twitter"
+  favicon: "https://www.google.com/s2/favicons?domain_url=twitter.com/realDonaldTrump/status/785148463868735488" => "https://abs.twimg.com/icons/apple-touch-icon-192x192.png"
+=========================================
+https://www.flickr.com/photos/bees/2341623661
+  author_name: "@flickr" => "null"
+  published_at: "" => "2019-09-10T19:22:48.216Z"
+  description: "Explore ‮‭‬bees‬'s 10229 photos on Flickr!" => "Explore ‮‭‬bees‬’s photos on Flickr. ‮‭‬bees‬ has uploaded 10229 photos to Flickr."
+  provider: "page" => "Flickr"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.flickr.com/photos/bees/2341623661/" => "https://combo.staticflickr.com/pw/apple-touch-icon.png"
+=========================================
+https://www.hongkongfp.com/2017/03/08/top-officials-suing-defamation-may-give-perception-bullying-says-chief-exec-candidate-woo/
+  author_name: "@hongkongfp" => "Kris Cheng"
+  published_at: "2017-03-08T00:05:34.000+08:00" => "2017-03-07T10:36:40.000Z"
+  description: "Chief executive candidate Woo Kw-hing has said that top officials suing lawmakers for defamation may give the perception of bullying. He was referring to the case of Chief Executive Leung Chun-ying suing accountancy sector lawmaker Kenneth Leung Kai-cheong for defamation over the latter’s  on CY Leung’s controversial payment from Australian firm UGL. “I don’t think […]" => "Chief executive candidate Woo Kw-hing has said that top officials suing lawmakers for defamation may give the perception of bullying. He was referring to the case of Chief Executive Leung Chun-ying suing accountancy sector lawmaker Kenneth Leung Kai-cheong for defamation over the latter’s on CY Leu…"
+  provider: "page" => "Hong Kong Free Press HKFP"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.hongkongfp.com/2017/03/08/top-officials-suing-defamation-may-give-perception-bullying-says-chief-exec-candidate-woo/" => "https://www.hongkongfp.com/wp-content/uploads/2015/06/HKFP_avatar_144sq.png"
+=========================================
+https://twitter.com/meedan/status/1095034925420560387
+  published_at: "Mon Feb 11 19:00:45 +0000 2019" => "2020-01-31T23:19:00.000Z"
+  description: "Eleven news organizations and 3 universities are teaming up to fact-check claims related to the May 13, 2019 midterm elections. #TsekPH
+https://t.co/lXk5ryiQuJ" => "“Eleven news organizations and 3 universities are teaming up to fact-check claims related to the May 13, 2019 midterm elections. #TsekPH
+https://t.co/lXk5ryiQuJ”"
+  picture: "null" => "https://pbs.twimg.com/profile_images/875455750557937664/HAjXGzZ2_400x400.jpg"
+  provider: "twitter" => "Twitter"
+  title: "Eleven news organizations and 3 universities are teaming up to fact-check claims related to the May 13, 2019 midterm elections. #TsekPH https://t.co/lXk5ryiQuJ" => "meedan on Twitter"
+  favicon: "https://www.google.com/s2/favicons?domain_url=twitter.com/meedan/status/1095034925420560387" => "https://abs.twimg.com/icons/apple-touch-icon-192x192.png"
+=========================================
+https://twitter.com/lila_engel/status/783423627383504896?ref_src=twsrc%5Etfw
+  author_name: "julie lauren vick" => "lila_engel"
+  published_at: "Tue Oct 04 21:48:42 +0000 2016" => "2019-09-10T17:48:00.000Z"
+  description: "In 2004 @NYTmag ran a cover story featuring this (then unaccredited) Karl Rove quote. It was a portent, and I think of it almost daily. https://t.co/QEk3PomHCq" => "“In 2004 @NYTmag ran a cover story featuring this (then unaccredited) Karl Rove quote. It was a portent, and I think of it almost daily.”"
+  picture: "https://pbs.twimg.com/media/Ct9HojMWcAAl9oe.jpg" => "https://pbs.twimg.com/media/Ct9HojMWcAAl9oe.jpg:large"
+  provider: "twitter" => "Twitter"
+  title: "In 2004 @NYTmag ran a cover story featuring this (then unaccredited) Karl Rove quote. It was a portent, and I think of it almost daily. https://t.co/QEk3PomHCq" => "julie lauren vick on Twitter"
+  favicon: "https://www.google.com/s2/favicons?domain_url=twitter.com/lila_engel/status/783423627383504896" => "https://abs.twimg.com/icons/apple-touch-icon-192x192.png"
+=========================================
+https://twitter.com/lila_engel/status/783423627383504896
+  author_name: "julie lauren vick" => "lila_engel"
+  published_at: "Tue Oct 04 21:48:42 +0000 2016" => "2019-09-10T17:48:00.000Z"
+  description: "In 2004 @NYTmag ran a cover story featuring this (then unaccredited) Karl Rove quote. It was a portent, and I think of it almost daily. https://t.co/QEk3PomHCq" => "“In 2004 @NYTmag ran a cover story featuring this (then unaccredited) Karl Rove quote. It was a portent, and I think of it almost daily.”"
+  picture: "https://pbs.twimg.com/media/Ct9HojMWcAAl9oe.jpg" => "https://pbs.twimg.com/media/Ct9HojMWcAAl9oe.jpg:large"
+  provider: "twitter" => "Twitter"
+  title: "In 2004 @NYTmag ran a cover story featuring this (then unaccredited) Karl Rove quote. It was a portent, and I think of it almost daily. https://t.co/QEk3PomHCq" => "julie lauren vick on Twitter"
+  favicon: "https://www.google.com/s2/favicons?domain_url=twitter.com/lila_engel/status/783423627383504896" => "https://abs.twimg.com/icons/apple-touch-icon-192x192.png"
+=========================================
+undefined : undefined (undefined)
+https://twitter.com/bradymakesstuff/status/844240817334247425
+  author_name: "Brady" => "bradymakesstuff"
+  published_at: "Tue Mar 21 17:34:30 +0000 2017" => "2017-04-03T15:00:00.000Z"
+  description: "Anti immigrant graffiti in a portajon on a residential construction site in Mtn Brook, AL. Job has about 50% Latino workers. https://t.co/bS5vI4Jq7I" => "“Anti immigrant graffiti in a portajon on a residential construction site in Mtn Brook, AL. Job has about 50% Latino workers.”"
+  picture: "https://pbs.twimg.com/media/C7dYir1VMAAi46b.jpg" => "https://pbs.twimg.com/media/C7dYir1VMAAi46b.jpg:large"
+  provider: "twitter" => "Twitter"
+  title: "Anti immigrant graffiti in a portajon on a residential construction site in Mtn Brook, AL. Job has about 50% Latino workers. https://t.co/bS5vI4Jq7I" => "Brady on Twitter"
+  favicon: "https://www.google.com/s2/favicons?domain_url=twitter.com/bradymakesstuff/status/844240817334247425" => "https://abs.twimg.com/icons/apple-touch-icon-192x192.png"
+=========================================
+https://twitter.com/cal_fire/status/919029734847025152
+  author_name: "CAL FIRE" => "CAL_FIRE"
+  published_at: "Sat Oct 14 02:38:58 +0000 2017" => "2019-09-10T22:38:00.000Z"
+  description: "#TubbsFire [update] between Calistoga and Santa Rosa (Napa & Sonoma County) is now 35,270 acres and 44% contained. https://t.co/5OVEfaseWy https://t.co/tw1KzIPuiL" => "“#TubbsFire [update] between Calistoga and Santa Rosa (Napa &amp; Sonoma County) is now 35,270 acres and 44% contained. https://t.co/5OVEfaseWy”"
+  picture: "https://pbs.twimg.com/media/DMEMgUuVwAES0Yz.jpg" => "https://pbs.twimg.com/media/DMEMgUuVwAES0Yz.jpg:large"
+  provider: "twitter" => "Twitter"
+  title: "#TubbsFire [update] between Calistoga and Santa Rosa (Napa & Sonoma County) is now 35,270 acres and 44% contained. https://t.co/5OVEfaseWy https://t.co/tw1KzIPuiL" => "CAL FIRE on Twitter"
+  favicon: "https://www.google.com/s2/favicons?domain_url=twitter.com/CAL_FIRE/status/919029734847025152" => "https://abs.twimg.com/icons/apple-touch-icon-192x192.png"
+=========================================
+https://twitter.com/caiosba/status/123456789 : 404 (Not Found)
+https://twitter.com/meedan/status/1130872630674972673
+  published_at: "Tue May 21 16:27:00 +0000 2019" => "2019-05-27T23:19:00.000Z"
+  description: "TOSsed Out highlights the various ways in which Terms of Service (TOS) and other speech moderation rules are unevenly enforced, with little to no transparency, against a wide spectrum of people. @EFF
+https://t.co/G77iJ5kRhg" => "“TOSsed Out highlights the various ways in which Terms of Service (TOS) and other speech moderation rules are unevenly enforced, with little to no transparency, against a wide spectrum of people. @EFF
+https://t.co/G77iJ5kRhg”"
+  picture: "null" => "https://pbs.twimg.com/profile_images/875455750557937664/HAjXGzZ2_400x400.jpg"
+  provider: "twitter" => "Twitter"
+  title: "TOSsed Out highlights the various ways in which Terms of Service (TOS) and other speech moderation rules are unevenly enforced, with little to no transparency, against a wide spectrum of people. @EFF https://t.co/G77iJ5kRhg" => "meedan on Twitter"
+  favicon: "https://www.google.com/s2/favicons?domain_url=twitter.com/meedan/status/1130872630674972673" => "https://abs.twimg.com/icons/apple-touch-icon-192x192.png"
+=========================================
+https://www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3&theater
+  author_name: "Kiko Loureiro" => "null"
+  published_at: "2015-10-31T00:00:00.000+00:00" => "null"
+  description: "Kiko Loureiro updated his profile picture." => "Kiko Loureiro atualizou a foto do perfil."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/12144884_1195161923843707_2568663037890130414_n.jpg?_nc_cat=109&_nc_oc=AQkuHD1WWERi-3RNDv_CW6KjT_BdtRGXSk3rJT7vYAbqwEASKGg1ay0IB8pVBN2z4S8&_nc_ht=scontent.fssa7-1.fna&oh=3828bcecb3714e0e0baa1283ce188652&oe=5E01FA24" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-9/12144884_1195161923843707_2568663037890130414_n.jpg?_nc_cat=109&_nc_oc=AQnQ9RP-24_bik50hUln7PlVUnr5HuX8ukdi2UMClFPOmUr11b4fI9uMxiuGkl-Ihm0&_nc_ht=scontent.fssa2-2.fna&oh=9091f74421b51aa013a398dff30bb615&oe=5E01FA24"
+  provider: "facebook" => "Facebook"
+  title: "Kiko Loureiro on Facebook" => "Kiko Loureiro"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014&type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3
+  author_name: "Kiko Loureiro" => "null"
+  published_at: "2015-10-31T00:00:00.000+00:00" => "null"
+  description: "Kiko Loureiro updated his profile picture." => "Kiko Loureiro atualizou a foto do perfil."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/12144884_1195161923843707_2568663037890130414_n.jpg?_nc_cat=109&_nc_oc=AQkuHD1WWERi-3RNDv_CW6KjT_BdtRGXSk3rJT7vYAbqwEASKGg1ay0IB8pVBN2z4S8&_nc_ht=scontent.fssa7-1.fna&oh=3828bcecb3714e0e0baa1283ce188652&oe=5E01FA24" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-9/12144884_1195161923843707_2568663037890130414_n.jpg?_nc_cat=109&_nc_oc=AQnQ9RP-24_bik50hUln7PlVUnr5HuX8ukdi2UMClFPOmUr11b4fI9uMxiuGkl-Ihm0&_nc_ht=scontent.fssa2-2.fna&oh=9091f74421b51aa013a398dff30bb615&oe=5E01FA24"
+  provider: "facebook" => "Facebook"
+  title: "Kiko Loureiro on Facebook" => "Kiko Loureiro"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014&type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/dina.samak/posts/10153679232246949?pnref=story.unseen-section
+  author_name: "Dina Samak" => "null"
+  published_at: "2016-08-31T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/s200x200/65613160_10156070383221949_6577611589120163840_n.jpg?_nc_cat=101&_nc_oc=AQkzMYo4gJtVC4e3DMhcdi_SEpYWlcqtAJzcqXj_YjJmi7T50Xu6TTo0F1VSKsTQIaQ&_nc_ht=scontent.fssa7-1.fna&oh=2d67015ad39f722ee09d861784f4ce72&oe=5E10E782" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/s200x200/65613160_10156070383221949_6577611589120163840_n.jpg?_nc_cat=101&_nc_oc=AQndRLz44p3Ina4_vVZGaYW2byCxTv_yLWrkoMh2w3gipu4hK8PFfLV-JdybAQbvJr4&_nc_ht=scontent.fssa2-1.fna&oh=e91706eefd73aa18551036e51a5d7d7b&oe=5E10E782"
+  provider: "facebook" => "Facebook‬"
+  title: "Dina Samak on Facebook" => "Dina Samak"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/dina.samak/posts/10153679232246949" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/dina.samak/posts/10153679232246949
+  author_name: "Dina Samak" => "null"
+  published_at: "2016-08-31T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/s200x200/65613160_10156070383221949_6577611589120163840_n.jpg?_nc_cat=101&_nc_oc=AQkzMYo4gJtVC4e3DMhcdi_SEpYWlcqtAJzcqXj_YjJmi7T50Xu6TTo0F1VSKsTQIaQ&_nc_ht=scontent.fssa7-1.fna&oh=2d67015ad39f722ee09d861784f4ce72&oe=5E10E782" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/s200x200/65613160_10156070383221949_6577611589120163840_n.jpg?_nc_cat=101&_nc_oc=AQndRLz44p3Ina4_vVZGaYW2byCxTv_yLWrkoMh2w3gipu4hK8PFfLV-JdybAQbvJr4&_nc_ht=scontent.fssa2-1.fna&oh=e91706eefd73aa18551036e51a5d7d7b&oe=5E10E782"
+  provider: "facebook" => "Facebook‬"
+  title: "Dina Samak on Facebook" => "Dina Samak"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/dina.samak/posts/10153679232246949" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479?pnref=story.unseen-section
+  author_name: "Cyrine Abdelnour" => "null"
+  published_at: "2016-10-31T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p200x200/67360265_10156936314577479_3777317681204559872_n.jpg?_nc_cat=104&_nc_oc=AQkEzjNh_YRESMMSzNDQSLyo2bbA_DMESb32HlQ0WWocVjlFuO__oMLS1olNTWKpMF0&_nc_ht=scontent.fssa7-1.fna&oh=1386a68eda401162f77942b5e65a41d4&oe=5DFCAB6A" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/p200x200/67360265_10156936314577479_3777317681204559872_n.jpg?_nc_cat=104&_nc_oc=AQkfiuvwS0B_wBXfVNWWM8bBs0yB5KdslQwdhE1ZQ6GU3ii-D0ct3VwC6Lbkv0NgjbU&_nc_ht=scontent.fssa2-1.fna&oh=3be7e99d76fc4451b73de2878b65d3a2&oe=5DFCAB6A"
+  provider: "facebook" => "Facebook"
+  title: "Cyrine Abdelnour on Facebook" => "Cyrine Abdelnour"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/CyrineOfficialPage/posts/10154332542247479" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479
+  author_name: "Cyrine Abdelnour" => "null"
+  published_at: "2016-10-31T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p200x200/67360265_10156936314577479_3777317681204559872_n.jpg?_nc_cat=104&_nc_oc=AQkEzjNh_YRESMMSzNDQSLyo2bbA_DMESb32HlQ0WWocVjlFuO__oMLS1olNTWKpMF0&_nc_ht=scontent.fssa7-1.fna&oh=1386a68eda401162f77942b5e65a41d4&oe=5DFCAB6A" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/p200x200/67360265_10156936314577479_3777317681204559872_n.jpg?_nc_cat=104&_nc_oc=AQkfiuvwS0B_wBXfVNWWM8bBs0yB5KdslQwdhE1ZQ6GU3ii-D0ct3VwC6Lbkv0NgjbU&_nc_ht=scontent.fssa2-1.fna&oh=3be7e99d76fc4451b73de2878b65d3a2&oe=5DFCAB6A"
+  provider: "facebook" => "Facebook"
+  title: "Cyrine Abdelnour on Facebook" => "Cyrine Abdelnour"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/CyrineOfficialPage/posts/10154332542247479" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://m.facebook.com/story.php?story_fbid=10154584426664820&id=355665009819%C2%ACif_t=live_video%C2%ACif_id=1476846578702256&ref=bookmarks
+  published_at: "2016-10-18T00:00:00.000+00:00" => "2016-10-19T03:09:30.000Z"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t15.5256-10/14645700_10154584445939820_3787909207995449344_n.jpg?_nc_cat=107&_nc_oc=AQmUlJB0bTfNrtDFTnwmUaCmFCQsyY6ZTagIke-djYhQHHQKZVLJrk1au8985z-a-c0&_nc_ht=scontent.fssa7-1.fna&oh=c725c3e71bb8245f31cd5ba4cd69a797&oe=5DFCBA6E" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t15.5256-10/fr/cp0/e15/q65/14645700_10154584445939820_3787909207995449344_n.jpg?_nc_cat=107&_nc_oc=AQlnsFfpkGjUAblI2rxnhXBuLDU9GJQWuHijLDa4czoIikvmT1ev11FzBG6qYYgKLTk&_nc_ht=scontent.fssa2-2.fna&oh=3f5af6e1bda5a40f34c614b27b7fd1e8&oe=5E0777BD"
+  provider: "facebook" => "Facebook"
+  title: "South China Morning Post on Facebook" => "South China Morning Post"
+  url: "https://www.facebook.com/scmp/videos/10154584426664820/" => "https://www.facebook.com/story.php?story_fbid=10154584426664820&id=355665009819"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/scmp/videos/10154584426664820/" => "null"
+=========================================
+https://www.facebook.com/cbcnews/videos/10154783484119604/
+  published_at: "2016-10-31T00:00:00.000+00:00" => "2016-11-01T01:00:10.000Z"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t15.5256-10/p200x200/14926650_10154783812779604_1342878673929240576_n.jpg?_nc_cat=107&_nc_oc=AQld_eAACliopRzurBY0lBux3p22wAs4hrSMeG5s28JtBMUgAldCwfTDeCXlC-bKHok&_nc_ht=scontent.fssa7-1.fna&oh=6170b884dd4000cd12ab5e23b664664a&oe=5E0DD041" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/21317437_10155863340319604_6230501867175208293_n.png?_nc_cat=1&_nc_oc=AQnA--FT6irNkY15tSz_vregupiCw5d79B8p7eWrvokTp0PJ8fl5CKANxgP1Fgz_uH8&_nc_ht=scontent.fssa2-2.fna&oh=3f6e332e21878648d0664c70b047b4db&oe=5E0EF73C"
+  provider: "facebook" => "Facebook Watch"
+  title: "CBC News on Facebook" => "The National: LIVE"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/cbcnews/videos/10154783484119604/" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/teste637621352/posts/1538843716180215/ : 404 (Not Found)
+https://www.facebook.com/events/364677040588691/permalink/376287682760960/?ref=1&action_history=null
+  author_name: "Zawya" => "null"
+  published_at: "" => "null"
+  description: "Event in Cairo, Egypt by Zawya on Thursday, October 13 2016 with 2.5K people interested and 829 people going. 57 posts in the discussion." => "″موعد مع خان” : برنامج أعدّه محمد المصري في المشهد الختامي من فيلم ”الحريف” يقول فارس لرزق أنه ”سيلعب مع الخسران”، سينزل إلى مباراة ٤ - ٠، ويحاول. لسنوات طويلة، ظل ”خان” يجيد اللعب مع الخسران: تحدّي ظروف الإنتاج، الرهان على مشاريع غير معتادة، التعامل مع الفشل اللحظي أو عدم التقدير الكافي أو الهجوم…"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-0/c251.0.200.200a/p200x200/14595586_1170927832973576_6347464558052972050_n.jpg?_nc_cat=110&_nc_oc=AQmUplECmuy4q31MYAFPEhZPc27nHAarVeVdEuuA9V3piJq392C99bvHf_WXkuvMAPE&_nc_ht=scontent.fssa7-1.fna&oh=f63009a286f2c0a772557cf623a8cb20&oe=5DFE153C" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-0/c251.0.200.200a/p200x200/14595586_1170927832973576_6347464558052972050_n.jpg?_nc_cat=110&_nc_oc=AQmK70Gbr_rEyLRij-j5HFnf5sWGyvFi2xfbYl2il7lbfpRai0eUQVtRxELcGZFu-lE&_nc_ht=scontent.fssa2-1.fna&oh=85716c9739063c68346db9a4b11c40ca&oe=5DFE153C"
+  provider: "facebook" => "موعد مع خان‎"
+  title: "Zawya on Facebook" => "‎Zawya’s Tribute to Mohamed Khan | موعد مع خان‎"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/events/zawya/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691/" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/events/364677040588691/permalink/379973812392347/?ref=1&action_history=null
+  author_name: "Zawya" => "null"
+  published_at: "" => "null"
+  description: "Event in Cairo, Egypt by Zawya on Thursday, October 13 2016 with 2.5K people interested and 829 people going. 57 posts in the discussion." => "″موعد مع خان” : برنامج أعدّه محمد المصري في المشهد الختامي من فيلم ”الحريف” يقول فارس لرزق أنه ”سيلعب مع الخسران”، سينزل إلى مباراة ٤ - ٠، ويحاول. لسنوات طويلة، ظل ”خان” يجيد اللعب مع الخسران: تحدّي ظروف الإنتاج، الرهان على مشاريع غير معتادة، التعامل مع الفشل اللحظي أو عدم التقدير الكافي أو الهجوم…"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-0/c251.0.200.200a/p200x200/14595586_1170927832973576_6347464558052972050_n.jpg?_nc_cat=110&_nc_oc=AQmUplECmuy4q31MYAFPEhZPc27nHAarVeVdEuuA9V3piJq392C99bvHf_WXkuvMAPE&_nc_ht=scontent.fssa7-1.fna&oh=f63009a286f2c0a772557cf623a8cb20&oe=5DFE153C" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-0/c251.0.200.200a/p200x200/14595586_1170927832973576_6347464558052972050_n.jpg?_nc_cat=110&_nc_oc=AQmK70Gbr_rEyLRij-j5HFnf5sWGyvFi2xfbYl2il7lbfpRai0eUQVtRxELcGZFu-lE&_nc_ht=scontent.fssa2-1.fna&oh=85716c9739063c68346db9a4b11c40ca&oe=5DFE153C"
+  provider: "facebook" => "موعد مع خان‎"
+  title: "Zawya on Facebook" => "‎Zawya’s Tribute to Mohamed Khan | موعد مع خان‎"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/events/zawya/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691/" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/ironmaiden/videos/vb.172685102050/10154577999342051/?type=2&theater
+  author_name: "Iron Maiden" => "null"
+  published_at: "2017-07-15T00:00:00.000+00:00" => "2017-07-15T15:51:30.000Z"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t15.5256-10/p200x200/20131236_10154578000322051_2916467421743153152_n.jpg?_nc_cat=106&_nc_oc=AQm8zkvUxWzgq0tZT_jzSJGKf6k2bANbmGrHoWm0Gda8D7tktNWkgfS7_4_sSi0hDT8&_nc_ht=scontent.fssa7-1.fna&oh=239c4887b39194265300579b699a0dc0&oe=5E06B90E" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/p720x720/45835131_10155680171787051_155853234911576064_n.jpg?_nc_cat=1&_nc_oc=AQndLfejIEeorZVr41MQ_pOL62HwhWWenl9G8yN0RCQVIPV_za6jzlCxUexrxlwFqT0&_nc_ht=scontent.fssa2-2.fna&oh=f9d13af7019f4be2ef30383a8f01a75b&oe=5E0D48AE"
+  provider: "facebook" => "Facebook Watch"
+  title: "Iron Maiden on Facebook" => "Iron Maiden - Tailgunner! #Lancaster #Aircraft #Plane #WW2..."
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/ironmaiden/videos/vb.172685102050/10154577999342051/?type=2&theater" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/Bimbo.Memories/photos/pb.235404669918505.-2207520000.1481570271./1051597428299221/?type=3&theater
+  author_name: "Bimbo Memories" => "null"
+  published_at: "2016-12-12T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/15400507_1051597428299221_6315842220063966332_n.jpg?_nc_cat=101&_nc_oc=AQkBzUIeBMekNteRVhqrCtUYML0T_uO2Z9gSOChrUpstKjjjxPaetdl2yiRXv-66OEE&_nc_ht=scontent.fssa7-1.fna&oh=e86ef8ef95bfc7efdf71bd0ddb78050d&oe=5DFF1B87" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-9/15400507_1051597428299221_6315842220063966332_n.jpg?_nc_cat=101&_nc_oc=AQmyI_4mTe29jiP2pRgvTUmAI0kSgLdPiRw-yFqd9X4kKneI2-VfTfDaRoLiwWkfMhU&_nc_ht=scontent.fssa2-1.fna&oh=68a3c1499cb3c297d04c4f5dd801222d&oe=5DFF1B87"
+  provider: "facebook" => "Facebook"
+  title: "Bimbo Memories on Facebook" => "Bimbo Memories"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/Bimbo.Memories/photos/a.237189963073309/1051597428299221/?type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/Classic.mou/photos/pb.136985363145802.-2207520000.1481570401./640132509497749/?type=3&theater
+  author_name: "Classic" => "null"
+  published_at: "2016-12-12T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t31.0-8/15369974_640132509497749_4281523565478374345_o.jpg?_nc_cat=100&_nc_oc=AQlGY5vc4aCJN3LyAz1wymV5zP38xkulX4rxekjM_hSyGVXYQV_ITi-pEyHqoofqdTA&_nc_ht=scontent.fssa7-1.fna&oh=ff1422b93574569fb4db93f9b67c1243&oe=5E11FCBD" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t31.0-8/15369974_640132509497749_4281523565478374345_o.jpg?_nc_cat=100&_nc_oc=AQk9O7tBB2pwMYrxVDO06CWRR0rcA_ALYu5SUg8WeZKi8Ex_LaeXMkVMHikdpa0u4z4&_nc_ht=scontent.fssa2-2.fna&oh=ee3b4fda8481de3ed0d77f14daf2e2e4&oe=5E11FCBD"
+  provider: "facebook" => "null"
+  title: "Classic on Facebook" => "Classic"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/Classic.mou/photos/a.136991166478555/640132509497749/?type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/ironmaiden/photos/a.406269382050.189128.172685102050/10154015223857051/?type=3&theater
+  author_name: "Iron Maiden" => "null"
+  published_at: "2016-12-23T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/15698145_10154015223857051_722272621420644133_n.jpg?_nc_cat=109&_nc_oc=AQnxczqf497y39pGQjF3_6Fd6Mh0oWRwPovFoXVd2UhHNQtNFSMe7KUIrpRrmsrVzaU&_nc_ht=scontent.fssa7-1.fna&oh=dc8151263b8652681fc24f0e1e8d3e2b&oe=5E03B211" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-9/15698145_10154015223857051_722272621420644133_n.jpg?_nc_cat=109&_nc_oc=AQlJymkJU0RmiOXhps1YYD-ypuRSV4d-7oMJuLvkVobjoOqeJ-mqBREo88WL-WUHuYk&_nc_ht=scontent.fssa2-2.fna&oh=c67a3c69af429a7de1080281bbcc55f7&oe=5E03B211"
+  provider: "facebook" => "Facebook"
+  title: "Iron Maiden on Facebook" => "Iron Maiden"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/ironmaiden/photos/a.406269382050/10154015223857051/?type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/profile.php?id=100001147915899
+  author_name: "Caio Sacramento (Caiosba)" => "(Terror das cachorra)"
+  published_at: "" => "2020-03-01T15:00:00.000Z"
+  description: "Bacharel em Ciência da Computação (UFBA), Mestre em Ciência da Computação (UFBA), Engenheiro de Software e Artista Digital" => "Caio Sacramento está no Facebook. Participe do Facebook para se conectar com Caio Sacramento e outros que você talvez conheça. O Facebook oferece às pessoas o poder de compartilhar e tornar o mundo..."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p160x160/12669543_976265519088369_877453730176380715_n.jpg?_nc_cat=102&_nc_oc=AQmlrdkYsmzv72ybGFE5AkpsZCNS8o1RVoH0Usad0bjUgXNI0V2nvdkccvfCjXdzZ6E&_nc_ht=scontent.fssa7-1.fna&oh=9c643e50f69a92ead844141179c1aead&oe=5DC87D16" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/p200x200/12669543_976265519088369_877453730176380715_n.jpg?_nc_cat=102&_nc_oc=AQmEgGIuG1UwJjv_t7HOWe1Wy5NK2dekJCoXX43I2L40G1yxAEDcCvxG7orI5t-_wQw&_nc_ht=scontent.fssa2-1.fna&oh=e7240c30a3f6412be67aaee3c1d0bf9a&oe=5DF993E4"
+  provider: "facebook" => "Facebook"
+  title: "Caio Sacramento (Caiosba)" => "Caio Sacramento"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/caiosba" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/dina.hawary/posts/10158416884740321
+  author_name: "Dina El Hawary" => "انتظرونا يوم الجمعة الساعة 9 مساءً مع الفنانة #يسرا_اللوزي وفر..."
+  published_at: "2017-03-31T00:00:00.000+00:00" => "2017-03-31T20:16:29.000Z"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t15.5256-10/p200x200/17620020_797114020453287_8183758766018134016_n.jpg?_nc_cat=105&_nc_oc=AQm3NNyXE64xxSbijSExEiHohzxCmf5jrNJUsvJKj4SGplgDrtZORDhJuyKw-t9zRBU&_nc_ht=scontent.fssa7-1.fna&oh=52fe2aadc088d5f267766ddbdff12af4&oe=5E0E4E4B" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/p720x720/21106416_10159191633960321_8206511892512976086_n.jpg?_nc_cat=106&_nc_oc=AQkMQQCZtOcdIJ7Q8zTy43TLq6Medtcxi9okVDJUhiLxQoOEcqqxGvrfoaL-QBr8wwQ&_nc_ht=scontent.fssa2-2.fna&oh=d59f502a26b3f937415e5a1d8493a4bc&oe=5DF6F7C6"
+  provider: "facebook" => "Facebook Watch"
+  title: "Dina El Hawary on Facebook" => "انتظرونا يوم الجمعة الساعة 9 مساءً مع الفنانة #يسرا_اللوزي وفر..."
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/dina.hawary/posts/10158416884740321" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/nostalgia.y/photos/pb.456182634511888.-2207520000.1484079948./928269767303170/?type=3&theater
+  author_name: "Nostalgia" => "null"
+  published_at: "2016-11-28T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/15181134_928269767303170_7195169848911975270_n.jpg?_nc_cat=110&_nc_oc=AQnpWq47jU7ct9g3JOtQVyXMekxb6u1Z1BAJccagSqwOXHxL2N_tfjjhQMxlXf-9rnI&_nc_ht=scontent.fssa7-1.fna&oh=cf1f06b2c17e77407c2722326a537a78&oe=5E08AE67" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-9/15181134_928269767303170_7195169848911975270_n.jpg?_nc_cat=110&_nc_oc=AQkRAwFJ_HKYXZ2RZJMGquqkeq-rOp5rEU3WzAPwVRpavNqXvLC1nUMqZPxeg_RCL_c&_nc_ht=scontent.fssa2-1.fna&oh=c8eab28f19b2686aa7660c6eff4b4c86&oe=5E08AE67"
+  provider: "facebook" => "Facebook‬"
+  title: "Nostalgia on Facebook" => "Nostalgia"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/nostalgia.y/photos/a.456184044511747/928269767303170/?type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater
+  author_name: "Nostalgia" => "null"
+  published_at: "2016-12-15T00:00:00.000+00:00" => "null"
+  description: "Nostalgia added a new photo." => "Nostalgia adicionou uma nova foto."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/15439965_942167619246718_2691945489696826151_n.jpg?_nc_cat=101&_nc_oc=AQmHyFJsbqvB2HoqMWzUApRULt0AqOlL_rEE16kSZAmrAsdLEwhzXfYxL84yJ5cOG14&_nc_ht=scontent.fssa7-1.fna&oh=f51411c585524c48fefda3e6d78914f7&oe=5E135638" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-9/15439965_942167619246718_2691945489696826151_n.jpg?_nc_cat=101&_nc_oc=AQlmpRrcgoQJVvw2SjMHYJgvf1gTf78dqqISmAEcUAbKrXkiISaKaprsZpiVrrAaXy4&_nc_ht=scontent.fssa2-1.fna&oh=a2a59fb59db725d134e0623e6bf2b1ed&oe=5E135638"
+  provider: "facebook" => "Facebook"
+  title: "Nostalgia on Facebook" => "Nostalgia"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/nostalgia.y/photos/a.508939832569501/942167619246718/?type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/nostalgia.y/posts/942167695913377
+  author_name: "Nostalgia" => "null"
+  published_at: "2016-12-15T00:00:00.000+00:00" => "2019-09-10T22:06:00.000Z"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/15439965_942167619246718_2691945489696826151_n.jpg?_nc_cat=101&_nc_oc=AQmHyFJsbqvB2HoqMWzUApRULt0AqOlL_rEE16kSZAmrAsdLEwhzXfYxL84yJ5cOG14&_nc_ht=scontent.fssa7-1.fna&oh=f51411c585524c48fefda3e6d78914f7&oe=5E135638" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-9/15439965_942167619246718_2691945489696826151_n.jpg?_nc_cat=101&_nc_oc=AQlmpRrcgoQJVvw2SjMHYJgvf1gTf78dqqISmAEcUAbKrXkiISaKaprsZpiVrrAaXy4&_nc_ht=scontent.fssa2-1.fna&oh=a2a59fb59db725d134e0623e6bf2b1ed&oe=5E135638"
+  provider: "facebook" => "null"
+  title: "Nostalgia on Facebook" => "Nostalgia"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/nostalgia.y/posts/942167695913377" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/Classic.mou/posts/666508790193454:0
+  author_name: "Classic" => "null"
+  published_at: "2017-02-08T00:00:00.000+00:00" => "2019-09-10T15:17:00.000Z"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/16473884_666508790193454_8112186335057907723_n.jpg?_nc_cat=100&_nc_oc=AQn-Nq6NooQ95zMYZqonFyus-RpmFbbWD2si3I0F4fSW_8SVA233vd2xiaLIbkBgxHw&_nc_ht=scontent.fssa7-1.fna&oh=9c2ba72b3bd959088588ccc22d83e829&oe=5E0C7106" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-9/16473884_666508790193454_8112186335057907723_n.jpg?_nc_cat=100&_nc_oc=AQnBXpEg5G0AWrhY8cKgPXAnpj9BoaTKKiOODFWSlLcEQY9DbHU1ACKTCFSQ9XuvJ1I&_nc_ht=scontent.fssa2-2.fna&oh=044f369b3d06f0dbdae5ec1d6957ce05&oe=5E0C7106"
+  provider: "facebook" => "null"
+  title: "Classic on Facebook" => "Classic"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/Classic.mou/posts/666508790193454:0" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/nanabhay/posts/10156130657385246
+  author_name: "Mohamed Nanabhay" => "null"
+  published_at: "2015-10-27T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/12065594_10156130654225246_1573128779736032544_n.jpg?_nc_cat=103&_nc_oc=AQnslhBKTUG4SOnA5mHCF2T2HH6lqLkx9gAWVx_Aw1ghCiIlfYQ0etdKS0958_7GWak&_nc_ht=scontent.fssa7-1.fna&oh=de12b6b1257f1be41b45c965af3670fb&oe=5DFF79D5" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-9/12065594_10156130654225246_1573128779736032544_n.jpg?_nc_cat=103&_nc_oc=AQn3CU_2-M0knEL6heiMPUvrPn8BJFeL-0EYEKEq9LA4-se6FSyN_5vKq6QkNZ71YSs&_nc_ht=scontent.fssa2-2.fna&oh=0a891aba2112f1b7c4268f2bb3093aae&oe=5DFF79D5"
+  provider: "facebook" => "Facebook"
+  title: "Mohamed Nanabhay on Facebook" => "Mohamed Nanabhay"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/nanabhay/posts/10156130657385246" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/media/set/?set=a.10154534110871407.1073742048.54212446406&type=3
+  author_name: "Mariano Rajoy Brey" => "null"
+  published_at: "" => "null"
+  description: "En el Museo Serralves de Oporto, inaugurando la exposición "Joan Miró: Materialidad y Metamorfosis", ejemplo de vanguardia, libertad y de la rica tradición pictórica española. Un orgullo poder estar hoy en #Portugal y participar de uno de tantos intercambios culturales con un país que no sólo es vecino y aliado, sino también un país querido y hermano de #España. Seguiremos estrechando nuestros lazos. La integración y la unión son signos de la historia en nuestro tiempo. En un mundo globalizado, la disgregación conduce a la irrelevancia." => "Pressione alt + / para abrir este menu"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-0/p206x206/28168365_10156142565121407_7322078856831447544_n.jpg?_nc_cat=111&_nc_oc=AQnRb2Y03qJQlwfc8FN3G9l5O-sVZx3bKuWNNZ4V3tM5T3140JFT4Fq8N1a5pfgrRnM&_nc_ht=scontent.fssa7-1.fna&oh=6dc87146df32c7c3726973ff274552ae&oe=5DF0A3E8" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/p720x720/34536296_10156427594051407_6015682149993152512_n.jpg?_nc_cat=110&_nc_oc=AQkJRbskp1wn-IbIkaNo3V2fm1k-rfErlhtuuCjEG1oUKmxlLf-vtLvxHTfjT_1gXaY&_nc_ht=scontent.fssa2-1.fna&oh=2bf804d46954d0cd2a5a9693fc6e90c2&oe=5E0FDAB5"
+  provider: "facebook" => "Facebook"
+  title: "Mariano Rajoy Brey on Facebook" => "Exposición de Miró en el Museo Serralves y Palacio de la Bolsa | Facebook"
+  url: "https://www.facebook.com/media/set?set=a.10154534110871407.1073742048.54212446406&type=3" => "https://www.facebook.com/media/set/?set=a.10154534110871407.1073742048.54212446406&type=3"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/media/set?set=a.10154534110871407.1073742048.54212446406&type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/pg/Mariano-Rajoy-Brey-54212446406/photos/?tab=album&album_id=10154534110871407
+  author_name: "Mariano Rajoy Brey" => "null"
+  published_at: "" => "null"
+  description: "Mariano Rajoy Brey. 260K likes. Militante del Partido Popular. Creo en España, un gran país, una historia de éxito." => "Mariano Rajoy Brey. 260 mil curtidas. Militante del Partido Popular. Creo en España, un gran país, una historia de éxito."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p200x200/34536296_10156427594051407_6015682149993152512_n.jpg?_nc_cat=110&_nc_oc=AQlhOpYsOjN2dAX5G0_3_wyIVZjn04yS5ufSYPtI7Zgl8KytevuoBeWEBGoS0HTPrP0&_nc_ht=scontent.fssa7-1.fna&oh=4db1bdf5bf1a03399053333fbf0cd801&oe=5DFE2ACD" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/p200x200/34536296_10156427594051407_6015682149993152512_n.jpg?_nc_cat=110&_nc_oc=AQkJRbskp1wn-IbIkaNo3V2fm1k-rfErlhtuuCjEG1oUKmxlLf-vtLvxHTfjT_1gXaY&_nc_ht=scontent.fssa2-1.fna&oh=3c9efad8ee585cac64e17cb7b58c8b6e&oe=5DFE2ACD"
+  provider: "facebook" => "Facebook"
+  title: "Mariano Rajoy Brey on Facebook" => "Mariano Rajoy Brey"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/pages/category/Politician/Mariano-Rajoy-Brey-54212446406/photos/" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/album.php?fbid=10154534110871407&id=54212446406&aid=1073742048
+  author_name: "Mariano Rajoy Brey" => "null"
+  published_at: "" => "null"
+  description: "En el Museo Serralves de Oporto, inaugurando la exposición "Joan Miró: Materialidad y Metamorfosis", ejemplo de vanguardia, libertad y de la rica tradición pictórica española. Un orgullo poder estar hoy en #Portugal y participar de uno de tantos intercambios culturales con un país que no sólo es vecino y aliado, sino también un país querido y hermano de #España. Seguiremos estrechando nuestros lazos. La integración y la unión son signos de la historia en nuestro tiempo. En un mundo globalizado, la disgregación conduce a la irrelevancia." => "Pressione alt + / para abrir este menu"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-0/p206x206/28168365_10156142565121407_7322078856831447544_n.jpg?_nc_cat=111&_nc_oc=AQnRb2Y03qJQlwfc8FN3G9l5O-sVZx3bKuWNNZ4V3tM5T3140JFT4Fq8N1a5pfgrRnM&_nc_ht=scontent.fssa7-1.fna&oh=6dc87146df32c7c3726973ff274552ae&oe=5DF0A3E8" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/p720x720/34536296_10156427594051407_6015682149993152512_n.jpg?_nc_cat=110&_nc_oc=AQkJRbskp1wn-IbIkaNo3V2fm1k-rfErlhtuuCjEG1oUKmxlLf-vtLvxHTfjT_1gXaY&_nc_ht=scontent.fssa2-1.fna&oh=2bf804d46954d0cd2a5a9693fc6e90c2&oe=5E0FDAB5"
+  provider: "facebook" => "Facebook"
+  title: "Mariano Rajoy Brey on Facebook" => "Exposición de Miró en el Museo Serralves y Palacio de la Bolsa | Facebook"
+  url: "https://www.facebook.com/media/set?set=a.10154534110871407" => "https://www.facebook.com/media/set/?set=a.10154534110871407"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/media/set?set=a.10154534110871407" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/pg/Mariano-Rajoy-Brey-54212446406/photos
+  author_name: "Mariano Rajoy Brey" => "null"
+  published_at: "" => "null"
+  description: "Mariano Rajoy Brey. 260K likes. Militante del Partido Popular. Creo en España, un gran país, una historia de éxito." => "Mariano Rajoy Brey. 260 mil curtidas. Militante del Partido Popular. Creo en España, un gran país, una historia de éxito."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p200x200/34536296_10156427594051407_6015682149993152512_n.jpg?_nc_cat=110&_nc_oc=AQlhOpYsOjN2dAX5G0_3_wyIVZjn04yS5ufSYPtI7Zgl8KytevuoBeWEBGoS0HTPrP0&_nc_ht=scontent.fssa7-1.fna&oh=4db1bdf5bf1a03399053333fbf0cd801&oe=5DFE2ACD" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/p200x200/34536296_10156427594051407_6015682149993152512_n.jpg?_nc_cat=110&_nc_oc=AQkJRbskp1wn-IbIkaNo3V2fm1k-rfErlhtuuCjEG1oUKmxlLf-vtLvxHTfjT_1gXaY&_nc_ht=scontent.fssa2-1.fna&oh=3c9efad8ee585cac64e17cb7b58c8b6e&oe=5DFE2ACD"
+  provider: "facebook" => "Facebook"
+  title: "Mariano Rajoy Brey on Facebook" => "Mariano Rajoy Brey"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/pages/category/Politician/Mariano-Rajoy-Brey-54212446406/photos/" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/profile.php?id=100008161175765&fref=ts
+  author_name: "Tico Santa Cruz" => "(Tico tico)"
+  published_at: "" => "2019-09-13T15:00:00.000Z"
+  description: "" => "Tico Santa Cruz está no Facebook. Participe do Facebook para se conectar com Tico Santa Cruz e outros que você talvez conheça. O Facebook oferece às pessoas o poder de compartilhar e tornar o mundo..."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p160x160/69472931_2414078035540879_8719764955072561152_n.jpg?_nc_cat=101&_nc_oc=AQmMH7l-FaKiZ6Z4pEkK9ry6yrmn_x-9tAgSFJpbp0pfdPic0mP-WISSWG913maF1Lc&_nc_ht=scontent.fssa7-1.fna&oh=0e260815dd6b08dee97dc8a321759028&oe=5E112615" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/p200x200/69472931_2414078035540879_8719764955072561152_n.jpg?_nc_cat=101&_nc_oc=AQnbDiVaJax8BoYlrgHg9I1A1fFYuCPmUcDo5GigCIg7qlFG3_j0nIyLwnENKRyCohY&_nc_ht=scontent.fssa2-1.fna&oh=c0ca5fa91bb24f225ac143e8d560bec7&oe=5E0FD6A9"
+  provider: "facebook" => "Facebook"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/people/Tico-Santa-Cruz/100008161175765" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/teste637621352/posts/1028416870556238
+  author_name: "Teste" => "null"
+  published_at: "2015-11-17T00:00:00.000+00:00" => "2019-09-10T22:05:00.000Z"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p200x200/21078829_1622820767782509_5518875727231512409_n.png?_nc_cat=107&_nc_oc=AQnj_jQ1WjuWicm_RiUmWCz8l-7qHJbhMkOqcrEwdjRW0rOjXCFVdQpSVvjniMAhrOo&_nc_ht=scontent.fssa7-1.fna&oh=24b635b326f052a90722cd48807e687e&oe=5E12F751" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/p200x200/21078829_1622820767782509_5518875727231512409_n.png?_nc_cat=107&_nc_oc=AQm5cPQox7wdzEhZqErcxHQQjUheHx2qqyGi0cHm-Z_jNvEH3JjydUkJiNuCtx_kuYA&_nc_ht=scontent.fssa2-2.fna&oh=a7fba7123c319a4c78323e20cd294710&oe=5E12F751"
+  provider: "facebook" => "null"
+  title: "Teste on Facebook" => "Teste"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/teste637621352/posts/1028416870556238" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/pages/Meedan/105510962816034?fref=ts
+  author_name: "Meedan" => "null"
+  published_at: "" => "null"
+  description: "" => "Meedan. 68 curtidas. Meedan is a non-profit social technology company which aims to increase cross-language interaction on the web, with particular..."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/c47.0.160.160a/p160x160/399548_10149999285987789_1102888142_n.png?_nc_cat=1&_nc_oc=AQnEWN1viJl09T2ZfIfYPgHNSqmmIUK2SOMwgI-wgTG25he42KIV9Swmbwm7YdEjO20&_nc_ht=scontent.fssa7-1.fna&oh=64eebb3514eea67cd74886da06aa4c97&oe=5E14C4B1" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/c47.0.160.160a/p160x160/399548_10149999285987789_1102888142_n.png?_nc_cat=1&_nc_oc=AQlEVECNqLYjjpeo-37LHpIeb0RTDpDebSR7AH5x-fYPjn1TYLaZ1xh7j3jeTTl-bxw&_nc_ht=scontent.fssa2-2.fna&oh=4aa86bee537cf8e3208f7bf83d4c34d2&oe=5E14C4B1"
+  provider: "facebook" => "Facebook"
+  title: "Meedan" => "Meedan - Organização sem fins lucrativos | Facebook"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/pages/Meedan/105510962816034" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/photo.php?fbid=10156907731480246&set=pb.735450245.-2207520000.1502314039.&type=3&theater
+  author_name: "Mohamed Nanabhay" => "null"
+  published_at: "2016-05-27T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/13245434_10156907731480246_7286680789825239010_n.jpg?_nc_cat=106&_nc_oc=AQlNuzm7ENkBvf-T1co8Q12YJrEmVpkNiW9e5i-5FA6TZIGSysHcZdcX647f0o4Ax74&_nc_ht=scontent.fssa7-1.fna&oh=44362d756645d317ff432ed7b736370b&oe=5DF69EE0" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-9/13245434_10156907731480246_7286680789825239010_n.jpg?_nc_cat=106&_nc_oc=AQkzQ4DS4IAmWG8SysvHFqM35B6K46-rVke1kwbxE7hCXlKr7r4v2gZBOLaGg8M59QQ&_nc_ht=scontent.fssa2-2.fna&oh=55eb4bbf1a6d419395c61e2e5befc660&oe=5DF69EE0"
+  provider: "facebook" => "Facebook"
+  title: "Mohamed Nanabhay on Facebook" => "Mohamed Nanabhay"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/nanabhay/posts/10156907739200246" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/groups/1863694297275556/permalink/2193768444268138/
+  author_name: "Jundhrey Cernal Dolindo" => "null"
+  published_at: "2019-07-09T00:00:00.000+00:00" => "null"
+  description: "Jundhrey Cernal Dolindo shared a post." => "Jundhrey Cernal Dolindo compartilhou uma publicação."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/66514512_128048155098985_3802678243316727808_n.jpg?_nc_cat=103&_nc_oc=AQnSpzqci-baoio0tSV8DO_Cl4lWQiLvCGHKbnKvImbobo4ZTUeLpdd66DCDJOYWf_Q&_nc_ht=scontent.fssa7-1.fna&oh=d262153faea8a83c501292d62b3d7363&oe=5E04F32E" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/p200x200/48375459_530699697411523_7778717803539857408_n.jpg?_nc_cat=100&_nc_oc=AQmppHtliVygkGlltOX1XHy4716EXypTX1pcnbmjAc03Jm02gVyeJbXmGhhuv9iN-7k&_nc_ht=scontent.fssa2-2.fna&oh=ffd7f23678426f0573a37d1d6ed31f88&oe=5DEF6EFF"
+  provider: "facebook" => "Facebook"
+  title: "Jundhrey Cernal Dolindo on Facebook" => "Jundhrey Cernal Dolindo"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/groups/1863694297275556/permalink/2193768444268138/" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/ironmaiden/posts/10156071020577051
+  author_name: "Iron Maiden" => "null"
+  published_at: "2019-05-22T00:00:00.000+00:00" => "2019-09-10T15:00:00.000Z"
+  picture: "https://external.fssa7-1.fna.fbcdn.net/safe_image.php?d=AQA9pL2_0JG1IPVM&w=400&h=400&url=https%3A%2F%2Fi.ytimg.com%2Fvi%2FqMfu1GLVsiM%2Fmaxresdefault.jpg&cfs=1&_nc_hash=AQBBdyVi1P81r9TX" => "https://external.fssa2-2.fna.fbcdn.net/safe_image.php?d=AQA9pL2_0JG1IPVM&w=400&h=400&url=https%3A%2F%2Fi.ytimg.com%2Fvi%2FqMfu1GLVsiM%2Fmaxresdefault.jpg&cfs=1&_nc_hash=AQBBdyVi1P81r9TX"
+  provider: "facebook" => "Facebook"
+  title: "Iron Maiden on Facebook" => "Iron Maiden"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/ironmaiden/posts/10156071020577051" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/pages/category/Society---Culture-Website/PoporDezamagit/photos/
+  author_name: "Popor dezamagit" => "null"
+  published_at: "" => "null"
+  description: "Popor dezamagit, Кишинёв. 11K likes. Interest" => "Popor dezamagit, Chișinău. 11 mil curtidas. Interesse"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p200x200/64999847_891170977905227_3150872035085778944_n.png?_nc_cat=102&_nc_oc=AQkN_b2j5ffpVCm1kejIqsqN0Kyx3WsGwV5JA1YkTFq_x3TtyUnPOi_sEOaWYwI5LO4&_nc_ht=scontent.fssa7-1.fna&oh=51b25d7ac546d4ba31d34fb4b0d70c66&oe=5DF22752" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/p200x200/64999847_891170977905227_3150872035085778944_n.png?_nc_cat=102&_nc_oc=AQm51DaBtqBV2rFpj03sXFa8FXAhspxW-92ki4Pfx_TtQnfY0a6kN2vF3KtqKuKur0A&_nc_ht=scontent.fssa2-1.fna&oh=ab3099ea58221f79aaaf1fbfc46e09f4&oe=5DF22752"
+  provider: "facebook" => "Facebook"
+  title: "Popor dezamagit on Facebook" => "Popor dezamagit"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/pages/category/Interest/PoporDezamagit/photos/" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/xico.sa
+  author_name: "Xico Sá" => "null"
+  published_at: "" => "2019-09-10T06:00:00.000Z"
+  description: "Autor de Big Jato (Companhia das Letras) e Modos de Macho & Modinhas de Fêmea (Record) entre outros livros" => "Xico Sá está no Facebook. Participe do Facebook para se conectar com Xico Sá e outros que você talvez conheça. O Facebook oferece às pessoas o poder de compartilhar e tornar o mundo mais aberto e..."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p160x160/49699322_10157158979551686_6240720341606334464_n.jpg?_nc_cat=105&_nc_oc=AQl36bxcdelJJlCBucFPeOkz30QaVE1-nluszyma140lVctEaRKgGi5-MgHTHYbo9Kk&_nc_ht=scontent.fssa7-1.fna&oh=a2df1be4244d28607a3befdf5d6f5e58&oe=5DF57DFB" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/p200x200/49699322_10157158979551686_6240720341606334464_n.jpg?_nc_cat=105&_nc_oc=AQmy2ziZETPcL3xvSrFpuilKUJSyc2t-bLHeyOtubxhG2_cZ6_MqeYW6I5GIdNETncc&_nc_ht=scontent.fssa2-1.fna&oh=5c730b8be1f288023945b40c1788939d&oe=5DF4E855"
+  provider: "facebook" => "Facebook"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/xico.sa" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/ironmaiden/?fref=ts
+  author_name: "Iron Maiden" => "null"
+  published_at: "" => "2019-09-10T19:51:07.000Z"
+  description: "Iron Maiden. 13M likes. Scream for me Facebook!" => "Iron Maiden. 13 mi curtidas. Scream for me Facebook!"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p60x60/45835131_10155680171787051_155853234911576064_n.jpg?_nc_cat=1&_nc_oc=AQnHHH_bBMmXdh0KGIyjz9U5mFR4IjWv_XghvTL03ogvopDL4X7uEivHQZ9XdkXBLqs&_nc_ht=scontent.fssa7-1.fna&oh=40b6a1ab815e9c74f8bfd1328ba739ca&oe=5DF102C3" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/p200x200/45835131_10155680171787051_155853234911576064_n.jpg?_nc_cat=1&_nc_oc=AQndLfejIEeorZVr41MQ_pOL62HwhWWenl9G8yN0RCQVIPV_za6jzlCxUexrxlwFqT0&_nc_ht=scontent.fssa2-2.fna&oh=30e7bd50ce3a10e95f8472defb99491f&oe=5DFCFAC0"
+  provider: "facebook" => "Facebook"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/ironmaiden/" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/%D8%A7%D9%84%D9%85%D8%B1%D9%83%D8%B2-%D8%A7%D9%84%D8%AB%D9%82%D8%A7%D9%81%D9%8A-%D8%A7%D9%84%D9%82%D8%A8%D8%B7%D9%8A-%D8%A7%D9%84%D8%A3%D8%B1%D8%AB%D9%88%D8%B0%D9%83%D8%B3%D9%8A-%D8%A8%D8%A7%D9%84%D9%85%D8%A7%D9%86%D9%8A%D8%A7-179240385797/
+  author_name: "المركز الثقافي القبطي الأرثوذكسي بالمانيا" => "null"
+  published_at: "" => "2019-09-10T23:17:00.000Z"
+  description: "‎المركز الثقافي القبطي الأرثوذكسي بالمانيا‎, Bad Kreuznach. 25,198 likes · 248 talking about this · 27 were here. Koptische Orthodoxes Kulturzentrum e.V" => "‎المركز الثقافي القبطي الأرثوذكسي بالمانيا‎, Bad Kreuznach. 25.196 curtidas · 235 falando sobre isso · 27 estiveram aqui. Koptische Orthodoxes Kulturzentrum e.V"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p60x60/23472193_10156047091555798_8447955561521924157_n.jpg?_nc_cat=110&_nc_oc=AQnM7SSRALBwLkrd-DxbJw_rUIa77VNgdEYfR_pqpIBn1QttT7pwPHh47AW_61sJFWM&_nc_ht=scontent.fssa7-1.fna&oh=5757f3c0ef5a70a7f57675479003381a&oe=5E0B67B1" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/p200x200/23472193_10156047091555798_8447955561521924157_n.jpg?_nc_cat=110&_nc_oc=AQmFPNpQ8GZ3FJ-thFQaVH2SbKI12LMkD1mfNIhbouvH-Y8Bunu5h9W6Qa4rAWavJkw&_nc_ht=scontent.fssa2-1.fna&oh=fb685f2d4cb5d4e8949fb866ee6d22a3&oe=5DFD13E9"
+  provider: "facebook" => "Facebook"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/Koptisch.Orthodoxes.Kulturzentrum.e.V/" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/ﺇﺩﺍﺭﺓ-ﺖﻣﻮﻴﻧ-ﺄﺒﻧﻮﺑ-217188161807938/ : undefined (undefined)
+https://facebook.com/caiosba
+  author_name: "Caio Sacramento (Caiosba)" => "(Terror das cachorra)"
+  published_at: "" => "2020-03-01T15:00:00.000Z"
+  description: "Bacharel em Ciência da Computação (UFBA), Mestre em Ciência da Computação (UFBA), Engenheiro de Software e Artista Digital" => "Caio Sacramento está no Facebook. Participe do Facebook para se conectar com Caio Sacramento e outros que você talvez conheça. O Facebook oferece às pessoas o poder de compartilhar e tornar o mundo..."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p160x160/12669543_976265519088369_877453730176380715_n.jpg?_nc_cat=102&_nc_oc=AQmlrdkYsmzv72ybGFE5AkpsZCNS8o1RVoH0Usad0bjUgXNI0V2nvdkccvfCjXdzZ6E&_nc_ht=scontent.fssa7-1.fna&oh=9c643e50f69a92ead844141179c1aead&oe=5DC87D16" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/p200x200/12669543_976265519088369_877453730176380715_n.jpg?_nc_cat=102&_nc_oc=AQmEgGIuG1UwJjv_t7HOWe1Wy5NK2dekJCoXX43I2L40G1yxAEDcCvxG7orI5t-_wQw&_nc_ht=scontent.fssa2-1.fna&oh=e7240c30a3f6412be67aaee3c1d0bf9a&oe=5DF993E4"
+  provider: "facebook" => "Facebook"
+  title: "Caio Sacramento (Caiosba)" => "Caio Sacramento"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/caiosba" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://facebook.com/100013581666047
+  author_name: "José Silva" => "null"
+  published_at: "" => "null"
+  description: "" => "José Silva está no Facebook. Participe do Facebook para se conectar com José Silva e outros que você talvez conheça. O Facebook oferece às pessoas o poder de compartilhar e tornar o mundo mais aberto..."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/c47.0.160.160a/p160x160/10354686_10150004552801856_220367501106153455_n.jpg?_nc_cat=1&_nc_oc=AQkwgW6bEf9knz7dPaDvLCXctZR-_uQKUs2WaM2OaSGX5k7czYl6ucvQGGL92j6NiQE&_nc_ht=scontent.fssa7-1.fna&oh=6cc6dd2623f7184fe4d5a94b29effabd&oe=5DFFC41E" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/s200x200/10354686_10150004552801856_220367501106153455_n.jpg?_nc_cat=1&_nc_oc=AQn5QD5QGMvNKIQLhxd_K9xhcDech1leUPm-x4OP4QUag-X_g06_xziUMs-qg6UrZgI&_nc_ht=scontent.fssa2-2.fna&oh=47543fd83c98d66d750cdf061c27af2f&oe=5E03BC50"
+  provider: "facebook" => "Facebook"
+  url: "http://www.facebook.com/people/José-Silva/100013581666047" => "https://www.facebook.com/people/Jos%C3%A9-Silva/100013581666047"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/people/José-Silva/100013581666047" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/teste637621352/photos/a.754851877912740.1073741826.749262715138323/896869113711015/?type=3
+  author_name: "Teste" => "null"
+  published_at: "2015-03-09T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/20525_896869113711015_299372647385209291_n.jpg?_nc_cat=101&_nc_oc=AQnJoom9WyWfReI--KdzLE30PcVVT9KhNkLZ5GVxZ4BQDvRfKDhmAZr6WD7ECFDZgcg&_nc_ht=scontent.fssa7-1.fna&oh=a0a8d6d3e9e0dd4945cfa91bf886b7c0&oe=5DFF5AA9" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-9/20525_896869113711015_299372647385209291_n.jpg?_nc_cat=101&_nc_oc=AQlYEKxAIszrKTVGRqH5ZI5QlMprSjnlQv2HFVtzNmnVEut1WZZglRGNkfdXTfCQBR4&_nc_ht=scontent.fssa2-1.fna&oh=42bb81d74f8cd1dd3301c0b9cae3c351&oe=5DFF5AA9"
+  provider: "facebook" => "Facebook"
+  title: "Teste on Facebook" => "Teste"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/teste637621352/photos/a.754851877912740/896869113711015/?type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/teste637621352/photos/a.1028424563888802.1073741827.749262715138323/1028424567222135/?type=3&theater
+  author_name: "Teste" => "null"
+  published_at: "2015-11-17T00:00:00.000+00:00" => "null"
+  description: "Teste added a new photo." => "Teste adicionou uma nova foto."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/11693912_1028424567222135_499327674046946466_n.png?_nc_cat=109&_nc_oc=AQlYRPThzQouhVF4Y_Gf9NKrGiAz6ScTprhy26rlC9Q5GxcBSmb8YLoJr6zFGO13Mk8&_nc_ht=scontent.fssa7-1.fna&oh=99b5fc2cfdfb914db16caf22e1a95b2e&oe=5E0E6023" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-9/11693912_1028424567222135_499327674046946466_n.png?_nc_cat=109&_nc_oc=AQlxwz9k8f6LiBb0BkODFKvAXnWh_8ik1LC6aea8tH_GuQJKSn7v2CpQLNl6WuX9Ob8&_nc_ht=scontent.fssa2-2.fna&oh=30b1a6558cbf2ed99272d60dc4322b1b&oe=5E0E6023"
+  provider: "facebook" => "Facebook"
+  title: "Teste on Facebook" => "Teste"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/teste637621352/photos/a.1028424563888802/1028424567222135/?type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/teste637621352/posts/1028795030518422
+  author_name: "Teste" => "null"
+  published_at: "2015-11-18T00:00:00.000+00:00" => "2019-09-10T22:05:00.000Z"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t31.0-8/12239249_1028794697185122_3846065516644746487_o.jpg?_nc_cat=107&_nc_oc=AQk-xcFGksBi9ricJzEY_z3J-NCodxJUoAZL041glrLffGIAFxCSrpD907evXpE2r7c&_nc_ht=scontent.fssa7-1.fna&oh=ee6ca799e0a44ca7b5a26e07d6176e8c&oe=5E064427" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t31.0-8/12239249_1028794697185122_3846065516644746487_o.jpg?_nc_cat=107&_nc_oc=AQlqMXctOVeCjFU1sz_v_SQtrdqNKD19Nml02zdkylXRbLr3D6sdQkSu2Db_BUvGp5Y&_nc_ht=scontent.fssa2-2.fna&oh=d2fe61a1556f251746fe26f29a9b9d55&oe=5E064427"
+  provider: "facebook" => "Facebook"
+  title: "Teste on Facebook" => "Teste"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/teste637621352/posts/1028795030518422" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/nanabhay/posts/10156130657385246?pnref=story
+  author_name: "Mohamed Nanabhay" => "null"
+  published_at: "2015-10-27T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/12065594_10156130654225246_1573128779736032544_n.jpg?_nc_cat=103&_nc_oc=AQnslhBKTUG4SOnA5mHCF2T2HH6lqLkx9gAWVx_Aw1ghCiIlfYQ0etdKS0958_7GWak&_nc_ht=scontent.fssa7-1.fna&oh=de12b6b1257f1be41b45c965af3670fb&oe=5DFF79D5" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-9/12065594_10156130654225246_1573128779736032544_n.jpg?_nc_cat=103&_nc_oc=AQn3CU_2-M0knEL6heiMPUvrPn8BJFeL-0EYEKEq9LA4-se6FSyN_5vKq6QkNZ71YSs&_nc_ht=scontent.fssa2-2.fna&oh=0a891aba2112f1b7c4268f2bb3093aae&oe=5DFF79D5"
+  provider: "facebook" => "Facebook"
+  title: "Mohamed Nanabhay on Facebook" => "Mohamed Nanabhay"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/nanabhay/posts/10156130657385246" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/photo.php?fbid=981302451896323&set=a.155912291102014.38637.100000497329098&type=3&theater
+  author_name: "Kiko Loureiro" => "null"
+  published_at: "2014-11-21T00:00:00.000+00:00" => "null"
+  description: "Kiko Loureiro added a new photo." => "Kiko Loureiro adicionou uma nova foto."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/10375041_981302451896323_8862179815187925287_n.jpg?_nc_cat=111&_nc_oc=AQkMT5YPg0B14EOp2BINi8gWgtsltsYTJmKjKEQUPWOZ8L9MzoFb7Eu-7CkYoguWMQY&_nc_ht=scontent.fssa7-1.fna&oh=3f701007d9516e32315df9515f600c13&oe=5E0B43FC" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-9/10375041_981302451896323_8862179815187925287_n.jpg?_nc_cat=111&_nc_oc=AQnQbl1O7xj3f8TmPZx3FTBjFTEcW6JjmomMYTOJlr9BArACpAfygNxhuGrLkFFyUhU&_nc_ht=scontent.fssa2-2.fna&oh=e0798ab8626fb4dea80ddfc1537857e3&oe=5E0B43FC"
+  provider: "facebook" => "Facebook"
+  title: "Kiko Loureiro on Facebook" => "Kiko Loureiro"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/photo.php?fbid=981302451896323&set=a.155912291102014&type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/photo.php?fbid=10155150801660195&set=p.10155150801660195&type=1&theater
+  author_name: "David Marcus" => "null"
+  published_at: "2015-01-16T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t31.0-8/10942354_10155150801660195_945321038727463565_o.jpg?_nc_cat=104&_nc_oc=AQkRjeSFGQi7j04L99_VVuSPTg5Yd_scbzPMDOUhKlhu2uQOWXklTRsVCAb4bf0I3iw&_nc_ht=scontent.fssa7-1.fna&oh=5b71af7ebe133fdacccc5aae2fd60a8f&oe=5E0CAA3B" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t31.0-8/10942354_10155150801660195_945321038727463565_o.jpg?_nc_cat=104&_nc_oc=AQlDWkX9yuIBoqX3dDjpfTZsa1rDRHYfSx8QU9rtn7v1R7XvlkygTtSqI0BOr3sxMgM&_nc_ht=scontent.fssa2-1.fna&oh=b3dc4554a09355d3dee78156a56ce454&oe=5E0CAA3B"
+  provider: "facebook" => "Facebook"
+  title: "David Marcus on Facebook" => "David Marcus"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/photo.php?fbid=10155150801660195&set=p.10155150801660195&type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/teste637621352/posts/1035783969819528
+  author_name: "Teste" => "null"
+  published_at: "2015-12-03T00:00:00.000+00:00" => "2019-09-10T22:05:00.000Z"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p200x200/21078829_1622820767782509_5518875727231512409_n.png?_nc_cat=107&_nc_oc=AQnj_jQ1WjuWicm_RiUmWCz8l-7qHJbhMkOqcrEwdjRW0rOjXCFVdQpSVvjniMAhrOo&_nc_ht=scontent.fssa7-1.fna&oh=24b635b326f052a90722cd48807e687e&oe=5E12F751" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/p200x200/21078829_1622820767782509_5518875727231512409_n.png?_nc_cat=107&_nc_oc=AQm5cPQox7wdzEhZqErcxHQQjUheHx2qqyGi0cHm-Z_jNvEH3JjydUkJiNuCtx_kuYA&_nc_ht=scontent.fssa2-2.fna&oh=a7fba7123c319a4c78323e20cd294710&oe=5E12F751"
+  provider: "facebook" => "Facebook"
+  title: "Teste on Facebook" => "Teste"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/teste637621352/posts/1035783969819528" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/teste637621352/posts/2194142813983632
+  author_name: "Teste" => "null"
+  published_at: "2018-12-02T00:00:00.000+00:00" => "2019-09-10T22:05:00.000Z"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/47341215_2194142583983655_1786262029229621248_n.jpg?_nc_cat=104&_nc_oc=AQlPF6qvI4VZA7Nb4uMTSPB-n-x_FNRC7l9ghydDkH9W3sDutrgGjy6gBpHAS_xDIl4&_nc_ht=scontent.fssa7-1.fna&oh=cd82a7fc0792e0f6c97bb5e9e679e919&oe=5E077556" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-9/47341215_2194142583983655_1786262029229621248_n.jpg?_nc_cat=104&_nc_oc=AQmIm98PMFcdFNqs2w3OZxEuBiJ-jNTJpLIrgTuhpjTnoxL7cTYN6YzYQ7sGG-MqkNE&_nc_ht=scontent.fssa2-1.fna&oh=4d5da680dc057b936f5290f9402b95a8&oe=5E077556"
+  provider: "facebook" => "Facebook"
+  title: "Teste on Facebook" => "Teste"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/teste637621352/posts/2194142813983632" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/ahlam.alialshamsi/posts/108561999277346?pnref=story
+  author_name: "Ahlam Ali Al Shāmsi" => "null"
+  published_at: "2012-04-01T00:00:00.000+00:00" => "null"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/529411_106261999507346_1615782665_n.jpg?_nc_cat=102&_nc_oc=AQlbaPNznoOc5i3FAZrX5O6VGayFyTIMt6_Bp_sBLr3zeMqECqGD1bvhNpV6x6wiJrY&_nc_ht=scontent.fssa7-1.fna&oh=4840216113f746f53a8bf81ce0ef32a4&oe=5DF78F7A" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-1/529411_106261999507346_1615782665_n.jpg?_nc_cat=102&_nc_oc=AQn5gu59SmCZslfDwqwnF6kDICn-lM0I7d4WcFI71j380tsfu3XxQTCKAL-HLt8gq44&_nc_ht=scontent.fssa2-1.fna&oh=96109e7ce36101a6b8f3c1728d35eb1e&oe=5DF78F7A"
+  provider: "facebook" => "Facebook‬"
+  title: "Ahlam Ali Al Shāmsi on Facebook" => "Ahlam Ali Al Shāmsi"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/ahlam.alialshamsi/posts/108561999277346" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://m.facebook.com/photo.php?fbid=981302451896323&set=a.155912291102014.38637.100000497329098&type=3&theater
+  author_name: "Kiko Loureiro" => "null"
+  published_at: "2014-11-21T00:00:00.000+00:00" => "null"
+  description: "Kiko Loureiro added a new photo." => "Kiko Loureiro adicionou uma nova foto."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/10375041_981302451896323_8862179815187925287_n.jpg?_nc_cat=111&_nc_oc=AQkMT5YPg0B14EOp2BINi8gWgtsltsYTJmKjKEQUPWOZ8L9MzoFb7Eu-7CkYoguWMQY&_nc_ht=scontent.fssa7-1.fna&oh=3f701007d9516e32315df9515f600c13&oe=5E0B43FC" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-9/fr/cp0/e15/q65/10375041_981302451896323_8862179815187925287_n.jpg?_nc_cat=111&_nc_oc=AQnQbl1O7xj3f8TmPZx3FTBjFTEcW6JjmomMYTOJlr9BArACpAfygNxhuGrLkFFyUhU&_nc_ht=scontent.fssa2-2.fna&oh=a7590ce2e1ae197df0df3de5e803fa97&oe=5E0EE23E"
+  provider: "facebook" => "null"
+  title: "Kiko Loureiro on Facebook" => "Kiko Loureiro"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/photo.php?fbid=981302451896323&id=100000497329098&set=a.155912291102014" => "null"
+=========================================
+https://www.facebook.com/quoted.pictures/photos/a.128828073875334.28784.128791873878954/1096134023811396/?type=3&theater
+  author_name: "New Quoted Pictures Everyday" => "null"
+  published_at: "2016-09-08T00:00:00.000+00:00" => "null"
+  description: "New Quoted Pictures Everyday added a new photo." => "New Quoted Pictures Everyday adicionou uma nova foto."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-9/14222344_1096134023811396_8394853677148834035_n.jpg?_nc_cat=102&_nc_oc=AQkd54obgKb-i7EmqXaZIeZ8fLcshaMX0obJPxx0wUntoboZBJOYwfToyabwUTC_vUc&_nc_ht=scontent.fssa7-1.fna&oh=abdadfed33c12978e3f1f3dfa7f041f1&oe=5E03F978" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t1.0-9/14222344_1096134023811396_8394853677148834035_n.jpg?_nc_cat=102&_nc_oc=AQkaP1GgSYh8Wd6oXvQoYXCFGBbUeg1US08r-d9kAtbpwFMeBwQdDre8LCyS2bUuV0I&_nc_ht=scontent.fssa2-1.fna&oh=d0e64988341112d3bf232a12ef85c237&oe=5E03F978"
+  provider: "facebook" => "Facebook"
+  title: "New Quoted Pictures Everyday on Facebook" => "New Quoted Pictures Everyday"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/quoted.pictures/photos/a.128828073875334/1096134023811396/?type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/ESCAPE.Egypt/photos/ms.c.eJxNk8d1QzEMBDvyQw79N2ZyaeD7osMIwAZKLGTUViod1qU~;DCBNHcpl8gfMKeR8bz2gH6ABlHRuuHYM6AdywPkEsH~;gqAjxqLAKJtQGZFxw7CzIa6zdF8j1EZJjXRgTzAP43XBa4HfFa1REA2nXugScCi3wN7FZpF5BPtaVDEBqwPNR60O9Lsi0nbDrw3KyaPCVZfqAYiWmZO13YwvSbtygCWeKleh9KEVajW8FfZz32qcUrNgA5wfkA4Xfh004x46d9gdckQt2xR74biSOegwIcoB9OW~_oVIxKML0JWYC0XHvDkdZy0oY5bgjvBAPwdBpRuKE7kZDNGtnTLoCObBYqJJ4Ky5FF1kfh75Gnyl~;Qxqsv.bps.a.1204090389632094.1073742218.423930480981426/1204094906298309/?type=3&theater
+  author_name: "Escape" => "null"
+  published_at: "2016-09-06T00:00:00.000+00:00" => "null"
+  description: "Escape added a new photo." => "Escape adicionou uma nova foto."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t31.0-8/14257655_1204094906298309_5686096491476642814_o.jpg?_nc_cat=102&_nc_oc=AQlb1utwEegcISOmrsFRDPUhe1_zolxTn__d6S3EMzDMHCSSXS5PyePWggV55N0bs4Y&_nc_ht=scontent.fssa7-1.fna&oh=e1528227e3f4eb78aac29b5f6298e43b&oe=5DFE5FD7" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t31.0-8/14257655_1204094906298309_5686096491476642814_o.jpg?_nc_cat=102&_nc_oc=AQl_IlSuZebxUqr0KlKODvQawSS1nero0PrCPsuqLkBDc0clazRKLEOFNgvJGSNI_Ek&_nc_ht=scontent.fssa2-1.fna&oh=82b5f420724f9f718b2752749513a6f5&oe=5DFE5FD7"
+  provider: "facebook" => "Facebook"
+  title: "Escape on Facebook" => "Escape"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/Escape.Egypt/photos/a.1204090389632094/1204094906298309/?type=3" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/144585402276277/videos/1127489833985824
+  author_name: "Trent Aric - Meteorologist" => "null"
+  published_at: "2016-10-05T00:00:00.000+00:00" => "2016-10-05T11:15:30.000Z"
+  description: "MATTHEW YOU ARE DRUNK...GO HOME! Look at what the long range computer models are indicating with Hurricane Matthew. Yes that's right the GFS model along with the ECMWF (European Model) are both showing Matthew looping around the Atlantic and heading back to the west toward Florida. Let's hope this trend changes and this DOES NOT HAPPEN. Let's get through the next 48hrs first..." => "MATTHEW YOU ARE DRUNK...GO HOME! Look at what the long range computer models are indicating with Hurricane Matthew. Yes that’s right the GFS model..."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t15.5256-10/p200x200/14602101_1127500960651378_1143375978446192640_n.jpg?_nc_cat=107&_nc_oc=AQnwAqYPy4EPDzQfdMtkMdx4mkGlJIbfDkfVNNHBcmJOx_Naa4wNqZaWNWC4jIqo8YI&_nc_ht=scontent.fssa7-1.fna&oh=ae9fc7e21a20b05be0b8057c96b4bdd1&oe=5E05DC23" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/68282819_2335799013154894_3027237321251487744_n.png?_nc_cat=111&_nc_oc=AQmyYdvtnRqMPl8S-oV0lIGOMcGACZYsFhyBW-cJgdj4gb3ff4jFkllpr8WKAY8fScs&_nc_ht=scontent.fssa2-2.fna&oh=5ea77b7609248ba3aee6b9e04b7a0209&oe=5E00EE16"
+  provider: "facebook" => "Facebook Watch"
+  title: "Trent Aric - Meteorologist on Facebook" => "MATTHEW YOU ARE DRUNK...GO HOME! Look... - Trent Aric - Meteorologist"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/144585402276277/videos/1127489833985824" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/democrats/videos/10154268929856943
+  author_name: "Democratic Party" => "null"
+  published_at: "2016-09-27T00:00:00.000+00:00" => "2016-09-27T23:12:05.000Z"
+  description: "On National Voter Registration Day, you've got to 👯 Register your friends 🏡 Register your neighbors 🙋 Register everyone you know Go to iwillvote.com to get it done." => "On National Voter Registration Day, you’ve got to
+󾆢 Register your friends
+󾒱 Register your neighbors
+󾍗 Register everyone you know
+Go to iwillvote.com to..."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t15.5256-10/p200x200/14411395_10154268941541943_3110271773661200384_n.jpg?_nc_cat=110&_nc_oc=AQkd1vDKt72osUXoy4oD6EzQD49-2JNlQ_zxprhexpsDJ3HJ8ReL97w-qrsYVqOfKsg&_nc_ht=scontent.fssa7-1.fna&oh=467769e890448059f44ea1ba3bbd408d&oe=5E0C8B7B" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/p720x720/1526086_10152061389606943_5631354745317018857_n.png?_nc_cat=1&_nc_oc=AQm3SRfMfBAFhL38mRosf-NGOp2o2dQY-FgO36T5mRzgMnAMk9mu3x4X_xJPBA0Im-s&_nc_ht=scontent.fssa2-2.fna&oh=156968bf3b230304ceb48f84947e44de&oe=5E014B62"
+  provider: "facebook" => "Facebook Watch"
+  title: "Democratic Party on Facebook" => "On National Voter Registration Day,... - Democratic Party"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/democrats/videos/10154268929856943" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/edwinscott143/videos/vb.737361619/10154242961741620/?type=2&theater
+  author_name: "Eddie Scott - My baby girl Ella learned an important..." => "null"
+  published_at: "2016-08-31T00:00:00.000+00:00" => "2016-09-01T01:48:28.000Z"
+  description: "My baby girl Ella learned an important lesson today - Help those less fortunate than you!! So proud of my girl For licensing inquiries please contact licensing@junkinmedia.com Thank you!" => "My baby girl Ella learned an important lesson today - Help those less fortunate than you!! So proud of my girl
+For licensing inquiries please contact..."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t15.5256-10/p200x200/14146479_10154242963196620_407850789_n.jpg?_nc_cat=103&_nc_oc=AQmZy3Q3bxOpTugq9wDH4BX25MbubAVaH9Lu_CNgA6M-Bz-1Fx9cjDy0XVpz-qfW7rU&_nc_ht=scontent.fssa7-1.fna&oh=831a8903eda92f047eb239092fab13a9&oe=5E0D1A62" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/p720x720/66067478_10157008878736620_445264589630734336_n.jpg?_nc_cat=109&_nc_oc=AQly888SpXaWriMslilNXDPL5moT4wD8Ujud31E4nMv3vDdrsKpIm6JtKny0wUWTOmo&_nc_ht=scontent.fssa2-2.fna&oh=5b7ed13636ba876b5eee077cd070bb7c&oe=5E0A3294"
+  provider: "facebook" => "Facebook Watch"
+  title: "Eddie Scott - My baby girl Ella learned an important... on Facebook" => "Eddie Scott - My baby girl Ella learned an important..."
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/edwinscott143/videos/vb.737361619/10154242961741620/?type=2&theater" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/events/1090503577698748
+  author_name: "Nancy Ajram" => "null"
+  published_at: "" => "null"
+  description: "Event in Suez, Egypt by Nancy Ajram on Tuesday, September 13 2016 with 917 people interested and 520 people going. 58 posts in the discussion." => "Nancy Ajram will be performing in Stella Di Mare, September 13th, 2016 in Egypt. For tickets and information please contact 19565."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-0/c77.0.200.200a/p200x200/37568655_10156822855480934_8844108201071738880_n.jpg?_nc_cat=107&_nc_oc=AQlMSgrytp8_b-JTJQZjIgiKOfmZYmzPCg9UsB6AXYFDYwyQwtDikA9Vdxkv2Y-6kd4&_nc_ht=scontent.fssa7-1.fna&oh=d917f0d736e8cafa0320749416c6ef6d&oe=5DF29E70" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-0/c77.0.200.200a/p200x200/37568655_10156822855480934_8844108201071738880_n.jpg?_nc_cat=107&_nc_oc=AQkfgeta3aZEAHWu6z2fMZYbo3oGbKbDb9nLqNay7USELDE5KSDEekVDgyl75ObohLI&_nc_ht=scontent.fssa2-2.fna&oh=ff20d8a6f0999b2c6404fdd23661d91c&oe=5DF29E70"
+  provider: "facebook" => "null"
+  title: "Nancy Ajram on Facebook" => "Nancy Ajram in Stella Di Mare Music Festival"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/events/stella-di-mare-soukhna/nancy-ajram-in-stella-di-mare-music-festival/1090503577698748/" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406
+  author_name: "Mariano Rajoy Brey" => "null"
+  published_at: "2016-09-30T00:00:00.000+00:00" => "null"
+  description: "En el Museo Serralves de Oporto, inaugurando la exposición "Joan Miró: Materialidad y Metamorfosis", ejemplo de vanguardia, libertad y de la rica tradición pictórica española. Un orgullo poder estar..." => "En el Museo Serralves de Oporto, inaugurando la exposición “Joan Miró: Materialidad y Metamorfosis”, ejemplo de vanguardia, libertad y de la rica tradición pictórica española. Un orgullo poder estar..."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t31.0-8/14543767_10154534111016407_5167486558738906371_o.jpg?_nc_cat=108&_nc_oc=AQm4VhJU3ZoHNiT_KZjpxmE05PBczd_nrPWJLSgFGjiAAqLm28L0g_XuRqmePEuOz98&_nc_ht=scontent.fssa7-1.fna&oh=d7b682ee00436347799e1f14e205d36e&oe=5DF54B8B" => "https://scontent.fssa2-1.fna.fbcdn.net/v/t31.0-8/14543767_10154534111016407_5167486558738906371_o.jpg?_nc_cat=108&_nc_oc=AQmzdDv9Rkn0ytgMMGsi9iidzUymF2EyG88jJF1iYqgOdSoU1NIviG833op_WGMIUTs&_nc_ht=scontent.fssa2-1.fna&oh=3b2818398aa4a1f1a260526fb9e0a143&oe=5DF54B8B"
+  provider: "facebook" => "Facebook"
+  title: "Mariano Rajoy Brey on Facebook" => "Mariano Rajoy Brey"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/quoted.pictures/posts/1095740107184121
+  author_name: "New Quoted Pictures Everyday" => "null"
+  published_at: "2016-09-07T00:00:00.000+00:00" => "2019-09-10T10:36:00.000Z"
+  picture: "https://external.fssa7-1.fna.fbcdn.net/safe_image.php?d=AQCCMLtHeW1MxEQh&w=249&h=249&url=https%3A%2F%2Fmedia.giphy.com%2Fmedia%2FfBTpIC3LkshXO%2Fgiphy.gif&cfs=1&sx=127&sy=0&sw=249&sh=249&_nc_hash=AQCglfmamgWbc_QT" => "https://external.fssa2-2.fna.fbcdn.net/safe_image.php?d=AQCCMLtHeW1MxEQh&w=249&h=249&url=https%3A%2F%2Fmedia.giphy.com%2Fmedia%2FfBTpIC3LkshXO%2Fgiphy.gif&cfs=1&sx=127&sy=0&sw=249&sh=249&_nc_hash=AQCglfmamgWbc_QT"
+  provider: "facebook" => "Facebook"
+  title: "New Quoted Pictures Everyday on Facebook" => "New Quoted Pictures Everyday"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/quoted.pictures/posts/1095740107184121" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/scmp/videos/vb.355665009819/10154584426664820/?type=2&theater
+  published_at: "2016-10-18T00:00:00.000+00:00" => "2016-10-19T03:09:30.000Z"
+  description: "SCMP #FacebookLive amid chaotic scenes in #HongKong Legco as pro-establishment legislators walkout of 2nd Legco meeting and pro-democracy and pro-Beijing lawmakers argue." => "SCMP #FacebookLive amid chaotic scenes in #HongKong Legco as pro-establishment legislators walkout of 2nd Legco meeting and pro-democracy and pro-Beijing..."
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t15.5256-10/p200x200/14645700_10154584445939820_3787909207995449344_n.jpg?_nc_cat=107&_nc_oc=AQmUlJB0bTfNrtDFTnwmUaCmFCQsyY6ZTagIke-djYhQHHQKZVLJrk1au8985z-a-c0&_nc_ht=scontent.fssa7-1.fna&oh=b1fcf8dd383b90cfbdbb5cbdb80f7aab&oe=5E0CF5EE" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/27460058_10156058150499820_917740624832332458_n.png?_nc_cat=1&_nc_oc=AQmQQAoUz13w6FWr8Cfju4q40_BpgyT1KdFIcnLH5cKsmJIVoFYZ96ZTWLWIAP6pFzY&_nc_ht=scontent.fssa2-2.fna&oh=03e99cfb2464fae403f7032cd93b53c8&oe=5DEF52E3"
+  provider: "facebook" => "Facebook Watch"
+  title: "South China Morning Post on Facebook" => "SCMP #FacebookLive amid chaotic scenes... - South China Morning Post"
+  url: "https://www.facebook.com/scmp/videos/10154584426664820/" => "https://www.facebook.com/scmp/videos/vb.355665009819/10154584426664820/?type=2&theater"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/scmp/videos/10154584426664820/" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.facebook.com/ironmaiden/
+  author_name: "Iron Maiden" => "null"
+  published_at: "" => "2019-09-10T19:54:54.000Z"
+  description: "Iron Maiden. 13M likes. Scream for me Facebook!" => "Iron Maiden. 13 mi curtidas. Scream for me Facebook!"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p60x60/45835131_10155680171787051_155853234911576064_n.jpg?_nc_cat=1&_nc_oc=AQnHHH_bBMmXdh0KGIyjz9U5mFR4IjWv_XghvTL03ogvopDL4X7uEivHQZ9XdkXBLqs&_nc_ht=scontent.fssa7-1.fna&oh=40b6a1ab815e9c74f8bfd1328ba739ca&oe=5DF102C3" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/p200x200/45835131_10155680171787051_155853234911576064_n.jpg?_nc_cat=1&_nc_oc=AQndLfejIEeorZVr41MQ_pOL62HwhWWenl9G8yN0RCQVIPV_za6jzlCxUexrxlwFqT0&_nc_ht=scontent.fssa2-2.fna&oh=30e7bd50ce3a10e95f8472defb99491f&oe=5DFCFAC0"
+  provider: "facebook" => "Facebook"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/ironmaiden/" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://ca.ios.ba/files/meedan/facebook.html
+  author_name: "" => "null"
+  published_at: "" => "null"
+  description: "" => "null"
+  picture: "" => "null"
+  provider: "page" => "null"
+  title: "" => "facebook"
+  favicon: "https://www.google.com/s2/favicons?domain_url=ca.ios.ba/files/meedan/facebook.html" => "null"
+=========================================
+https://www.facebook.com/ironmaiden
+  author_name: "Iron Maiden" => "null"
+  published_at: "" => "2019-09-10T19:55:07.000Z"
+  description: "Iron Maiden. 13M likes. Scream for me Facebook!" => "Iron Maiden. 13 mi curtidas. Scream for me Facebook!"
+  picture: "https://scontent.fssa7-1.fna.fbcdn.net/v/t1.0-1/p60x60/45835131_10155680171787051_155853234911576064_n.jpg?_nc_cat=1&_nc_oc=AQnHHH_bBMmXdh0KGIyjz9U5mFR4IjWv_XghvTL03ogvopDL4X7uEivHQZ9XdkXBLqs&_nc_ht=scontent.fssa7-1.fna&oh=40b6a1ab815e9c74f8bfd1328ba739ca&oe=5DF102C3" => "https://scontent.fssa2-2.fna.fbcdn.net/v/t1.0-1/p200x200/45835131_10155680171787051_155853234911576064_n.jpg?_nc_cat=1&_nc_oc=AQndLfejIEeorZVr41MQ_pOL62HwhWWenl9G8yN0RCQVIPV_za6jzlCxUexrxlwFqT0&_nc_ht=scontent.fssa2-2.fna&oh=30e7bd50ce3a10e95f8472defb99491f&oe=5DFCFAC0"
+  provider: "facebook" => "Facebook"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.facebook.com/ironmaiden/" => "https://static.xx.fbcdn.net/rsrc.php/yz/r/KFyVIAWzntM.ico?_nc_x=Ij3Wp8lg5Kz"
+=========================================
+https://www.youtube.com/user/portadosfundos
+  published_at: "2012-03-12T04:30:27.000Z" => "null"
+  description: "Esse é o canal Porta dos Fundos. Lançamos vídeos originais, inéditos e exclusivos sempre às segundas, quintas e sábados às 11h. Inscrevam-se e assistam. :-)
+
+CONTATO: contato@portadosfundos.com.br" => "Esse é o canal Porta dos Fundos. Lançamos vídeos originais, inéditos e exclusivos sempre às segundas, quintas e sábados às 11h. Inscrevam-se e assistam. :-) ..."
+  picture: "https://yt3.ggpht.com/a/AGF-l79CY-atKoPRmXfHCnUHu_JZghGvGY49uIiP3g=s800-c-k-c0xffffffff-no-rj-mo" => "https://yt3.ggpht.com/a/AGF-l79CY-atKoPRmXfHCnUHu_JZghGvGY49uIiP3g=s900-c-k-c0xffffffff-no-rj-mo"
+  provider: "youtube" => "YouTube"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.youtube.com/channel/UCEWHPFNilsT0IfQfutVzsag" => "https://www.youtube.com/yts/img/favicon_144-vfliLAfaB.png"
+=========================================
+https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ
+  author_name: "Iron Maiden" => "The Legacy Of The Beast Tour"
+  published_at: "2005-09-13T02:05:43.000Z" => "null"
+  picture: "https://yt3.ggpht.com/a/AGF-l7-oPt7bXu633ciVtjvQfcMDA68eBiC2Fin-bQ=s800-c-k-c0xffffffff-no-rj-mo" => "https://yt3.ggpht.com/a/AGF-l7-oPt7bXu633ciVtjvQfcMDA68eBiC2Fin-bQ=s900-c-k-c0xffffffff-no-rj-mo"
+  provider: "youtube" => "YouTube"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ" => "https://www.youtube.com/yts/img/favicon_144-vfliLAfaB.png"
+=========================================
+https://www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQ
+  author_name: "Barbixas" => "Atividades recentes"
+  published_at: "2007-11-29T22:08:52.000Z" => "null"
+  description: "Canal da Cia Barbixas de Humor. Fazemos esquetes e improviso. Vídeos todas as terças e quintas, sempre às 8h da manhã.
+INSCREVA-SE:  http://bit.ly/1TiCxHt
+
+Acesse o site
+http://www.barbixas.com.br
+
+
+Midia Kit
+http://www.barbixas.com.br/midiakit/
+
+Facebook: http://www.facebook.com/barbixas
+Twitter: http://twitter.com/barbixas
+Instagram: http://www.instagram.com/ciabarbixas" => "Canal da Cia Barbixas de Humor. Fazemos esquetes e improviso. Vídeos todas as terças e quintas, sempre às 8h da manhã. INSCREVA-SE: http://bit.ly/1TiCxHt Ace..."
+  picture: "https://yt3.ggpht.com/a/AGF-l78XMu9D9P0EIDi8VFzkJjRouOmqnO-UzJ9byw=s800-c-k-c0xffffffff-no-rj-mo" => "https://yt3.ggpht.com/a/AGF-l78XMu9D9P0EIDi8VFzkJjRouOmqnO-UzJ9byw=s900-c-k-c0xffffffff-no-rj-mo"
+  provider: "youtube" => "YouTube"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQ" => "https://www.youtube.com/yts/img/favicon_144-vfliLAfaB.png"
+=========================================
+https://www.youtube.com/user/portadosfundos/
+  published_at: "2012-03-12T04:30:27.000Z" => "null"
+  description: "Esse é o canal Porta dos Fundos. Lançamos vídeos originais, inéditos e exclusivos sempre às segundas, quintas e sábados às 11h. Inscrevam-se e assistam. :-)
+
+CONTATO: contato@portadosfundos.com.br" => "Esse é o canal Porta dos Fundos. Lançamos vídeos originais, inéditos e exclusivos sempre às segundas, quintas e sábados às 11h. Inscrevam-se e assistam. :-) ..."
+  picture: "https://yt3.ggpht.com/a/AGF-l79CY-atKoPRmXfHCnUHu_JZghGvGY49uIiP3g=s800-c-k-c0xffffffff-no-rj-mo" => "https://yt3.ggpht.com/a/AGF-l79CY-atKoPRmXfHCnUHu_JZghGvGY49uIiP3g=s900-c-k-c0xffffffff-no-rj-mo"
+  provider: "youtube" => "YouTube"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.youtube.com/channel/UCEWHPFNilsT0IfQfutVzsag" => "https://www.youtube.com/yts/img/favicon_144-vfliLAfaB.png"
+=========================================
+https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ/
+  author_name: "Iron Maiden" => "The Legacy Of The Beast Tour"
+  published_at: "2005-09-13T02:05:43.000Z" => "null"
+  picture: "https://yt3.ggpht.com/a/AGF-l7-oPt7bXu633ciVtjvQfcMDA68eBiC2Fin-bQ=s800-c-k-c0xffffffff-no-rj-mo" => "https://yt3.ggpht.com/a/AGF-l7-oPt7bXu633ciVtjvQfcMDA68eBiC2Fin-bQ=s900-c-k-c0xffffffff-no-rj-mo"
+  provider: "youtube" => "YouTube"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ" => "https://www.youtube.com/yts/img/favicon_144-vfliLAfaB.png"
+=========================================
+https://www.youtube.com/watch?v=mtLxD7r4BZQ
+  published_at: "2016-11-15T15:20:45.000Z" => "2016-11-15T00:00:00.000Z"
+  description: "" => "null"
+  provider: "youtube" => "YouTube"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.youtube.com/watch?v=mtLxD7r4BZQ" => "https://www.youtube.com/yts/img/favicon_144-vfliLAfaB.png"
+=========================================
+https://www.youtube.com/watch?v=qMfu1GLVsiM
+  published_at: "2019-05-22T13:57:27.000Z" => "2019-05-22T00:00:00.000Z"
+  description: "As we prepare for the 2019 tour (get tickets at http://irnmdn.co/tour), the Killer Krew are really looking forward to working with Eddie again...
+
+
+Subscribe to Iron Maiden on YouTube: http://po.st/gfSFz3
+
+Follow Iron Maiden online:
+Official Site: http://ironmaiden.com/
+Facebook: https://www.facebook.com/ironmaiden
+Twitter: http://twitter.com/ironmaiden
+Instagram: https://instagram.com/ironmaiden/
+Spotify: https://open.spotify.com/artist/6mdiAmATAx73kdxrNrnlao
+Apple Music: https://itun.es/gb/nzfc" => "As we prepare for the 2019 tour (get tickets at http://irnmdn.co/tour), the Killer Krew are really looking forward to working with Eddie again... Subscribe t..."
+  provider: "youtube" => "YouTube"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.youtube.com/watch?v=qMfu1GLVsiM" => "https://www.youtube.com/yts/img/favicon_144-vfliLAfaB.png"
+=========================================
+https://www.instagram.com/p/BJwkn34AqtN/
+  author_name: "Megadeth" => "null"
+  published_at: "2016-08-31T04:02:21.000+00:00" => "null"
+  description: "Peace Sells✌💲#vicrattlehead #megadeth #dystopiaworldtour #mexicocity #mexico 📷👉 @davemcrobb" => "18.8k Likes, 54 Comments - Megadeth (@megadeth) on Instagram: “Peace Sells✌💲#vicrattlehead #megadeth #dystopiaworldtour #mexicocity #mexico 📷👉 @davemcrobb”"
+  picture: "https://instagram.fssa7-1.fna.fbcdn.net/vp/03d856f98a068da06268579b0e4c5d85/5E137910/t51.2885-15/sh0.08/e35/s640x640/14134760_1603124996647697_221979963_n.jpg?_nc_ht=instagram.fssa7-1.fna.fbcdn.net&_nc_cat=105" => "https://instagram.fssa2-1.fna.fbcdn.net/vp/94210ebdc87d4a0ff5a1a8130e27b4a0/5E148FDC/t51.2885-15/e35/14134760_1603124996647697_221979963_n.jpg?_nc_ht=instagram.fssa2-1.fna.fbcdn.net&_nc_cat=105"
+  provider: "instagram" => "Instagram"
+  title: "Peace Sells✌💲#vicrattlehead #megadeth #dystopiaworldtour #mexicocity #mexico 📷👉 @davemcrobb" => "Megadeth on Instagram: “Peace Sells✌💲#vicrattlehead #megadeth #dystopiaworldtour #mexicocity #mexico 📷👉 @davemcrobb”"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.instagram.com/p/BJwkn34AqtN/" => "https://www.instagram.com/static/images/ico/favicon-192.png/68d99ba29cc8.png"
+=========================================
+https://www.instagram.com/megadeth
+  author_name: "megadeth" => "null"
+  published_at: "" => "null"
+  description: "1.7m Followers, 114 Following, 1,667 Posts - See Instagram photos and videos from Megadeth (@megadeth)" => "2020 European Tour Dates, Cyber Army Tickets Presale, VIP Packages. Get detail here:"
+  picture: "https://instagram.fssa7-1.fna.fbcdn.net/vp/2c9c8d7d7677a01d6aa040e8609edf55/5E101CBF/t51.2885-19/s150x150/50165326_252214595676077_3529718266903658496_n.jpg?_nc_ht=instagram.fssa7-1.fna.fbcdn.net" => "https://instagram.fssa2-2.fna.fbcdn.net/vp/68a3613870b018ac2963f24dc0ace7ed/5E101CBF/t51.2885-19/s150x150/50165326_252214595676077_3529718266903658496_n.jpg?_nc_ht=instagram.fssa2-2.fna.fbcdn.net"
+  provider: "instagram" => "Instagram"
+  title: "megadeth" => "Megadeth (@megadeth) • Instagram photos and videos"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.instagram.com/megadeth/" => "https://www.instagram.com/static/images/ico/favicon-192.png/68d99ba29cc8.png"
+=========================================
+https://www.instagram.com/p/BK4YliEAatH/?taken-by=anxiaostudio : 404 (Not Found)
+https://www.instagram.com/p/BK4YliEAatH/ : 404 (Not Found)
+https://www.instagram.com/p/BOXV2-7BPAu
+  author_name: "Pope Francis" => "null"
+  published_at: "2016-12-23T15:29:18.000+00:00" => "null"
+  description: "" => "158.7k Likes, 966 Comments - Pope Francis (@franciscus) on Instagram"
+  picture: "https://instagram.fssa7-1.fna.fbcdn.net/vp/8b5b4d04000b59c8f22bade5df401e7c/5DFD9126/t51.2885-15/sh0.08/e35/s640x640/15624258_1245305805515150_2887010358478766080_n.jpg?_nc_ht=instagram.fssa7-1.fna.fbcdn.net&_nc_cat=102" => "https://instagram.fssa2-1.fna.fbcdn.net/vp/d71391baebeaa92a67868205895dafb4/5DFDA19C/t51.2885-15/e35/15624258_1245305805515150_2887010358478766080_n.jpg?_nc_ht=instagram.fssa2-1.fna.fbcdn.net&_nc_cat=102"
+  provider: "instagram" => "Instagram"
+  title: "" => "Instagram post by Pope Francis • Dec 23, 2016 at 3:29pm UTC"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.instagram.com/p/BOXV2-7BPAu/" => "https://www.instagram.com/static/images/ico/favicon-192.png/68d99ba29cc8.png"
+=========================================
+https://www.instagram.com/emeliiejanssonn/
+  published_at: "" => "2016-07-27T14:08:38.000Z"
+  description: "722 Followers, 483 Following, 165 Posts - See Instagram photos and videos from @emeliiejanssonn" => "Emelie Jansson
+Certifierad inredare 🎓"
+  picture: "https://instagram.fssa7-1.fna.fbcdn.net/vp/a4f020f3dfe321e6d1b633ac81e22c7f/5E031C78/t51.2885-19/s150x150/67584841_2351886025029286_7694065973820653568_n.jpg?_nc_ht=instagram.fssa7-1.fna.fbcdn.net" => "https://instagram.fssa2-2.fna.fbcdn.net/vp/4810c1e96022c3e6d57efbd760bbc05e/5E031C78/t51.2885-19/s150x150/67584841_2351886025029286_7694065973820653568_n.jpg?_nc_ht=instagram.fssa2-2.fna.fbcdn.net"
+  provider: "instagram" => "Instagram"
+  title: "emeliiejanssonn" => "@emeliiejanssonn • Instagram photos and videos"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.instagram.com/emeliiejanssonn/" => "https://www.instagram.com/static/images/ico/favicon-192.png/68d99ba29cc8.png"
+=========================================
+https://www.instagram.com/p/BxxBzJmiR00/
+  author_name: "Iron Maiden" => "null"
+  published_at: "2019-05-22T13:13:04.000+00:00" => "null"
+  description: "Don't forget - FC presale for the new shows in Sao Paulo and Porto Alegre is happening on Friday 😀" => "35.1k Likes, 592 Comments - Iron Maiden (@ironmaiden) on Instagram: “Don’t forget - FC presale for the new shows in Sao Paulo and Porto Alegre is happening on Friday 😀”"
+  picture: "https://instagram.fssa7-1.fna.fbcdn.net/vp/4ea6cb07c9808c569cd0c849d0b75840/5E0F8FFD/t51.2885-15/sh0.08/e35/s640x640/60044214_408982976619061_2057361487372630823_n.jpg?_nc_ht=instagram.fssa7-1.fna.fbcdn.net&_nc_cat=101" => "https://instagram.fssa2-1.fna.fbcdn.net/vp/f70224ea1e3e77b30aae66aba6a73398/5E11FA47/t51.2885-15/fr/e15/s1080x1080/60044214_408982976619061_2057361487372630823_n.jpg?_nc_ht=instagram.fssa2-1.fna.fbcdn.net&_nc_cat=101"
+  provider: "instagram" => "Instagram"
+  title: "Don't forget - FC presale for the new shows in Sao Paulo and Porto Alegre is happening on Friday 😀" => "Iron Maiden on Instagram: “Don’t forget - FC presale for the new shows in Sao Paulo and Porto Alegre is happening on Friday 😀”"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.instagram.com/p/BxxBzJmiR00/" => "https://www.instagram.com/static/images/ico/favicon-192.png/68d99ba29cc8.png"
+=========================================
+https://www.instagram.com/ironmaiden/
+  author_name: "ironmaiden" => "null"
+  published_at: "" => "null"
+  description: "2.6m Followers, 38 Following, 1,784 Posts - See Instagram photos and videos from Iron Maiden (@ironmaiden)" => "Tickets to the ‘Legacy of the Beast’ 2019 tour are now on sale!"
+  picture: "https://instagram.fssa7-1.fna.fbcdn.net/vp/b5c451a2d40bf39a74b969327bfbaf53/5E0C7275/t51.2885-19/11032790_938176722883074_1194583299_a.jpg?_nc_ht=instagram.fssa7-1.fna.fbcdn.net" => "https://instagram.fssa2-2.fna.fbcdn.net/vp/5eca65ebadf6616137173b604258d01e/5E0C7275/t51.2885-19/11032790_938176722883074_1194583299_a.jpg?_nc_ht=instagram.fssa2-2.fna.fbcdn.net"
+  provider: "instagram" => "Instagram"
+  title: "ironmaiden" => "Iron Maiden (@ironmaiden) • Instagram photos and videos"
+  favicon: "https://www.google.com/s2/favicons?domain_url=www.instagram.com/ironmaiden/" => "https://www.instagram.com/static/images/ico/favicon-192.png/68d99ba29cc8.png"
+=========================================
