@@ -228,11 +228,10 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /Dina El Hawary/, d['title']
     assert_match /ربنا يزيدهن فوق القوة قوة/, d['description']
     assert_not_nil d['published_at']
-    assert_equal 'Dina El Hawary', d['author_name']
+    assert_match /Dina El Hawary/, d['author_name']
     assert_equal 'dina.hawary', d['username']
     assert_equal 'http://facebook.com/813705320', d['author_url']
     assert_equal 'https://graph.facebook.com/813705320/picture', d['author_picture']
-    assert_not_nil d['picture']
     assert_nil d['error']
   end
 
