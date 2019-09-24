@@ -45,7 +45,7 @@ class ActiveSupport::TestCase
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_canonical_url)
     Media.any_instance.unstub(:try_https)
-    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:configured?)
     Airbrake.unstub(:notify)
     Media.any_instance.unstub(:url)
     Media.any_instance.unstub(:original_url)
