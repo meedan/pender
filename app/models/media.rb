@@ -111,7 +111,7 @@ class Media
       return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
       Media.request_url(url, 'Head')
     rescue OpenSSL::SSL::SSLError, URI::InvalidURIError, SocketError => e
-      Airbrake.notify(e, parameters: {url: url}) if Airbrake.configuration.api_key
+      Airbrake.notify(e, url: url) if Airbrake.configured?
       Rails.logger.warn "Could not access url: #{url} - #{e.message}"
       return false
     end
@@ -250,12 +250,12 @@ class Media
       html = preprocess_html(html)
       Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
     rescue OpenURI::HTTPError, Errno::ECONNRESET => e
-      Airbrake.notify(e, parameters: {url: self.url}) if Airbrake.configuration.api_key
+      Airbrake.notify(e, url: self.url) if Airbrake.configured?
       return nil
     rescue Zlib::DataError, Zlib::BufError
       self.get_html(Media.html_options(self.url).merge('Accept-Encoding' => 'identity'))
     rescue RuntimeError => e
-      Airbrake.notify(e, parameters: {url: self.url}) if !redirect_https_to_http?(header_options, e.message) && Airbrake.configuration.api_key
+      Airbrake.notify(e, url: self.url) if !redirect_https_to_http?(header_options, e.message) && Airbrake.configured?
       return nil
     end
   end

@@ -55,7 +55,7 @@ module Api
             MediaParserWorker.perform_async(url, @key.id, @refresh, @archivers)
             result[:enqueued] << url
           rescue StandardError => e
-            Airbrake.notify(e, parameters: {url: url}) if Airbrake.configuration.api_key
+            notify_airbrake(e, url: url)
             result[:failed] << url
           end
         end
@@ -241,7 +241,7 @@ module Api
       end
 
       def notify_airbrake(e, extra_info = {})
-        Airbrake.notify(e, parameters: {url: @url}.merge(extra_info)) if Airbrake.configuration.api_key
+        Airbrake.notify(e, {url: @url}.merge(extra_info)) if Airbrake.configured?
       end
 
       def handle_exceptions

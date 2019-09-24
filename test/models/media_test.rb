@@ -394,7 +394,7 @@ class MediaTest < ActiveSupport::TestCase
     parsed_url = Media.parse_url(m.url)
     header_options = Media.send(:html_options, m.url)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises('redirection forbidden')
-    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:configured?).returns(true)
 
     m.send(:get_html, header_options)
 
@@ -402,7 +402,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:get_canonical_url)
     Media.any_instance.unstub(:try_https)
     OpenURI.unstub(:open_uri)
-    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:configured?)
   end
 
   test "should redirect to HTTPS if available and not already HTTPS" do
@@ -850,7 +850,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should not send errbit error when twitter username is a default" do
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta name='twitter:title' content='Page with default Twitter username'><br/><meta name='twitter:creator' content='@username'>"))
-    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:configured?).returns(true)
     Airbrake.stubs(:notify).never
 
     m = create_media url: 'https://www.thedailysentry.net/2018/11/duterte-to-parojinogs-i-will-wipe-you.html'
@@ -858,7 +858,7 @@ class MediaTest < ActiveSupport::TestCase
     m.get_metatags(m)
     assert_equal 'Page with default Twitter username', m.get_twitter_metadata['title']
 
-    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:configured?)
     Airbrake.unstub(:notify)
     Media.any_instance.unstub(:doc)
   end
@@ -920,7 +920,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should not reach an infinite loop when parsing Twitter URL" do
     class HttpRedirectionLoop < StandardError
     end
-    Airbrake.stubs(:configuration).raises(HttpRedirectionLoop.new('Test'))
+    Airbrake.stubs(:configured?).raises(HttpRedirectionLoop.new('Test'))
     errors = 0
     urls = ['https://twitter.com/com', 'https://twitter.com/hadialabdallah/status/846103320880201729', 'https://twitter.com/syriacivildefe/status/845714970147012608', 'https://twitter.com/SyriaCivilDefe/status/845714970147012608', 'https://twitter.com/Lachybe', 'https://twitter.com/ideas', 'https://twitter.com/psicojen', 'https://twitter.com/cfcffl', 'https://twitter.com/account/suspended', 'https://twitter.com/g9wuortn6sve9fn/status/940956917010259970']
     urls.each do |url|
@@ -930,7 +930,7 @@ class MediaTest < ActiveSupport::TestCase
         errors += 1
       end
     end
-    Airbrake.unstub(:configuration)
+    Airbrake.unstub(:configured?)
     assert_equal 0, errors
   end
 
