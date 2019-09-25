@@ -37,7 +37,7 @@ module MediaOembedItem
       return true
     rescue JSON::ParserError => error
       self.data[:raw][:oembed] = { error: { message: error.message, code: 'INVALID_VALUE' } }
-      Airbrake.notify(StandardError.new('Could not parse `oembed` data as JSON'), parameters: { url: self.url, oembed_url: oembed_url, error_message: error.message, response_body: response.body }) if Airbrake.configuration.api_key
+      Airbrake.notify(StandardError.new('Could not parse `oembed` data as JSON'), url: self.url, oembed_url: oembed_url, error_message: error.message, response_body: response.body ) if Airbrake.configured?
     end
   end
 

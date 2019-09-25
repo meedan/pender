@@ -43,7 +43,7 @@ module MediaArchiver
 
     def give_up(archiver, url, key_id, attempts, response = {})
       if attempts > 20
-        Airbrake.notify(StandardError.new('Could not archive'), parameters: {url: url, archiver: archiver, error_code: response[:code], error_message: response[:message]}) if Airbrake.configuration.api_key
+        Airbrake.notify(StandardError.new('Could not archive'), url: url, archiver: archiver, error_code: response[:code], error_message: response[:message]) if Airbrake.configured?
         data = { error: { message: I18n.t(:could_not_archive, error_message: response[:message]), code: response[:code] }}
         Media.notify_webhook_and_update_cache(archiver, url, data, key_id)
         return true

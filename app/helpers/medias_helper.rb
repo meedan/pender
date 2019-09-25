@@ -20,7 +20,7 @@ module MediasHelper
     begin
       yield
     rescue exception => error
-      Airbrake.notify(error, parameters: { url: media.url, data: media.data }) if Airbrake.configuration.api_key
+      Airbrake.notify(error, url: media.url, data: media.data ) if Airbrake.configured?
       code = error.respond_to?(code_method) ? error.send(code_method) : 5
       media.data.merge!(error: { message: "#{error.class}: #{error.send(message_method)}", code: code })
       return

@@ -519,7 +519,7 @@ class MediasControllerTest < ActionController::TestCase
   test "should return timeout error with minimal data if cannot parse url" do
     stub_configs({ 'timeout' => 0.1 })
     url = 'https://changescamming.net/halalan-2019/maria-ressa-to-bong-go-um-attend-ka-ng-senatorial-debate-di-yung-nagtatapon-ka-ng-pera'
-    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:configured?).returns(true)
     Airbrake.stubs(:notify).never
 
     authenticate_with_token
@@ -529,6 +529,7 @@ class MediasControllerTest < ActionController::TestCase
       assert_equal value, JSON.parse(@response.body)['data'][key]
     end
     assert_equal({"message"=>"Timeout", "code"=>"TIMEOUT"}, JSON.parse(@response.body)['data']['error'])
+    Airbrake.unstub(:configured?)
     Airbrake.unstub(:notify)
   end
 

@@ -347,7 +347,7 @@ class FacebookItemTest < ActiveSupport::TestCase
 
   test "should parse as html when API token is expired and notify Airbrake" do
     fb_token = CONFIG['facebook_auth_token']
-    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:configured?).returns(true)
     Airbrake.stubs(:notify).once
     CONFIG['facebook_auth_token'] = 'EAACMBapoawsBAP8ugWtoTpZBpI68HdM68qgVdLNc8R0F8HMBvTU1mOcZA4R91BsHZAZAvSfTktgBrdjqhYJq2Qet2RMsNZAu12J14NqsP1oyIt74vXlFOBkR7IyjRLLVDysoUploWZC1N76FMPf5Dzvz9Sl0EymSkZD'
     m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
@@ -356,7 +356,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     CONFIG['facebook_auth_token'] = fb_token
     data = m.as_json(force: 1)
     assert_match /Nostalgia/, data['title']
-    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:configured?)
     Airbrake.unstub(:notify)
   end
 

@@ -238,14 +238,14 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "add error on media data when cannot find status" do
-    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:configured?).returns(true)
     Airbrake.stubs(:notify)
     m = create_media url: 'https://twitter.com/caiosba/status/123456789'
     data = m.as_json
 
     assert_match(/Twitter::Error::NotFound/, data['error']['message'])
     Airbrake.unstub(:notify)
-    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:configured?)
   end
 
   test "should have external id for profile" do

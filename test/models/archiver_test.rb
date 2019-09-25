@@ -98,7 +98,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:parse)
     Media.any_instance.stubs(:archive)
 
-    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:configured?).returns(true)
     Airbrake.stubs(:notify)
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
@@ -121,7 +121,7 @@ class ArchiverTest < ActiveSupport::TestCase
     end
 
     WebMock.disable!
-    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:configured?)
     Airbrake.unstub(:notify)
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_canonical_url)
@@ -140,7 +140,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:parse)
     Media.any_instance.stubs(:archive)
 
-    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:configured?).returns(true)
     Airbrake.stubs(:notify)
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
@@ -160,7 +160,7 @@ class ArchiverTest < ActiveSupport::TestCase
     end
 
     WebMock.disable!
-    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:configured?)
     Airbrake.unstub(:notify)
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_canonical_url)
@@ -179,7 +179,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:parse)
     Media.any_instance.stubs(:archive)
 
-    Airbrake.configuration.stubs(:api_key).returns('token')
+    Airbrake.stubs(:configured?).returns(true)
     Airbrake.stubs(:notify)
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
@@ -200,7 +200,7 @@ class ArchiverTest < ActiveSupport::TestCase
     end
 
     WebMock.disable!
-    Airbrake.configuration.unstub(:api_key)
+    Airbrake.unstub(:configured?)
     Airbrake.unstub(:notify)
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_canonical_url)
