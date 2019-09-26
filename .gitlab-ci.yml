@@ -1,7 +1,6 @@
 stages:
   - build
   - deploy
-
 build_qa:
   image: docker:latest
   services:
