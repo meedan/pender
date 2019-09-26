@@ -1,5 +1,5 @@
 stages:
-#  - test
+  - test
   - build
   - deploy
 
@@ -27,28 +27,28 @@ test_all:
   except:
     - master
 
-test:
-  image: docker:latest
-  allow_failure: false
-  services:
-    - docker:dind
-  tags:
-    - meedan
-    - meedan-labs
-  stage: test
-  script:
-    - apk add --no-cache curl wget git py-pip
-    - pip install docker-compose==1.23.2
-    - git clone https://${GITHUB_TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
-    - d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}"; done
-    - docker-compose build
-    - docker-compose -f docker-compose.yml -f docker-test.yml up -d
-    # - wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
-    - docker-compose exec -T pender test/setup-parallel
-    - docker-compose exec -T  pender bundle exec rake "parallel:test[3]"
-    - docker-compose exec -T pender cat tmp/performance.csv
-  only:
-    - master
+#test:
+#  image: docker:latest
+#  allow_failure: false
+#  services:
+#    - docker:dind
+#  tags:
+#    - meedan
+#    - meedan-labs
+#  stage: test
+#  script:
+#    - apk add --no-cache curl wget git py-pip
+#    - pip install docker-compose==1.23.2
+#    - git clone https://${GITHUB_TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
+#    - d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}"; done
+#    - docker-compose build
+#    - docker-compose -f docker-compose.yml -f docker-test.yml up -d
+#    # - wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
+#    - docker-compose exec -T pender test/setup-parallel
+#    - docker-compose exec -T  pender bundle exec rake "parallel:test[3]"
+#    - docker-compose exec -T pender cat tmp/performance.csv
+#  only:
+#    - master
 
 build_qa:
   image: docker:latest
