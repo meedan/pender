@@ -48,7 +48,7 @@ module MediasHelper
       begin
         data = JSON.parse(tag_content)
         data = data[0] if data.is_a?(Array)
-        data['@context'] == 'http://schema.org' ? add_schema_to_data(media, data, data['@type']) : media.data['raw']['json+ld'] = data
+        (data.is_a?(Hash) && data.dig('@context')) == 'http://schema.org' ? add_schema_to_data(media, data, data.dig('@type')) : media.data['raw']['json+ld'] = data
       rescue JSON::ParserError
         Rails.logger.info "Could not parse the JSON-LD content: #{media.url}"
       end
