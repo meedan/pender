@@ -43,22 +43,22 @@ module MediasHelper
 
   def get_jsonld_data(media)
     return if media.doc.nil?
-    tag_content = jsonld_tag(media.doc)
-    if tag_content
-      begin
-        data = JSON.parse(tag_content)
-        data = data[0] if data.is_a?(Array)
-        (data.is_a?(Hash) && data.dig('@context')) == 'http://schema.org' ? add_schema_to_data(media, data, data.dig('@type')) : media.data['raw']['json+ld'] = data
-      rescue JSON::ParserError
-        Rails.logger.info "Could not parse the JSON-LD content: #{media.url}"
-      end
+    data = jsonld_tag_content(media.doc)
+    if data
+      (data.is_a?(Hash) && data.dig('@context')) == 'http://schema.org' ? add_schema_to_data(media, data, data.dig('@type')) : media.data['raw']['json+ld'] = data
     end
   end
 
-  def jsonld_tag(doc)
+  def jsonld_tag_content(doc)
     tag = doc.at_css('script[type="application/ld+json"]')
     return if tag.blank? || tag.content == 'null'
-    tag.content
+    begin
+      data = JSON.parse(tag.content)
+      data = data[0] if data.is_a?(Array)
+    rescue JSON::ParserError
+      Rails.logger.info "Could not parse the JSON-LD content: #{media.url}"
+    end
+    data
   end
 
   def get_html_metadata(media, attr, metatags)
