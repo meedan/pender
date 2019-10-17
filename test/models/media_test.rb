@@ -953,4 +953,12 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:doc)
   end
 
+  test "should use original url when redirected page requires cookie" do
+    url = 'https://doi.org/10.1080/10584609.2019.1619639'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal url, data['url']
+    assert_nil data['error']
+  end
+
 end

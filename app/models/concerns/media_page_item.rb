@@ -19,8 +19,14 @@ module MediaPageItem
         author_name: get_page_author_name,
         author_picture: self.data[:picture]
       })
+      self.check_cookie_absent
     end
     self.check_if_safe
+  end
+
+  def check_cookie_absent
+    metatag = self.get_html_metadata(self, 'name', { cookie: 'pbContext' })
+    self.url = self.original_url if metatag && !metatag[:cookie].match(/Cookie Absent/).nil?
   end
 
   def check_if_safe
