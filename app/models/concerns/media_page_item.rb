@@ -26,7 +26,7 @@ module MediaPageItem
 
   def check_cookie_absent
     metatag = self.get_html_metadata(self, 'name', { cookie: 'pbContext' })
-    self.url = self.original_url if metatag && !metatag[:cookie].match(/Cookie Absent/).nil?
+    self.url = self.original_url if !metatag.empty? && !metatag[:cookie].match(/Cookie Absent/).nil?
   end
 
   def check_if_safe
