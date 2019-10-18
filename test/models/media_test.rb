@@ -935,12 +935,15 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should not reach the end of file caused by User-Agent" do
-    url = 'https://gnbc.news/9669/'
+    m = create_media url: 'https://gnbc.news/9669/'
+    parsed_url = Media.parse_url m.url
+    header_options = Media.send(:html_options, m.url)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0')).raises(EOFError)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0 (X11)'))
     assert_nothing_raised do
-      m = Media.new url: url
-      data = m.as_json
-      assert_match /BREAKING NEWS/, data['title']
+      m.send(:get_html, header_options)
     end
+    OpenURI.unstub(:open_uri)
   end
 
   test "should parse page when json+ld tag content is an empty array" do
@@ -951,6 +954,14 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal url, data['url']
     assert_nil data['error']
     Media.any_instance.unstub(:doc)
+  end
+
+  test "should use original url when redirected page requires cookie" do
+    url = 'https://doi.org/10.1080/10584609.2019.1619639'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal url, data['url']
+    assert_nil data['error']
   end
 
 end
