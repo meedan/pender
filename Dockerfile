@@ -16,6 +16,7 @@ COPY . /app
 
 # startup
 RUN chmod +x /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-background.sh
 EXPOSE 3200
 ENTRYPOINT ["tini", "--"]
 CMD ["/app/docker-entrypoint.sh"]
