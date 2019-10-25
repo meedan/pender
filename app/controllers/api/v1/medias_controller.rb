@@ -67,7 +67,7 @@ module Api
         render_timeout(false) do
           (render_url_invalid and return true) unless valid_url?
           rescue_block = Proc.new { |_e| render_url_invalid and return true }
-          handle_exceptions(OpenSSL::SSL::SSLError, rescue_block {url: @url, request: request}) do
+          handle_exceptions(OpenSSL::SSL::SSLError, rescue_block, {url: @url, request: request}) do
             @media = Media.new(url: @url, request: request, key: @key)
           end
         end and return true
