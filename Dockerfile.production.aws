@@ -67,4 +67,4 @@ RUN mv ./latest ./pender-$(date -I) \
 USER root
 EXPOSE 80
 WORKDIR ${DEPLOYDIR}/current
-CMD ["/opt/bin/start.sh"]
+ENTRYPOINT ["/opt/bin/start.sh"]

@@ -878,12 +878,17 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should handle exception when oembed content is not a valid json" do
+    oembed_response = 'response'
+    oembed_response.stubs(:code).returns('200')
+    oembed_response.stubs(:body).returns('\xEF\xBB\xBF{"version":"1.0","provider_name":"Philippines Lifestyle News"}')
+    Media.any_instance.stubs(:oembed_get_data_from_url).returns(oembed_response)
     url = 'https://web.archive.org/web/20190226023026/http://philippineslifestyle.com/flat-earth-theory-support-philippines/'
     m = create_media url: url
     data = m.as_json
     assert_equal 'page', data['oembed']['provider_name']
     assert_match(/unexpected token/, data[:raw][:oembed]['error']['message'])
     assert_nil data['error']
+    Media.any_instance.unstub(:oembed_get_data_from_url)
   end
 
   test "should follow redirections of path relative urls" do
@@ -922,7 +927,7 @@ class MediaTest < ActiveSupport::TestCase
     end
     Airbrake.stubs(:configured?).raises(HttpRedirectionLoop.new('Test'))
     errors = 0
-    urls = ['https://twitter.com/com', 'https://twitter.com/hadialabdallah/status/846103320880201729', 'https://twitter.com/syriacivildefe/status/845714970147012608', 'https://twitter.com/SyriaCivilDefe/status/845714970147012608', 'https://twitter.com/Lachybe', 'https://twitter.com/ideas', 'https://twitter.com/psicojen', 'https://twitter.com/cfcffl', 'https://twitter.com/account/suspended', 'https://twitter.com/g9wuortn6sve9fn/status/940956917010259970']
+    urls = ['https://twitter.com/com', 'https://twitter.com/hadialabdallah/status/846103320880201729', 'https://twitter.com/syriacivildefe/status/845714970147012608', 'https://twitter.com/SyriaCivilDefe/status/845714970147012608', 'https://twitter.com/Lachybe', 'https://twitter.com/ideas', 'https://twitter.com/psicojen', 'https://twitter.com/account/suspended', 'https://twitter.com/g9wuortn6sve9fn/status/940956917010259970']
     urls.each do |url|
       begin
         Media.new url: url
@@ -935,11 +940,33 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should not reach the end of file caused by User-Agent" do
-    url = 'https://gnbc.news/9669/'
+    m = create_media url: 'https://gnbc.news/9669/'
+    parsed_url = Media.parse_url m.url
+    header_options = Media.send(:html_options, m.url)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0')).raises(EOFError)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0 (X11)'))
     assert_nothing_raised do
-      m = Media.new url: url
-      data = m.as_json
-      assert_match /BREAKING NEWS/, data['title']
+      m.send(:get_html, header_options)
     end
+    OpenURI.unstub(:open_uri)
   end
+
+  test "should parse page when json+ld tag content is an empty array" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML('<script data-rh="true" type="application/ld+json">[]</script>'))
+    url = 'https://www.nytimes.com/2019/10/13/world/middleeast/syria-turkey-invasion-isis.html'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal url, data['url']
+    assert_nil data['error']
+    Media.any_instance.unstub(:doc)
+  end
+
+  test "should use original url when redirected page requires cookie" do
+    url = 'https://doi.org/10.1080/10584609.2019.1619639'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal url, data['url']
+    assert_nil data['error']
+  end
+
 end
