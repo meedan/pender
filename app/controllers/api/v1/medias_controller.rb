@@ -18,7 +18,8 @@ module Api
       def index
         @url = params[:url]
 
-        handle_exceptions do
+        rescue_block = Proc.new { |e| render_error e.message, 'UNKNOWN' }
+        handle_exceptions(StandardError, rescue_block, {code: 'UNKNOWN'}) do
           (render_parameters_missing; return) if @url.blank?
           (render_url_invalid; return) unless is_url?(@url)
 
@@ -50,13 +51,11 @@ module Api
         urls = params[:url].is_a?(Array) ? params[:url] : params[:url].split(',').map(&:strip)
         result = { enqueued: [], failed: []}
         urls.each do |url|
-          begin
+          rescue_block = Proc.new { |_e| result[:failed] << url }
+          handle_exceptions(StandardError, rescue_block, {url: url}) do
             @url = url
             MediaParserWorker.perform_async(url, @key.id, @refresh, @archivers)
             result[:enqueued] << url
-          rescue StandardError => e
-            notify_airbrake(e, url: url)
-            result[:failed] << url
           end
         end
         render_success 'success', result
@@ -67,11 +66,9 @@ module Api
       def render_uncached_media
         render_timeout(false) do
           (render_url_invalid and return true) unless valid_url?
-          begin
+          rescue_block = Proc.new { |_e| render_url_invalid and return true }
+          handle_exceptions(OpenSSL::SSL::SSLError, rescue_block {url: @url, request: request}) do
             @media = Media.new(url: @url, request: request, key: @key)
-          rescue OpenSSL::SSL::SSLError => e
-            notify_airbrake(e)
-            render_url_invalid and return true
           end
         end and return true
         false
@@ -244,12 +241,14 @@ module Api
         Airbrake.notify(e, {url: @url}.merge(extra_info)) if Airbrake.configured?
       end
 
-      def handle_exceptions
+      def handle_exceptions(exception, rescue_block, error_info = {})
         begin
           yield
-        rescue StandardError => e
-          notify_airbrake(e, { message: e.message, code: 'UNKNOWN' })
-          render_error e.message, 'UNKNOWN'
+        rescue exception => e
+          error_info = { message: e.message }.merge(error_info)
+          notify_airbrake(e, error_info)
+          Rails.logger.warn "Error on #{caller_locations(2).first.label}: #{error_info}"
+          rescue_block.call(e)
         end
       end
     end
