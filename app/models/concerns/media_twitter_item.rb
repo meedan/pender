@@ -67,7 +67,7 @@ module MediaTwitterItem
   end
 
   def twitter_author_url(username)
-    return if username.blank? || username == '@username'
+    return if ignore_twitter_metatag(username)
     begin
       self.twitter_client.user(username).url.to_s
     rescue Twitter::Error => e
@@ -75,5 +75,9 @@ module MediaTwitterItem
       Rails.logger.info "[Twitter URL] Cannot get twitter url of #{username}: #{e.class} - #{e.message}"
       nil
     end
+  end
+
+  def ignore_twitter_metatag(value)
+    value.blank? || value == '@username'
   end
 end
