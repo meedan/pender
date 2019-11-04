@@ -969,4 +969,13 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil data['error']
   end
 
+  test "should ignore author_name when it is twitter default" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta content='@username' name='twitter:site'/>"))
+    url = 'http://www.dutertenews4network.com/2018/11/leni-nagpunta-sa-london-sinalubong-ng.html'
+    m = create_media url: url
+    data = m.as_json
+    assert_not_equal '@username', data['author_name']
+    Media.any_instance.unstub(:doc)
+  end
+
 end

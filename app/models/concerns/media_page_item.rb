@@ -80,6 +80,7 @@ module MediaPageItem
     data = get_html_metadata(self, 'name', metatags).with_indifferent_access
     data.merge!(get_html_metadata(self, 'property', metatags))
     data['author_url'] = twitter_author_url(data['username'])
+    data.delete('author_name') if ignore_twitter_metatag(data['author_name'])
     unless data['author_url']
       data.delete('author_url')
       data.delete('username')
