@@ -349,4 +349,73 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal ['archive_is'].sort, Media.enabled_archivers('archive_is', 'archive_org').keys
     Media::ARCHIVERS['archive_org'][:enabled] = true
   end
+
+  test "should archive to perma.cc and store the URL on archives" do
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://twitter.com/meedan/status/1095755205554200576'
+    m = Media.new url: url, key: a
+    m.as_json
+
+    Media.any_instance.unstub(:archive_to_perma_cc)
+    Pender::Store.stubs(:read).returns(nil)
+    response = 'mock';response.stubs(:code).returns('201');response.stubs(:body).returns('{"guid":"AUA8-QNGH"}')
+    Net::HTTP.any_instance.stubs(:request).returns(response)
+    Media.stubs(:notify_webhook_and_update_cache).with('perma_cc', url, { location: 'http://perma.cc/AUA8-QNGH'}, a.id)
+
+    m.archive('perma_cc')
+
+    Pender::Store.unstub(:read)
+    Net::HTTP.any_instance.unstub(:request)
+    Media.unstub(:notify_webhook_and_update_cache)
+    Media.notify_webhook_and_update_cache('perma_cc', url, { location: 'http://perma.cc/AUA8-QNGH'}, a.id)
+
+    id = Media.get_id(url)
+    cached = Pender::Store.read(id, :json)[:archives]
+    assert_equal ['perma_cc'], cached.keys
+    assert_equal({ 'location' => 'http://perma.cc/AUA8-QNGH'}, cached['perma_cc'])
+  end
+
+  test "should not try to archive on Perma.cc if already archived on it" do
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://twitter.com/meedan/status/1095755205554200576'
+    m = Media.new url: url, key: a
+    m.as_json
+    Media.update_cache(url, { archives: { 'perma_cc' => { location: 'http://perma.cc/AUA8-QNGH'}}})
+
+    Media.any_instance.unstub(:archive_to_perma_cc)
+    Media.stubs(:notify_webhook_and_update_cache).with('perma_cc', url, { location: 'http://perma.cc/AUA8-QNGH'}, a.id).never
+
+    m.archive_to_perma_cc
+
+    Media.unstub(:notify_webhook_and_update_cache)
+  end
+
+  test "should update media with error when archive to Perma.cc fails" do
+    WebMock.enable!
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    Media.any_instance.stubs(:archive)
+
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'http://example.com'
+
+    assert_nothing_raised do
+      m = Media.new url: url
+      m.as_json
+      assert m.data.dig('archives', 'perma_cc').nil?
+      Media.send_to_perma_cc(url.to_s, a.id, 20)
+      media_data = Pender::Store.read(Media.get_id(url), :json)
+      assert_equal({"message"=>I18n.t(:could_not_archive, error_message: 'Unauthorized'), "code"=>"401"}, media_data.dig('archives', 'perma_cc', 'error'))
+    end
+
+    WebMock.disable!
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
+    Media.any_instance.unstub(:archive)
+  end
+
 end
