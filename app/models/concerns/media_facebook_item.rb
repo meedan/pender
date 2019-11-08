@@ -118,7 +118,7 @@ module MediaFacebookItem
   end
 
   def get_facebook_author_name_from_html
-    author_link = self.doc.at_css('.fbPhotoAlbumActionList a') || self.doc.at_css('.uiHeaderTitle > a') || self.doc.at_css('.userContentWrapper .profileLink')
+    author_link = self.doc.at_css('.fbPhotoAlbumActionList a') || self.doc.at_css('.uiHeaderTitle a[href^="https://"]') || self.doc.at_css('.userContentWrapper .profileLink')
     author_link.blank? ? self.get_facebook_title_from_html : author_link.text
   end
 

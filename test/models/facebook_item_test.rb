@@ -169,7 +169,6 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should parse url 4" do
     m = create_media url: 'https://www.facebook.com/ironmaiden/videos/vb.172685102050/10154577999342051/?type=2&theater'
     d = m.as_json
-    assert_match /Iron Maiden/, d['title']
     assert_match /Tailgunner! #Lancaster #Aircraft #Plane #WW2 #IronMaiden #TheBookOfSoulsWorldTour #Canada #Toronto #CWHM/, d['description']
     assert_not_nil d['published_at']
     assert_equal 'ironmaiden', d['username']
@@ -177,6 +176,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal 'http://facebook.com/172685102050', d['author_url']
     assert_equal 'https://graph.facebook.com/172685102050/picture', d['author_picture']
     assert_match /20131236_10154578000322051_2916467421743153152/, d['picture']
+    assert_match /Iron Maiden/, d['title']
   end
 
   test "should parse facebook url without identified pattern as item" do
