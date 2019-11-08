@@ -13,21 +13,22 @@ class CcDevilleTest < ActiveSupport::TestCase
   end
 
   test "should clear cache from Cloudflare" do
-    url = 'https://pender.checkmedia.org/api/medias.html?url=https://twitter.com/caiosba/status/811777768174260225'
+    url = 'https://pender.meedan.com/api/medias.html?url=https://twitter.com/caiosba/status/811777768174260225'
 
     status = @cc.get_status(url)
     cf = status['data']['caches'].last
     assert_equal 'cloudflare', cf['name']
-    old_expiration_time = Time.parse(cf['expires'])
+    old_age = cf['age'].to_i
 
     @cc.clear_cache(url)
-    sleep 1
+    sleep 2
 
     status = @cc.get_status(url)
     cf = status['data']['caches'].last
     assert_equal 'cloudflare', cf['name']
-    new_expiration_time = Time.parse(cf['expires'])
+    assert_match /^MISS|HIT$/, cf['cache_status']
+    new_age = cf['age'].to_i
 
-    assert new_expiration_time > old_expiration_time
+    assert new_age < old_age
   end
 end
