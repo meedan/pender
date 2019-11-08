@@ -220,6 +220,7 @@ class Media
     require 'uri'
     uri = URI.parse(URI.encode(url))
     ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG.dig(config).blank? }
+    return ["http://#{CONFIG['proxy_host']}:#{CONFIG['proxy_port']}", CONFIG['proxy_user_prefix'].gsub(/-country$/, "-session-#{Random.rand(100000)}"), CONFIG['proxy_pass']] if uri.host.match(/facebook\.com/)
     country = nil
     country = CONFIG['hosts'][uri.host]['country'] if CONFIG['hosts'] && CONFIG['hosts'][uri.host] && CONFIG['hosts'][uri.host]['country']
     return nil if country.nil?
@@ -231,10 +232,17 @@ class Media
     http = Net::HTTP.new(uri.host, uri.port)
     http.read_timeout = CONFIG['timeout'] || 30
     http.use_ssl = uri.scheme == 'https'
-    user_agent = { 'User-Agent' => Media.html_options(uri)['User-Agent']}
-    request = "Net::HTTP::#{verb}".constantize.new(uri, user_agent)
+    headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => 'en-US;q=0.6,en;q=0.4' }
+    request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
     request['Cookie'] = Media.set_cookies(uri)
-    http.request(request)
+    if uri.host.match(/facebook\.com/) && CONFIG['proxy_host']
+      proxy = Net::HTTP::Proxy(CONFIG['proxy_host'], CONFIG['proxy_port'], CONFIG['proxy_user_prefix'].gsub(/-country$/, "-session-#{Random.rand(100000)}"), CONFIG['proxy_pass'])
+      proxy.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http2|
+        http2.request(request)
+      end
+    else
+      http.request(request)
+    end
   end
 
   def get_html(header_options = {})
@@ -242,7 +250,7 @@ class Media
     begin
       proxy = Media.get_proxy(self.url)
       options = header_options
-      options = { proxy_http_basic_authentication: proxy } if proxy
+      options = { proxy_http_basic_authentication: proxy, 'Accept-Language' => 'en-US;q=0.6,en;q=0.4' } if proxy
       OpenURI.open_uri(Media.parse_url(decoded_uri(self.url)), options) do |f|
         f.binmode
         html = f.read
@@ -267,7 +275,7 @@ class Media
     options[:http_basic_authentication] = credentials
     options['User-Agent'] = 'Mozilla/5.0 (X11)'
     options['Accept'] = '*/*'
-    options['Accept-Language'] = 'en'
+    options['Accept-Language'] = 'en-US;q=0.6,en;q=0.4'
     options['Cookie'] = Media.set_cookies(uri)
     options
   end
