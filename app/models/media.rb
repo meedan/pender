@@ -237,32 +237,17 @@ class Media
     http.request(request)
   end
 
-  def request_fresh_html(options)
-    html = ''
-    OpenURI.open_uri(Media.parse_url(decoded_uri(self.url)), options) do |f|
-      f.binmode
-      html = f.read
-    end
-    preprocess_html(html)
-  end
-
-  def request_html(options)
-    html = ''
-    if Rails.env.test?
-      html = Rails.cache.fetch(Digest::MD5.hexdigest(self.url), race_condition_ttl: 30.seconds) do
-        self.request_fresh_html(options)
-      end
-    end
-    html = self.request_fresh_html(options) unless Rails.env.test?
-    html
-  end
-
   def get_html(header_options = {})
+    html = ''
     begin
       proxy = Media.get_proxy(self.url)
       options = header_options
       options = { proxy_http_basic_authentication: proxy } if proxy
-      html = self.request_html(options)
+      OpenURI.open_uri(Media.parse_url(decoded_uri(self.url)), options) do |f|
+        f.binmode
+        html = f.read
+      end
+      html = preprocess_html(html)
       Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
     rescue OpenURI::HTTPError, Errno::ECONNRESET => e
       Airbrake.notify(e, url: self.url) if Airbrake.configured?
