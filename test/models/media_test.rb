@@ -727,7 +727,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should request URL with User-Agent on header" do
     url = 'https://globalvoices.org/2019/02/16/nigeria-postpones-2019-general-elections-hours-before-polls-open-citing-logistics-and-operations-concerns'
     uri = Media.parse_url url
-    Net::HTTP::Head.stubs(:new).with(uri, {'User-Agent' => Media.html_options(uri)['User-Agent']}).once.returns({})
+    Net::HTTP::Head.stubs(:new).with(uri, {'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => 'en-US;q=0.6,en;q=0.4'}).once.returns({})
     Net::HTTP.any_instance.stubs(:request).returns('success')
 
     assert_equal 'success', Media.request_url(url, 'Head')
@@ -943,8 +943,8 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://gnbc.news/9669/'
     parsed_url = Media.parse_url m.url
     header_options = Media.send(:html_options, m.url)
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0')).raises(EOFError)
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0 (X11)'))
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0', 'Accept-Language' => 'en-US;q=0.6,en;q=0.4')).raises(EOFError)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0 (X11)', 'Accept-Language' => 'en-US;q=0.6,en;q=0.4'))
     assert_nothing_raised do
       m.send(:get_html, header_options)
     end
