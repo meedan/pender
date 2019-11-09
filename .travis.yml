@@ -1,7 +1,9 @@
 language: minimal
 before_install:
+- sed -i "s/TODO/${CODECLIMATE_REPO_TOKEN}/g" docker-test.yml
 - git clone https://${TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
-- d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}"; done
+- d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}";
+  done
 - docker-compose build
 - docker-compose -f docker-compose.yml -f docker-test.yml up -d
 - wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
@@ -14,3 +16,7 @@ after_script:
 notifications:
   slack:
     secure: jeHPR5g+4VbyOV4kXEb6kxXmlw1cn67/HEBhpL1V/EdxpnmUbj1DyMcYDHcj4D9A2wjuVNYxhmqVUfkNKeSBYiBR+hqZs4WEvRfSE8WIhnrU+A1u+IfZtv1w5jairrBS9B9+lDhSr/EKTP8FactKLDvWNkZgZTYhSmLxarCUHnAUKo3Kp48cXdt8ywtbVXylnBtE0ofyKSu1qAiM+Oh7mJjgEUymeRNy44DbALnTEpv9y7x+IeDkF0T+IoJYnV7Sk2+vdB18ULVzGfSAnjPIvFPehIQ40I2nfebOksDYqqtTZTXi/yA9tRZdsoIelq1RH8QFSglfqoAR5v/Eamqm13cGO8Xu7e66Lowm0+knSHZrokldFdhcpes1gEYVRiV3CiRbZCJhi69DMuHzm3gvaYyNDWe3Gx9zzekGYGXFpwsLjwOvxWcZSUF3kopFXJIMdMpUKS2OJpGCmsWThXuk4zXm4cEHtZBpWRjxALC+45Lh5/c53Pcv6dUxVx/nN984T8SAdsDfxIMywauYZ3N7CKgVVg5GejX48UaLsh68FczxV5R5ISU3eIOilzU7aslq/vn+uTHTnbx5yQXOpCuTZIoS/eC1PF8wIvq6R9HL7GfZZJv3f7zjddlrdMV9zdM8h1objhfd/4InGncH9YVQbczvO1PTf1CBdNIVSNVEDyE=
+env:
+  global:
+  - secure: lAEcFRWQDoLWn14FvLmF++GbP+Z855baFk8lD9xH+L7qJjVGVmDXanCKEeQ1rfcUaADk6FHhYrckeMmMqrbU1nuq2tA+WXM+/G/P6nWEsFlx8wmBrtFwx3lrgDR/bCyceVTRkuV7PfRtpgsLrJfpFOdSAhITrUXfNe84Fml8do4/36lsLmDs3irjXXhSm4J1lISGxGrVG8AsGo1/EycW6S4Pn++4HfJaWRqg5FZn21pubg8Wtu3kw2iZIkJcbMS0Gt5FneuNMHabT2H5+yQmHVGZqCjUhlElQ57dwb5c1Ktvqv35tZrlE2PlsFJiTk+cReSC6w/X62VvT+IkvPHSP44kjzmp0OhkNw2AWPMGaMxCir/pz7iopJEataKwgtSjMArPEBNQptPMUcE4k58h9FDFplSXB5SkraUMO4YzfuahV4Wv5HnG+IJghK/ymu4ejrL2fXRfUBNNo+7RTocG1+3oMorhJhBlmLtk6u3PO2Qjhwmy3JlKFa1qvfuV3zuY8GctQGrKgJbHMuAnzWT4qJ5FzUZ7K4GtI72oUqB5H98V5+YX7gZnrqv8VcGghMJX/cl5lXkeYzRlFZ9aMzYvFfaKHxhx01pUjdaH3xA9fvF3GrdwNSiwv8Ic+Tg69vkXqGdyVNVk6UWj1Rjg59SEiwQpleKG1tude3EMofz6r+s=
+  - secure: wU8QPGKKuhThj58tuPPYw4qkY+sqKi/LcoPLyIzHTyIUm4nJVI1hBEqbuoKJjfl5wkG4tI4enxELrKvATqY+EhmVsuTNaD/aBh5V6yuLYXITxmXqhMKTMyic+loUMT4Re8PcADq3FqxXppTPLc/+DLVRXOoxS0i5ki4x8a3fCmL802HbbCLPDuC+AFt73cyy1sPCzKOhZ0UFGdeq6Tj+U+6vCrkeRxvgh81OOxR4E9PKIo8/O46PjYZb4mskojF+GO+IYquigdVNWG2fCFKZsLzUgISXvCvKg6/bk2agRIrl7wpv79vryeOAKPwV/AIjZSbj2zAHsbnUVPDZ5yrGFM52ipKeLTDZ1pr8MOYWK8CLXleqSN2yfVCJnG3julTD3MbhuYhhUFtjk+zPRpI1EEusS2IjduOpYeRPWNmKoQRQbCvuQaCowbIyZosHK34rqf8GaFdNdl66PB9N7ST3YMP6mbxSBzO/9pWpJDOtoYEGUd6KnAMFiOapSF7WV0p2Pol7qCeJRvT9vpnRzQlLoHTA8nczNWscRyILwEfCao9CSLVW9BunDadqhiHKNm9d/bgcCB/sPeJNdftnHVMM+JNtY+SnZwE9joJgdBvnFV7w1DHsPrfWSq0G73HCmwBUWapGE5EGLrYrvAyoxlr/fMGOwBIDWXxqXYJRJvozl6w=

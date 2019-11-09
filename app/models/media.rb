@@ -42,16 +42,14 @@
 #    2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media json data
 
 class Media
-  include ActiveModel::Validations
-  include ActiveModel::Conversion
-  include MediasHelper
-  include MediaOembed
-  include MediaArchiver
+  [ActiveModel::Validations, ActiveModel::Conversion, MediasHelper, MediaOembed, MediaArchiver].each { |concern| include concern }
   extend ActiveModel::Naming
 
   attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :key
 
   TYPES = {}
+
+  LANG = 'en-US;q=0.6,en;q=0.4'
 
   def initialize(attributes = {})
     attributes.each do |name, value|
@@ -79,9 +77,7 @@ class Media
   end
 
   # Parsers and archivers
-  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg].each do |concern|
-    include concern
-  end
+  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg].each { |concern| include concern }
 
   def self.minimal_data(instance)
     data = {}
@@ -222,7 +218,7 @@ class Media
     ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG.dig(config).blank? }
     return ["http://#{CONFIG['proxy_host']}:#{CONFIG['proxy_port']}", CONFIG['proxy_user_prefix'].gsub(/-country$/, "-session-#{Random.rand(100000)}"), CONFIG['proxy_pass']] if uri.host.match(/facebook\.com/)
     country = nil
-    country = CONFIG['hosts'][uri.host]['country'] if CONFIG['hosts'] && CONFIG['hosts'][uri.host] && CONFIG['hosts'][uri.host]['country']
+    country = CONFIG['hosts'][uri.host]['country'] unless CONFIG.dig('hosts', uri.host, 'country').nil?
     return nil if country.nil?
     proxy_user = CONFIG['proxy_user_prefix'] + '-' + country
     ["http://#{CONFIG['proxy_host']}:#{CONFIG['proxy_port']}", proxy_user, CONFIG['proxy_pass']]
@@ -232,7 +228,7 @@ class Media
     http = Net::HTTP.new(uri.host, uri.port)
     http.read_timeout = CONFIG['timeout'] || 30
     http.use_ssl = uri.scheme == 'https'
-    headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => 'en-US;q=0.6,en;q=0.4' }
+    headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }
     request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
     request['Cookie'] = Media.set_cookies(uri)
     if uri.host.match(/facebook\.com/) && CONFIG['proxy_host']
@@ -250,7 +246,7 @@ class Media
     begin
       proxy = Media.get_proxy(self.url)
       options = header_options
-      options = { proxy_http_basic_authentication: proxy, 'Accept-Language' => 'en-US;q=0.6,en;q=0.4' } if proxy
+      options = { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } if proxy
       OpenURI.open_uri(Media.parse_url(decoded_uri(self.url)), options) do |f|
         f.binmode
         html = f.read
@@ -270,14 +266,8 @@ class Media
 
   def self.html_options(url)
     uri = url.is_a?(String) ? Media.parse_url(url) : url
-    options = { allow_redirections: :safe, proxy: nil }
     credentials = Media.get_http_auth(uri)
-    options[:http_basic_authentication] = credentials
-    options['User-Agent'] = 'Mozilla/5.0 (X11)'
-    options['Accept'] = '*/*'
-    options['Accept-Language'] = 'en-US;q=0.6,en;q=0.4'
-    options['Cookie'] = Media.set_cookies(uri)
-    options
+    { allow_redirections: :safe, proxy: nil, http_basic_authentication: credentials, 'User-Agent' => 'Mozilla/5.0 (X11)', 'Accept' => '*/*', 'Accept-Language' => LANG, 'Cookie' => Media.set_cookies(uri) }
   end
 
   def self.get_http_auth(uri)

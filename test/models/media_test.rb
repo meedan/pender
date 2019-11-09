@@ -714,7 +714,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse page when item on microdata doesn't have type" do
-    url = 'https://medium.com/darius-foroux/how-to-retain-more-from-the-books-you-read-in-5-simple-steps-700d90653a41'
+    url = 'https://medium.com/meedan-updates/meedan-at-mediaparty-2019-378f7202d460'
     m = create_media url: url
     Mida::Document.stubs(:new).with(m.doc).returns(OpenStruct.new(items: [OpenStruct.new(id: 'id')]))
     d = m.as_json
