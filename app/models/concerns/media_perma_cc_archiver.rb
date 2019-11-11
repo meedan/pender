@@ -16,7 +16,7 @@ module MediaPermaCcArchiver
     end
 
     def send_to_perma_cc(url, key_id, attempts = 1, response = nil)
-      return if archived_on_perma_cc?(url)
+      return if notify_already_archived_on_perma_cc(url, key_id)
       Media.give_up('perma_cc', url, key_id, attempts, response) and return
       encoded_uri = URI.encode(URI.decode(url))
       uri = URI.parse("https://api.perma.cc/v1/archives/?api_key=#{CONFIG['perma_cc_key']}")
@@ -37,10 +37,12 @@ module MediaPermaCcArchiver
       end
     end
 
-    def archived_on_perma_cc?(url)
+    def notify_already_archived_on_perma_cc(url, key_id)
       id = Media.get_id(url)
       data = Pender::Store.read(id, :json)
-      !data.nil? && !data.dig(:archives, :perma_cc).nil?
+      return if data.nil? || data.dig(:archives, :perma_cc).nil?
+      settings = Media.api_key_settings(key_id)
+      Media.notify_webhook('perma_cc', url, data, settings)
     end
 
   end
