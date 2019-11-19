@@ -325,7 +325,8 @@ class MediaTest < ActiveSupport::TestCase
       '' => m.url,
       'http://www.test.bli' => 'http://www.test.bli',
       '//www.test.bli' => 'https://www.test.bli',
-      '/example' => 'https://www.test.com/example'
+      '/example' => 'https://www.test.com/example',
+      'www.test.bli' => 'http://www.test.bli'
     }
     paths.each do |path, expected|
       returned = m.send(:absolute_url, path)

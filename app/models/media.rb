@@ -291,6 +291,8 @@ class Media
       path
     elsif path =~ /^\/\//
       Media.parse_url(self.url).scheme + ':' + path
+    elsif path =~ /^www\./
+      self.add_scheme(path)
     else
       self.top_url(self.url) + path
     end
