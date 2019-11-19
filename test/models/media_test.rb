@@ -854,7 +854,7 @@ class MediaTest < ActiveSupport::TestCase
     Airbrake.stubs(:configured?).returns(true)
     Airbrake.stubs(:notify).never
 
-    m = create_media url: 'https://www.thedailysentry.net/2018/11/duterte-to-parojinogs-i-will-wipe-you.html'
+    m = create_media url: 'http://www.example.com'
     m.data = Media.minimal_data(m)
     m.get_metatags(m)
     assert_equal 'Page with default Twitter username', m.get_twitter_metadata['title']
