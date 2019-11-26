@@ -370,7 +370,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal '09/2016', Time.parse(d['published_at']).strftime('%m/%Y')
     assert_equal 'item', d['type']
     assert_match /Escape/, d['title']
-    assert_match /Escape added a new photo./, d['description']
+    assert_match /Escape(\.Egypt)? added a new photo./, d['description']
     assert_match /423930480981426/, d['author_picture']
     assert_equal 1, d['photos'].size
     assert_match /^https:/, d['picture']
