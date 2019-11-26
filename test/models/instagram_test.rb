@@ -93,4 +93,14 @@ class InstagramTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'ironmaiden', data['external_id']
   end
+
+  test "should parse IGTV link as item" do
+    m = create_media url: 'https://www.instagram.com/tv/B47W-ZVJpBv/?igshid=l5tx0fnl421e'
+    d = m.as_json
+    assert_equal 'item', d['type']
+    assert_equal '@biakicis', d['username']
+    assert_equal 'Bia Kicis', d['author_name']
+  end
+
+
 end 

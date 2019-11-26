@@ -1,14 +1,14 @@
 module MediaInstagramItem
   extend ActiveSupport::Concern
 
-  INSTAGRAM_URL = /^https?:\/\/(www\.)?instagram\.com\/p\/([^\/]+)/
+  INSTAGRAM_URL = /^https?:\/\/(www\.)?instagram\.com\/(p|tv)\/([^\/]+)/
 
   included do
     Media.declare('instagram_item', [INSTAGRAM_URL])
   end
 
   def data_from_instagram_item
-    id = self.url.match(INSTAGRAM_URL)[2]
+    id = self.url.match(INSTAGRAM_URL)[3]
 
     handle_exceptions(self, StandardError) do
       self.get_instagram_data(id.to_s)

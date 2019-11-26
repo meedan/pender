@@ -325,7 +325,8 @@ class MediaTest < ActiveSupport::TestCase
       '' => m.url,
       'http://www.test.bli' => 'http://www.test.bli',
       '//www.test.bli' => 'https://www.test.bli',
-      '/example' => 'https://www.test.com/example'
+      '/example' => 'https://www.test.com/example',
+      'www.test.bli' => 'http://www.test.bli'
     }
     paths.each do |path, expected|
       returned = m.send(:absolute_url, path)
@@ -714,7 +715,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse page when item on microdata doesn't have type" do
-    url = 'https://medium.com/darius-foroux/how-to-retain-more-from-the-books-you-read-in-5-simple-steps-700d90653a41'
+    url = 'https://medium.com/meedan-updates/meedan-at-mediaparty-2019-378f7202d460'
     m = create_media url: url
     Mida::Document.stubs(:new).with(m.doc).returns(OpenStruct.new(items: [OpenStruct.new(id: 'id')]))
     d = m.as_json
@@ -853,7 +854,7 @@ class MediaTest < ActiveSupport::TestCase
     Airbrake.stubs(:configured?).returns(true)
     Airbrake.stubs(:notify).never
 
-    m = create_media url: 'https://www.thedailysentry.net/2018/11/duterte-to-parojinogs-i-will-wipe-you.html'
+    m = create_media url: 'http://www.example.com'
     m.data = Media.minimal_data(m)
     m.get_metatags(m)
     assert_equal 'Page with default Twitter username', m.get_twitter_metadata['title']
