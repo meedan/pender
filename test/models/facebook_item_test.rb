@@ -123,7 +123,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     variations.each do |url|
       m = create_media url: url, request: request
       data = m.as_json
-      assert_match /facebook\.com\/watch/, m.url
+      assert_match /facebook\.com/, m.url
       assert_match /Facebook Watch/, data['title']
       assert_match /Original shows and popular videos in different categories from producers and creators you love/, data['description']
       assert_not_nil data['published_at']
