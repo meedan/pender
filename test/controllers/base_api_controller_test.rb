@@ -33,12 +33,12 @@ class BaseApiControllerTest < ActionController::TestCase
     get :about, format: :json
     assert_response :success
     response = JSON.parse(@response.body)
-    assert_equal [{"key"=>"archive_is", "label"=>"Archive.is"}, {"key"=>"archive_org", "label"=>"Archive.org"}], response['data']['archivers']
+    assert_equal [{"key"=>"archive_is", "label"=>"Archive.is"}, {"key"=>"archive_org", "label"=>"Archive.org"}, {"key"=>"perma_cc", "label"=>"Perma.cc"}], response['data']['archivers']
 
     Media::ARCHIVERS['archive_is'][:enabled] = false
     get :about, format: :json
     response = JSON.parse(@response.body)
-    assert_equal [{"key"=>"archive_org", "label"=>"Archive.org"}], response['data']['archivers']
+    assert_equal [{"key"=>"archive_org", "label"=>"Archive.org"}, {"key"=>"perma_cc", "label"=>"Perma.cc"}], response['data']['archivers']
   end
 
 end
