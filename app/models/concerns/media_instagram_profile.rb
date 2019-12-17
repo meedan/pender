@@ -11,7 +11,7 @@ module MediaInstagramProfile
     username = self.url.match(INSTAGRAM_PROFILE_URL)[2]
 
     handle_exceptions(self, StandardError) do
-      self.data.merge!(self.data_from_instagram_html)
+      self.data.merge!(self.data_from_html_metadata)
     end
 
     self.data.merge!({
@@ -25,7 +25,7 @@ module MediaInstagramProfile
     })
   end
 
-  def data_from_instagram_html
+  def data_from_html_metadata
     raise 'Could not parse this media' if self.doc.blank?
     data = {}
     metatags = { image: 'og:image', title: 'og:title', description: 'og:description' }

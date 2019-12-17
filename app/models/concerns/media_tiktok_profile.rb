@@ -13,7 +13,7 @@ module MediaTiktokProfile
     username = match['username']
 
     handle_exceptions(self, StandardError) do
-      self.data.merge!(self.data_from_tiktok_html)
+      self.data.merge!(self.data_from_html_metadata)
 
       self.data.merge!({
         username: username,
@@ -27,13 +27,4 @@ module MediaTiktokProfile
       })
     end
   end
-
-  def data_from_tiktok_html
-    raise 'Could not parse this media' if self.doc.blank?
-    data = {}
-    metatags = { image: 'og:image', title: 'og:title', description: 'og:description' }
-    data.merge! get_html_metadata(self, 'property', metatags)
-    data
-  end
-
 end
