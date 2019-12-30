@@ -59,10 +59,8 @@ module MediaOembedItem
   end
 
   def oembed_create_request(uri)
-    request = Net::HTTP::Get.new(uri.request_uri)
-    request.add_field('User-Agent', 'Mozilla/5.0 (compatible; Pender/0.1; +https://github.com/meedan/pender)')
-    credentials = Media.get_http_auth(uri)
-    request.basic_auth(credentials.first, credentials.last) unless credentials.blank?
+    headers = { 'User-Agent' => 'Mozilla/5.0 (compatible; Pender/0.1; +https://github.com/meedan/pender)' }.merge(Media.get_cf_credentials(uri))
+    request = Net::HTTP::Get.new(uri.request_uri, headers)
     request
   end
 
