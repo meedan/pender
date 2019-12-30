@@ -425,12 +425,13 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse dropbox video url" do
-    m = create_media url: 'https://www.dropbox.com/s/2k0gocce8ry2xcx/videoplayback155.mp4?dl=0'
+    url = 'https://www.dropbox.com/s/t25htjxk3b3p8oo/A%20Progressive%20Journey%20%2350.mov?dl=0'
+    m = create_media url: url
     d = m.as_json
-    assert_equal 'https://www.dropbox.com/s/2k0gocce8ry2xcx/videoplayback155.mp4?dl=0', m.url
+    assert_equal url, m.url
     assert_equal 'item', d['type']
     assert_equal 'dropbox', d['provider']
-    assert_equal 'videoplayback155.mp4', d['title']
+    assert_match /A Progressive Journey/, d['title']
     assert_equal 'Shared with Dropbox', d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
