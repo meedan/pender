@@ -270,7 +270,6 @@ class Media
   end
 
   def self.get_cf_credentials(uri)
-    credentials = {}
     unless CONFIG['hosts'].nil?
       config = CONFIG['hosts'][uri.host]
       if !config.nil? && config.has_key?('cf_credentials')
@@ -278,7 +277,7 @@ class Media
         credentials = { 'CF-Access-Client-Id' => id, 'CF-Access-Client-Secret' => secret }
       end
     end
-    credentials
+    credentials || {}
   end
 
   def top_url(url)
