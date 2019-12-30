@@ -57,17 +57,20 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
-  test "should parse HTTP-authed URL including credentials on header" do
+  test "should parse URL including cloudflare credentials on header" do
     url = 'https://example.com/'
     parsed_url = Media.parse_url url
     m = Media.new url: url
-    header_options_without_auth = Media.send(:html_options, url)
-    assert_nil header_options_without_auth[:http_basic_authentication]
-    stub_configs({'hosts' => {"example.com"=>{"http_auth"=>"example:1234"}}})
-    header_options_with_auth = Media.send(:html_options, url)
-    assert_equal ['example', '1234'], header_options_with_auth[:http_basic_authentication]
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_auth).raises(RuntimeError.new('unauthorized'))
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options_with_auth)
+    header_options_without_cf = Media.send(:html_options, url)
+    assert_nil header_options_without_cf['CF-Access-Client-Id']
+    assert_nil header_options_without_cf['CF-Access-Client-Secret']
+    stub_configs({'hosts' => {"example.com"=>{"cf_credentials"=>"1234:5678"}}})
+    header_options_with_cf = Media.send(:html_options, url)
+    puts header_options_with_cf
+    assert_equal '1234', header_options_with_cf['CF-Access-Client-Id']
+    assert_equal '5678', header_options_with_cf['CF-Access-Client-Secret']
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_cf).raises(RuntimeError.new('unauthorized'))
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options_with_cf)
     assert_equal Nokogiri::HTML::Document, m.send(:get_html, Media.send(:html_options, m.url)).class
   end
 

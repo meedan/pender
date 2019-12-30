@@ -228,7 +228,7 @@ class Media
     http = Net::HTTP.new(uri.host, uri.port)
     http.read_timeout = CONFIG['timeout'] || 30
     http.use_ssl = uri.scheme == 'https'
-    headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }
+    headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }.merge(Media.get_cf_credentials(uri))
     request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
     request['Cookie'] = Media.set_cookies(uri)
     if uri.host.match(/facebook\.com/) && CONFIG['proxy_host']
@@ -266,15 +266,17 @@ class Media
 
   def self.html_options(url)
     uri = url.is_a?(String) ? Media.parse_url(url) : url
-    credentials = Media.get_http_auth(uri)
-    { allow_redirections: :safe, proxy: nil, http_basic_authentication: credentials, 'User-Agent' => 'Mozilla/5.0 (X11)', 'Accept' => '*/*', 'Accept-Language' => LANG, 'Cookie' => Media.set_cookies(uri) }
+    { allow_redirections: :safe, proxy: nil, 'User-Agent' => 'Mozilla/5.0 (X11)', 'Accept' => '*/*', 'Accept-Language' => LANG, 'Cookie' => Media.set_cookies(uri) }.merge(Media.get_cf_credentials(uri))
   end
 
-  def self.get_http_auth(uri)
-    credentials = nil
+  def self.get_cf_credentials(uri)
+    credentials = {}
     unless CONFIG['hosts'].nil?
       config = CONFIG['hosts'][uri.host]
-      credentials = config['http_auth'].split(':') if !config.nil? && config.has_key?('http_auth')
+      if !config.nil? && config.has_key?('cf_credentials')
+        id, secret = config['cf_credentials'].split(':')
+        credentials = { 'CF-Access-Client-Id' => id, 'CF-Access-Client-Secret' => secret }
+      end
     end
     credentials
   end
