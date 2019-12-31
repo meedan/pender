@@ -361,6 +361,7 @@ class ArchiverTest < ActiveSupport::TestCase
     response = 'mock';response.stubs(:code).returns('201');response.stubs(:body).returns('{"guid":"AUA8-QNGH"}')
     Net::HTTP.any_instance.stubs(:request).returns(response)
     Media.stubs(:notify_webhook_and_update_cache).with('perma_cc', url, { location: 'http://perma.cc/AUA8-QNGH'}, a.id)
+    Media.stubs(:enabled_archivers).with('perma_cc').returns({ 'perma_cc' => {:patterns=>[/^.*$/], :modifier=>:only, :enabled=>true}})
 
     m.archive('perma_cc')
 
@@ -373,6 +374,7 @@ class ArchiverTest < ActiveSupport::TestCase
     cached = Pender::Store.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
     assert_equal({ 'location' => 'http://perma.cc/AUA8-QNGH'}, cached['perma_cc'])
+    Media.unstub(:enabled_archivers)
   end
 
   test "should not try to archive on Perma.cc if already archived on it" do
@@ -416,6 +418,22 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:try_https)
     Media.any_instance.unstub(:parse)
     Media.any_instance.unstub(:archive)
+  end
+
+  test "should not declare Perma.cc as archiver if perma_key is not present" do
+    assert_nil CONFIG.dig('perma_cc_key')
+    assert_not_includes Media::ARCHIVERS.keys, 'perma_cc'
+  end
+
+  test "should return api key settings" do
+    key1 = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    key2 = create_api_key application_settings: {}
+    key3 = create_api_key
+    [key1.id, key2.id, key3.id, -1].each do |id|
+      assert_nothing_raised do
+        Media.api_key_settings(id)
+      end
+    end
   end
 
 end

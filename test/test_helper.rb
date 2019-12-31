@@ -58,7 +58,6 @@ class ActiveSupport::TestCase
     Media.any_instance.unstub(:oembed_get_data_from_url)
     Media.any_instance.unstub(:doc)
     Media::ARCHIVERS['archive_is'][:enabled] = true
-    Media::ARCHIVERS['perma_cc'][:enabled] = true
     clear_bucket(create: true)
   end
 
@@ -74,7 +73,6 @@ class ActiveSupport::TestCase
     Media.any_instance.unstub(:archive_to_archive_org)
     Media.any_instance.unstub(:archive_to_perma_cc)
     Media::ARCHIVERS['archive_is'][:enabled] = false
-    Media::ARCHIVERS['perma_cc'][:enabled] = false
     CONFIG.unstub(:[])
     clear_bucket
   end
