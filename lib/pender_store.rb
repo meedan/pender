@@ -9,6 +9,11 @@ module Pender
       "#{CONFIG.dig('storage', 'bucket')}#{ENV['TEST_ENV_NUMBER']}"
     end
 
+    def self.video_bucket_name
+      video_bucket = CONFIG.dig('storage', 'video_bucket')
+      video_bucket ? "#{video_bucket}#{ENV['TEST_ENV_NUMBER']}" : self.bucket_name
+    end
+
     def self.exist?(id, type)
       resource = Aws::S3::Resource.new
       bucket = resource.bucket(bucket_name)
@@ -41,6 +46,24 @@ module Pender
         bucket: bucket_name,
         content_type: content_type
       )
+    end
+
+    def self.upload_video_folder(local_path)
+      response = nil
+      key_prefix = "video/#{File.basename(local_path)}/"
+      client = Aws::S3::Client.new
+      Dir.glob(local_path + '/*').each do |filepath|
+        File.open(filepath, 'rb') do |file|
+          content_type = Rack::Mime.mime_type(File.extname(filepath))
+          response = client.put_object(
+            key: key_prefix + File.basename(filepath),
+            body: file,
+            bucket: video_bucket_name,
+            content_type: content_type
+          )
+        end
+      end
+      response.to_h
     end
 
     def self.delete(id, *types)

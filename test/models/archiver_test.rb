@@ -436,4 +436,93 @@ class ArchiverTest < ActiveSupport::TestCase
     end
   end
 
+  test "should call youtube-dl and worker to upload video when archive video" do
+    Sidekiq::Testing.fake!
+    Media.any_instance.unstub(:archive_to_video)
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://twitter.com/meedan/status/1202732707597307905'
+    m = Media.new url: url, key: a
+    m.as_json
+
+    Media.any_instance.unstub(:archive_to_video)
+    Media.stubs(:supported_video?).with(url).returns(true)
+    Media.stubs(:notify_video_already_archived).with(url, a.id).returns(nil)
+
+    assert_difference 'ArchiveVideoWorker.jobs.size', 1 do
+      Media.archive_video(url, a.id)
+    end
+
+    not_video_url = 'https://twitter.com/meedan/status/1214263820484521985'
+    Media.stubs(:supported_video?).with(not_video_url).returns(true)
+    Media.stubs(:notify_video_already_archived).with(not_video_url, a.id).returns(nil)
+
+    assert_no_difference 'ArchiveVideoWorker.jobs.size' do
+      Media.archive_video(not_video_url, a.id)
+    end
+
+    Media.unstub(:supported_video?)
+    Media.unstub(:notify_video_already_archived)
+    ArchiveVideoWorker.unstub(:perform_async)
+  end
+
+  test "should return false when is not supported when archive video" do
+    assert Media.supported_video?('https://twitter.com/meedan/status/1202732707597307905')
+
+    assert !Media.supported_video?('https://twitter.com/meedan/status/1214263820484521985')
+  end
+
+  test "should notify if URL was already parsed and has a location on data when archive video" do
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://twitter.com/meedan/status/1202732707597307905'
+
+    Pender::Store.stubs(:read).with(Media.get_id(url), :json).returns(nil)
+    assert_nil Media.notify_video_already_archived(url, nil)
+
+    data = { archives: { video_archiver: { error: 'could not download video data'}}}
+    Pender::Store.stubs(:read).with(Media.get_id(url), :json).returns()
+    assert_nil Media.notify_video_already_archived(url, nil)
+
+    data[:archives][:video_archiver] = { location: 'path_to_video' }
+    Pender::Store.stubs(:read).with(Media.get_id(url), :json).returns(data)
+    Media.stubs(:notify_webhook).with('video_archiver', url, data, {}).returns('Notify webhook')
+    assert_equal 'Notify webhook', Media.notify_video_already_archived(url, nil)
+
+    Pender::Store.unstub(:read)
+    Media.unstub(:notify_webhook)
+  end
+
+  test "should archive video and update cache" do
+    Sidekiq::Testing.fake!
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://twitter.com/meedan/status/1202732707597307905'
+    id = Media.get_id url
+
+    assert_equal 0, ArchiveVideoWorker.jobs.size
+    m = create_media url: url, key: a
+    data = m.as_json
+    assert_nil data.dig('archives', 'video_archiver')
+    Media.archive_video(url, a.id)
+    assert_equal 1, ArchiveVideoWorker.jobs.size
+
+    ArchiveVideoWorker.drain
+    data = m.as_json
+    assert_equal "#{File.join(Media.archiving_folder, id)}/1202732707597307905.mp4", data.dig('archives', 'video_archiver', 'location')
+    assert_equal File.join(Media.archiving_folder, id), data.dig('archives', 'video_archiver', 'path')
+  end
+
+  test "should generate the public archiving folder for videos" do
+    CONFIG.stubs(:dig).with('storage', 'bucket').returns('default_bucket')
+    CONFIG.stubs(:dig).with('storage', 'endpoint').returns('http://local-storage')
+    CONFIG.stubs(:dig).with('storage', 'video_asset_path').returns(nil)
+    CONFIG.stubs(:dig).with('storage', 'video_bucket').returns(nil)
+    assert_equal 'http://local-storage/default_bucket/video', Media.archiving_folder
+
+    CONFIG.stubs(:dig).with('storage', 'video_bucket').returns('bucket_for_videos')
+    assert_equal 'http://local-storage/bucket_for_videos/video', Media.archiving_folder
+
+    CONFIG.stubs(:dig).with('storage', 'video_asset_path').returns('http://public-storage/my-videos')
+    assert_equal 'http://public-storage/my-videos', Media.archiving_folder
+
+    CONFIG.unstub(:dig)
+  end
 end
