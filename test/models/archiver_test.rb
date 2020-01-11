@@ -515,13 +515,13 @@ class ArchiverTest < ActiveSupport::TestCase
     CONFIG.stubs(:dig).with('storage', 'endpoint').returns('http://local-storage')
     CONFIG.stubs(:dig).with('storage', 'video_asset_path').returns(nil)
     CONFIG.stubs(:dig).with('storage', 'video_bucket').returns(nil)
-    assert_equal 'http://local-storage/default_bucket/video', Media.archiving_folder
+    assert_equal "http://local-storage/#{Pender::Store.video_bucket_name}/video", Media.archiving_folder
 
     CONFIG.stubs(:dig).with('storage', 'video_bucket').returns('bucket_for_videos')
-    assert_equal 'http://local-storage/bucket_for_videos/video', Media.archiving_folder
+    assert_equal "http://local-storage/#{Pender::Store.video_bucket_name}/video", Media.archiving_folder
 
     CONFIG.stubs(:dig).with('storage', 'video_asset_path').returns('http://public-storage/my-videos')
-    assert_equal 'http://public-storage/my-videos', Media.archiving_folder
+    assert_equal "http://public-storage/my-videos", Media.archiving_folder
 
     CONFIG.unstub(:dig)
   end
