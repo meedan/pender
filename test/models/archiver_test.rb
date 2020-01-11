@@ -462,7 +462,8 @@ class ArchiverTest < ActiveSupport::TestCase
 
     Media.unstub(:supported_video?)
     Media.unstub(:notify_video_already_archived)
-    ArchiveVideoWorker.unstub(:perform_async)
+
+    ArchiveVideoWorker.clear
   end
 
   test "should return false when is not supported when archive video" do
