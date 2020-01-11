@@ -82,11 +82,13 @@ class ActiveSupport::TestCase
 
   def clear_bucket(options = {})
     resource = Aws::S3::Resource.new
-    bucket = resource.bucket(Pender::Store.bucket_name)
-    if bucket.exists?
-      bucket.objects.each { |obj| obj.delete }
-    else
-      bucket.create if options.dig(:create)
+    [Pender::Store.bucket_name, Pender::Store.video_bucket_name].each do |name|
+      bucket = resource.bucket(name)
+      if bucket.exists?
+        bucket.objects.each { |obj| obj.delete }
+      else
+        bucket.create if options.dig(:create)
+      end
     end
   end
 
