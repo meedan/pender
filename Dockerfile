@@ -8,8 +8,7 @@ ENV RAILS_ENV development
 RUN apt-get update -qq && apt-get install -y imagemagick inotify-tools --no-install-recommends
 
 # nginx
-COPY ./nginx.development.conf /etc/nginx/sites-available/pender-development
-COPY ./nginx.test.conf /etc/nginx/sites-available/pender-test
+COPY ./nginx.local.conf /etc/nginx/sites-available/pender-development
 RUN rm /etc/nginx/sites-enabled/default
 
 # install our app
