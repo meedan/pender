@@ -36,7 +36,8 @@ module MediaTiktokItem
   end
 
   def get_tiktok_author_picture
-    self.doc.at_css('.user-info .avatar')['style'].match(/url\("(.+)"\)/)[1]
+    avatar = self.doc.at_css('.user-info .avatar avatar-wrapper')
+    avatar['style'].match(/url\("(.+)"\)/)[1] if avatar && avatar['style']
   end
 
   def tiktok_oembed_url
