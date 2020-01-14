@@ -12,20 +12,39 @@ module MediaInstagramItem
 
     handle_exceptions(self, StandardError) do
       self.get_instagram_data(id.to_s)
+      self.data.merge!(external_id: id)
       data = self.data
+      return if data.dig('raw', 'api', 'error') && data.dig('raw', 'graphql', 'error')
       self.data.merge!({
         external_id: id,
-        username: '@' + data['raw']['api']['author_name'],
-        description: data['raw']['api']['title'],
-        title: data['raw']['api']['title'],
-        picture: data['raw']['api']['thumbnail_url'],
-        author_url: data['raw']['api']['author_url'],
-        html: data['raw']['api']['html'],
-        author_picture: data['raw']['graphql']['shortcode_media']['owner']['profile_pic_url'],
-        author_name: data['raw']['graphql']['shortcode_media']['owner']['full_name'],
+        username: '@' + get_instagram_username_from_data,
+        description: get_instagram_text_from_data,
+        title: get_instagram_text_from_data,
+        picture: get_instagram_picture_from_data,
+        author_url: get_info_from_data('api', data, 'author_url'),
+        html: get_info_from_data('api', data, 'html'),
+        author_picture: data.dig('raw', 'graphql', 'shortcode_media', 'owner', 'profile_pic_url'),
+        author_name: data.dig('raw', 'graphql', 'shortcode_media', 'owner', 'full_name'),
         published_at: self.get_instagram_datetime
       })
     end
+  end
+
+  def get_instagram_username_from_data
+    username = get_info_from_data('api', self.data, 'author_name')
+    username.blank? ? data.dig('raw', 'graphql', 'shortcode_media', 'owner', 'username') : username
+  end
+
+  def get_instagram_text_from_data
+    text = get_info_from_data('api', self.data, 'title')
+    return text unless text.blank?
+    text = self.data.dig('raw', 'graphql', 'shortcode_media', 'edge_media_to_caption', 'edges')
+    (!text.blank? && text.is_a?(Array)) ? text.first.dig('node', 'text') : ''
+  end
+
+  def get_instagram_picture_from_data
+    picture = get_info_from_data('api', self.data, 'thumbnail_url')
+    picture.blank? ? self.data.dig('raw', 'graphql', 'shortcode_media', 'display_url') : picture
   end
 
   def get_instagram_data(id)
@@ -33,8 +52,13 @@ module MediaInstagramItem
     sources = { api: "https://api.instagram.com/oembed/?url=http://instagr.am/p/#{id}", graphql: "https://www.instagram.com/p/#{id}/?__a=1" }
     sources.each do |source|
       pool << Thread.new {
-        data = self.get_instagram_json_data(source[1])
-        self.data['raw'][source[0]] = (source[0] == :api) ? data : data['graphql']
+        begin
+          data = self.get_instagram_json_data(source[1])
+          self.data['raw'][source[0]] = (source[0] == :api) ? data : data['graphql']
+        rescue StandardError => error
+          Airbrake.notify(error.message, instagram_source: source) if Airbrake.configured?
+          self.data['raw'][source[0]] = { error: { message: "#{error.class}: #{error.message} - #{source[1]}" }}
+        end
       }
     end
     pool.each(&:join)
@@ -42,7 +66,8 @@ module MediaInstagramItem
   end
 
   def get_instagram_datetime
-    Time.parse(self.data['raw']['api']['html'].match(/.*datetime=\\?"([^"]+)\\?".*/)[1])
+    datetime = get_info_from_data('api', self.data, 'html').match(/.*datetime=\\?"([^"]+)\\?".*/)
+    datetime ? Time.parse(datetime[1]) : ''
   end
 
   def get_instagram_json_data(url)
