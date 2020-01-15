@@ -14,7 +14,7 @@ module MediaInstagramItem
       self.get_instagram_data(id.to_s)
       self.data.merge!(external_id: id)
       data = self.data
-      return if data.dig('raw', 'api', 'error') && data.dig('raw', 'graphql', 'error')
+      raise data.dig('raw', 'api', 'error', 'message') if data.dig('raw', 'api', 'error') && data.dig('raw', 'graphql', 'error')
       self.data.merge!({
         external_id: id,
         username: '@' + get_instagram_username_from_data,
@@ -57,7 +57,8 @@ module MediaInstagramItem
           self.data['raw'][source[0]] = (source[0] == :api) ? data : data['graphql']
         rescue StandardError => error
           Airbrake.notify(error.message, instagram_source: source) if Airbrake.configured?
-          self.data['raw'][source[0]] = { error: { message: "#{error.class}: #{error.message} - #{source[1]}" }}
+          Rails.logger.info "[Instagram URL] Cannot get data from '#{source[0]}' (#{source[1]}): (#{error.class}) #{error.message}"
+          self.data['raw'][source[0]] = { error: { message: error.message }}
         end
       }
     end
