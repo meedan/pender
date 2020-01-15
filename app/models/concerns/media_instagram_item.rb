@@ -32,7 +32,7 @@ module MediaInstagramItem
 
   def get_instagram_username_from_data
     username = get_info_from_data('api', self.data, 'author_name')
-    username.blank? ? data.dig('raw', 'graphql', 'shortcode_media', 'owner', 'username') : username
+    username.blank? ? (data.dig('raw', 'graphql', 'shortcode_media', 'owner', 'username') || '' ) : username
   end
 
   def get_instagram_text_from_data

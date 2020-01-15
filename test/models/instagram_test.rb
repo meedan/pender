@@ -113,6 +113,7 @@ class InstagramTest < ActiveSupport::TestCase
     assert_equal '', d['author_name']
     assert_match /Not Found/, d['raw']['api']['error']['message']
     assert_match /Not Found/, d['raw']['graphql']['error']['message']
+    Media.any_instance.unstub(:get_instagram_json_data)
   end
 
   test "should parse when only graphql returns data" do
