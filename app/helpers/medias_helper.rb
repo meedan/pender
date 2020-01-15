@@ -72,6 +72,7 @@ module MediasHelper
 
   def get_info_from_data(source, data, *args)
     hash = data['raw'][source]
+    return '' if hash.nil?
     args.each do |i|
       return hash[i] if !hash[i].nil?
     end

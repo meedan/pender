@@ -102,5 +102,38 @@ class InstagramTest < ActiveSupport::TestCase
     assert_equal 'Bia Kicis', d['author_name']
   end
 
+  test "should return error on data when can't get info from api and graphql" do
+    id = 'B6_wqMHgQ12'
+    Media.any_instance.stubs(:get_instagram_json_data).raises('Net::HTTPNotFound: Not Found')
+    m = create_media url: "https://www.instagram.com/p/#{id}/"
+    d = m.as_json
+    assert_equal id, d['external_id']
+    assert_equal 'item', d['type']
+    assert_equal '', d['username']
+    assert_equal '', d['author_name']
+    assert_match /Not Found/, d['raw']['api']['error']['message']
+    assert_match /Not Found/, d['raw']['graphql']['error']['message']
+    Media.any_instance.unstub(:get_instagram_json_data)
+  end
+
+  test "should parse when only graphql returns data" do
+    m = create_media url: 'https://www.instagram.com/p/B6_wqMHgQ12/'
+    id = 'B6_wqMHgQ12'
+    Media.any_instance.stubs(:get_instagram_json_data).with("https://api.instagram.com/oembed/?url=http://instagr.am/p/#{id}").raises('Net::HTTPNotFound: Not Found')
+    graphql_response = { 'graphql' => {
+      "shortcode_media"=>{"display_url"=>"https://instagram.net/v/29_n.jpg",
+      "edge_media_to_caption"=>{"edges"=>[{"node"=>{"text"=>"Verify misinformation on WhatsApp"}}]},
+      "owner"=>{"profile_pic_url"=>"https://instagram.net/v/56_n.jpg", "username"=>"c.afpfact", "full_name"=>"AFP Fact Check"}}}}
+    Media.any_instance.stubs(:get_instagram_json_data).with("https://www.instagram.com/p/#{id}/?__a=1").returns(graphql_response)
+    d = m.as_json
+    assert_equal 'B6_wqMHgQ12', d['external_id']
+    assert_equal 'item', d['type']
+    assert_equal '@c.afpfact', d['username']
+    assert_equal 'AFP Fact Check', d['author_name']
+    assert_equal 'Verify misinformation on WhatsApp', d['title']
+    assert_equal 'https://instagram.net/v/29_n.jpg', d['picture']
+    assert_equal 'https://instagram.net/v/56_n.jpg', d['author_picture']
+    Media.any_instance.unstub(:get_instagram_json_data)
+  end
 
 end 
