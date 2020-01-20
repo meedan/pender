@@ -57,17 +57,20 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
-  test "should parse HTTP-authed URL including credentials on header" do
+  test "should parse URL including cloudflare credentials on header" do
     url = 'https://example.com/'
     parsed_url = Media.parse_url url
     m = Media.new url: url
-    header_options_without_auth = Media.send(:html_options, url)
-    assert_nil header_options_without_auth[:http_basic_authentication]
-    stub_configs({'hosts' => {"example.com"=>{"http_auth"=>"example:1234"}}})
-    header_options_with_auth = Media.send(:html_options, url)
-    assert_equal ['example', '1234'], header_options_with_auth[:http_basic_authentication]
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_auth).raises(RuntimeError.new('unauthorized'))
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options_with_auth)
+    header_options_without_cf = Media.send(:html_options, url)
+    assert_nil header_options_without_cf['CF-Access-Client-Id']
+    assert_nil header_options_without_cf['CF-Access-Client-Secret']
+    stub_configs({'hosts' => {"example.com"=>{"cf_credentials"=>"1234:5678"}}})
+    header_options_with_cf = Media.send(:html_options, url)
+    puts header_options_with_cf
+    assert_equal '1234', header_options_with_cf['CF-Access-Client-Id']
+    assert_equal '5678', header_options_with_cf['CF-Access-Client-Secret']
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_cf).raises(RuntimeError.new('unauthorized'))
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options_with_cf)
     assert_equal Nokogiri::HTML::Document, m.send(:get_html, Media.send(:html_options, m.url)).class
   end
 
@@ -422,12 +425,13 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse dropbox video url" do
-    m = create_media url: 'https://www.dropbox.com/s/2k0gocce8ry2xcx/videoplayback155.mp4?dl=0'
+    url = 'https://www.dropbox.com/s/t25htjxk3b3p8oo/A%20Progressive%20Journey%20%2350.mov?dl=0'
+    m = create_media url: url
     d = m.as_json
-    assert_equal 'https://www.dropbox.com/s/2k0gocce8ry2xcx/videoplayback155.mp4?dl=0', m.url
+    assert_equal url, m.url
     assert_equal 'item', d['type']
     assert_equal 'dropbox', d['provider']
-    assert_equal 'videoplayback155.mp4', d['title']
+    assert_match /A Progressive Journey/, d['title']
     assert_equal 'Shared with Dropbox', d['description']
     assert_not_nil d['published_at']
     assert_equal '', d['username']
@@ -778,8 +782,13 @@ class MediaTest < ActiveSupport::TestCase
     
     CONFIG['hosts'] = { 'time.com' => { 'country' => 'gb' } }
     m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
+    host, user, pass = Media.get_proxy(m.url)
+    assert_match CONFIG['proxy_host'], host
+    assert_match "#{CONFIG['proxy_user_prefix']}-gb", user
+    assert_equal CONFIG['proxy_pass'], pass
+
     data = m.as_json
-    assert_match /https?:\/\/time.com/, data['title']
+    assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title']
 
     CONFIG['hosts'] = config
   end

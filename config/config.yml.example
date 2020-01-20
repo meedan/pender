@@ -21,9 +21,7 @@ development: &default
   proxy_password:
   hosts:
     one.host:
-      http_auth: username:password
-    another.host:
-      http_auth: username:password
+      cf_credentials: 1234:5678
     yet.another.host:
       country: cc
 
