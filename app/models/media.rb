@@ -70,7 +70,8 @@ class Media
     if options.delete(:force) || Pender::Store.read(Media.get_id(self.original_url), :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
       data = self.data.merge(Media.required_fields(self)).with_indifferent_access
-      Pender::Store.write(Media.get_id(self.original_url), :json, data)
+
+      Pender::Store.write(Media.get_id(self.original_url), :json, cleanup_data_encoding(data))
     end
     self.archive(options.delete(:archivers))
     Pender::Store.read(Media.get_id(self.original_url), :json)
