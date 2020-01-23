@@ -131,7 +131,7 @@ module MediasHelper
       content = content.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "�")
     elsif content.respond_to?(:each_with_index)
       content.each_with_index do |(k, v), i|
-        next if content.is_a?(Hash) && v.blank?
+        next if content.is_a?(Hash) && !v
         value = v || k
         index = content.is_a?(Hash) ? k : i
         content[index] = cleanup_text(value)
