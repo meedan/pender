@@ -130,14 +130,18 @@ module MediasHelper
     if content.is_a?(String)
       content = content.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "�")
     elsif content.respond_to?(:each_with_index)
-      content.each_with_index do |(k, v), i|
-        next if content.is_a?(Hash) && !v
-        value = v || k
-        index = content.is_a?(Hash) ? k : i
-        content[index] = cleanup_text(value)
-      end
+      content = cleanup_collection(content)
     end
     content
   end
 
+  def cleanup_collection(content)
+    content.each_with_index do |(k, v), i|
+      next if content.is_a?(Hash) && !v
+      value = v || k
+      index = content.is_a?(Hash) ? k : i
+      content[index] = cleanup_text(value)
+    end
+    content
+  end
 end
