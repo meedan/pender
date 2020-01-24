@@ -10,7 +10,7 @@
 # canonical url and normalize it before parsing.
 #
 # There are specific parsers for +Youtube+, +Twitter+, +Facebook+, +Instagram+,
-# +Bridge+, +Dropbox+ and +oEmbed+.
+# +Dropbox+ and +oEmbed+.
 # When the url cannot be parsed by a specific parser, it is parsed as a
 # generic page.
 #
@@ -77,7 +77,7 @@ class Media
   end
 
   # Parsers and archivers
-  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaBridgeItem, MediaDropboxItem, MediaTiktokItem, MediaTiktokProfile, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg, MediaPermaCcArchiver].each { |concern| include concern }
+  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaDropboxItem, MediaTiktokItem, MediaTiktokProfile, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg, MediaPermaCcArchiver].each { |concern| include concern }
 
   def self.minimal_data(instance)
     data = {}
