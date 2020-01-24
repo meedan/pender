@@ -977,4 +977,28 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:doc)
   end
 
+  test "should not raise encoding error when saving data" do
+    url = 'https://bastitimes.page/article/raajy-sarakaaren-araajak-tatvon-ke-viruddh-karen-kathoratam-kaarravaee-sonoo-jha/5CvP5F.html'
+    data_with_encoding_error = {"published_at"=>"", "description"=>"कर\xE0\xA5", "raw"=>{"metatags"=>[{"content"=>"कर\xE0\xA5"}]}, "schema"=>{"NewsArticle"=>[{"author"=>[{"name"=>"कर\xE0\xA5"}], "headline"=>"कर\xE0\xA5", "publisher"=>{"@type"=>"Organization", "name"=>"कर\xE0\xA5"}}]}, "oembed"=>{"type"=>"rich", "version"=>"1.0", "title"=>"कर\xE0\xA5"}}
+
+    m = create_media url: url
+    Media.any_instance.stubs(:data).returns(data_with_encoding_error)
+    Media.any_instance.stubs(:parse)
+
+    assert_raises JSON::GeneratorError do
+      Pender::Store.write(Media.get_id(m.original_url), :json, data_with_encoding_error)
+    end
+
+    assert_nothing_raised do
+      data = m.as_json
+      assert_equal "कर�", data['description']
+      assert_equal "कर�", data['oembed']['title']
+      assert_equal "कर�", data['raw']['metatags'].first['content']
+      assert_equal "कर�", data['schema']['NewsArticle'].first['headline']
+      assert_equal "कर�", data['schema']['NewsArticle'].first['author'].first['name']
+      assert_equal "कर�", data['schema']['NewsArticle'].first['publisher']['name']
+    end
+    Media.any_instance.unstub(:data)
+    Media.any_instance.unstub(:parse)
+  end
 end

@@ -119,4 +119,29 @@ module MediasHelper
   def get_timeout_data(media, url, id)
     get_error_data({ message: 'Timeout', code: 'TIMEOUT' }, media, url, id)
   end
+
+  def cleanup_data_encoding(data)
+    data.each do |field, value|
+      data[field] = cleanup_text(value)
+    end
+  end
+
+  def cleanup_text(content)
+    if content.is_a?(String)
+      content = content.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "�")
+    elsif content.respond_to?(:each_with_index)
+      content = cleanup_collection(content)
+    end
+    content
+  end
+
+  def cleanup_collection(content)
+    content.each_with_index do |(k, v), i|
+      next if content.is_a?(Hash) && !v
+      value = v || k
+      index = content.is_a?(Hash) ? k : i
+      content[index] = cleanup_text(value)
+    end
+    content
+  end
 end
