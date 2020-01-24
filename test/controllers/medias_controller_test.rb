@@ -57,7 +57,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://speakbridge.io/medias/embed/viber/1/403'
+    url = 'https://twitter.com/GyenesNat/status/1220020473955635200'
     get :index, url: url, refresh: '1', format: :html
     id = Digest::MD5.hexdigest(url)
     first_parsed_at = Pender::Store.get(id, :html).last_modified
@@ -69,7 +69,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should not ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://speakbridge.io/medias/embed/viber/1/403'
+    url = 'https://twitter.com/GyenesNat/status/1220020473955635200'
     id = Digest::MD5.hexdigest(url)
     get :index, url: url, refresh: '0', format: :html
     first_parsed_at = Pender::Store.get(id, :html).last_modified
