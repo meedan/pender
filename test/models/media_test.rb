@@ -1001,4 +1001,10 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:data)
     Media.any_instance.unstub(:parse)
   end
+
+  test "should return empty when get oembed url and doc is nil" do
+    m = create_media url: 'https://www.instagram.com/p/B6_wqMHgQ12/6'
+    assert_equal '', m.get_oembed_url
+  end
+
 end
