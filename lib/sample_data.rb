@@ -19,6 +19,6 @@ module SampleData
   end
 
   def create_media(options = {})
-    Media.new({ url: 'http://test.com' }.merge(options))
+    Media.new({ url: 'http://example.com/' }.merge(options))
   end
 end

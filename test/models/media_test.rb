@@ -310,13 +310,13 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should return absolute url debug travis" do
-    m = create_media url: 'https://www.test.com'
+    m = create_media url: 'https://www.example.com/'
     paths = {
       nil => m.url,
       '' => m.url,
       'http://www.test.bli' => 'http://www.test.bli',
       '//www.test.bli' => 'https://www.test.bli',
-      '/example' => 'https://www.test.com/example',
+      '/example' => 'https://www.example.com/example',
       'www.test.bli' => 'http://www.test.bli'
     }
     paths.each do |path, expected|
