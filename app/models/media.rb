@@ -239,7 +239,7 @@ class Media
       end
     else
       response = http.request(request)
-      puts response
+      puts "#{response.body} (#{response.code})"
       response
     end
   end
