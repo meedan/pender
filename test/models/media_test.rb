@@ -2,7 +2,7 @@ require_relative '../test_helper'
 require 'cc_deville'
 
 class MediaTest < ActiveSupport::TestCase
-  test "should create media debug travis" do
+  test "should create media" do
     assert_kind_of Media, create_media
   end
 
@@ -309,7 +309,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil d['error']
   end
 
-  test "should return absolute url debug travis" do
+  test "should return absolute url" do
     m = create_media url: 'https://www.example.com/'
     paths = {
       nil => m.url,

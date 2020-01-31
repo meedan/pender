@@ -238,9 +238,7 @@ class Media
         http2.request(request)
       end
     else
-      response = http.request(request)
-      puts "#{response.body} (#{response.code})"
-      response
+      http.request(request)
     end
   end
 
