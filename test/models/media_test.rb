@@ -2,7 +2,7 @@ require_relative '../test_helper'
 require 'cc_deville'
 
 class MediaTest < ActiveSupport::TestCase
-  test "should create media" do
+  test "should create media debug travis" do
     assert_kind_of Media, create_media
   end
 
@@ -66,7 +66,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil header_options_without_cf['CF-Access-Client-Secret']
     stub_configs({'hosts' => {"example.com"=>{"cf_credentials"=>"1234:5678"}}})
     header_options_with_cf = Media.send(:html_options, url)
-    puts header_options_with_cf
     assert_equal '1234', header_options_with_cf['CF-Access-Client-Id']
     assert_equal '5678', header_options_with_cf['CF-Access-Client-Secret']
     OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_cf).raises(RuntimeError.new('unauthorized'))
@@ -310,7 +309,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil d['error']
   end
 
-  test "should return absolute url" do
+  test "should return absolute url debug travis" do
     m = create_media url: 'https://www.test.com'
     paths = {
       nil => m.url,
