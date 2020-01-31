@@ -66,7 +66,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil header_options_without_cf['CF-Access-Client-Secret']
     stub_configs({'hosts' => {"example.com"=>{"cf_credentials"=>"1234:5678"}}})
     header_options_with_cf = Media.send(:html_options, url)
-    puts header_options_with_cf
     assert_equal '1234', header_options_with_cf['CF-Access-Client-Id']
     assert_equal '5678', header_options_with_cf['CF-Access-Client-Secret']
     OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_cf).raises(RuntimeError.new('unauthorized'))
@@ -311,13 +310,13 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should return absolute url" do
-    m = create_media url: 'https://www.test.com'
+    m = create_media url: 'https://www.example.com/'
     paths = {
       nil => m.url,
       '' => m.url,
       'http://www.test.bli' => 'http://www.test.bli',
       '//www.test.bli' => 'https://www.test.bli',
-      '/example' => 'https://www.test.com/example',
+      '/example' => 'https://www.example.com/example',
       'www.test.bli' => 'http://www.test.bli'
     }
     paths.each do |path, expected|
@@ -1001,4 +1000,10 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:data)
     Media.any_instance.unstub(:parse)
   end
+
+  test "should return empty when get oembed url and doc is nil" do
+    m = create_media url: 'https://www.instagram.com/p/B6_wqMHgQ12/6'
+    assert_equal '', m.get_oembed_url
+  end
+
 end
