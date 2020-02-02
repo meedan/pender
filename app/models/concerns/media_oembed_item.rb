@@ -2,6 +2,7 @@ module MediaOembedItem
   extend ActiveSupport::Concern
 
   def get_oembed_url
+    return '' if self.doc.nil?
     tag = self.doc.at_css('link[type="application/json+oembed"]')
     tag.nil? ? '' : tag.attribute('href').to_s
   end
