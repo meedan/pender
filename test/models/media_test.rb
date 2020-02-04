@@ -519,9 +519,15 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should not return empty values on metadata keys due to bad html" do
     m = create_media url: 'http://www.politifact.com/truth-o-meter/article/2017/may/09/year-fact-checking-about-james-comey-clinton-email/'
+    html = '<meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta property="og:description" content="James Comey is out as FBI director. "While I greatly appreciate you informing me">'
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(html))
     tag_description = m.as_json['raw']['metatags'].find { |tag| tag['property'] == 'og:description'}
     assert_equal ['property', 'content'], tag_description.keys
-    assert_match /\AJames Comey is out as FBI director.*last July.\z/, tag_description['content']
+    assert_match /\AJames Comey is out as FBI director.\z/, tag_description['content']
+    Media.any_instance.unstub(:doc)
   end
 
   test "should parse url with redirection https -> http" do
