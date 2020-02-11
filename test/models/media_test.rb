@@ -231,7 +231,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['published_at']
     assert_equal 'Emerson T. Brooking and P. W. Singer', d['username']
     assert_equal 'https://www.theatlantic.com', d['author_url']
-    assert_match /https:\/\/cdn\.theatlantic\.com\/assets\/media\/img\/2016\/10\/WEL_Singer_SocialWar_opener_ALT\/facebook\.jpg/, d['picture']
+    assert_match /theatlantic/, d['picture']
   end
 
   test "should parse url 2" do
@@ -1012,4 +1012,20 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', m.get_oembed_url
   end
 
+  test "should get metrics from Facebook" do
+    Media.unstub(:request_metrics_from_facebook)
+    url = 'https://www.google.com/'
+    m = create_media url: url
+    m.as_json
+    id = Media.get_id(url)
+    data = Pender::Store.read(id, :json)
+    assert data['metrics']['facebook']['share_count'] > 0
+    Media.stubs(:request_metrics_from_facebook).raises(StandardError.new)
+    url = 'https://meedan.com'
+    m = create_media url: url
+    m.as_json
+    id = Media.get_id(url)
+    data = Pender::Store.read(id, :json)
+    assert_equal({}, data['metrics'])
+  end
 end

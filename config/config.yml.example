@@ -10,6 +10,8 @@ development: &default
   cc_deville_host:
   cc_deville_token:
   cc_deville_httpauth: 'username:password'
+  facebook_app_id:
+  facebook_app_secret:
   public_url:
   redis_host: 'localhost'
   redis_port: 6379
