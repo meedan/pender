@@ -63,35 +63,6 @@ module MediaArchiver
       Media.update_cache(url, { archives: { archiver => data } })
     end
 
-    def update_cache(url, newdata)
-      id = Media.get_id(url)
-      data = Pender::Store.read(id, :json)
-      unless data.blank?
-        newdata.each do |key, value|
-          data[key] = data[key].is_a?(Hash) ? data[key].merge(value) : value
-        end
-        data['webhook_called'] = @webhook_called ? 1 : 0
-        Pender::Store.write(id, :json, data)
-      end
-    end
-
-    def notify_webhook(type, url, data, settings)
-      if settings['webhook_url'] && settings['webhook_token']
-        uri = URI.parse(settings['webhook_url'])
-        payload = data.merge({ url: url, type: type }).to_json
-        sig = 'sha1=' + OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), settings['webhook_token'], payload)
-        headers = { 'Content-Type': 'text/json', 'X-Signature': sig }
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = uri.scheme == 'https'
-        request = Net::HTTP::Post.new(uri.request_uri, headers)
-        request.body = payload
-        response = http.request(request)
-        Rails.logger.info "[Webhook] Sending #{url} to webhook: Code: #{response.code} Response: #{response.body}"
-        @webhook_called = true
-      end
-      true
-    end
-
     def enabled_archivers(*archivers)
       ARCHIVERS.slice(*archivers).select { |_name, rule| rule[:enabled] }
     end

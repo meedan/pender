@@ -668,6 +668,7 @@ class MediasControllerTest < ActionController::TestCase
     parse_error = { error: { "message"=>"RuntimeError: RuntimeError", "code"=>5}}
     required_fields = Media.required_fields(OpenStruct.new(url: url))
     Media.stubs(:required_fields).returns(required_fields)
+    Media.stubs(:notify_webhook)
     Media.stubs(:notify_webhook).with('media_parsed', url, parse_error.merge(required_fields).with_indifferent_access, webhook_info)
     Media.any_instance.stubs(:parse).raises(RuntimeError)
     a = create_api_key application_settings: webhook_info

@@ -59,6 +59,7 @@ class ActiveSupport::TestCase
     Media.any_instance.unstub(:doc)
     Media::ARCHIVERS['archive_is'][:enabled] = true
     clear_bucket(create: true)
+    Media.stubs(:request_metrics_from_facebook).returns({ 'share_count' => 123 })
   end
 
   # This will run after any test

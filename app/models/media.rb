@@ -36,13 +36,14 @@
 #    4. Match the url with the patterns described on specific parsers
 #    5. Parse the page with the parser found on previous step
 #    6. Archives the page in background, for the archivers that apply to the current URL
+#    7. Get metrics for the current URL, in background
 #  * Parse as oEmbed
 #    1. Get media the json data
 #    2. If the page has an oEmbed url, request it and get the response
 #    2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media json data
 
 class Media
-  [ActiveModel::Validations, ActiveModel::Conversion, MediasHelper, MediaOembed, MediaArchiver].each { |concern| include concern }
+  [ActiveModel::Validations, ActiveModel::Conversion, MediasHelper, MediaOembed, MediaArchiver, MediaMetrics].each { |concern| include concern }
   extend ActiveModel::Naming
 
   attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :key
@@ -74,11 +75,12 @@ class Media
       Pender::Store.write(Media.get_id(self.original_url), :json, cleanup_data_encoding(data))
     end
     self.archive(options.delete(:archivers))
+    self.get_metrics
     Pender::Store.read(Media.get_id(self.original_url), :json)
   end
 
-  # Parsers and archivers
-  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaDropboxItem, MediaTiktokItem, MediaTiktokProfile, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg, MediaPermaCcArchiver].each { |concern| include concern }
+  # Parsers, archivers and metrics
+  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaDropboxItem, MediaTiktokItem, MediaTiktokProfile, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg, MediaPermaCcArchiver, MediaFacebookEngagementMetrics].each { |concern| include concern }
 
   def self.minimal_data(instance)
     data = {}
@@ -87,6 +89,7 @@ class Media
     end
     data[:raw] = {}
     data[:archives] = {}
+    data[:metrics] = {}
     data.merge(Media.required_fields(instance)).with_indifferent_access
   end
 
@@ -116,6 +119,35 @@ class Media
 
   def self.get_id(url)
     Digest::MD5.hexdigest(Media.normalize_url(url))
+  end
+
+  def self.update_cache(url, newdata)
+    id = Media.get_id(url)
+    data = Pender::Store.read(id, :json)
+    unless data.blank?
+      newdata.each do |key, value|
+        data[key] = data[key].is_a?(Hash) ? data[key].merge(value) : value
+      end
+      data['webhook_called'] = @webhook_called ? 1 : 0
+      Pender::Store.write(id, :json, data)
+    end
+  end
+
+  def self.notify_webhook(type, url, data, settings)
+    if settings['webhook_url'] && settings['webhook_token']
+      uri = URI.parse(settings['webhook_url'])
+      payload = data.merge({ url: url, type: type }).to_json
+      sig = 'sha1=' + OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), settings['webhook_token'], payload)
+      headers = { 'Content-Type': 'text/json', 'X-Signature': sig }
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = uri.scheme == 'https'
+      request = Net::HTTP::Post.new(uri.request_uri, headers)
+      request.body = payload
+      response = http.request(request)
+      Rails.logger.info "[Webhook] Sending #{url} to webhook: Code: #{response.code} Response: #{response.body}"
+      @webhook_called = true
+    end
+    true
   end
 
   protected
@@ -336,5 +368,4 @@ class Media
       ''
     end
   end
-
 end
