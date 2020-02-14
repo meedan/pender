@@ -12,6 +12,8 @@ development: &default
   cc_deville_httpauth: 'username:password'
   facebook_app_id:
   facebook_app_secret:
+  facebook_test_app_id:
+  facebook_test_app_secret:
   public_url:
   redis_host: 'localhost'
   redis_port: 6379
@@ -21,6 +23,7 @@ development: &default
   proxy_port:
   proxy_user_prefix:
   proxy_password:
+  storage:
   hosts:
     one.host:
       cf_credentials: 1234:5678
