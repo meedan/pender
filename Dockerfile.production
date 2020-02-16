@@ -1,7 +1,7 @@
 # meedan/pender
 # https://github.com/meedan/pender
 
-FROM ruby:2.4-slim-buster as builder
+FROM ruby:2.4-slim-buster
 MAINTAINER sysops@meedan.com
 
 ENV DEPLOYUSER=pender \
@@ -19,7 +19,7 @@ ENV DEPLOYUSER=pender \
 COPY production/bin /opt/bin/
 RUN chmod 755 /opt/bin/*.sh
 
-RUN apt-get update && apt-get install --no-install-recommends -y build-essential git libpq-dev libsqlite3-dev
+RUN apt-get update && apt-get install --no-install-recommends -y build-essential git libpq-dev libsqlite3-dev graphicsmagick inotify-tools
 
 # pender user
 RUN useradd ${DEPLOYUSER} -s /bin/bash -m
