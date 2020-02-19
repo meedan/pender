@@ -1014,12 +1014,16 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should get metrics from Facebook" do
     Media.unstub(:request_metrics_from_facebook)
-    url = 'https://www.google.com/'
-    m = create_media url: url
-    m.as_json
-    id = Media.get_id(url)
-    data = Pender::Store.read(id, :json)
-    assert data['metrics']['facebook']['share_count'] > 0
+    app_id = CONFIG['facebook_test_app_id'] || CONFIG['facebook_app_id']
+    app_secret = CONFIG['facebook_test_app_secret'] || CONFIG['facebook_app_secret']
+    stub_configs({ 'facebook_app_id' => app_id, 'facebook_app_secret' => app_secret }) do
+      url = 'https://www.google.com/'
+      m = create_media url: url
+      m.as_json
+      id = Media.get_id(url)
+      data = Pender::Store.read(id, :json)
+      assert data['metrics']['facebook']['share_count'] > 0
+    end
     Media.stubs(:request_metrics_from_facebook).raises(StandardError.new)
     url = 'https://meedan.com'
     m = create_media url: url
