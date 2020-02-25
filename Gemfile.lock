@@ -137,7 +137,7 @@ GEM
       metaclass (~> 0.0.1)
     multipart-post (2.0.0)
     naught (1.1.0)
-    nokogiri (1.10.3)
+    nokogiri (1.10.8)
       mini_portile2 (~> 2.4.0)
     open_uri_redirections (0.2.1)
     parallel (1.12.1)
@@ -300,7 +300,7 @@ DEPENDENCIES
   mida
   minitest-retry
   mocha
-  nokogiri (= 1.10.3)
+  nokogiri (= 1.10.8)
   open_uri_redirections
   parallel_tests
   pg
