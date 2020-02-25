@@ -153,7 +153,8 @@ GEM
     public_suffix (2.0.5)
     puma (3.11.0)
     rack (1.6.12)
-    rack-cors (1.0.2)
+    rack-cors (1.0.5)
+      rack (>= 1.6.0)
     rack-protection (2.0.1)
       rack
     rack-test (0.6.3)
