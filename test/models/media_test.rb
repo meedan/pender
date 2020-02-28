@@ -1032,4 +1032,13 @@ class MediaTest < ActiveSupport::TestCase
     data = Pender::Store.read(id, :json)
     assert_equal({}, data['metrics'])
   end
+
+  test "should get metrics from Facebook when URL has non-ascii" do
+    Media.unstub(:request_metrics_from_facebook)
+    assert_nothing_raised do
+      response = Media.request_metrics_from_facebook("http://www.facebook.com/people/\u091C\u0941\u0928\u0948\u0926-\u0905\u0939\u092E\u0926/100014835514496")
+      assert_kind_of Hash, response
+    end
+  end
+
 end
