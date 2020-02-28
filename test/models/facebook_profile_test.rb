@@ -149,7 +149,6 @@ class FacebookProfileTest < ActiveSupport::TestCase
   test "should parse Facebook user profile using user token" do
     variations = %w(
       https://facebook.com/100001147915899
-      https://www.facebook.com/100001147915899
     )
     variations.each do |url|
       media = create_media url: url
