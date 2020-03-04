@@ -5,7 +5,7 @@ MAINTAINER Meedan <sysops@meedan.com>
 ENV RAILS_ENV development
 
 # install dependencies
-RUN apt-get update -qq && apt-get install -y build-essential git graphicsmagick inotify-tools libsqlite3-dev libpq-dev --no-install-recommends
+RUN apt-get update -qq && apt-get install -y curl build-essential git graphicsmagick inotify-tools libsqlite3-dev libpq-dev --no-install-recommends
 
 # install our app
 RUN mkdir -p /app

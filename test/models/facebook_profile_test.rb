@@ -149,7 +149,6 @@ class FacebookProfileTest < ActiveSupport::TestCase
   test "should parse Facebook user profile using user token" do
     variations = %w(
       https://facebook.com/100001147915899
-      https://www.facebook.com/100001147915899
     )
     variations.each do |url|
       media = create_media url: url
@@ -177,15 +176,6 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
-  end
-
-  test "should parse numeric Facebook profile" do
-    m = create_media url: 'https://facebook.com/100013581666047'
-    data = m.as_json
-    assert_equal 'José Silva', data['title']
-    assert_equal 'José-Silva', data['username']
-    assert_match /^http/, data['picture']
-    assert_not_equal '', data['description'].to_s
   end
 
   # http://errbit.test.meedan.net/apps/576218088583c6f1ea000231/problems/57a1bf968583c6f1ea000c01

@@ -20,7 +20,7 @@ module MediaFacebookEngagementMetrics
       response = Net::HTTP.get_response(URI(api))
       token = JSON.parse(response.body)['access_token']
       api = "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=#{token}"
-      response = Net::HTTP.get_response(URI(api))
+      response = Net::HTTP.get_response(URI(URI.encode(api)))
       JSON.parse(response.body)['engagement']
     end
 
@@ -28,7 +28,7 @@ module MediaFacebookEngagementMetrics
       value = begin
                 self.request_metrics_from_facebook(url)
               rescue StandardError => e
-                Airbrake.notify(e) if Airbrake.configured?
+                Airbrake.notify(e, url: url) if Airbrake.configured?
                 {}
               end
       Media.notify_webhook_and_update_metrics_cache(url, 'facebook', value, key_id)
