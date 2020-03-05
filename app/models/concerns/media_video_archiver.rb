@@ -19,7 +19,7 @@ module MediaVideoArchiver
       return if !supported_video?(url) || notify_video_already_archived(url, key_id)
       local_folder = self.tmp_archiving_folder(url)
       Media.give_up('video_archiver', url, key_id, attempts, response) and return
-      response = system "youtube-dl #{url} -q --write-all-thumbnails --write-info-json --all-subs -f 'ogg/mp4/webm' -o '#{local_folder}/%(id)s.%(ext)s'"
+      response = system("youtube-dl", "#{url} -q --write-all-thumbnails --write-info-json --all-subs -f 'ogg/mp4/webm' -o '#{local_folder}/%(id)s.%(ext)s'", out: '/dev/null')
 
       if response
         ArchiveVideoWorker.perform_async(url, local_folder, self.archiving_folder, key_id)
@@ -45,7 +45,7 @@ module MediaVideoArchiver
     end
 
     def supported_video?(url)
-      system "youtube-dl #{url} -g -q"
+      system("youtube-dl", "#{url} -g -q", out: '/dev/null')
     end
   end
 end
