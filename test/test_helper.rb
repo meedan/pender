@@ -43,6 +43,7 @@ class ActiveSupport::TestCase
     Media.any_instance.stubs(:archive_to_archive_is).returns(nil)
     Media.any_instance.stubs(:archive_to_archive_org).returns(nil)
     Media.any_instance.stubs(:archive_to_perma_cc).returns(nil)
+    Media.any_instance.stubs(:archive_to_video).returns(nil)
     Media.any_instance.unstub(:parse)
     OpenURI.unstub(:open_uri)
     Twitter::REST::Client.any_instance.unstub(:user)
@@ -73,6 +74,7 @@ class ActiveSupport::TestCase
     Media.any_instance.unstub(:archive_to_archive_is)
     Media.any_instance.unstub(:archive_to_archive_org)
     Media.any_instance.unstub(:archive_to_perma_cc)
+    Media.any_instance.unstub(:archive_to_video)
     Media::ARCHIVERS['archive_is'][:enabled] = false
     CONFIG.unstub(:[])
     clear_bucket
@@ -80,11 +82,13 @@ class ActiveSupport::TestCase
 
   def clear_bucket(options = {})
     resource = Aws::S3::Resource.new
-    bucket = resource.bucket(Pender::Store.bucket_name)
-    if bucket.exists?
-      bucket.objects.each { |obj| obj.delete }
-    else
-      bucket.create if options.dig(:create)
+    [Pender::Store.bucket_name, Pender::Store.video_bucket_name].each do |name|
+      bucket = resource.bucket(name)
+      if bucket.exists?
+        bucket.objects.each { |obj| obj.delete }
+      else
+        bucket.create if options.dig(:create)
+      end
     end
   end
 
