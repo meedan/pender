@@ -507,8 +507,29 @@ class ArchiverTest < ActiveSupport::TestCase
 
     ArchiveVideoWorker.drain
     data = m.as_json
+    assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
     assert_equal "#{File.join(Media.archiving_folder, id)}/1202732707597307905.mp4", data.dig('archives', 'video_archiver', 'location')
     assert_equal File.join(Media.archiving_folder, id), data.dig('archives', 'video_archiver', 'path')
+  end
+
+  test "should handle error and update cache when archiving fails" do
+    Sidekiq::Testing.fake!
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://twitter.com/meedan/status/1202732707597307905'
+    id = Media.get_id url
+
+    assert_equal 0, ArchiveVideoWorker.jobs.size
+    m = create_media url: url, key: a
+    data = m.as_json
+    assert_nil data.dig('archives', 'video_archiver')
+    Media.archive_video(url, a.id)
+    assert_equal 1, ArchiveVideoWorker.jobs.size
+
+    Pender::Store.stubs(:upload_video_folder).raises(StandardError.new('upload error'))
+    ArchiveVideoWorker.drain
+    data = m.as_json
+    assert_not_nil data.dig('archives', 'video_archiver', 'error', 'message')
+    Pender::Store.unstub(:upload_video_folder)
   end
 
   test "should generate the public archiving folder for videos" do
