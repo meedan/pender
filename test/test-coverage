@@ -1,0 +1,16 @@
+#!/bin/bash
+if [[ "$TRAVIS_PULL_REQUEST" == "false" ]] && [[ $TRAVIS_TEST_RESULT == 0 ]]
+then
+  apt-get install -y golang-go golang-glide
+  printf '#!/bin/bash\ngo run /tmp/go/src/github.com/codeclimate/test-reporter/main.go $@\n' > test/cc-test-reporter && chmod +x test/cc-test-reporter
+  export GOPATH=/tmp/go
+  rm -rf /tmp/go/src/github.com/codeclimate
+  mkdir -p /tmp/go/src/github.com/codeclimate
+  git clone https://github.com/meedan/test-reporter /tmp/go/src/github.com/codeclimate/test-reporter
+  cd test
+  ./cc-test-reporter show-coverage --help
+  ./cc-test-reporter format-coverage -t simplecov --output ../coverage/codeclimate.json ../coverage/.resultset.json
+  cat ../coverage/codeclimate.json | ./cc-test-reporter upload-coverage --input -
+  ./cc-test-reporter show-coverage ../coverage/codeclimate.json
+  cd -
+fi
