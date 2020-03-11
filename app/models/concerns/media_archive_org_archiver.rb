@@ -2,7 +2,7 @@ module MediaArchiveOrgArchiver
   extend ActiveSupport::Concern
 
   included do
-    Media.declare_archiver('archive_org', [/^.*$/], :only)
+    Media.declare_archiver('archive_org', [/^.*$/], :only, false)
   end
 
   def archive_to_archive_org
