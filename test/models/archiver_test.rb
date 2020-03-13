@@ -134,6 +134,37 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive)
   end
 
+  test "should update media with error when reques to Archive.org fails" do
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    Media.any_instance.stubs(:archive)
+
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://example.com'
+
+    assert_nothing_raised do
+      m = Media.new url: url
+      data = m.as_json
+      assert m.data.dig('archives', 'archive_org').nil?
+      WebMock.stub_request(:any, /web.archive.org/).to_raise(Net::ReadTimeout)
+      Media.send_to_archive_org(url, a.id)
+      media_data = Pender::Store.read(Media.get_id(url), :json)
+      assert_match /Could not archive/, media_data.dig('archives', 'archive_org', 'error', 'message')
+    end
+
+    WebMock.disable!
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
+    Media.any_instance.unstub(:archive)
+  end
+
   test "should not raise error and update media when unexpected response from Archive.is" do
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'archive.is' }
