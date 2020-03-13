@@ -27,7 +27,7 @@ module MediaArchiveOrgArchiver
         response = http.request(request)
         Rails.logger.info "[Archiver Archive.org] Sending #{url} to Archive.org: Code: #{response.code}"
 
-        if location = response['content-location'] || response['location']
+        if location = (response['content-location'] || response['location'])
           data = { location: 'https://web.archive.org' + location }
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
         else
