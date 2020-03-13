@@ -2,6 +2,10 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 
 class ArchiverTest < ActiveSupport::TestCase
 
+  def teardown
+    FileUtils.rm_rf(File.join(Rails.root, 'tmp', 'videos'))
+  end
+
   test "should skip screenshots" do
     config = CONFIG['archiver_skip_hosts']
 
@@ -508,8 +512,36 @@ class ArchiverTest < ActiveSupport::TestCase
     ArchiveVideoWorker.drain
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
-    assert_equal "#{File.join(Media.archiving_folder, id)}/1202732707597307905.mp4", data.dig('archives', 'video_archiver', 'location')
-    assert_equal File.join(Media.archiving_folder, id), data.dig('archives', 'video_archiver', 'path')
+    assert_equal "#{File.join(Media.archiving_folder, id)}/#{id}.mp4", data.dig('archives', 'video_archiver', 'location')
+  end
+
+  test "should archive video info subtitles and thumbnails" do
+    Sidekiq::Testing.fake!
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://www.youtube.com/watch?v=1vSJrexmVWU'
+    id = Media.get_id url
+
+    assert_equal 0, ArchiveVideoWorker.jobs.size
+    m = create_media url: url, key: a
+    data = m.as_json
+    assert_nil data.dig('archives', 'video_archiver')
+    Media.archive_video(url, a.id)
+    assert_equal 1, ArchiveVideoWorker.jobs.size
+
+    ArchiveVideoWorker.drain
+    data = m.as_json
+    assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
+    folder = File.join(Media.archiving_folder, id)
+    assert_equal ['info', 'location', 'subtitles', 'thumbnails', 'videos'], data.dig('archives', 'video_archiver').keys.sort
+    assert_equal "#{folder}/#{id}.mp4", data.dig('archives', 'video_archiver', 'location')
+    assert_equal "#{folder}/#{id}.info.json", data.dig('archives', 'video_archiver', 'info')
+    assert_equal "#{folder}/#{id}.mp4", data.dig('archives', 'video_archiver', 'videos').first
+    data.dig('archives', 'video_archiver', 'subtitles').each do |sub|
+      assert_match /\A#{folder}\/#{id}.*\.vtt\z/, sub
+    end
+    data.dig('archives', 'video_archiver', 'thumbnails').each do |thumb|
+      assert_match /\A#{folder}\/#{id}.*\.jpg\z/, thumb
+    end
   end
 
   test "should handle error and update cache when archiving fails" do
