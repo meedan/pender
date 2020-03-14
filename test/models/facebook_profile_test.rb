@@ -399,10 +399,10 @@ class FacebookProfileTest < ActiveSupport::TestCase
   test "should parse Facebook video url from a profile" do
     m = create_media url: 'https://www.facebook.com/edwinscott143/videos/vb.737361619/10154242961741620/?type=2&theater'
     d = m.as_json
-    assert_match /Eddie Scott/, d['title']
+    assert_match /Eddie/, d['title']
     assert_equal 'item', d['type']
     assert_match /^http/, d['picture']
-    assert_match /14146479_10154242963196620_407850789/, d['picture']
+    assert_match /10154242961741620/, d['picture']
     assert_not_nil d['author_picture']
     assert_not_nil Time.parse(d['published_at'])
   end
