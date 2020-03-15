@@ -95,7 +95,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal 'http://facebook.com/5823419603', data['author_url']
     assert_equal 'https://graph.facebook.com/5823419603/picture', data['author_picture']
     assert_match /^https/, data['picture']
-    assert_match /14926650_10154783812779604_1342878673929240576/, data['picture']
+    assert_match /10154783484119604/, data['picture']
   end
 
   test "should parse Facebook removed live post" do
@@ -168,10 +168,10 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /Tailgunner! #Lancaster #Aircraft #Plane #WW2 #IronMaiden #TheBookOfSoulsWorldTour #Canada #Toronto #CWHM/, d['description']
     assert_not_nil d['published_at']
     assert_equal 'ironmaiden', d['username']
-    assert_equal 'Iron Maiden', d['author_name']
+    assert_match /Iron Maiden/, d['author_name']
     assert_equal 'http://facebook.com/172685102050', d['author_url']
     assert_equal 'https://graph.facebook.com/172685102050/picture', d['author_picture']
-    assert_match /20131236_10154578000322051_2916467421743153152/, d['picture']
+    assert_match /10154577999342051/, d['picture']
     assert_match /Iron Maiden/, d['title']
   end
 
