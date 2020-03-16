@@ -57,7 +57,7 @@ class ArchiverTest < ActiveSupport::TestCase
   test "should archive to Archive.org" do
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    urls = ['https://twitter.com/marcouza/status/875424957613920256', 'https://twitter.com/marcouza/status/863907872421412864']
+    urls = ['https://twitter.com/marcouza/status/875424957613920256', 'https://twitter.com/marcouza/status/863907872421412864', 'https://twitter.com/ozm/status/1217826699183841280']
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
     WebMock.disable_net_connect!(allow: allowed_sites)
@@ -66,10 +66,17 @@ class ArchiverTest < ActiveSupport::TestCase
       WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: {})
       m = create_media url: urls[0], key: a
       data = m.as_json
+      assert_not_nil data['archives']['archive_org']['error']['message']
 
       WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
       m = create_media url: urls[1], key: a
       data = m.as_json
+      assert_equal 'https://web.archive.org/web/123456/test', data['archives']['archive_org']['location']
+
+      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'location' => 'https://web.archive.org/web/123456/test' })
+      m = create_media url: urls[2], key: a
+      data = m.as_json
+      assert_equal 'https://web.archive.org/web/123456/test', data['archives']['archive_org']['location']
     end
 
     WebMock.disable!
