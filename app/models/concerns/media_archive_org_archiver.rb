@@ -29,7 +29,9 @@ module MediaArchiveOrgArchiver
 
         location = response['content-location'] || response['location']
         if location
-          data = { location: 'https://web.archive.org' + location }
+          address = 'https://web.archive.org'
+          location = address + location unless location.starts_with?(address)
+          data = { location: location }
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
         else
           Media.delay_for(3.minutes).send_to_archive_org(url, key_id, attempts + 1, {code: response.code, message: response.message})
