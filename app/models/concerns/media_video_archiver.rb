@@ -16,9 +16,7 @@ module MediaVideoArchiver
     end
 
     def archive_video(url, key_id, supported = nil, attempts = 1, response = nil)
-      Media.give_up('video_archiver', url, key_id, attempts, response) and return
-
-      begin
+      handle_archiving_exceptions('video_archiver', :archive_video, 1.hour, url, key_id, attempts) do
         supported = supported_video?(url) if supported.nil?
         return if supported.is_a?(FalseClass) || notify_video_already_archived(url, key_id)
         id = Media.get_id(url)
@@ -31,11 +29,6 @@ module MediaVideoArchiver
         else
           Media.delay_for(3.minutes).archive_video(url, key_id, supported, attempts + 1, {message: '[Youtube-DL] Cannot download video data', code: 5})
         end
-      rescue StandardError => e
-        Media.delay_for(1.hour).archive_video(url, key_id, attempts + 1, {code: 5, message: e.message})
-        Rails.logger.info "[Youtube-DL] Could not archive: #{e.message}"
-        data = { error: { message: I18n.t(:could_not_archive, error_message: e.message), code: 5 }}
-        Media.notify_webhook_and_update_cache('video_archiver', url, data, key_id)
       end
     end
 

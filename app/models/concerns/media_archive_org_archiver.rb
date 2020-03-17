@@ -18,7 +18,7 @@ module MediaArchiveOrgArchiver
     def send_to_archive_org(url, key_id, attempts = 1, response = nil)
       Media.give_up('archive_org', url, key_id, attempts, response) and return
 
-      begin
+      handle_archiving_exceptions('archive_org', :send_to_archive_org, 24.hours, url, key_id, attempts) do
         encoded_uri = URI.encode(URI.decode(url))
         uri = URI.parse("https://web.archive.org/save/#{encoded_uri}")
         http = Net::HTTP.new(uri.host, uri.port)
@@ -36,11 +36,6 @@ module MediaArchiveOrgArchiver
         else
           Media.delay_for(3.minutes).send_to_archive_org(url, key_id, attempts + 1, {code: response.code, message: response.message})
         end
-      rescue StandardError => e
-        Media.delay_for(24.hours).send_to_archive_org(url, key_id, attempts + 1, {code: 5, message: e.message})
-        Rails.logger.info "[Archiver Archive.org] Could not archive: #{e.message}"
-        data = { error: { message: I18n.t(:could_not_archive, error_message: e.message), code: 5 }}
-        Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
       end
     end
   end
