@@ -491,11 +491,11 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.stubs(:notify_video_already_archived).with(url, a.id).returns(nil)
 
     assert_difference 'ArchiveVideoWorker.jobs.size', 1 do
-      Media.archive_video(url, a.id)
+      Media.send_to_video_archiver(url, a.id)
     end
 
     assert_no_difference 'ArchiveVideoWorker.jobs.size' do
-      Media.archive_video(url, a.id, false)
+      Media.send_to_video_archiver(url, a.id, false)
     end
 
     not_video_url = 'https://twitter.com/meedan/status/1214263820484521985'
@@ -503,7 +503,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.stubs(:notify_video_already_archived).with(not_video_url, a.id).returns(nil)
 
     assert_no_difference 'ArchiveVideoWorker.jobs.size' do
-      Media.archive_video(not_video_url, a.id)
+      Media.send_to_video_archiver(not_video_url, a.id)
     end
 
     Media.unstub(:supported_video?)
@@ -548,7 +548,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m = create_media url: url, key: a
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
-    Media.archive_video(url, a.id)
+    Media.send_to_video_archiver(url, a.id)
     assert_equal 1, ArchiveVideoWorker.jobs.size
 
     ArchiveVideoWorker.drain
@@ -567,7 +567,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m = create_media url: url, key: a
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
-    Media.archive_video(url, a.id)
+    Media.send_to_video_archiver(url, a.id)
     assert_equal 1, ArchiveVideoWorker.jobs.size
 
     ArchiveVideoWorker.drain
@@ -596,7 +596,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m = create_media url: url, key: a
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
-    Media.archive_video(url, a.id)
+    Media.send_to_video_archiver(url, a.id)
     assert_equal 1, ArchiveVideoWorker.jobs.size
 
     Pender::Store.stubs(:upload_video_folder).raises(StandardError.new('upload error'))
@@ -621,7 +621,7 @@ class ArchiverTest < ActiveSupport::TestCase
       data = m.as_json
       assert m.data.dig('archives', 'video_archiver').nil?
       Media.stubs(:supported_video?).with(url).raises(StandardError)
-      Media.archive_video(url, a.id)
+      Media.send_to_video_archiver(url, a.id)
       media_data = Pender::Store.read(Media.get_id(url), :json)
       assert_match /Could not archive/, media_data.dig('archives', 'video_archiver', 'error', 'message')
     end

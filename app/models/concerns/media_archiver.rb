@@ -77,11 +77,11 @@ module MediaArchiver
       # url_hash(url) + '.png'
     end
 
-    def handle_archiving_exceptions(archiver, archive_method, delay_time, url, key_id, attempts)
+    def handle_archiving_exceptions(archiver, delay_time, url, key_id, attempts)
       begin
         yield
       rescue StandardError => error
-        Media.delay_for(delay_time).send(archive_method, url, key_id, attempts + 1, {code: 5, message: error.message})
+        Media.delay_for(delay_time).send("send_to_#{archiver}", url, key_id, attempts + 1, {code: 5, message: error.message})
         Rails.logger.info "[#{archiver}] Could not archive: #{error.message}"
         data = { error: { message: I18n.t(:could_not_archive, error_message: error.message), code: 5 }}
         Media.notify_webhook_and_update_cache(archiver, url, data, key_id)

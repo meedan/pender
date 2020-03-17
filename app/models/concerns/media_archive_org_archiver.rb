@@ -18,7 +18,7 @@ module MediaArchiveOrgArchiver
     def send_to_archive_org(url, key_id, attempts = 1, response = nil)
       Media.give_up('archive_org', url, key_id, attempts, response) and return
 
-      handle_archiving_exceptions('archive_org', :send_to_archive_org, 24.hours, url, key_id, attempts) do
+      handle_archiving_exceptions('archive_org', 24.hours, url, key_id, attempts) do
         encoded_uri = URI.encode(URI.decode(url))
         uri = URI.parse("https://web.archive.org/save/#{encoded_uri}")
         http = Net::HTTP.new(uri.host, uri.port)
