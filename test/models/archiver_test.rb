@@ -494,6 +494,10 @@ class ArchiverTest < ActiveSupport::TestCase
       Media.archive_video(url, a.id)
     end
 
+    assert_no_difference 'ArchiveVideoWorker.jobs.size' do
+      Media.archive_video(url, a.id, false)
+    end
+
     not_video_url = 'https://twitter.com/meedan/status/1214263820484521985'
     Media.stubs(:supported_video?).with(not_video_url).returns(true)
     Media.stubs(:notify_video_already_archived).with(not_video_url, a.id).returns(nil)
@@ -582,7 +586,7 @@ class ArchiverTest < ActiveSupport::TestCase
     end
   end
 
-  test "should handle error and update cache when archiving fails" do
+  test "should handle error and update cache when archiving video fails" do
     Sidekiq::Testing.fake!
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1202732707597307905'
@@ -600,6 +604,34 @@ class ArchiverTest < ActiveSupport::TestCase
     data = m.as_json
     assert_not_nil data.dig('archives', 'video_archiver', 'error', 'message')
     Pender::Store.unstub(:upload_video_folder)
+  end
+
+  test "should update media with error when youtube-dl call fails on video archiving" do
+    Sidekiq::Testing.fake!
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://example.com'
+
+    assert_nothing_raised do
+      m = Media.new url: url
+      data = m.as_json
+      assert m.data.dig('archives', 'video_archiver').nil?
+      Media.stubs(:supported_video?).with(url).raises(StandardError)
+      Media.archive_video(url, a.id)
+      media_data = Pender::Store.read(Media.get_id(url), :json)
+      assert_match /Could not archive/, media_data.dig('archives', 'video_archiver', 'error', 'message')
+    end
+
+    WebMock.disable!
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
+    Media.unstub(:supported_video?)
   end
 
   test "should generate the public archiving folder for videos" do

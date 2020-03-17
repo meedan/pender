@@ -15,17 +15,27 @@ module MediaVideoArchiver
       self.delay_for(15.seconds).archive_video(url, key_id)
     end
 
-    def archive_video(url, key_id, attempts = 1, response = nil)
-      return if !supported_video?(url) || notify_video_already_archived(url, key_id)
-      id = Media.get_id(url)
-      local_folder = File.join(Rails.root, 'tmp', 'videos', id)
+    def archive_video(url, key_id, supported = nil, attempts = 1, response = nil)
       Media.give_up('video_archiver', url, key_id, attempts, response) and return
-      response = system("youtube-dl", url, "-o#{local_folder}/#{id}.%(ext)s", "--restrict-filenames", "--no-warnings", "-q", "--write-all-thumbnails", "--write-info-json", "--all-subs", "-fogg/mp4/webm",  out: '/dev/null')
 
-      if response
-        ArchiveVideoWorker.perform_async(url, local_folder, self.archiving_folder, key_id)
-      else
-        Media.delay_for(3.minutes).archive_video(url, key_id, attempts + 1, {message: '[Youtube-DL] Cannot download video data', code: 5})
+      begin
+        supported = supported_video?(url) if supported.nil?
+        return if supported.is_a?(FalseClass) || notify_video_already_archived(url, key_id)
+        id = Media.get_id(url)
+        local_folder = File.join(Rails.root, 'tmp', 'videos', id)
+        Media.give_up('video_archiver', url, key_id, attempts, response) and return
+        response = system("youtube-dl", url, "-o#{local_folder}/#{id}.%(ext)s", "--restrict-filenames", "--no-warnings", "-q", "--write-all-thumbnails", "--write-info-json", "--all-subs", "-fogg/mp4/webm",  out: '/dev/null')
+
+        if response
+          ArchiveVideoWorker.perform_async(url, local_folder, self.archiving_folder, key_id)
+        else
+          Media.delay_for(3.minutes).archive_video(url, key_id, supported, attempts + 1, {message: '[Youtube-DL] Cannot download video data', code: 5})
+        end
+      rescue StandardError => e
+        Media.delay_for(1.hour).archive_video(url, key_id, attempts + 1, {code: 5, message: e.message})
+        Rails.logger.info "[Youtube-DL] Could not archive: #{e.message}"
+        data = { error: { message: I18n.t(:could_not_archive, error_message: e.message), code: 5 }}
+        Media.notify_webhook_and_update_cache('video_archiver', url, data, key_id)
       end
     end
 
