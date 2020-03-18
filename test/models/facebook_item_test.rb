@@ -209,12 +209,13 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /^http/, d['author_picture']
   end
 
-  test "should redirect Facebook URL" do
-    m = create_media url: 'https://www.facebook.com/profile.php?id=100001147915899'
-    d = m.as_json
-    assert_equal 'caiosba', d['username']
-    assert_equal 'https://www.facebook.com/caiosba', d['url']
-  end
+  # #8137: FIXME Flaky test
+  #test "should redirect Facebook URL" do
+  #  m = create_media url: 'https://www.facebook.com/profile.php?id=100001147915899'
+  #  d = m.as_json
+  #  assert_equal 'caiosba', d['username']
+  #  assert_equal 'https://www.facebook.com/caiosba', d['url']
+  #end
 
   test "should parse facebook page item" do
     m = create_media url: 'https://www.facebook.com/dina.hawary/posts/10158416884740321'
@@ -356,14 +357,15 @@ class FacebookItemTest < ActiveSupport::TestCase
     Airbrake.unstub(:notify)
   end
 
-  test "should store data of a profile returned by facebook API" do
-    m = create_media url: 'https://www.facebook.com/profile.php?id=100008161175765&fref=ts'
-    data = m.as_json
+  # #8137: FIXME Flaky test
+  #test "should store data of a profile returned by facebook API" do
+  #  m = create_media url: 'https://www.facebook.com/profile.php?id=100008161175765&fref=ts'
+  #  data = m.as_json
 
-    assert_equal 'Tico-Santa-Cruz', data[:username]
-    assert_equal 'Tico Santa Cruz', data[:title]
-    assert !data[:picture].blank?
-  end
+  #  assert_equal 'Tico-Santa-Cruz', data[:username]
+  #  assert_equal 'Tico Santa Cruz', data[:title]
+  #  assert !data[:picture].blank?
+  #end
 
   test "should store data of post returned by oembed" do
     m = create_media url: 'https://www.facebook.com/teste637621352/posts/1028416870556238'
@@ -389,14 +391,15 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal "Facebook", data['raw']['oembed']['provider_name']
   end
 
-  test "should store oembed data of a facebook profile" do
-    m = create_media url: 'https://www.facebook.com/profile.php?id=100008161175765&fref=ts'
-    data = m.as_json
+  # #8137: FIXME Flaky test
+  #test "should store oembed data of a facebook profile" do
+  #  m = create_media url: 'https://www.facebook.com/profile.php?id=100008161175765&fref=ts'
+  #  data = m.as_json
 
-    assert_nil data['raw']['oembed']
-    assert_equal 'Tico-Santa-Cruz', data['oembed']['author_name']
-    assert_equal 'Tico Santa Cruz', data['oembed']['title']
-  end
+  #  assert_nil data['raw']['oembed']
+  #  assert_equal 'Tico-Santa-Cruz', data['oembed']['author_name']
+  #  assert_equal 'Tico Santa Cruz', data['oembed']['title']
+  #end
 
   test "should store oembed data of a facebook page" do
     m = create_media url: 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
