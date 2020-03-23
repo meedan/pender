@@ -54,5 +54,5 @@ Rails.application.configure do
     options
   end
   config.lograge.formatter = Lograge::Formatters::Json.new
-  config.log_level = :debug
+  config.log_level = :warn
 end

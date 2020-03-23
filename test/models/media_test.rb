@@ -38,7 +38,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should not normalize URL" do
     urls = %w(
       https://meedan.com/
-      http://ios.ba/
+      https://example.com/
       https://ca.ios.ba/?foo=bar
     )
     urls.each do |url|
