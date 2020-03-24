@@ -558,6 +558,9 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should archive video info subtitles and thumbnails" do
+    config = CONFIG['proxy_host']
+    CONFIG['proxy_host'] = ''
+
     Sidekiq::Testing.fake!
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://www.youtube.com/watch?v=1vSJrexmVWU'
@@ -584,6 +587,7 @@ class ArchiverTest < ActiveSupport::TestCase
     data.dig('archives', 'video_archiver', 'thumbnails').each do |thumb|
       assert_match /\A#{folder}\/#{id}.*\.jpg\z/, thumb
     end
+    CONFIG['proxy_host'] = config
   end
 
   test "should handle error and update cache when archiving video fails" do
@@ -646,6 +650,25 @@ class ArchiverTest < ActiveSupport::TestCase
 
     CONFIG.stubs(:dig).with('storage', 'video_asset_path').returns('http://public-storage/my-videos')
     assert_equal "http://public-storage/my-videos", Media.archiving_folder
+
+    CONFIG.unstub(:dig)
+  end
+
+  test "should use proxy to download yt video" do
+    url = 'https://www.youtube.com/watch?v=oDNuxzfuq8M'
+
+    CONFIG.stubs(:dig).with('proxy_host').returns('example.proxy')
+    CONFIG.stubs(:dig).with('proxy_port').returns('1111')
+    CONFIG.stubs(:dig).with('proxy_user_prefix').returns('user-country')
+    CONFIG.stubs(:dig).with('proxy_pass').returns('proxy-test')
+    assert_match /http:\/\/user-session-\d+:proxy-test@example.proxy:1111/, Media.yt_download_proxy(url)
+
+    CONFIG.stubs(:dig).with('proxy_user_prefix').returns('')
+    CONFIG.stubs(:dig).with('proxy_pass').returns('')
+    assert_nil Media.yt_download_proxy(url)
+
+    CONFIG.stubs(:dig).returns(nil)
+    assert_nil Media.yt_download_proxy(url)
 
     CONFIG.unstub(:dig)
   end
