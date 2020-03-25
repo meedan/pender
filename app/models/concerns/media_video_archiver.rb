@@ -44,7 +44,7 @@ module MediaVideoArchiver
     end
 
     def supported_video?(url)
-      system("youtube-dl", url, "--restrict-filenames", "--no-warnings", "-g", "-q", out: '/dev/null')
+      system("youtube-dl", url, "--proxy=#{Media.yt_download_proxy(url)}", "--restrict-filenames", "--no-warnings", "-g", "-q", out: '/dev/null')
     end
 
     def yt_download_proxy(url)

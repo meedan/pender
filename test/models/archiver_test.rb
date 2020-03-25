@@ -564,6 +564,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Sidekiq::Testing.fake!
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://www.youtube.com/watch?v=1vSJrexmVWU'
+    Media.stubs(:supported_video?).with(url).returns(true)
     id = Media.get_id url
 
     assert_equal 0, ArchiveVideoWorker.jobs.size
@@ -588,6 +589,7 @@ class ArchiverTest < ActiveSupport::TestCase
       assert_match /\A#{folder}\/#{id}.*\.jpg\z/, thumb
     end
     CONFIG['proxy_host'] = config
+    Media.unstub(:supported_video?)
   end
 
   test "should handle error and update cache when archiving video fails" do
