@@ -50,10 +50,8 @@ module MediaVideoArchiver
     def yt_download_proxy(url)
       uri = URI.parse(url)
       return unless uri.host.match(/youtube\.com/)
-      proxy = {}
-      ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| proxy[config] = CONFIG.dig(config) }
-      proxy.values.each { |v| return if v.blank? }
-      "http://#{proxy['proxy_user_prefix'].gsub(/-country$/, "-session-#{Random.rand(100000)}")}:#{proxy['proxy_pass']}@#{proxy['proxy_host']}:#{proxy['proxy_port']}"
+      ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG.dig(config).blank? }
+      "http://#{CONFIG.dig('proxy_user_prefix').gsub(/-country$/, "-session-#{Random.rand(100000)}")}:#{CONFIG.dig('proxy_pass')}@#{CONFIG.dig('proxy_host')}:#{CONFIG.dig('proxy_port')}"
     end
   end
 end
