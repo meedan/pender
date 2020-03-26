@@ -62,6 +62,7 @@ class ActiveSupport::TestCase
     Media::ARCHIVERS['archive_org'][:enabled] = true
     clear_bucket(create: true)
     Media.stubs(:request_metrics_from_facebook).returns({ 'share_count' => 123 })
+    Media.stubs(:supported_video?).returns(false)
   end
 
   # This will run after any test

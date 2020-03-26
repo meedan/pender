@@ -513,6 +513,7 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should return false when is not supported when archive video" do
+    Media.unstub(:supported_video?)
     assert Media.supported_video?('https://twitter.com/meedan/status/1202732707597307905')
 
     assert !Media.supported_video?('https://twitter.com/meedan/status/1214263820484521985')
@@ -542,6 +543,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Sidekiq::Testing.fake!
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1202732707597307905'
+    Media.stubs(:supported_video?).with(url).returns(true)
     id = Media.get_id url
 
     assert_equal 0, ArchiveVideoWorker.jobs.size
@@ -555,6 +557,7 @@ class ArchiverTest < ActiveSupport::TestCase
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
     assert_equal "#{File.join(Media.archiving_folder, id)}/#{id}.mp4", data.dig('archives', 'video_archiver', 'location')
+    Media.unstub(:supported_video?)
   end
 
   test "should archive video info subtitles and thumbnails" do
@@ -596,6 +599,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Sidekiq::Testing.fake!
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1202732707597307905'
+    Media.stubs(:supported_video?).with(url).returns(true)
     id = Media.get_id url
 
     assert_equal 0, ArchiveVideoWorker.jobs.size
@@ -610,6 +614,7 @@ class ArchiverTest < ActiveSupport::TestCase
     data = m.as_json
     assert_not_nil data.dig('archives', 'video_archiver', 'error', 'message')
     Pender::Store.unstub(:upload_video_folder)
+    Media.unstub(:supported_video?)
   end
 
   test "should update media with error when youtube-dl call fails on video archiving" do
