@@ -6,7 +6,7 @@ then
   export GOPATH=/tmp/go
   rm -rf /tmp/go/src/github.com/codeclimate
   mkdir -p /tmp/go/src/github.com/codeclimate
-  git clone https://github.com/meedan/test-reporter /tmp/go/src/github.com/codeclimate/test-reporter
+  git clone https://github.com/codeclimate/test-reporter /tmp/go/src/github.com/codeclimate/test-reporter
   cd test
   ./cc-test-reporter show-coverage --help
   ./cc-test-reporter format-coverage -t simplecov --output ../coverage/codeclimate.json ../coverage/.resultset.json
