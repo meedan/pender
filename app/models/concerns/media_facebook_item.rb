@@ -118,7 +118,8 @@ module MediaFacebookItem
   end
 
   def get_facebook_author_name_from_html
-    author_link = self.doc.at_css('.fbPhotoAlbumActionList a') || self.doc.at_css('.uiHeaderTitle a[href^="https://"]') || self.doc.at_css('.userContentWrapper .profileLink')
+    author_link = self.doc.at_css('.fbPhotoAlbumActionList a') || self.doc.at_css('.uiHeaderTitle a[href^="https://"]') || self.doc.css('div.userContentWrapper').at_css('h5 > span.fwn > span.fcg > a') || self.doc.at_css('.userContentWrapper .profileLink')
+
     author_link.blank? ? self.get_facebook_title_from_html : author_link.text
   end
 
@@ -258,11 +259,10 @@ module MediaFacebookItem
   end
 
   def get_facebook_sharing_info
-    sharing_info = self.doc.css('div.userContentWrapper').at_css('h5 > span.fwn > span.fcg')
-    return unless sharing_info
-    if sharing_info.text.match(/shared a/) && sharing_info.at_css('span.fwb') && sharing_info.at_css('> a')
-      sharing_info.at_css('> a').attr('href')
-    end
+    sharing_info = self.doc.css('div.userContentWrapper .mtm._5pcm').css('div[data-testid="story-subtitle"] .fcg > a')
+    return if sharing_info.blank?
+    shared_url = sharing_info.attr('href')
+    absolute_url(shared_url)
   end
 
   def set_facebook_picture

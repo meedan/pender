@@ -513,6 +513,7 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should return false when is not supported when archive video" do
+    Media.unstub(:supported_video?)
     assert Media.supported_video?('https://twitter.com/meedan/status/1202732707597307905')
 
     assert !Media.supported_video?('https://twitter.com/meedan/status/1214263820484521985')
@@ -542,6 +543,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Sidekiq::Testing.fake!
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1202732707597307905'
+    Media.stubs(:supported_video?).with(url).returns(true)
     id = Media.get_id url
 
     assert_equal 0, ArchiveVideoWorker.jobs.size
@@ -555,12 +557,17 @@ class ArchiverTest < ActiveSupport::TestCase
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
     assert_equal "#{File.join(Media.archiving_folder, id)}/#{id}.mp4", data.dig('archives', 'video_archiver', 'location')
+    Media.unstub(:supported_video?)
   end
 
   test "should archive video info subtitles and thumbnails" do
+    config = CONFIG['proxy_host']
+    CONFIG['proxy_host'] = ''
+
     Sidekiq::Testing.fake!
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://www.youtube.com/watch?v=1vSJrexmVWU'
+    Media.stubs(:supported_video?).with(url).returns(true)
     id = Media.get_id url
 
     assert_equal 0, ArchiveVideoWorker.jobs.size
@@ -584,12 +591,15 @@ class ArchiverTest < ActiveSupport::TestCase
     data.dig('archives', 'video_archiver', 'thumbnails').each do |thumb|
       assert_match /\A#{folder}\/#{id}.*\.jpg\z/, thumb
     end
+    CONFIG['proxy_host'] = config
+    Media.unstub(:supported_video?)
   end
 
   test "should handle error and update cache when archiving video fails" do
     Sidekiq::Testing.fake!
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1202732707597307905'
+    Media.stubs(:supported_video?).with(url).returns(true)
     id = Media.get_id url
 
     assert_equal 0, ArchiveVideoWorker.jobs.size
@@ -604,6 +614,7 @@ class ArchiverTest < ActiveSupport::TestCase
     data = m.as_json
     assert_not_nil data.dig('archives', 'video_archiver', 'error', 'message')
     Pender::Store.unstub(:upload_video_folder)
+    Media.unstub(:supported_video?)
   end
 
   test "should update media with error when youtube-dl call fails on video archiving" do
@@ -646,6 +657,25 @@ class ArchiverTest < ActiveSupport::TestCase
 
     CONFIG.stubs(:dig).with('storage', 'video_asset_path').returns('http://public-storage/my-videos')
     assert_equal "http://public-storage/my-videos", Media.archiving_folder
+
+    CONFIG.unstub(:dig)
+  end
+
+  test "should use proxy to download yt video" do
+    url = 'https://www.youtube.com/watch?v=oDNuxzfuq8M'
+
+    CONFIG.stubs(:dig).with('proxy_host').returns('example.proxy')
+    CONFIG.stubs(:dig).with('proxy_port').returns('1111')
+    CONFIG.stubs(:dig).with('proxy_user_prefix').returns('user-country')
+    CONFIG.stubs(:dig).with('proxy_pass').returns('proxy-test')
+    assert_match /http:\/\/user-session-\d+:proxy-test@example.proxy:1111/, Media.yt_download_proxy(url)
+
+    CONFIG.stubs(:dig).with('proxy_user_prefix').returns('')
+    CONFIG.stubs(:dig).with('proxy_pass').returns('')
+    assert_nil Media.yt_download_proxy(url)
+
+    CONFIG.stubs(:dig).returns(nil)
+    assert_nil Media.yt_download_proxy(url)
 
     CONFIG.unstub(:dig)
   end

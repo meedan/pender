@@ -22,12 +22,11 @@ module MediaVideoArchiver
         id = Media.get_id(url)
         local_folder = File.join(Rails.root, 'tmp', 'videos', id)
         Media.give_up('video_archiver', url, key_id, attempts, response) and return
-        response = system("youtube-dl", url, "-o#{local_folder}/#{id}.%(ext)s", "--restrict-filenames", "--no-warnings", "-q", "--write-all-thumbnails", "--write-info-json", "--all-subs", "-fogg/mp4/webm",  out: '/dev/null')
-
+        response = system("youtube-dl", url, "--proxy=#{Media.yt_download_proxy(url)}", "-o#{local_folder}/#{id}.%(ext)s", "--restrict-filenames", "--no-warnings", "-q", "--write-all-thumbnails", "--write-info-json", "--all-subs", "-fogg/mp4/webm",  out: '/dev/null')
         if response
           ArchiveVideoWorker.perform_async(url, local_folder, self.archiving_folder, key_id)
         else
-          Media.delay_for(3.minutes).send_to_video_archiver(url, key_id, supported, attempts + 1, {message: '[Youtube-DL] Cannot download video data', code: 5})
+          Media.delay_for(5.minutes).send_to_video_archiver(url, key_id, supported, attempts + 1, {message: '[Youtube-DL] Cannot download video data', code: 5})
         end
       end
     end
@@ -45,7 +44,14 @@ module MediaVideoArchiver
     end
 
     def supported_video?(url)
-      system("youtube-dl", url, "--restrict-filenames", "--no-warnings", "-g", "-q", out: '/dev/null')
+      system("youtube-dl", url, "--proxy=#{Media.yt_download_proxy(url)}", "--restrict-filenames", "--no-warnings", "-g", "-q", out: '/dev/null')
+    end
+
+    def yt_download_proxy(url)
+      uri = URI.parse(url)
+      return unless uri.host.match(/youtube\.com/)
+      ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG.dig(config).blank? }
+      "http://#{CONFIG.dig('proxy_user_prefix').gsub(/-country$/, "-session-#{Random.rand(100000)}")}:#{CONFIG.dig('proxy_pass')}@#{CONFIG.dig('proxy_host')}:#{CONFIG.dig('proxy_port')}"
     end
   end
 end
