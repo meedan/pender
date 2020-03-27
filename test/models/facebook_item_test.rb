@@ -455,7 +455,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     url = 'https://www.facebook.com/danielafeitosa/posts/1862242233833668'
     m = create_media url: url.to_s
     data = m.as_json
-    assert_equal original_url, data.dig('original_post')
+    assert_match /facebook.com\/dcc1968/, data.dig('original_post')
     assert_match image_name, data[:picture]
   end
 
