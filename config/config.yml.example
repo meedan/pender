@@ -1,40 +1,88 @@
 development: &default
   secret_token: somethingsecret
   authorization_header: 'X-Pender-Token'
-  google_api_key: ''
-  twitter_consumer_key:
-  twitter_consumer_secret:
-  twitter_access_token:
-  twitter_access_token_secret:
-  timeout: 5 # In seconds
-  cc_deville_host:
-  cc_deville_token:
-  cc_deville_httpauth: 'username:password'
-  facebook_app_id:
-  facebook_app_secret:
-  facebook_test_app_id:
-  facebook_test_app_secret:
-  public_url:
-  redis_host: 'localhost'
+  timeout: 25
+  public_url: 'http://localhost:3200'
+  redis_host: 'redis'
   redis_port: 6379
   redis_database: 1
-  archiver_skip_hosts: 'checkmedia.org'
-  proxy_host:
-  proxy_port:
-  proxy_user_prefix:
-  proxy_password:
+
+  # File storage on S3 or API equivalent
+  #
+  # REQUIRED
+  # Use values below for local development
+  #
   storage:
+    endpoint: 'http://minio:9000'
+    access_key: 'AKIAIOSFODNN7EXAMPLE'
+    secret_key: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+    bucket: 'check-dev'
+    bucket_region: 'us-east-1'
+    video_bucket: 'pender-video'
+    video_asset_path: 'http://localhost:9000/pender-video/video'
+
+  # Cache-clearing service
+  #
+  # SOON-TO-BE-DEPRECATED
+  # Use values below
+  #
+  cc_deville_host: https://cc-aws.meedan.com
+  cc_deville_token: e1CXbbwt6s1tY8VsglaxxRbF6ghivU5o
+  cc_deville_httpauth:
+
+  # Proxy service
+  # We use Luminati https://luminati.io/
+  #
+  # OPTIONAL
+  #
+  proxy_host: '<LUMINATI HOST>'
+  proxy_port: '<LUMINATI PORT>'
+  proxy_user_prefix: '<LUMINATI ACCOUNT PREFIX>'
+  proxy_pass: '<LUMINATI ACCOUNT PASSWORD>'
+
+  # Google API to query YouTube posts
+  #
+  # REQUIRED for YouTube links
+  #
+  google_api_key: '<GOOGLE API KEY FOR YOUTUBE>'
+
+  # Twitter API to query Twitter posts
+  #
+  # REQUIRED for Twitter posts
+  #
+  twitter_consumer_key: '<TWITTER APP CONSUMER KEY>'
+  twitter_consumer_secret: '<TWITTER APP CONSUMER SECRET>'
+  twitter_access_token: '<TWITTER APP ACCESS TOKEN>'
+  twitter_access_token_secret: '<TWITTER APP ACCESS TOKEN SECRET>'
+
+  # Facebook API to query Facebook posts
+  #
+  # REQUIRED for Facebook posts
+  #
+  facebook_app_id: '<FACEBOOK APP ID>'
+  facebook_app_secret: '<FACEBOOK APP SECRET>'
+
+  # Special HTTP headers to access specific hosts
+  #
+  # OPTIONAL
+  #
   hosts:
-    one.host:
-      cf_credentials: 1234:5678
-    yet.another.host:
-      country: cc
+    <HOST DOMAIN>:
+      <HEADER NAME>: '<HEADER VALUE>'
+      <HEADER NAME>: '<HEADER VALUE>'
+    <HOST DOMAIN>:
+      <HEADER NAME>: '<HEADER VALUE>'
+      <HEADER NAME>: '<HEADER VALUE>'
 
 test:
   <<: *default
+  chrome_debug_port: 9444
+  storage:
+    endpoint: 'http://minio:9000'
+    access_key: 'AKIAIOSFODNN7EXAMPLE'
+    secret_key: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+    bucket: 'check-test'
+    bucket_region: 'us-east-1'
 
 production:
-  <<: *default
-
-profile:
   <<: *default

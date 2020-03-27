@@ -1,4 +1,10 @@
 ---
-:redis_host: 'localhost'
+:redis_host: 'redis'
 :redis_port: 6379
-:redis_database: 1
+:redis_database: 0
+:queues:
+  - ["default", 1]
+  - ["esqueue", 1]
+  - ["smooch", 1]
+  - ["smooch_ping", 1]
+  - ["pusher", 1]

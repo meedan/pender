@@ -46,7 +46,7 @@ Rails.application.configure do
 
   # Use the lowest log level to ensure availability of diagnostic information
   # when problems arise.
-  # config.log_level = :debug
+  config.log_level = :debug
 
   # Prepend all log lines with the following tags.
   # config.log_tags = [ :subdomain, :uuid ]
@@ -72,22 +72,10 @@ Rails.application.configure do
   config.active_support.deprecation = :notify
 
   # Use default logging formatter so that PID and timestamp are not suppressed.
-  # config.log_formatter = ::Logger::Formatter.new
+  config.log_formatter = ::Logger::Formatter.new
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
   config.assets.compile = true
   config.assets.precompile =  ['*.js', '*.css', '*.css.erb']
-
-  config.lograge.enabled = true
-
-  config.lograge.logger = ActiveSupport::Logger.new(STDOUT)
-  config.lograge.custom_options = lambda do |event|
-    options = event.payload.slice(:request_id, :user_id)
-    options[:params] = event.payload[:params].except("controller", "action")
-    options[:time] = Time.now
-    options
-  end
-  config.lograge.formatter = Lograge::Formatters::Json.new
-  config.log_level = :debug
 end
