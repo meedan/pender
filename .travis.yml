@@ -1,7 +1,7 @@
 language: minimal
 before_install:
 - sed -i "s/TODO/${CODECLIMATE_REPO_TOKEN}/g" docker-test.yml
-- git https://${TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
+- git clone https://${TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
 - d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}";
   done
 - docker-compose build
