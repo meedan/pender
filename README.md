@@ -29,32 +29,13 @@ A parsing, archiving and rendering service.
 * Archive.org
 * Video Vault
 
-### Installation
+### Running
 
-#### Non-Docker-based
-
-* Configure `config/config.yml`, `config/database.yml`, `config/sidekiq.yml`, `config/initializers/errbit.rb` and `config/initializers/secret_token.rb` (check the example files)
-* Run `bundle install`
-* Run `bundle exec rake db:migrate`
-* Create an API key: `bundle exec rake lapis:api_keys:create`
-* Start the server: `rails s`
-* Go to [http://localhost:3000/api](http://localhost:3000/api) and use the API key you created
-
-You can optionally use Puma, which allows you to restart the Rails server by doing: `touch tmp/restart.txt`. In order to do that, instead of `rails s`, start the server with `bundle exec pumactl start`.
-
-#### Docker-based
-
-* You can also start the application on Docker by running `rake lapis:docker:run` (it will run on port 3000 and your local hostname) - you first need to create an API key after entering the container (`lapis:docker:shell`) before using the web interface
-
-### Running the tests
-
-* `bundle install --without nothing`
-* `RAILS_ENV=test bundle exec rake db:migrate`
-* `RAILS_ENV=test bundle exec rake test:coverage`
-
-### Integration
-
-Other applications can communicate with this service (and test this communication) using the client library, which can be automatically generated.
+```
+find -name '*.example' | while read f; do cp "$f" "${f%%.example}"; done
+docker-compose build
+docker-compose up --abort-on-container-exit
+```
 
 ### API
 
@@ -176,7 +157,7 @@ An oEmbed representation of the item, e.g.:
     },
     "schema": {},
     "html": "",
-    "embed_tag": <embed_tag>
+    "embed_tag": "<embed_tag>"
   }
 }
 ```
@@ -219,7 +200,7 @@ An oEmbed representation of the item, e.g.:
 {
   "type": "error",
   "data": {
-    "message": 354, # Waiting time in seconds
+    "message": 354, // Waiting time in seconds
     "code": 11
   }
 }
@@ -289,7 +270,7 @@ Clears the cache for the URL(s) passed as parameter.
 200: Success
 ```json
 {
-  "type": "success,
+  "type": "success",
 }
 ```
 

@@ -21,47 +21,48 @@ development: &default
     video_bucket: 'pender-video'
     video_asset_path: 'http://localhost:9000/pender-video/video'
 
+  # Exception reporting using Airbrake or API equivalent https://airbrake.io/
+  #
+  # OPTIONAL
+  #
+  airbrake:
+    host: # '<AIRBRAKE HOST>'
+    port: # '<AIRBRAKE PORT>'
+    project_key: # '<AIRBRAKE PROJECT KEY>'
+    environment: # '<AIRBRAKE ENVIRONMENT>'
+
   # Google API
   #
   # REQUIRED for YouTube links
   # OPTIONAL for Safe Browsing Lookup API https://developers.google.com/safe-browsing/v4/lookup-api
   # To get a key, follow these instructions https://developers.google.com/safe-browsing/v4/get-started
   #
-  google_api_key: '<GOOGLE API KEY>'
+  google_api_key: # '<GOOGLE API KEY>'
 
   # Twitter API
   #
   # REQUIRED for Twitter posts
   #
-  twitter_consumer_key: '<TWITTER APP CONSUMER KEY>'
-  twitter_consumer_secret: '<TWITTER APP CONSUMER SECRET>'
-  twitter_access_token: '<TWITTER APP ACCESS TOKEN>'
-  twitter_access_token_secret: '<TWITTER APP ACCESS TOKEN SECRET>'
+  twitter_consumer_key: # '<TWITTER APP CONSUMER KEY>'
+  twitter_consumer_secret: # '<TWITTER APP CONSUMER SECRET>'
+  twitter_access_token: # '<TWITTER APP ACCESS TOKEN>'
+  twitter_access_token_secret: # '<TWITTER APP ACCESS TOKEN SECRET>'
 
   # Facebook API
   #
   # REQUIRED for Facebook social metrics
   #
-  facebook_app_id: '<FACEBOOK APP ID>'
-  facebook_app_secret: '<FACEBOOK APP SECRET>'
+  facebook_app_id: # '<FACEBOOK APP ID>'
+  facebook_app_secret: # '<FACEBOOK APP SECRET>'
 
-  # Cache-clearing service
+  # Luminati proxy service https://luminati.io/
   #
   # OPTIONAL
   #
-  cc_deville_host:
-  cc_deville_token:
-  cc_deville_httpauth:
-
-  # Proxy service
-  # We use Luminati https://luminati.io/
-  #
-  # OPTIONAL
-  #
-  proxy_host: '<LUMINATI HOST>'
-  proxy_port: '<LUMINATI PORT>'
-  proxy_user_prefix: '<LUMINATI ACCOUNT PREFIX>'
-  proxy_pass: '<LUMINATI ACCOUNT PASSWORD>'
+  proxy_host: # '<LUMINATI HOST>'
+  proxy_port: # '<LUMINATI PORT>'
+  proxy_user_prefix: # '<LUMINATI ACCOUNT PREFIX>'
+  proxy_pass: # '<LUMINATI ACCOUNT PASSWORD>'
 
   # Special instructions to access specific domains
   #
@@ -69,8 +70,14 @@ development: &default
   #
   hosts:
     <HOST DOMAIN>:
-      country: '<PROXY SETTING FOR COUNTRY>'
+      country: '<COUNTRY CODE FOR PROXY SETTING>'
       cf_credentials: '<CLOUDFLARE CREDENTIALS>'
+
+  # DEPRECATED
+  #
+  cc_deville_host:
+  cc_deville_token:
+  cc_deville_httpauth:
 
 test:
   <<: *default
