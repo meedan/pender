@@ -10,7 +10,9 @@ Aws.config.update(
 )
 
 resource = Aws::S3::Resource.new
-bucket = resource.bucket(Pender::Store.bucket_name)
-unless bucket.exists?
-  bucket.create
+[Pender::Store.bucket_name, Pender::Store.video_bucket_name].each do |name|
+  bucket = resource.bucket(name)
+  unless bucket.exists?
+    bucket.create
+  end
 end

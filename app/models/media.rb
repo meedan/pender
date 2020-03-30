@@ -79,8 +79,8 @@ class Media
     Pender::Store.read(Media.get_id(self.original_url), :json)
   end
 
-  # Parsers, archivers and metrics
-  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaDropboxItem, MediaTiktokItem, MediaTiktokProfile, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg, MediaPermaCcArchiver, MediaFacebookEngagementMetrics].each { |concern| include concern }
+  # Parsers and archivers
+  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaDropboxItem, MediaTiktokItem, MediaTiktokProfile, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg, MediaPermaCcArchiver, MediaVideoArchiver, MediaFacebookEngagementMetrics].each { |concern| include concern }
 
   def self.minimal_data(instance)
     data = {}

@@ -37,8 +37,8 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should not normalize URL" do
     urls = %w(
-      https://meedan.com/en/
-      http://ios.ba/
+      https://meedan.com/
+      https://example.com/
       https://ca.ios.ba/?foo=bar
     )
     urls.each do |url|
@@ -130,11 +130,11 @@ class MediaTest < ActiveSupport::TestCase
     request.expects(:base_url).returns('http://localhost')
     m = create_media url: 'https://meedan.com/en/check/', request: request
     d = m.as_json
-    assert_equal 'Check', d['title']
-    assert_match(/Verify digital media consistently and openly/, d['description'])
+    assert_equal 'Product', d['title']
+    assert_match(/Check is an online workspace/, d['description'])
     assert_equal '', d['published_at']
     assert_equal '', d['username']
-    assert_equal 'https://meedan.com/en/check/', m.url
+    assert_equal 'https://meedan.com/check', m.url
     assert_equal 'https://meedan.com', d['author_url']
     assert_not_nil d['picture']
   end
@@ -188,13 +188,13 @@ class MediaTest < ActiveSupport::TestCase
   test "should get relative canonical URL parsed from html tags" do
     m = create_media url: 'http://meedan.com'
     d = m.as_json
-    assert_equal 'https://meedan.com/en/', m.url
+    assert_equal 'https://meedan.com/', m.url
     assert_equal 'Meedan', d['title']
-    assert_match /team of designers, technologists and journalists/, d['description']
+    assert_match /This is Meedan/, d['description']
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://meedan.com', d['author_url']
-    assert_equal 'http://meedan.com/images/logos/meedan-logo-600@2x.png', d['picture']
+    assert_match /meedan_logo/, d['picture']
   end
 
   test "should parse url with arabic chars" do
@@ -1030,7 +1030,7 @@ class MediaTest < ActiveSupport::TestCase
     m.as_json
     id = Media.get_id(url)
     data = Pender::Store.read(id, :json)
-    assert_equal({}, data['metrics'])
+    assert_equal({}, data['metrics']['facebook'])
   end
 
   test "should get metrics from Facebook when URL has non-ascii" do

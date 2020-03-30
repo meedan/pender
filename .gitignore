@@ -9,8 +9,6 @@ db/schema.rb
 /tmp/sockets
 config/database.yml
 config/config.yml
-config/initializers/errbit.rb
-config/initializers/secret_token.rb
 *.sw*
 *~
 public/assets
@@ -22,10 +20,8 @@ tmp/restart.txt
 tmp/puma-*
 tmp/profile
 tmp/performance*
-config/environments/profile.rb
 config/sidekiq.yml
 dump.rdb
-config/initializers/errbit.rb.travis
 config/cookies.txt
 coverage
 .idea

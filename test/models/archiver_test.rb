@@ -2,6 +2,10 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 
 class ArchiverTest < ActiveSupport::TestCase
 
+  def teardown
+    FileUtils.rm_rf(File.join(Rails.root, 'tmp', 'videos'))
+  end
+
   test "should skip screenshots" do
     config = CONFIG['archiver_skip_hosts']
 
@@ -53,7 +57,7 @@ class ArchiverTest < ActiveSupport::TestCase
   test "should archive to Archive.org" do
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    urls = ['https://twitter.com/marcouza/status/875424957613920256', 'https://twitter.com/marcouza/status/863907872421412864']
+    urls = ['https://twitter.com/marcouza/status/875424957613920256', 'https://twitter.com/marcouza/status/863907872421412864', 'https://twitter.com/ozm/status/1217826699183841280']
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
     WebMock.disable_net_connect!(allow: allowed_sites)
@@ -62,10 +66,17 @@ class ArchiverTest < ActiveSupport::TestCase
       WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: {})
       m = create_media url: urls[0], key: a
       data = m.as_json
+      assert_not_nil data['archives']['archive_org']['error']['message']
 
       WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
       m = create_media url: urls[1], key: a
       data = m.as_json
+      assert_equal 'https://web.archive.org/web/123456/test', data['archives']['archive_org']['location']
+
+      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'location' => 'https://web.archive.org/web/123456/test' })
+      m = create_media url: urls[2], key: a
+      data = m.as_json
+      assert_equal 'https://web.archive.org/web/123456/test', data['archives']['archive_org']['location']
     end
 
     WebMock.disable!
@@ -123,6 +134,37 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
     Airbrake.unstub(:configured?)
     Airbrake.unstub(:notify)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
+    Media.any_instance.unstub(:archive)
+  end
+
+  test "should update media with error when reques to Archive.org fails" do
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    Media.any_instance.stubs(:archive)
+
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://example.com'
+
+    assert_nothing_raised do
+      m = Media.new url: url
+      data = m.as_json
+      assert m.data.dig('archives', 'archive_org').nil?
+      WebMock.stub_request(:any, /web.archive.org/).to_raise(Net::ReadTimeout)
+      Media.send_to_archive_org(url, a.id)
+      media_data = Pender::Store.read(Media.get_id(url), :json)
+      assert_match /Could not archive/, media_data.dig('archives', 'archive_org', 'error', 'message')
+    end
+
+    WebMock.disable!
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_canonical_url)
     Media.any_instance.unstub(:try_https)
@@ -436,4 +478,205 @@ class ArchiverTest < ActiveSupport::TestCase
     end
   end
 
+  test "should call youtube-dl and worker to upload video when archive video" do
+    Sidekiq::Testing.fake!
+    Media.any_instance.unstub(:archive_to_video)
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://twitter.com/meedan/status/1202732707597307905'
+    m = Media.new url: url, key: a
+    m.as_json
+
+    Media.any_instance.unstub(:archive_to_video)
+    Media.stubs(:supported_video?).with(url).returns(true)
+    Media.stubs(:notify_video_already_archived).with(url, a.id).returns(nil)
+
+    assert_difference 'ArchiveVideoWorker.jobs.size', 1 do
+      Media.send_to_video_archiver(url, a.id)
+    end
+
+    assert_no_difference 'ArchiveVideoWorker.jobs.size' do
+      Media.send_to_video_archiver(url, a.id, false)
+    end
+
+    not_video_url = 'https://twitter.com/meedan/status/1214263820484521985'
+    Media.stubs(:supported_video?).with(not_video_url).returns(true)
+    Media.stubs(:notify_video_already_archived).with(not_video_url, a.id).returns(nil)
+
+    assert_no_difference 'ArchiveVideoWorker.jobs.size' do
+      Media.send_to_video_archiver(not_video_url, a.id)
+    end
+
+    Media.unstub(:supported_video?)
+    Media.unstub(:notify_video_already_archived)
+
+    ArchiveVideoWorker.clear
+  end
+
+  test "should return false when is not supported when archive video" do
+    Media.unstub(:supported_video?)
+    assert Media.supported_video?('https://twitter.com/meedan/status/1202732707597307905')
+
+    assert !Media.supported_video?('https://twitter.com/meedan/status/1214263820484521985')
+  end
+
+  test "should notify if URL was already parsed and has a location on data when archive video" do
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://twitter.com/meedan/status/1202732707597307905'
+
+    Pender::Store.stubs(:read).with(Media.get_id(url), :json).returns(nil)
+    assert_nil Media.notify_video_already_archived(url, nil)
+
+    data = { archives: { video_archiver: { error: 'could not download video data'}}}
+    Pender::Store.stubs(:read).with(Media.get_id(url), :json).returns()
+    assert_nil Media.notify_video_already_archived(url, nil)
+
+    data[:archives][:video_archiver] = { location: 'path_to_video' }
+    Pender::Store.stubs(:read).with(Media.get_id(url), :json).returns(data)
+    Media.stubs(:notify_webhook).with('video_archiver', url, data, {}).returns('Notify webhook')
+    assert_equal 'Notify webhook', Media.notify_video_already_archived(url, nil)
+
+    Pender::Store.unstub(:read)
+    Media.unstub(:notify_webhook)
+  end
+
+  test "should archive video and update cache" do
+    Sidekiq::Testing.fake!
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://twitter.com/meedan/status/1202732707597307905'
+    Media.stubs(:supported_video?).with(url).returns(true)
+    id = Media.get_id url
+
+    assert_equal 0, ArchiveVideoWorker.jobs.size
+    m = create_media url: url, key: a
+    data = m.as_json
+    assert_nil data.dig('archives', 'video_archiver')
+    Media.send_to_video_archiver(url, a.id)
+    assert_equal 1, ArchiveVideoWorker.jobs.size
+
+    ArchiveVideoWorker.drain
+    data = m.as_json
+    assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
+    assert_equal "#{File.join(Media.archiving_folder, id)}/#{id}.mp4", data.dig('archives', 'video_archiver', 'location')
+    Media.unstub(:supported_video?)
+  end
+
+  test "should archive video info subtitles and thumbnails" do
+    config = CONFIG['proxy_host']
+    CONFIG['proxy_host'] = ''
+
+    Sidekiq::Testing.fake!
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://www.youtube.com/watch?v=1vSJrexmVWU'
+    Media.stubs(:supported_video?).with(url).returns(true)
+    id = Media.get_id url
+
+    assert_equal 0, ArchiveVideoWorker.jobs.size
+    m = create_media url: url, key: a
+    data = m.as_json
+    assert_nil data.dig('archives', 'video_archiver')
+    Media.send_to_video_archiver(url, a.id)
+    assert_equal 1, ArchiveVideoWorker.jobs.size
+
+    ArchiveVideoWorker.drain
+    data = m.as_json
+    assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
+    folder = File.join(Media.archiving_folder, id)
+    assert_equal ['info', 'location', 'subtitles', 'thumbnails', 'videos'], data.dig('archives', 'video_archiver').keys.sort
+    assert_equal "#{folder}/#{id}.mp4", data.dig('archives', 'video_archiver', 'location')
+    assert_equal "#{folder}/#{id}.info.json", data.dig('archives', 'video_archiver', 'info')
+    assert_equal "#{folder}/#{id}.mp4", data.dig('archives', 'video_archiver', 'videos').first
+    data.dig('archives', 'video_archiver', 'subtitles').each do |sub|
+      assert_match /\A#{folder}\/#{id}.*\.vtt\z/, sub
+    end
+    data.dig('archives', 'video_archiver', 'thumbnails').each do |thumb|
+      assert_match /\A#{folder}\/#{id}.*\.jpg\z/, thumb
+    end
+    CONFIG['proxy_host'] = config
+    Media.unstub(:supported_video?)
+  end
+
+  test "should handle error and update cache when archiving video fails" do
+    Sidekiq::Testing.fake!
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://twitter.com/meedan/status/1202732707597307905'
+    Media.stubs(:supported_video?).with(url).returns(true)
+    id = Media.get_id url
+
+    assert_equal 0, ArchiveVideoWorker.jobs.size
+    m = create_media url: url, key: a
+    data = m.as_json
+    assert_nil data.dig('archives', 'video_archiver')
+    Media.send_to_video_archiver(url, a.id)
+    assert_equal 1, ArchiveVideoWorker.jobs.size
+
+    Pender::Store.stubs(:upload_video_folder).raises(StandardError.new('upload error'))
+    ArchiveVideoWorker.drain
+    data = m.as_json
+    assert_not_nil data.dig('archives', 'video_archiver', 'error', 'message')
+    Pender::Store.unstub(:upload_video_folder)
+    Media.unstub(:supported_video?)
+  end
+
+  test "should update media with error when youtube-dl call fails on video archiving" do
+    Sidekiq::Testing.fake!
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://example.com'
+
+    assert_nothing_raised do
+      m = Media.new url: url
+      data = m.as_json
+      assert m.data.dig('archives', 'video_archiver').nil?
+      Media.stubs(:supported_video?).with(url).raises(StandardError)
+      Media.send_to_video_archiver(url, a.id)
+      media_data = Pender::Store.read(Media.get_id(url), :json)
+      assert_match /Could not archive/, media_data.dig('archives', 'video_archiver', 'error', 'message')
+    end
+
+    WebMock.disable!
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
+    Media.unstub(:supported_video?)
+  end
+
+  test "should generate the public archiving folder for videos" do
+    CONFIG.stubs(:dig).with('storage', 'bucket').returns('default_bucket')
+    CONFIG.stubs(:dig).with('storage', 'endpoint').returns('http://local-storage')
+    CONFIG.stubs(:dig).with('storage', 'video_asset_path').returns(nil)
+    CONFIG.stubs(:dig).with('storage', 'video_bucket').returns(nil)
+    assert_equal "http://local-storage/#{Pender::Store.video_bucket_name}/video", Media.archiving_folder
+
+    CONFIG.stubs(:dig).with('storage', 'video_bucket').returns('bucket_for_videos')
+    assert_equal "http://local-storage/#{Pender::Store.video_bucket_name}/video", Media.archiving_folder
+
+    CONFIG.stubs(:dig).with('storage', 'video_asset_path').returns('http://public-storage/my-videos')
+    assert_equal "http://public-storage/my-videos", Media.archiving_folder
+
+    CONFIG.unstub(:dig)
+  end
+
+  test "should use proxy to download yt video" do
+    url = 'https://www.youtube.com/watch?v=oDNuxzfuq8M'
+
+    CONFIG.stubs(:dig).with('proxy_host').returns('example.proxy')
+    CONFIG.stubs(:dig).with('proxy_port').returns('1111')
+    CONFIG.stubs(:dig).with('proxy_user_prefix').returns('user-country')
+    CONFIG.stubs(:dig).with('proxy_pass').returns('proxy-test')
+    assert_match /http:\/\/user-session-\d+:proxy-test@example.proxy:1111/, Media.yt_download_proxy(url)
+
+    CONFIG.stubs(:dig).with('proxy_user_prefix').returns('')
+    CONFIG.stubs(:dig).with('proxy_pass').returns('')
+    assert_nil Media.yt_download_proxy(url)
+
+    CONFIG.stubs(:dig).returns(nil)
+    assert_nil Media.yt_download_proxy(url)
+
+    CONFIG.unstub(:dig)
+  end
 end
