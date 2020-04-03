@@ -884,6 +884,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should handle exception when oembed content is not a valid json" do
     oembed_response = 'response'
     oembed_response.stubs(:code).returns('200')
+    oembed_response.stubs(:message).returns('OK')
     oembed_response.stubs(:body).returns('\xEF\xBB\xBF{"version":"1.0","provider_name":"Philippines Lifestyle News"}')
     Media.any_instance.stubs(:oembed_get_data_from_url).returns(oembed_response)
     url = 'https://web.archive.org/web/20190226023026/http://philippineslifestyle.com/flat-earth-theory-support-philippines/'

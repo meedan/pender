@@ -39,7 +39,8 @@ module MediaOembedItem
     rescue JSON::ParserError => error
       self.data[:raw][:oembed] = { error: { message: error.message, code: 'INVALID_VALUE' } }
       Airbrake.notify(StandardError.new('Could not parse `oembed` data as JSON'), url: self.url, oembed_url: oembed_url, error_message: error.message, response_body: response.body ) if Airbrake.configured?
-      Rails.logger.warn level: 'WARN', messsage: '[Parser] Could not parse `oembed` data as JSON', oembed_url: oembed_url, error_message: error.message, response_code: response.code, response_message: response.message
+      Rails.logger.warn level: 'WARN', messsage: '[Parser] Could not parse `oembed` data as JSON', oembed_url: oembed_url, error_class: error.class, response_code: response.code, response_message: response.message
+      return false
     end
   end
 
