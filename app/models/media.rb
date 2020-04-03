@@ -112,7 +112,7 @@ class Media
       Media.request_url(url, 'Head')
     rescue OpenSSL::SSL::SSLError, URI::InvalidURIError, SocketError => e
       Airbrake.notify(e, url: url) if Airbrake.configured?
-      Rails.logger.warn "Could not access url: #{url} - #{e.message}"
+      Rails.logger.warn level: 'WARN', message: '[Parser] Invalid URL', url: url, error_class: e.class, error_message: e.message
       return false
     end
   end
@@ -144,7 +144,7 @@ class Media
       request = Net::HTTP::Post.new(uri.request_uri, headers)
       request.body = payload
       response = http.request(request)
-      Rails.logger.info "[Webhook] Sending #{url} to webhook: Code: #{response.code} Response: #{response.body}"
+      Rails.logger.info level: 'INFO', messsage: 'Webhook notification', url: url, type: type, code: response.code, response: response.message, webhook_url: settings['webhook_url']
       @webhook_called = true
     end
     true
@@ -288,11 +288,13 @@ class Media
       Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
     rescue OpenURI::HTTPError, Errno::ECONNRESET => e
       Airbrake.notify(e, url: self.url) if Airbrake.configured?
+      Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: self.url, error_class: e.class, error_message: e.message
       return nil
     rescue Zlib::DataError, Zlib::BufError
       self.get_html(Media.html_options(self.url).merge('Accept-Encoding' => 'identity'))
     rescue RuntimeError => e
       Airbrake.notify(e, url: self.url) if !redirect_https_to_http?(header_options, e.message) && Airbrake.configured?
+      Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: self.url, error_class: e.class, error_message: e.message
       return nil
     end
   end

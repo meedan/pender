@@ -57,7 +57,7 @@ module MediaInstagramItem
           self.data['raw'][source[0]] = (source[0] == :api) ? data : data['graphql']
         rescue StandardError => error
           Airbrake.notify(error.message, instagram_source: source) if Airbrake.configured?
-          Rails.logger.info "[Instagram URL] Cannot get data from '#{source[0]}' (#{source[1]}): (#{error.class}) #{error.message}"
+          Rails.logger.warn level: 'WARN', message: '[Parser] Cannot get data from Instagram URL', source_type: source[0], source_url: source[1], error_class: error.class, error_message: error.message
           self.data['raw'][source[0]] = { error: { message: error.message }}
         end
       }

@@ -1,4 +1,17 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
   skip_before_filter :verify_authenticity_token
+
+  def append_info_to_payload(payload)
+    super
+    case
+      when payload[:status] < 300
+        payload[:level] = 'INFO'
+      when payload[:status] < 500
+        payload[:level] = 'WARN'
+      else
+        payload[:level] = 'ERROR'
+      end
+  end
+
 end

@@ -90,6 +90,7 @@ module Api
         rescue StandardError => e
           data = get_error_data({ message: e.message, code: 'UNKNOWN' }, @media, @url, @id)
           notify_airbrake(e, data)
+          Rails.logger.warn level: 'WARN', message: '[Rendering] Could not render media JSON data', error_class: e.class, error_message: e.message
           data.merge!(@data) unless @data.blank?
           data.merge!(@media.data) unless @media.blank?
           render_media(data)
@@ -153,6 +154,7 @@ module Api
           data = @media.nil? ? {} : @media.data
           data.merge!(error: { message: e.message, code: 'UNKNOWN' })
           notify_airbrake(e, data)
+          Rails.logger.warn level: 'WARN', message: '[Rendering] Could not render media oEmbed data', error_class: e.class, error_message: e.message
           render_media(data)
         end
       end
@@ -247,7 +249,7 @@ module Api
         rescue exception => e
           error_info = { message: e.message }.merge(error_info)
           notify_airbrake(e, error_info)
-          Rails.logger.warn "Error on #{caller_locations(2).first.label}: #{error_info}"
+          Rails.logger.warn level: 'WARN', message: "[Parser] Error on #{caller_locations(2).first.label}", error: error_info
           rescue_block.call(e)
         end
       end
