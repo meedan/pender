@@ -159,7 +159,7 @@ class ArchiverTest < ActiveSupport::TestCase
       data = m.as_json
       assert m.data.dig('archives', 'archive_org').nil?
       WebMock.stub_request(:any, /web.archive.org/).to_raise(Net::ReadTimeout)
-      Media.send_to_archive_org(url, a.id)
+      Media.send_to_archive_org(url, a.id, 20)
       media_data = Pender::Store.read(Media.get_id(url), :json)
       assert_match /Could not archive/, media_data.dig('archives', 'archive_org', 'error', 'message')
     end
@@ -400,7 +400,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     Media.any_instance.unstub(:archive_to_perma_cc)
     Pender::Store.stubs(:read).returns(nil)
-    response = 'mock';response.stubs(:code).returns('201');response.stubs(:body).returns('{"guid":"AUA8-QNGH"}')
+    response = 'mock';response.stubs(:code).returns('201');response.stubs(:body).returns('{"guid":"AUA8-QNGH"}');response.stubs(:message).returns('OK')
     Net::HTTP.any_instance.stubs(:request).returns(response)
     Media.stubs(:notify_webhook_and_update_cache).with('perma_cc', url, { location: 'http://perma.cc/AUA8-QNGH'}, a.id)
     Media.stubs(:enabled_archivers).with('perma_cc').returns({ 'perma_cc' => {:patterns=>[/^.*$/], :modifier=>:only, :enabled=>true}})
@@ -495,7 +495,7 @@ class ArchiverTest < ActiveSupport::TestCase
     end
 
     assert_no_difference 'ArchiveVideoWorker.jobs.size' do
-      Media.send_to_video_archiver(url, a.id, false)
+      Media.send_to_video_archiver(url, a.id, nil, nil, false)
     end
 
     not_video_url = 'https://twitter.com/meedan/status/1214263820484521985'

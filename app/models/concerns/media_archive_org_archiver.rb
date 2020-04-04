@@ -15,7 +15,7 @@ module MediaArchiveOrgArchiver
       self.delay_for(15.seconds).send_to_archive_org(url, key_id)
     end
 
-    def send_to_archive_org(url, key_id, attempts = 1, response = nil)
+    def send_to_archive_org(url, key_id, attempts = 1, response = nil, supported = nil)
       Media.give_up('archive_org', url, key_id, attempts, response) and return
 
       handle_archiving_exceptions('archive_org', 24.hours, url, key_id, attempts) do

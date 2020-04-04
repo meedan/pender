@@ -15,8 +15,8 @@ module MediaVideoArchiver
       self.delay_for(15.seconds).send_to_video_archiver(url, key_id)
     end
 
-    def send_to_video_archiver(url, key_id, supported = nil, attempts = 1, response = nil)
-      handle_archiving_exceptions('video_archiver', 1.hour, url, key_id, supported, attempts) do
+    def send_to_video_archiver(url, key_id, attempts = 1, response = nil, supported = nil)
+      handle_archiving_exceptions('video_archiver', 1.hour, url, key_id, attempts, supported) do
         supported = supported_video?(url) if supported.nil?
         return if supported.is_a?(FalseClass) || notify_video_already_archived(url, key_id)
         id = Media.get_id(url)
@@ -26,7 +26,7 @@ module MediaVideoArchiver
         if response
           ArchiveVideoWorker.perform_async(url, local_folder, self.archiving_folder, key_id)
         else
-          Media.delay_for(5.minutes).send_to_video_archiver(url, key_id, supported, attempts + 1, {message: '[Youtube-DL] Cannot download video data', code: 5})
+          Media.delay_for(5.minutes).send_to_video_archiver(url, key_id, attempts + 1, {message: '[Youtube-DL] Cannot download video data', code: 5}, supported)
         end
       end
     end
