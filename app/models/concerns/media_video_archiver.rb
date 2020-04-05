@@ -16,7 +16,7 @@ module MediaVideoArchiver
     end
 
     def send_to_video_archiver(url, key_id, attempts = 1, response = nil, supported = nil)
-      handle_archiving_exceptions('video_archiver', 1.hour, url, key_id, attempts, supported) do
+      handle_archiving_exceptions('video_archiver', 1.hour, { url: url, key_id: key_id, attempts: attempts, supported: supported }) do
         supported = supported_video?(url) if supported.nil?
         return if supported.is_a?(FalseClass) || notify_video_already_archived(url, key_id)
         id = Media.get_id(url)
