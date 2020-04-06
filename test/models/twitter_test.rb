@@ -86,8 +86,8 @@ class TwitterTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.hongkongfp.com/2017/03/08/top-officials-suing-defamation-may-give-perception-bullying-says-chief-exec-candidate-woo/'
     d = m.as_json
     assert_match(/Hong Kong Free Press/, d['title'])
-    assert_equal 'https://www.hongkongfp.com/wp-content/uploads/2017/03/2017-03-06_11-45-23.jpg', d['picture']
-    assert_match(/Chief executive candidate Woo Kw-hing/, d['description'])
+    assert_match /hongkongfp.com\/wp-content\/uploads\/2017\/03\/2017-03-06_11-45-23.jpg/, d['picture']
+    assert_match(/Chief executive candidate Woo Kwok-hing/, d['description'])
     assert_equal '@krislc', d['username']
     assert_equal 'https://twitter.com/krislc', d['author_url']
   end
