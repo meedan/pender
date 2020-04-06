@@ -12,8 +12,9 @@ class ArchiveVideoWorker
       data = video_files(public_path, local_path)
       FileUtils.rm_rf(local_path)
     rescue StandardError => e
-      message = '[Youtube-DL] Could not upload video data'
+      message = '[Video Archiver] Could not upload video data'
       Airbrake.notify(e, url: url, archiver: 'video_archiver', error_code: 5, error_message: e.message) if Airbrake.configured?
+      Rails.logger.warn level: 'WARN', messsage: message, url: url, archiver: 'video_archiver', error_class: e.class, error_message: e.message
       data = { error: { message: I18n.t(:could_not_archive, error_message: message), code: 5 }}
     end
     Media.notify_webhook_and_update_cache('video_archiver', url, data, key_id)

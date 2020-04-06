@@ -159,7 +159,7 @@ class ArchiverTest < ActiveSupport::TestCase
       data = m.as_json
       assert m.data.dig('archives', 'archive_org').nil?
       WebMock.stub_request(:any, /web.archive.org/).to_raise(Net::ReadTimeout)
-      Media.send_to_archive_org(url, a.id)
+      Media.send_to_archive_org(url, a.id, 20)
       media_data = Pender::Store.read(Media.get_id(url), :json)
       assert_match /Could not archive/, media_data.dig('archives', 'archive_org', 'error', 'message')
     end
@@ -400,7 +400,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     Media.any_instance.unstub(:archive_to_perma_cc)
     Pender::Store.stubs(:read).returns(nil)
-    response = 'mock';response.stubs(:code).returns('201');response.stubs(:body).returns('{"guid":"AUA8-QNGH"}')
+    response = 'mock';response.stubs(:code).returns('201');response.stubs(:body).returns('{"guid":"AUA8-QNGH"}');response.stubs(:message).returns('OK')
     Net::HTTP.any_instance.stubs(:request).returns(response)
     Media.stubs(:notify_webhook_and_update_cache).with('perma_cc', url, { location: 'http://perma.cc/AUA8-QNGH'}, a.id)
     Media.stubs(:enabled_archivers).with('perma_cc').returns({ 'perma_cc' => {:patterns=>[/^.*$/], :modifier=>:only, :enabled=>true}})
@@ -495,7 +495,7 @@ class ArchiverTest < ActiveSupport::TestCase
     end
 
     assert_no_difference 'ArchiveVideoWorker.jobs.size' do
-      Media.send_to_video_archiver(url, a.id, false)
+      Media.send_to_video_archiver(url, a.id, nil, nil, false)
     end
 
     not_video_url = 'https://twitter.com/meedan/status/1214263820484521985'
@@ -512,11 +512,30 @@ class ArchiverTest < ActiveSupport::TestCase
     ArchiveVideoWorker.clear
   end
 
+  test "should not raise error when try to download video from non-ascii URL" do
+    Media.any_instance.unstub(:archive_to_video)
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+
+    Media.any_instance.unstub(:archive_to_video)
+    Media.stubs(:notify_video_already_archived).returns(nil)
+
+    assert_nothing_raised do
+      Media.send_to_video_archiver('http://www.facebook.com/pages/category/Musician-Band/चौधरी-कमला-बाड़मेर-108960273957085', a.id, true, 20)
+    end
+
+    Media.unstub(:notify_video_already_archived)
+  end
+
   test "should return false when is not supported when archive video" do
     Media.unstub(:supported_video?)
     assert Media.supported_video?('https://twitter.com/meedan/status/1202732707597307905')
 
     assert !Media.supported_video?('https://twitter.com/meedan/status/1214263820484521985')
+  end
+
+  test "should check if non-ascii URL support video download" do
+    Media.unstub(:supported_video?)
+    assert !Media.supported_video?('http://www.facebook.com/pages/category/Musician-Band/चौधरी-कमला-बाड़मेर-108960273957085')
   end
 
   test "should notify if URL was already parsed and has a location on data when archive video" do

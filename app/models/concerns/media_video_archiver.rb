@@ -15,18 +15,18 @@ module MediaVideoArchiver
       self.delay_for(15.seconds).send_to_video_archiver(url, key_id)
     end
 
-    def send_to_video_archiver(url, key_id, supported = nil, attempts = 1, response = nil)
-      handle_archiving_exceptions('video_archiver', 1.hour, url, key_id, attempts) do
+    def send_to_video_archiver(url, key_id, attempts = 1, response = nil, supported = nil)
+      handle_archiving_exceptions('video_archiver', 1.hour, { url: url, key_id: key_id, attempts: attempts, supported: supported }) do
         supported = supported_video?(url) if supported.nil?
         return if supported.is_a?(FalseClass) || notify_video_already_archived(url, key_id)
         id = Media.get_id(url)
         local_folder = File.join(Rails.root, 'tmp', 'videos', id)
         Media.give_up('video_archiver', url, key_id, attempts, response) and return
-        response = system("youtube-dl", url, "--proxy=#{Media.yt_download_proxy(url)}", "-o#{local_folder}/#{id}.%(ext)s", "--restrict-filenames", "--no-warnings", "-q", "--write-all-thumbnails", "--write-info-json", "--all-subs", "-fogg/mp4/webm",  out: '/dev/null')
+        response = system("youtube-dl", URI.encode(url), "--proxy=#{Media.yt_download_proxy(URI.encode(url))}", "-o#{local_folder}/#{id}.%(ext)s", "--restrict-filenames", "--no-warnings", "-q", "--write-all-thumbnails", "--write-info-json", "--all-subs", "-fogg/mp4/webm",  out: '/dev/null')
         if response
           ArchiveVideoWorker.perform_async(url, local_folder, self.archiving_folder, key_id)
         else
-          Media.delay_for(5.minutes).send_to_video_archiver(url, key_id, supported, attempts + 1, {message: '[Youtube-DL] Cannot download video data', code: 5})
+          Media.delay_for(5.minutes).send_to_video_archiver(url, key_id, attempts + 1, {message: '[Youtube-DL] Cannot download video data', code: 5}, supported)
         end
       end
     end
@@ -44,7 +44,8 @@ module MediaVideoArchiver
     end
 
     def supported_video?(url)
-      system("youtube-dl", url, "--proxy=#{Media.yt_download_proxy(url)}", "--restrict-filenames", "--no-warnings", "-g", "-q", out: '/dev/null')
+      url = URI.encode url
+      system("youtube-dl", URI.encode(url), "--proxy=#{Media.yt_download_proxy(url)}", "--restrict-filenames", "--no-warnings", "-g", "-q", out: '/dev/null')
     end
 
     def yt_download_proxy(url)

@@ -15,17 +15,17 @@ module MediaArchiveOrgArchiver
       self.delay_for(15.seconds).send_to_archive_org(url, key_id)
     end
 
-    def send_to_archive_org(url, key_id, attempts = 1, response = nil)
+    def send_to_archive_org(url, key_id, attempts = 1, response = nil, _supported = nil)
       Media.give_up('archive_org', url, key_id, attempts, response) and return
 
-      handle_archiving_exceptions('archive_org', 24.hours, url, key_id, attempts) do
+      handle_archiving_exceptions('archive_org', 24.hours, { url: url, key_id: key_id, attempts: attempts }) do
         encoded_uri = URI.encode(URI.decode(url))
         uri = URI.parse("https://web.archive.org/save/#{encoded_uri}")
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true
         request = Net::HTTP::Get.new(uri.request_uri)
         response = http.request(request)
-        Rails.logger.info "[Archiver Archive.org] Sending #{url} to Archive.org: Code: #{response.code}"
+        Rails.logger.info level: 'INFO', messsage: '[Archiver] Sent URL to Archive.org', url: url, code: response.code, response: response.message
 
         location = response['content-location'] || response['location']
         if location

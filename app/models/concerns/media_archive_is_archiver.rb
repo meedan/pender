@@ -23,7 +23,7 @@ module MediaArchiveIsArchiver
       request = Net::HTTP::Post.new(uri.request_uri)
       request.set_form_data({ url: url })
       response = http.request(request)
-      Rails.logger.info "[Archiver Archive.is] Sending #{url} to Archive.is: Code: #{response.code} Response: #{response.body}"
+      Rails.logger.info level: 'INFO', messsage: '[Archiver] Sent URL to Archive.is', url: url, code: response.code, response: response.message
 
       if response['refresh']
         Media.delay_for(3.minutes).send_to_archive_is(url, key_id, attempts + 1, {code: response.code, message: response.message})
@@ -32,6 +32,7 @@ module MediaArchiveIsArchiver
         Media.notify_webhook_and_update_cache('archive_is', url, data, key_id)
       else
         Airbrake.notify(StandardError.new('Unexpected response from archive.is'), url: url, archiver: 'archive.is', error_code: response.code, error_message: response.message, error_body: response.body) if Airbrake.configured? && !response.nil?
+        Rails.logger.warn level: 'WARN', messsage: '[Archiver] Unexpected response from Archive.is', url: url, code: response.code, response: response.message
         data = { error: { message: I18n.t(:could_not_archive, error_message: response.message), code: response.code }}
         Media.notify_webhook_and_update_cache('archive_is', url, data, key_id)
       end

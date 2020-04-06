@@ -51,14 +51,14 @@ Rails.application.configure do
   config.allow_concurrency = true
 
   config.lograge.enabled = true
-
-  config.lograge.logger = ActiveSupport::Logger.new(STDOUT)
   config.lograge.custom_options = lambda do |event|
     options = event.payload.slice(:request_id, :user_id)
     options[:params] = event.payload[:params].except("controller", "action")
-    options[:time] = Time.now
+    options[:level] = event.payload[:level]
     options
   end
   config.lograge.formatter = Lograge::Formatters::Json.new
+  config.logger = ActiveSupport::Logger.new(STDOUT)
+
   config.log_level = :debug
 end
