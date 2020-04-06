@@ -23,6 +23,7 @@ module MediasHelper
       Airbrake.notify(error, url: media.url, data: media.data ) if Airbrake.configured?
       code = error.respond_to?(code_method) ? error.send(code_method) : 5
       media.data.merge!(error: { message: "#{error.class}: #{error.send(message_method)}", code: code })
+      Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse', url: media.url, code: code, error_class: error.class, error_message: error.send(message_method)
       return
     end
   end
@@ -56,7 +57,7 @@ module MediasHelper
       data = JSON.parse(tag.content)
       data = data[0] if data.is_a?(Array)
     rescue JSON::ParserError
-      Rails.logger.info "Could not parse the JSON-LD content: #{media.url}"
+      Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse the JSON-LD content', url: media.url
     end
     data
   end

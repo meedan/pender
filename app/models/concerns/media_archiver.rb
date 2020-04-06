@@ -44,6 +44,7 @@ module MediaArchiver
     def give_up(archiver, url, key_id, attempts, response = {})
       if attempts > 20
         Airbrake.notify(StandardError.new('Could not archive'), url: url, archiver: archiver, error_code: response[:code], error_message: response[:message]) if Airbrake.configured?
+        Rails.logger.warn level: 'WARN', messsage: '[Archiver] Could not archive', url: url, archiver: archiver, error_code: response[:code], error_message: response[:message]
         data = { error: { message: I18n.t(:could_not_archive, error_message: response[:message]), code: response[:code] }}
         Media.notify_webhook_and_update_cache(archiver, url, data, key_id)
         return true
@@ -77,14 +78,14 @@ module MediaArchiver
       # url_hash(url) + '.png'
     end
 
-    def handle_archiving_exceptions(archiver, delay_time, url, key_id, attempts)
+    def handle_archiving_exceptions(archiver, delay_time, params)
       begin
         yield
       rescue StandardError => error
-        Media.delay_for(delay_time).send("send_to_#{archiver}", url, key_id, attempts + 1, {code: 5, message: error.message})
-        Rails.logger.info "[#{archiver}] Could not archive: #{error.message}"
+        Media.delay_for(delay_time).send("send_to_#{archiver}", params[:url], params[:key_id], params[:attempts] + 1, {code: 5, message: error.message}, params[:supported])
+        Rails.logger.warn level: 'WARN', messsage: '[Archiver] Error archiving', url: params[:url], archiver: archiver, error_class: error.class, error_message: error.message
         data = { error: { message: I18n.t(:could_not_archive, error_message: error.message), code: 5 }}
-        Media.notify_webhook_and_update_cache(archiver, url, data, key_id)
+        Media.notify_webhook_and_update_cache(archiver, params[:url], data, params[:key_id])
         return
       end
     end
