@@ -122,7 +122,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 'https://www.facebook.com/NautilusMag/', data['url']
     assert_equal 'Nautilus Magazine', data['title']
     assert_equal 'NautilusMag', data['username']
-    assert_match /Visit us at http:\/\/nautil.us/, data['description']
+    assert_match /Visit us/, data['description']
     assert_equal 'https://www.facebook.com/NautilusMag/', data['author_url']
     assert_match /644661_515192635206115_1479923468/, data['author_picture']
     assert_equal 'Nautilus Magazine', data['author_name']
