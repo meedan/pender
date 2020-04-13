@@ -7,6 +7,8 @@ class Semaphore
   end
 
   def lock
+    # CONFIG['timeout'] sets the max time for a page to be parsed,
+    # so the lock duration needs to be at least higher than its value
     timeout = (CONFIG['timeout'] || 20) + 4
     @redis.set(@key, Time.now, ex: timeout.round) unless CONFIG.nil?
   end
