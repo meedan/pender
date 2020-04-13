@@ -7,7 +7,8 @@ class Semaphore
   end
 
   def lock
-    @redis.getset(@key, Time.now) unless CONFIG.nil?
+    timeout = (CONFIG['timeout'] || 20) + 4
+    @redis.set(@key, Time.now, ex: timeout.round) unless CONFIG.nil?
   end
 
   def locked?
