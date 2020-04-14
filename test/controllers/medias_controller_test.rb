@@ -766,6 +766,24 @@ class MediasControllerTest < ActionController::TestCase
     Pender::Store.unstub(:read)
   end
 
+  test "should unlock url after timeout" do
+    url = 'https://twitter.com/knowloitering/'
+    s = Semaphore.new(url)
+    assert !s.locked?
+
+    stub_configs({ 'timeout' => 0.001 })
+    s.lock
+    sleep 5
+    assert !s.locked?
+    s.unlock
+
+    stub_configs({ 'timeout' => 30 })
+    s.lock
+    sleep 5
+    assert s.locked?
+    s.unlock
+  end
+
   test "should return error if URL is not safe" do
     authenticate_with_token
     url = 'http://malware.wicar.org/data/ms14_064_ole_xp.html' # More examples: https://www.wicar.org/test-malware.html
