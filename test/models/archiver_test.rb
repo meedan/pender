@@ -490,26 +490,24 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.stubs(:supported_video?).with(url).returns(true)
     Media.stubs(:notify_video_already_archived).with(url, a.id).returns(nil)
 
-    assert_difference 'ArchiveVideoWorker.jobs.size', 1 do
-      Media.send_to_video_archiver(url, a.id)
-    end
+    Media.stubs(:store_video_folder).returns('store_video_folder')
+    mock = 'delay'
+    Media.stubs(:delay_for).returns(mock)
+    mock.stubs(:send_to_video_archiver).returns('delay_send_to_video_archiver')
 
-    assert_no_difference 'ArchiveVideoWorker.jobs.size' do
-      Media.send_to_video_archiver(url, a.id, nil, nil, false)
-    end
+    assert_equal 'store_video_folder', Media.send_to_video_archiver(url, a.id)
+    assert_nil Media.send_to_video_archiver(url, a.id, nil, nil, false)
 
     not_video_url = 'https://twitter.com/meedan/status/1214263820484521985'
     Media.stubs(:supported_video?).with(not_video_url).returns(true)
     Media.stubs(:notify_video_already_archived).with(not_video_url, a.id).returns(nil)
 
-    assert_no_difference 'ArchiveVideoWorker.jobs.size' do
-      Media.send_to_video_archiver(not_video_url, a.id)
-    end
+    assert_equal 'delay_send_to_video_archiver', Media.send_to_video_archiver(not_video_url, a.id, 20)
 
     Media.unstub(:supported_video?)
     Media.unstub(:notify_video_already_archived)
-
-    ArchiveVideoWorker.clear
+    Media.unstub(:store_video_folder)
+    Media.unstub(:delay_for)
   end
 
   test "should not raise error when try to download video from non-ascii URL" do
@@ -565,14 +563,11 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.stubs(:supported_video?).with(url).returns(true)
     id = Media.get_id url
 
-    assert_equal 0, ArchiveVideoWorker.jobs.size
     m = create_media url: url, key: a
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
     Media.send_to_video_archiver(url, a.id)
-    assert_equal 1, ArchiveVideoWorker.jobs.size
 
-    ArchiveVideoWorker.drain
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
     assert_equal "#{File.join(Media.archiving_folder, id)}/#{id}.mp4", data.dig('archives', 'video_archiver', 'location')
@@ -589,14 +584,11 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.stubs(:supported_video?).with(url).returns(true)
     id = Media.get_id url
 
-    assert_equal 0, ArchiveVideoWorker.jobs.size
     m = create_media url: url, key: a
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
     Media.send_to_video_archiver(url, a.id)
-    assert_equal 1, ArchiveVideoWorker.jobs.size
 
-    ArchiveVideoWorker.drain
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
     folder = File.join(Media.archiving_folder, id)
@@ -621,15 +613,12 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.stubs(:supported_video?).with(url).returns(true)
     id = Media.get_id url
 
-    assert_equal 0, ArchiveVideoWorker.jobs.size
     m = create_media url: url, key: a
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
-    Media.send_to_video_archiver(url, a.id)
-    assert_equal 1, ArchiveVideoWorker.jobs.size
 
     Pender::Store.stubs(:upload_video_folder).raises(StandardError.new('upload error'))
-    ArchiveVideoWorker.drain
+    Media.send_to_video_archiver(url, a.id)
     data = m.as_json
     assert_not_nil data.dig('archives', 'video_archiver', 'error', 'message')
     Pender::Store.unstub(:upload_video_folder)
