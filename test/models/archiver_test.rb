@@ -479,7 +479,6 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should call youtube-dl and worker to upload video when archive video" do
-    Sidekiq::Testing.fake!
     Media.any_instance.unstub(:archive_to_video)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1202732707597307905'
@@ -556,29 +555,10 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:notify_webhook)
   end
 
-  test "should archive video and update cache" do
-    Sidekiq::Testing.fake!
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    url = 'https://twitter.com/meedan/status/1202732707597307905'
-    Media.stubs(:supported_video?).with(url).returns(true)
-    id = Media.get_id url
-
-    m = create_media url: url, key: a
-    data = m.as_json
-    assert_nil data.dig('archives', 'video_archiver')
-    Media.send_to_video_archiver(url, a.id)
-
-    data = m.as_json
-    assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
-    assert_equal "#{File.join(Media.archiving_folder, id)}/#{id}.mp4", data.dig('archives', 'video_archiver', 'location')
-    Media.unstub(:supported_video?)
-  end
-
-  test "should archive video info subtitles and thumbnails" do
+  test "should archive video info subtitles, thumbnails and update cache" do
     config = CONFIG['proxy_host']
     CONFIG['proxy_host'] = ''
 
-    Sidekiq::Testing.fake!
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://www.youtube.com/watch?v=1vSJrexmVWU'
     Media.stubs(:supported_video?).with(url).returns(true)
@@ -618,7 +598,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_nil data.dig('archives', 'video_archiver')
 
     Pender::Store.stubs(:upload_video_folder).raises(StandardError.new('upload error'))
-    Media.send_to_video_archiver(url, a.id)
+    Media.send_to_video_archiver(url, a.id, 20)
     data = m.as_json
     assert_not_nil data.dig('archives', 'video_archiver', 'error', 'message')
     Pender::Store.unstub(:upload_video_folder)
@@ -640,7 +620,7 @@ class ArchiverTest < ActiveSupport::TestCase
       data = m.as_json
       assert m.data.dig('archives', 'video_archiver').nil?
       Media.stubs(:supported_video?).with(url).raises(StandardError)
-      Media.send_to_video_archiver(url, a.id)
+      Media.send_to_video_archiver(url, a.id, 20)
       media_data = Pender::Store.read(Media.get_id(url), :json)
       assert_match /Could not archive/, media_data.dig('archives', 'video_archiver', 'error', 'message')
     end
