@@ -877,11 +877,11 @@ class MediaTest < ActiveSupport::TestCase
     oembed_response.stubs(:body).returns('\xEF\xBB\xBF{"version":"1.0","provider_name":"Philippines Lifestyle News"}')
     Media.any_instance.stubs(:oembed_get_data_from_url).returns(oembed_response)
     url = 'https://web.archive.org/web/20190226023026/http://philippineslifestyle.com/flat-earth-theory-support-philippines/'
-    m = create_media url: url
-    data = m.as_json
-    assert_equal 'page', data['oembed']['provider_name']
-    assert_match(/unexpected token/, data[:raw][:oembed]['error']['message'])
-    assert_nil data['error']
+    m = Media.new url: url
+    m.data = Media.minimal_data(m)
+    m.data_from_oembed_item
+    assert_match(/unexpected token/, m.data[:raw][:oembed]['error']['message'])
+    assert_nil m.data['error']
     Media.any_instance.unstub(:oembed_get_data_from_url)
   end
 
