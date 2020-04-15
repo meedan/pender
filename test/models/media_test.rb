@@ -245,17 +245,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, d['picture']
   end
 
-  test "should parse url 3" do
-    m = create_media url: 'https://almanassa.com/ar/story/3164'
-    d = m.as_json
-    assert_equal 'تسلسل زمني| تحرير الموصل: أسئلة الصراع الإقليمي تنتظر الإجابة.. أو الانفجار', d['title']
-    assert_match /مرت الأيام التي تلت محاولة اغتيال العبادي/, d['description']
-    assert_equal '', d['published_at']
-    assert !d['author_name'].blank?
-    assert_match /https:\/\/almanassa.com/, d['author_url']
-    assert_match /\/\/almanassa.com\/sites\/default\/files\/irq_367110792_1469895703-bicubic\.jpg/, d['picture']
-  end
-
   test "should return author picture" do
     request = 'http://localhost'
     request.expects(:base_url).returns('http://localhost')
