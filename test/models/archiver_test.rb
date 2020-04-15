@@ -479,7 +479,6 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should call youtube-dl and worker to upload video when archive video" do
-    Sidekiq::Testing.fake!
     Media.any_instance.unstub(:archive_to_video)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1202732707597307905'
@@ -490,26 +489,24 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.stubs(:supported_video?).with(url).returns(true)
     Media.stubs(:notify_video_already_archived).with(url, a.id).returns(nil)
 
-    assert_difference 'ArchiveVideoWorker.jobs.size', 1 do
-      Media.send_to_video_archiver(url, a.id)
-    end
+    Media.stubs(:store_video_folder).returns('store_video_folder')
+    mock = 'delay'
+    Media.stubs(:delay_for).returns(mock)
+    mock.stubs(:send_to_video_archiver).returns('delay_send_to_video_archiver')
 
-    assert_no_difference 'ArchiveVideoWorker.jobs.size' do
-      Media.send_to_video_archiver(url, a.id, nil, nil, false)
-    end
+    assert_equal 'store_video_folder', Media.send_to_video_archiver(url, a.id)
+    assert_nil Media.send_to_video_archiver(url, a.id, nil, nil, false)
 
     not_video_url = 'https://twitter.com/meedan/status/1214263820484521985'
     Media.stubs(:supported_video?).with(not_video_url).returns(true)
     Media.stubs(:notify_video_already_archived).with(not_video_url, a.id).returns(nil)
 
-    assert_no_difference 'ArchiveVideoWorker.jobs.size' do
-      Media.send_to_video_archiver(not_video_url, a.id)
-    end
+    assert_equal 'delay_send_to_video_archiver', Media.send_to_video_archiver(not_video_url, a.id, 20)
 
     Media.unstub(:supported_video?)
     Media.unstub(:notify_video_already_archived)
-
-    ArchiveVideoWorker.clear
+    Media.unstub(:store_video_folder)
+    Media.unstub(:delay_for)
   end
 
   test "should not raise error when try to download video from non-ascii URL" do
@@ -558,45 +555,18 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:notify_webhook)
   end
 
-  test "should archive video and update cache" do
-    Sidekiq::Testing.fake!
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    url = 'https://twitter.com/meedan/status/1202732707597307905'
-    Media.stubs(:supported_video?).with(url).returns(true)
-    id = Media.get_id url
-
-    assert_equal 0, ArchiveVideoWorker.jobs.size
-    m = create_media url: url, key: a
-    data = m.as_json
-    assert_nil data.dig('archives', 'video_archiver')
-    Media.send_to_video_archiver(url, a.id)
-    assert_equal 1, ArchiveVideoWorker.jobs.size
-
-    ArchiveVideoWorker.drain
-    data = m.as_json
-    assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
-    assert_equal "#{File.join(Media.archiving_folder, id)}/#{id}.mp4", data.dig('archives', 'video_archiver', 'location')
-    Media.unstub(:supported_video?)
-  end
-
-  test "should archive video info subtitles and thumbnails" do
-    config = CONFIG['proxy_host']
-    CONFIG['proxy_host'] = ''
-
-    Sidekiq::Testing.fake!
+  test "should archive video info subtitles, thumbnails and update cache" do
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://www.youtube.com/watch?v=1vSJrexmVWU'
     Media.stubs(:supported_video?).with(url).returns(true)
+    Media.stubs(:yt_download_proxy).with(url).returns(nil)
     id = Media.get_id url
 
-    assert_equal 0, ArchiveVideoWorker.jobs.size
     m = create_media url: url, key: a
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
     Media.send_to_video_archiver(url, a.id)
-    assert_equal 1, ArchiveVideoWorker.jobs.size
 
-    ArchiveVideoWorker.drain
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
     folder = File.join(Media.archiving_folder, id)
@@ -610,8 +580,8 @@ class ArchiverTest < ActiveSupport::TestCase
     data.dig('archives', 'video_archiver', 'thumbnails').each do |thumb|
       assert_match /\A#{folder}\/#{id}.*\.jpg\z/, thumb
     end
-    CONFIG['proxy_host'] = config
     Media.unstub(:supported_video?)
+    Media.unstub(:yt_download_proxy)
   end
 
   test "should handle error and update cache when archiving video fails" do
@@ -621,15 +591,12 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.stubs(:supported_video?).with(url).returns(true)
     id = Media.get_id url
 
-    assert_equal 0, ArchiveVideoWorker.jobs.size
     m = create_media url: url, key: a
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
-    Media.send_to_video_archiver(url, a.id)
-    assert_equal 1, ArchiveVideoWorker.jobs.size
 
     Pender::Store.stubs(:upload_video_folder).raises(StandardError.new('upload error'))
-    ArchiveVideoWorker.drain
+    Media.send_to_video_archiver(url, a.id, 20)
     data = m.as_json
     assert_not_nil data.dig('archives', 'video_archiver', 'error', 'message')
     Pender::Store.unstub(:upload_video_folder)
@@ -651,7 +618,7 @@ class ArchiverTest < ActiveSupport::TestCase
       data = m.as_json
       assert m.data.dig('archives', 'video_archiver').nil?
       Media.stubs(:supported_video?).with(url).raises(StandardError)
-      Media.send_to_video_archiver(url, a.id)
+      Media.send_to_video_archiver(url, a.id, 20)
       media_data = Pender::Store.read(Media.get_id(url), :json)
       assert_match /Could not archive/, media_data.dig('archives', 'video_archiver', 'error', 'message')
     end
