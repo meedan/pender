@@ -24,7 +24,7 @@ module MediaVideoArchiver
         Media.give_up('video_archiver', url, key_id, attempts, response) and return
         response = system("youtube-dl", URI.encode(url), "--proxy=#{Media.yt_download_proxy(URI.encode(url))}", "-o#{local_folder}/#{id}.%(ext)s", "--restrict-filenames", "--no-warnings", "-q", "--write-all-thumbnails", "--write-info-json", "--all-subs", "-fogg/mp4/webm",  out: '/dev/null')
         if response
-          ArchiveVideoWorker.perform_async(url, local_folder, self.archiving_folder, key_id)
+          Media.store_video_folder(url, local_folder, self.archiving_folder, key_id)
         else
           Media.delay_for(5.minutes).send_to_video_archiver(url, key_id, attempts + 1, {message: '[Youtube-DL] Cannot download video data', code: 5}, supported)
         end
@@ -53,6 +53,42 @@ module MediaVideoArchiver
       return unless uri.host.match(/youtube\.com/)
       ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG.dig(config).blank? }
       "http://#{CONFIG.dig('proxy_user_prefix').gsub(/-country$/, "-session-#{Random.rand(100000)}")}:#{CONFIG.dig('proxy_pass')}@#{CONFIG.dig('proxy_host')}:#{CONFIG.dig('proxy_port')}"
+    end
+
+    def store_video_folder(url, local_path, public_path, key_id)
+      begin
+        Pender::Store.upload_video_folder(local_path)
+        id = File.basename(local_path)
+        public_path = File.join(public_path, id)
+        data = organize_video_files(public_path, local_path)
+        FileUtils.rm_rf(local_path)
+      rescue StandardError => e
+        message = '[Video Archiver] Could not upload video data'
+        Airbrake.notify(e, url: url, archiver: 'video_archiver', error_code: 5, error_message: e.message) if Airbrake.configured?
+        Rails.logger.warn level: 'WARN', messsage: message, url: url, archiver: 'video_archiver', error_class: e.class, error_message: e.message
+        data = { error: { message: I18n.t(:could_not_archive, error_message: message), code: 5 }}
+      end
+      Media.notify_webhook_and_update_cache('video_archiver', url, data, key_id)
+    end
+
+    def organize_video_files(public_path, local_path)
+      data = { info: nil, videos: [], subtitles: [], thumbnails: [] }
+      Dir.glob("#{local_path}/*").each do |filename|
+        filepath = "#{public_path}/#{File.basename(filename)}"
+        mime_type = Rack::Mime.mime_type(File.extname(filename))
+        case mime_type
+        when /^image/
+          data[:thumbnails] << filepath
+        when /^video/
+          data[:videos] << filepath
+          data[:location] ||= filepath
+        when /application\/json/
+          data[:info] ||= filepath
+        else
+          data[:subtitles] << filepath
+        end
+      end
+      data
     end
   end
 end
