@@ -631,12 +631,18 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should handle schema when type is an array" do
+    doc = ''
+    open('test/data/page-with-schema.html') { |f| doc = f.read }
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
+
     url = 'https://patents.google.com/patent/US6896907B2/en'
     m = create_media url: url
     data = m.as_json
     article = data['schema']['ScholarlyArticle'].first
     assert_equal 'patent', article['@type']
     assert_equal 'http://schema.org', article['@context']
+
+    Media.any_instance.unstub(:doc)
   end
 
   test "should return nil on schema key if not found on page" do
@@ -647,11 +653,19 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should store all schemas as array" do
+    doc = ''
+    open('test/data/page-with-schema.html') { |f| doc = f.read }
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
+
     url = 'https://g1.globo.com/sp/sao-paulo/noticia/pf-indicia-haddad-por-caixa-2-em-campanha-para-a-prefeitura-de-sp.ghtml'
     m = create_media url: url
     data = m.as_json
-    assert_equal ['NewsArticle', 'WebPage'], data['schema'].keys.sort
+    assert_equal ['NewsArticle', 'ScholarlyArticle', 'WebPage'], data['schema'].keys.sort
     assert data['schema']['NewsArticle'].is_a? Array
+    assert data['schema']['WebPage'].is_a? Array
+    assert data['schema']['ScholarlyArticle'].is_a? Array
+
+    Media.any_instance.unstub(:doc)
   end
 
   test "should store ClaimReview schema after preprocess" do
