@@ -1,7 +1,7 @@
 module MediaTiktokItem
   extend ActiveSupport::Concern
 
-  TIKTOK_URL = /^https?:\/\/(www\.)?tiktok\.com\/(?<username>[^\/]+)\/video\/(?<id>[^\/]+)/
+  TIKTOK_URL = /^https?:\/\/(www\.)?tiktok\.com\/(?<username>[^\/]+)\/video\/(?<id>[^\/|?]+)/
 
   included do
     Media.declare('tiktok_item', [TIKTOK_URL])
