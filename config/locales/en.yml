@@ -20,7 +20,9 @@
 # available at http://guides.rubyonrails.org/i18n.html.
 
 en:
-  could_not_archive: "Could not archive: '%{error_message}'"
+  archiver_host_skipped: "Pages from host '%{info}' are not archived"
+  archiver_not_found: "This archiver does not exist"
+  archiver_disabled: "This archiver is disabled"
   url_not_valid: 'The URL is not valid'
   unauthorized: 'Unauthorized'
   parameters_missing: 'Parameters missing'

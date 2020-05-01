@@ -2,7 +2,7 @@ module MediaArchiveIsArchiver
   extend ActiveSupport::Concern
 
   included do
-    Media.declare_archiver('archive_is', [/^.*$/], :only, false)
+    Media.declare_archiver('archive_is', [/^.*$/], :only)
   end
 
   def archive_to_archive_is
@@ -18,23 +18,21 @@ module MediaArchiveIsArchiver
     def send_to_archive_is(url, key_id, attempts = 1, response = nil)
       Media.give_up('archive_is', url, key_id, attempts, response) and return
 
-      uri = URI.parse('http://archive.is/submit/')
-      http = Net::HTTP.new(uri.host, uri.port)
-      request = Net::HTTP::Post.new(uri.request_uri)
-      request.set_form_data({ url: url })
-      response = http.request(request)
-      Rails.logger.info level: 'INFO', messsage: '[Archiver] Sent URL to Archive.is', url: url, code: response.code, response: response.message
+      handle_archiving_exceptions('archive_is', 24.hours, { url: url, key_id: key_id, attempts: attempts }) do
+        uri = URI.parse('http://archive.today/submit/')
+        http = Net::HTTP.new(uri.host, uri.port)
+        request = Net::HTTP::Post.new(uri.request_uri)
+        request.set_form_data({ url: url })
+        response = http.request(request)
+        Rails.logger.info level: 'INFO', messsage: '[archive_is] Sent URL to archive', url: url, code: response.code, response: response.message
 
-      if response['refresh']
-        Media.delay_for(3.minutes).send_to_archive_is(url, key_id, attempts + 1, {code: response.code, message: response.message})
-      elsif response['location']
-        data = { location: response['location'] }
-        Media.notify_webhook_and_update_cache('archive_is', url, data, key_id)
-      else
-        Airbrake.notify(StandardError.new('Unexpected response from archive.is'), url: url, archiver: 'archive.is', error_code: response.code, error_message: response.message, error_body: response.body) if Airbrake.configured? && !response.nil?
-        Rails.logger.warn level: 'WARN', messsage: '[Archiver] Unexpected response from Archive.is', url: url, code: response.code, response: response.message
-        data = { error: { message: I18n.t(:could_not_archive, error_message: response.message), code: response.code }}
-        Media.notify_webhook_and_update_cache('archive_is', url, data, key_id)
+        if response['location']
+          data = { location: response['location'] }
+          Media.notify_webhook_and_update_cache('archive_is', url, data, key_id)
+        else
+          Rails.logger.warn level: 'WARN', messsage: 'ARCHIVER_FAILURE', url: url, archiver: 'archive_is', error_code: response.code, error_message: response.message, attempts: attempts
+          Media.delay_for(3.minutes).send_to_archive_is(url, key_id, attempts + 1, {code: response.code, message: response.message})
+        end
       end
     end
   end

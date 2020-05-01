@@ -17,16 +17,18 @@ module MediaVideoArchiver
 
     def send_to_video_archiver(url, key_id, attempts = 1, response = nil, supported = nil)
       handle_archiving_exceptions('video_archiver', 1.hour, { url: url, key_id: key_id, attempts: attempts, supported: supported }) do
-        supported = supported_video?(url) if supported.nil?
+        supported = supported_video?(url, key_id) if supported.nil?
         return if supported.is_a?(FalseClass) || notify_video_already_archived(url, key_id)
         id = Media.get_id(url)
         local_folder = File.join(Rails.root, 'tmp', 'videos', id)
         Media.give_up('video_archiver', url, key_id, attempts, response) and return
-        response = system("youtube-dl", URI.encode(url), "--proxy=#{Media.yt_download_proxy(URI.encode(url))}", "-o#{local_folder}/#{id}.%(ext)s", "--restrict-filenames", "--no-warnings", "-q", "--write-all-thumbnails", "--write-info-json", "--all-subs", "-fogg/mp4/webm",  out: '/dev/null')
-        if response
+        stdout, stderr, status = Open3.capture3("youtube-dl", URI.encode(url), "--proxy=#{Media.yt_download_proxy(URI.encode(url))}", "-o#{local_folder}/#{id}.%(ext)s", "--restrict-filenames", "--no-warnings", "-q", "--write-all-thumbnails", "--write-info-json", "--all-subs", "-fogg/mp4/webm")
+
+        if status.success?
           Media.store_video_folder(url, local_folder, self.archiving_folder, key_id)
         else
-          Media.delay_for(5.minutes).send_to_video_archiver(url, key_id, attempts + 1, {message: '[Youtube-DL] Cannot download video data', code: 5}, supported)
+          Rails.logger.warn level: 'WARN', messsage: 'ARCHIVER_FAILURE', url: url, archiver: 'video_archiver', error_code: status.exitstatus, error_message: stderr.gsub(/\n$/, ''), attempts: attempts
+          Media.delay_for(5.minutes).send_to_video_archiver(url, key_id, attempts + 1, {code: status.exitstatus, message: stderr.gsub(/\n$/, '')}, supported)
         end
       end
     end
@@ -43,9 +45,14 @@ module MediaVideoArchiver
       Media.notify_webhook('video_archiver', url, data, settings)
     end
 
-    def supported_video?(url)
+    def supported_video?(url, key_id = nil)
       url = URI.encode url
-      system("youtube-dl", URI.encode(url), "--proxy=#{Media.yt_download_proxy(url)}", "--restrict-filenames", "--no-warnings", "-g", "-q", out: '/dev/null')
+      stdout, stderr, status = Open3.capture3("youtube-dl", URI.encode(url), "--proxy=#{Media.yt_download_proxy(url)}", "--restrict-filenames", "--no-warnings", "-g", "-q")
+      unless status.success?
+        data = { error: { message: "#{status.exitstatus} #{stderr.gsub(/;.*\n$/, '')}", code: LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA') }}
+        Media.notify_webhook_and_update_cache('video_archiver', url, data, key_id)
+      end
+      status.success?
     end
 
     def yt_download_proxy(url)
@@ -56,18 +63,11 @@ module MediaVideoArchiver
     end
 
     def store_video_folder(url, local_path, public_path, key_id)
-      begin
-        Pender::Store.upload_video_folder(local_path)
-        id = File.basename(local_path)
-        public_path = File.join(public_path, id)
-        data = organize_video_files(public_path, local_path)
-        FileUtils.rm_rf(local_path)
-      rescue StandardError => e
-        message = '[Video Archiver] Could not upload video data'
-        Airbrake.notify(e, url: url, archiver: 'video_archiver', error_code: 5, error_message: e.message) if Airbrake.configured?
-        Rails.logger.warn level: 'WARN', messsage: message, url: url, archiver: 'video_archiver', error_class: e.class, error_message: e.message
-        data = { error: { message: I18n.t(:could_not_archive, error_message: message), code: 5 }}
-      end
+      Pender::Store.upload_video_folder(local_path)
+      id = File.basename(local_path)
+      public_path = File.join(public_path, id)
+      data = organize_video_files(public_path, local_path)
+      FileUtils.rm_rf(local_path)
       Media.notify_webhook_and_update_cache('video_archiver', url, data, key_id)
     end
 

@@ -2,7 +2,7 @@ module MediaPermaCcArchiver
   extend ActiveSupport::Concern
 
   included do
-    Media.declare_archiver('perma_cc', [/^.*$/], :only) unless CONFIG.dig('perma_cc_key').blank?
+    Media.declare_archiver('perma_cc', [/^.*$/], :only, !CONFIG.dig('perma_cc_key').blank?)
   end
 
   def archive_to_perma_cc
@@ -18,22 +18,26 @@ module MediaPermaCcArchiver
     def send_to_perma_cc(url, key_id, attempts = 1, response = nil)
       return if notify_already_archived_on_perma_cc(url, key_id)
       Media.give_up('perma_cc', url, key_id, attempts, response) and return
-      encoded_uri = URI.encode(URI.decode(url))
-      uri = URI.parse("https://api.perma.cc/v1/archives/?api_key=#{CONFIG['perma_cc_key']}")
-      headers = { 'Content-Type': 'application/json' }
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      request = Net::HTTP::Post.new(uri.request_uri, headers)
-      request.body = { url: encoded_uri }.to_json
-      response = http.request(request)
-      Rails.logger.info level: 'INFO', messsage: '[Archiver] Sent URL to Perma.cc', url: url, code: response.code, response: response.message
 
-      if !response.nil? && response.code == '201' && !response.body.blank?
-        body = JSON.parse(response.body)
-        data = { location: 'http://perma.cc/' + body['guid'] }
-        Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
-      else
-        Media.delay_for(3.minutes).send_to_perma_cc(url, key_id, attempts + 1, {code: response.code, message: response.message})
+      handle_archiving_exceptions('perma_cc', 24.hours, { url: url, key_id: key_id, attempts: attempts }) do
+        encoded_uri = URI.encode(URI.decode(url))
+        uri = URI.parse("https://api.perma.cc/v1/archives/?api_key=#{CONFIG['perma_cc_key']}")
+        headers = { 'Content-Type': 'application/json' }
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        request = Net::HTTP::Post.new(uri.request_uri, headers)
+        request.body = { url: encoded_uri }.to_json
+        response = http.request(request)
+        Rails.logger.info level: 'INFO', messsage: '[perma_cc] Sent URL to archive', url: url, code: response.code, response: response.message
+
+        if !response.nil? && response.code == '201' && !response.body.blank?
+          body = JSON.parse(response.body)
+          data = { location: 'http://perma.cc/' + body['guid'] }
+          Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
+        else
+          Rails.logger.warn level: 'WARN', messsage: 'ARCHIVER_FAILURE', url: url, archiver: 'perma_cc', error_code: response.code, error_message: response.message, attempts: attempts
+          Media.delay_for(3.minutes).send_to_perma_cc(url, key_id, attempts + 1, {code: response.code, message: response.message})
+        end
       end
     end
 
