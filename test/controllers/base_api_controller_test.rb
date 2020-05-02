@@ -49,19 +49,17 @@ class BaseApiControllerTest < ActionController::TestCase
     get :about, format: :json
     assert_response :success
     response = JSON.parse(@response.body)
-    puts response['data']['archivers']
     assert_not_includes response['data']['archivers'], {"key"=>"perma_cc", "label"=>"Perma.cc"}
 
     CONFIG['perma_cc_key'] = 'perma-cc-key'
     Media.declare_archiver('perma_cc', [/^.*$/], :only, CONFIG.dig('perma_cc_key').present?)
     get :about, format: :json
     response = JSON.parse(@response.body)
-    puts response['data']['archivers']
     assert_includes response['data']['archivers'], {"key"=>"perma_cc", "label"=>"Perma.cc"}
 
+    Media::ARCHIVERS['perma_cc'][:enabled] = CONFIG.dig('perma_cc_key').present?
     Media.unstub(:enabled_archivers)
     CONFIG.delete('perma_cc_key')
-    Media::ARCHIVERS.delete('perma_cc')
   end
 
 end

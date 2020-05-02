@@ -534,7 +534,6 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should archive on all archivers when no archiver parameter is sent" do
-    puts "ARCHIVERS: #{Media::ARCHIVERS}"
     Media.any_instance.unstub(:archive_to_archive_is)
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
