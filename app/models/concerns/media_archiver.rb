@@ -6,7 +6,6 @@ module MediaArchiver
   ARCHIVERS = {}
 
   def archive(archivers = nil)
-    puts "archivers nil: #{archivers.nil?}"
     url = self.url
     if !archivers.nil?
       archivers = archivers.split(',').map(&:strip)
@@ -88,7 +87,6 @@ module MediaArchiver
     end
 
     def available_archivers(archivers, media = nil)
-      puts "archivers after filter: #{archivers}"
       available = ARCHIVERS.keys & archivers
       media.update_data_with_archivers_errors(archivers - available, { type: 'ARCHIVER_NOT_FOUND' }) if media
       available
