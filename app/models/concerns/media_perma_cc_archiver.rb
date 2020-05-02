@@ -2,7 +2,7 @@ module MediaPermaCcArchiver
   extend ActiveSupport::Concern
 
   included do
-    Media.declare_archiver('perma_cc', [/^.*$/], :only, !CONFIG.dig('perma_cc_key').blank?)
+    Media.declare_archiver('perma_cc', [/^.*$/], :only, CONFIG.dig('perma_cc_key').present?)
   end
 
   def archive_to_perma_cc
