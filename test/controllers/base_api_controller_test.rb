@@ -57,9 +57,9 @@ class BaseApiControllerTest < ActionController::TestCase
     response = JSON.parse(@response.body)
     assert_includes response['data']['archivers'], {"key"=>"perma_cc", "label"=>"Perma.cc"}
 
+    CONFIG.delete('perma_cc_key')
     Media::ARCHIVERS['perma_cc'][:enabled] = CONFIG.dig('perma_cc_key').present?
     Media.unstub(:enabled_archivers)
-    CONFIG.delete('perma_cc_key')
   end
 
 end
