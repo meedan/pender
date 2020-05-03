@@ -15,7 +15,7 @@ module MediaPermaCcArchiver
       self.delay_for(15.seconds).send_to_perma_cc(url, key_id)
     end
 
-    def send_to_perma_cc(url, key_id, attempts = 1, response = nil)
+    def send_to_perma_cc(url, key_id, attempts = 1, response = nil, supported = nil)
       return if notify_already_archived_on_perma_cc(url, key_id)
       Media.give_up('perma_cc', url, key_id, attempts, response) and return
 
@@ -35,8 +35,7 @@ module MediaPermaCcArchiver
           data = { location: 'http://perma.cc/' + body['guid'] }
           Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
         else
-          Rails.logger.warn level: 'WARN', messsage: 'ARCHIVER_FAILURE', url: url, archiver: 'perma_cc', error_code: response.code, error_message: response.message, attempts: attempts
-          Media.delay_for(3.minutes).send_to_perma_cc(url, key_id, attempts + 1, {code: response.code, message: response.message})
+          retry_archiving_after_failure('ARCHIVER_FAILURE', 'perma_cc', 3.minutes, { url: url, key_id: key_id, attempts: attempts, code: response.code, message: response.message })
         end
       end
     end
