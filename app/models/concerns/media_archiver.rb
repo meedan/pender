@@ -7,10 +7,8 @@ module MediaArchiver
 
   def archive(archivers = nil)
     url = self.url
-    if !archivers.nil?
-      archivers = archivers.split(',').map(&:strip)
-      self.skip_archive_if_needed(archivers) and return
-    end
+    archivers = archivers.to_s.split(',').map(&:strip)
+    self.skip_archive_if_needed(archivers) and return
     archivers = self.filter_archivers(archivers)
     available = Media.available_archivers(archivers, self)
     Media.enabled_archivers(available, self).each do |name, rule|
@@ -26,7 +24,7 @@ module MediaArchiver
     return true if archivers.include?('none')
     url = self.url
     skip = CONFIG['archiver_skip_hosts']
-    unless skip.blank? || archivers.nil?
+    unless skip.blank?
       host = begin URI.parse(url).host rescue '' end
       update_data_with_archivers_errors(archivers, { type: 'ARCHIVER_HOST_SKIPPED', info: host }) and return true if skip.split(',').include?(host)
     end
@@ -51,7 +49,7 @@ module MediaArchiver
   end
 
   def filter_archivers(archivers)
-    archivers = ARCHIVERS.keys if archivers.nil?
+    archivers = ARCHIVERS.keys if archivers.blank?
     id = Media.get_id(url)
     data = Pender::Store.read(id, :json)
     return archivers if data.nil? || data.dig(:archives).nil?
@@ -113,12 +111,17 @@ module MediaArchiver
         yield
       rescue StandardError => error
         error_type = 'ARCHIVER_ERROR'
-        Media.delay_for(delay_time).send("send_to_#{archiver}", params[:url], params[:key_id], params[:attempts] + 1, {code: 5, message: error.message, error_type: error_type}, params[:supported])
-        Rails.logger.warn level: 'WARN', messsage: error_type, url: params[:url], archiver: archiver, error_class: error.class, error_message: error.message
+        params.merge!({code: LapisConstants::ErrorCodes::const_get(error_type), message: "#{error.class} #{error.message}"})
+        retry_archiving_after_failure(error_type, archiver, delay_time, params)
         data = { error: { message: "#{error.class} #{error.message}", code: LapisConstants::ErrorCodes::const_get(error_type) }}
         Media.notify_webhook_and_update_cache(archiver, params[:url], data, params[:key_id])
         return
       end
+    end
+
+    def retry_archiving_after_failure(error_type, archiver, delay_time, params)
+      Rails.logger.warn level: 'WARN', messsage: error_type, url: params[:url], archiver: archiver, error_code: params[:code], error_message: params[:message], attempts: params[:attempts]
+      Media.delay_for(delay_time).send("send_to_#{archiver}", params[:url], params[:key_id], params[:attempts] + 1, {code: params[:code], message: params[:message]}, params[:supported])
     end
   end
 

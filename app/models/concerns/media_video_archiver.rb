@@ -22,13 +22,12 @@ module MediaVideoArchiver
         id = Media.get_id(url)
         local_folder = File.join(Rails.root, 'tmp', 'videos', id)
         Media.give_up('video_archiver', url, key_id, attempts, response) and return
-        stdout, stderr, status = Open3.capture3("youtube-dl", URI.encode(url), "--proxy=#{Media.yt_download_proxy(URI.encode(url))}", "-o#{local_folder}/#{id}.%(ext)s", "--restrict-filenames", "--no-warnings", "-q", "--write-all-thumbnails", "--write-info-json", "--all-subs", "-fogg/mp4/webm")
+        _stdout, stderr, status = Open3.capture3("youtube-dl", URI.encode(url), "--proxy=#{Media.yt_download_proxy(URI.encode(url))}", "-o#{local_folder}/#{id}.%(ext)s", "--restrict-filenames", "--no-warnings", "-q", "--write-all-thumbnails", "--write-info-json", "--all-subs", "-fogg/mp4/webm")
 
         if status.success?
           Media.store_video_folder(url, local_folder, self.archiving_folder, key_id)
         else
-          Rails.logger.warn level: 'WARN', messsage: 'ARCHIVER_FAILURE', url: url, archiver: 'video_archiver', error_code: status.exitstatus, error_message: stderr.gsub(/\n$/, ''), attempts: attempts
-          Media.delay_for(5.minutes).send_to_video_archiver(url, key_id, attempts + 1, {code: status.exitstatus, message: stderr.gsub(/\n$/, '')}, supported)
+          retry_archiving_after_failure('ARCHIVER_FAILURE', 'video_archiver', 5.minutes, { url: url, key_id: key_id, attempts: attempts, code: status.exitstatus, message: stderr.gsub(/\n$/, ''), supported: supported })
         end
       end
     end
@@ -47,7 +46,7 @@ module MediaVideoArchiver
 
     def supported_video?(url, key_id = nil)
       url = URI.encode url
-      stdout, stderr, status = Open3.capture3("youtube-dl", URI.encode(url), "--proxy=#{Media.yt_download_proxy(url)}", "--restrict-filenames", "--no-warnings", "-g", "-q")
+      _stdout, stderr, status = Open3.capture3("youtube-dl", URI.encode(url), "--proxy=#{Media.yt_download_proxy(url)}", "--restrict-filenames", "--no-warnings", "-g", "-q")
       unless status.success?
         data = { error: { message: "#{status.exitstatus} #{stderr.gsub(/;.*\n$/, '')}", code: LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA') }}
         Media.notify_webhook_and_update_cache('video_archiver', url, data, key_id)
