@@ -15,7 +15,7 @@ module MediaArchiveIsArchiver
       self.delay_for(15.seconds).send_to_archive_is(url, key_id)
     end
 
-    def send_to_archive_is(url, key_id, attempts = 1, response = nil, supported = nil)
+    def send_to_archive_is(url, key_id, attempts = 1, response = nil, _supported = nil)
       Media.give_up('archive_is', url, key_id, attempts, response) and return
 
       handle_archiving_exceptions('archive_is', 24.hours, { url: url, key_id: key_id, attempts: attempts }) do

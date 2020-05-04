@@ -22,7 +22,9 @@ module MediaVideoArchiver
         id = Media.get_id(url)
         local_folder = File.join(Rails.root, 'tmp', 'videos', id)
         Media.give_up('video_archiver', url, key_id, attempts, response) and return
-        _stdout, stderr, status = Open3.capture3("youtube-dl", URI.encode(url), "--proxy=#{Media.yt_download_proxy(URI.encode(url))}", "-o#{local_folder}/#{id}.%(ext)s", "--restrict-filenames", "--no-warnings", "-q", "--write-all-thumbnails", "--write-info-json", "--all-subs", "-fogg/mp4/webm")
+        proxy = "--proxy=#{Media.yt_download_proxy(URI.encode(url))}"
+        output = "-o#{local_folder}/#{id}.%(ext)s"
+        _stdout, stderr, status = Open3.capture3("youtube-dl", URI.encode(url), proxy, output, "--restrict-filenames", "--no-warnings", "-q", "--write-all-thumbnails", "--write-info-json", "--all-subs", "-fogg/mp4/webm")
 
         if status.success?
           Media.store_video_folder(url, local_folder, self.archiving_folder, key_id)
@@ -46,7 +48,8 @@ module MediaVideoArchiver
 
     def supported_video?(url, key_id = nil)
       url = URI.encode url
-      _stdout, stderr, status = Open3.capture3("youtube-dl", URI.encode(url), "--proxy=#{Media.yt_download_proxy(url)}", "--restrict-filenames", "--no-warnings", "-g", "-q")
+      proxy = "--proxy=#{Media.yt_download_proxy(URI.encode(url))}"
+      _stdout, stderr, status = Open3.capture3("youtube-dl", URI.encode(url), proxy, "--restrict-filenames", "--no-warnings", "-g", "-q")
       unless status.success?
         data = { error: { message: "#{status.exitstatus} #{stderr.gsub(/;.*\n$/, '')}", code: LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA') }}
         Media.notify_webhook_and_update_cache('video_archiver', url, data, key_id)
