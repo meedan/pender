@@ -15,7 +15,7 @@ module MediaPermaCcArchiver
       self.delay_for(15.seconds).send_to_perma_cc(url, key_id)
     end
 
-    def send_to_perma_cc(url, key_id, attempts = 1, response = nil, supported = nil)
+    def send_to_perma_cc(url, key_id, attempts = 1, response = nil, _supported = nil)
       return if notify_already_archived_on_perma_cc(url, key_id)
       Media.give_up('perma_cc', url, key_id, attempts, response) and return
 
