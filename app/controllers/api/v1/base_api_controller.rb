@@ -13,7 +13,7 @@ module Api
 
       def about
         return unless request.format.json?
-        archivers = Media.enabled_archivers(*Media::ARCHIVERS.keys)
+        archivers = Media.enabled_archivers(Media::ARCHIVERS.keys)
         info = {
           name: "Keep",
           version: VERSION,

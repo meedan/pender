@@ -324,8 +324,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match(/Hong Kong Free Press/, data['title'])
     assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
-    assert_equal '@AFP', data['username']
-    assert_equal 'https://twitter.com/AFP', data['author_url']
+    assert_match /https:\/\/.+AFP/, data['author_url']
     assert_not_nil data['picture']
     assert_nil data['error']
   end
@@ -340,8 +339,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match(/Hong Kong Free Press/, data['title'])
     assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
-    assert_equal '@AFP', data['username']
-    assert_equal 'https://twitter.com/AFP', data['author_url']
+    assert_match /https:\/\/.+AFP/, data['author_url']
     assert_not_nil data['picture']
     assert_match(/StandardError/, data['error']['message'])
   end

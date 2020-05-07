@@ -25,7 +25,7 @@ module MediaArchiveOrgArchiver
         http.use_ssl = true
         request = Net::HTTP::Get.new(uri.request_uri)
         response = http.request(request)
-        Rails.logger.info level: 'INFO', messsage: '[Archiver] Sent URL to Archive.org', url: url, code: response.code, response: response.message
+        Rails.logger.info level: 'INFO', messsage: '[archive_org] Sent URL to archive', url: url, code: response.code, response: response.message
 
         location = response['content-location'] || response['location']
         if location
@@ -34,7 +34,7 @@ module MediaArchiveOrgArchiver
           data = { location: location }
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
         else
-          Media.delay_for(3.minutes).send_to_archive_org(url, key_id, attempts + 1, {code: response.code, message: response.message})
+          retry_archiving_after_failure('ARCHIVER_FAILURE', 'archive_org', 3.minutes, { url: url, key_id: key_id, attempts: attempts, code: response.code, message: response.message })
         end
       end
     end
