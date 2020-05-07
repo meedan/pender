@@ -679,7 +679,7 @@ class ArchiverTest < ActiveSupport::TestCase
     url = 'http://example.com'
     m = Media.new url: url
     m.data = Media.minimal_data(m)
-    m.archive('archive_org')
+    m.archive
 
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_HOST_SKIPPED'), m.data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal I18n.t(:archiver_host_skipped, info: 'example.com'), m.data.dig('archives', 'archive_org', 'error', 'message')
