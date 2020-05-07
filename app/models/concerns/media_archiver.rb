@@ -8,8 +8,8 @@ module MediaArchiver
   def archive(archivers = nil)
     url = self.url
     archivers = archivers.to_s.split(',').map(&:strip)
-    self.skip_archive_if_needed(archivers) and return
     archivers = self.filter_archivers(archivers)
+    self.skip_archive_if_needed(archivers) and return
     available = Media.available_archivers(archivers, self)
     Media.enabled_archivers(available, self).each do |name, rule|
       rule[:patterns].each do |pattern|
