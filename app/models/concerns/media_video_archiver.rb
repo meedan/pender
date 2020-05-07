@@ -25,12 +25,12 @@ module MediaVideoArchiver
         uri = URI.encode(url)
         proxy = "--proxy=#{Media.yt_download_proxy(uri)}"
         output = "-o#{local_folder}/#{id}.%(ext)s"
-        _stdout, stderr, status = Open3.capture3('youtube-dl', uri, proxy, output, '--restrict-filenames', '--no-warnings', '-q', '--write-all-thumbnails', '--write-info-json', '--all-subs', '-fogg/mp4/webm')
+        system('youtube-dl', uri, proxy, output, '--restrict-filenames', '--no-warnings', '-q', '--write-all-thumbnails', '--write-info-json', '--all-subs', '-fogg/mp4/webm')
 
-        if status.success?
+        if $?.success?
           Media.store_video_folder(url, local_folder, self.archiving_folder, key_id)
         else
-          retry_archiving_after_failure('ARCHIVER_FAILURE', 'video_archiver', 5.minutes, { url: url, key_id: key_id, attempts: attempts, code: status.exitstatus, message: stderr.gsub(/\n$/, ''), supported: supported })
+          retry_archiving_after_failure('ARCHIVER_FAILURE', 'video_archiver', 5.minutes, { url: url, key_id: key_id, attempts: attempts, code: $?.exitstatus, message: I18n.t(:archiver_video_not_downloaded), supported: supported })
         end
       end
     end
@@ -49,13 +49,12 @@ module MediaVideoArchiver
 
     def supported_video?(url, key_id = nil)
       uri = URI.encode url
-      proxy = "--proxy=#{Media.yt_download_proxy(uri)}"
-      _stdout, stderr, status = Open3.capture3('youtube-dl', uri, proxy, '--restrict-filenames', '--no-warnings', '-g', '-q')
-      unless status.success?
-        data = { error: { message: "#{status.exitstatus} #{stderr.gsub(/;.*\n$/, '')}", code: LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA') }}
+      system('youtube-dl', uri, "--proxy=#{Media.yt_download_proxy(uri)}", '--restrict-filenames', '--no-warnings', '-g', '-q')
+      unless $?.success?
+        data = { error: { message: I18n.t(:archiver_not_supported_media, code: $?.exitstatus), code: LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA') }}
         Media.notify_webhook_and_update_cache('video_archiver', url, data, key_id)
       end
-      status.success?
+      $?.success?
     end
 
     def yt_download_proxy(url)

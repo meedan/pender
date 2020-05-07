@@ -37,9 +37,9 @@ module MediaArchiver
     key_id = self.key ? self.key.id : nil
     archivers.each do |archiver|
       message = if error[:info]
-                  I18n.t(error[:type].downcase.to_sym, archiver_key: archiver, info: error[:info])
+                  I18n.t(error[:type].downcase.to_sym, info: error[:info])
                 else
-                  I18n.t(error[:type].downcase.to_sym, archiver_key: archiver)
+                  I18n.t(error[:type].downcase.to_sym)
                 end
       data = { error: { message: message, code: LapisConstants::ErrorCodes::const_get(error[:type]) }}
       self.data['archives'].merge!({"#{archiver}": data })
@@ -66,7 +66,7 @@ module MediaArchiver
         error_type = response[:error_type] || 'ARCHIVER_FAILURE'
         Airbrake.notify(StandardError.new(error_type), url: url, archiver: archiver, error_code: response[:code], error_message: response[:message]) if Airbrake.configured?
         Rails.logger.warn level: 'WARN', messsage: error_type, url: url, archiver: archiver, error_code: response[:code], error_message: response[:message]
-        data = { error: { message: "#{response[:code]} #{response[:message]}", code: LapisConstants::ErrorCodes::const_get(error_type) }}
+        data = { error: { message: I18n.t(:archiver_failure, message: response[:message], code: response[:code]), code: LapisConstants::ErrorCodes::const_get(error_type) }}
         Media.notify_webhook_and_update_cache(archiver, url, data, key_id)
         return true
       end
@@ -113,7 +113,7 @@ module MediaArchiver
         error_type = 'ARCHIVER_ERROR'
         params.merge!({code: LapisConstants::ErrorCodes::const_get(error_type), message: "#{error.class} #{error.message}"})
         retry_archiving_after_failure(error_type, archiver, delay_time, params)
-        data = { error: { message: "#{error.class} #{error.message}", code: LapisConstants::ErrorCodes::const_get(error_type) }}
+        data = { error: { message: params[:message], code: LapisConstants::ErrorCodes::const_get(error_type) }}
         Media.notify_webhook_and_update_cache(archiver, params[:url], data, params[:key_id])
         return
       end

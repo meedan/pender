@@ -492,7 +492,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     media_data = Pender::Store.read(Media.get_id(url), :json)
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA'), media_data.dig('archives', 'video_archiver', 'error', 'code')
-    assert_equal '1 ERROR: Unsupported Twitter Card.', media_data.dig('archives', 'video_archiver', 'error', 'message')
+    assert_equal I18n.t(:archiver_not_supported_media, code: 1), media_data.dig('archives', 'video_archiver', 'error', 'message')
 
     Media.any_instance.unstub(:parse)
     Media.any_instance.unstub(:get_metrics)
@@ -626,7 +626,7 @@ class ArchiverTest < ActiveSupport::TestCase
       Media.send_to_video_archiver(url, a.id, 20)
       media_data = Pender::Store.read(Media.get_id(url), :json)
       assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'video_archiver', 'error', 'code')
-      assert_equal '1 ERROR: requested format not available', media_data.dig('archives', 'video_archiver', 'error', 'message')
+      assert_equal "1 #{I18n.t(:archiver_video_not_downloaded)}", media_data.dig('archives', 'video_archiver', 'error', 'message')
     end
 
     WebMock.disable!
