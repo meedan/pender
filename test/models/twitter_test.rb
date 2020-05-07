@@ -83,13 +83,15 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should parse twitter metatags 2" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta name='twitter:title' content='Hong Kong Free Press'><br/><meta name='twitter:creator' content='@krislc'><meta name='twitter:description' content='Chief executive'><meta name='twitter:image' content='http://example.com/image.png'>"))
     m = create_media url: 'https://www.hongkongfp.com/2017/03/08/top-officials-suing-defamation-may-give-perception-bullying-says-chief-exec-candidate-woo/'
     d = m.as_json
-    assert_match(/Hong Kong Free Press/, d['title'])
-    assert_match /hongkongfp.com\/wp-content\/uploads\/2017\/03\/2017-03-06_11-45-23.jpg/, d['picture']
-    assert_match(/Chief executive candidate Woo Kwok-hing/, d['description'])
+    assert_equal 'Hong Kong Free Press', d['title']
+    assert_equal 'http://example.com/image.png', d['picture']
+    assert_equal 'Chief executive', d['description']
     assert_equal '@krislc', d['username']
     assert_equal 'https://twitter.com/krislc', d['author_url']
+    Media.any_instance.unstub(:doc)
   end
 
   test "should parse valid link with blank spaces" do
