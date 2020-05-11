@@ -24,7 +24,7 @@ module MediaArchiveIsArchiver
         request = Net::HTTP::Post.new(uri.request_uri)
         request.set_form_data({ url: url })
         response = http.request(request)
-        Rails.logger.info level: 'INFO', messsage: '[archive_is] Sent URL to archive', url: url, code: response.code, response: response.message
+        Rails.logger.info level: 'INFO', message: '[archive_is] Sent URL to archive', url: url, code: response.code, response: response.message
 
         if response['location']
           data = { location: response['location'] }

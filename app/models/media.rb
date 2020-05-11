@@ -142,7 +142,7 @@ class Media
       request = Net::HTTP::Post.new(uri.request_uri, headers)
       request.body = payload
       response = http.request(request)
-      Rails.logger.info level: 'INFO', messsage: 'Webhook notification', url: url, type: type, code: response.code, response: response.message, webhook_url: settings['webhook_url']
+      Rails.logger.info level: 'INFO', message: 'Webhook notification', url: url, type: type, code: response.code, response: response.message, webhook_url: settings['webhook_url']
       @webhook_called = true
     end
     true
