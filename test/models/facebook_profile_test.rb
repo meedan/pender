@@ -329,15 +329,12 @@ class FacebookProfileTest < ActiveSupport::TestCase
   end
 
   test "should create Facebook post from mobile URL" do
-    m = create_media url: 'https://m.facebook.com/photo.php?fbid=10155150801660195&set=p.10155150801660195&type=1&theater'
+    m = create_media url: 'https://m.facebook.com/KIKOLOUREIROofficial/photos/a.10150618138397252/10152555300292252/?type=3&theater'
     d = m.as_json
-    assert_equal '100000497329098_981302451896323', d['uuid']
-    assert_equal 'Kiko Loureiro added a new photo.', d['text']
-    assert_equal '100000497329098', d['user_uuid']
+    assert_match /Bolívia/, d['text']
     assert_equal 'Kiko Loureiro', d['author_name']
     assert_equal 1, d['media_count']
-    assert_equal '981302451896323', d['object_id']
-    assert_equal '21/11/2014', Time.parse(d['published_at']).strftime("%d/%m/%Y")
+    assert_equal '20/11/2014', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should parse Facebook photo post url" do
