@@ -7,8 +7,8 @@ class TiktokTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal '@scout2015', d['username']
     assert_equal 'profile', d['type']
-    assert_equal 'Scout & Suki on TikTok', d['title']
-    assert_equal 'Scout & Suki on TikTok', d['author_name']
+    assert_equal 'Scout and Suki on TikTok', d['title']
+    assert_equal 'Scout and Suki on TikTok', d['author_name']
     assert_equal '@scout2015', d['external_id']
     assert_not_nil d['picture']
     assert_equal 'https://www.tiktok.com/@scout2015', m.url
@@ -21,7 +21,7 @@ class TiktokTest < ActiveSupport::TestCase
     assert_equal '@scout2015', d['username']
     assert_equal 'item', d['type']
     assert_match /Who agrees/, d['title']
-    assert_equal 'Scout & Suki', d['author_name']
+    assert_equal 'Scout and Suki', d['author_name']
     assert_equal '6771039287917038854', d['external_id']
     assert_equal 'https://www.tiktok.com/@scout2015', d['author_url']
     assert_match /^http/, d['picture']
