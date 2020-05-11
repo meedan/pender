@@ -28,7 +28,7 @@ module MediaPermaCcArchiver
         request = Net::HTTP::Post.new(uri.request_uri, headers)
         request.body = { url: encoded_uri }.to_json
         response = http.request(request)
-        Rails.logger.info level: 'INFO', messsage: '[perma_cc] Sent URL to archive', url: url, code: response.code, response: response.message
+        Rails.logger.info level: 'INFO', message: '[perma_cc] Sent URL to archive', url: url, code: response.code, response: response.message
 
         if !response.nil? && response.code == '201' && !response.body.blank?
           body = JSON.parse(response.body)

@@ -3,8 +3,8 @@ require 'cc_deville'
 
 class FacebookItemTest < ActiveSupport::TestCase
   test "should get canonical URL parsed from facebook html" do
-    media1 = create_media url: 'https://www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3&theater'
-    media2 = create_media url: 'https://www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3'
+    media1 = create_media url: 'https://www.facebook.com/photo.php?fbid=10155446238011949&set=a.10151842779956949&type=3&theater'
+    media2 = create_media url: 'https://www.facebook.com/photo.php?fbid=10155446238011949&set=a.10151842779956949&type=3'
     media1.as_json
     media2.as_json
     assert_equal media2.url, media1.url

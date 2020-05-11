@@ -43,7 +43,7 @@ module MediaArchiver
                 end
       data = { error: { message: message, code: LapisConstants::ErrorCodes::const_get(error[:type]) }}
       self.data['archives'].merge!({"#{archiver}": data })
-      Rails.logger.warn level: 'WARN', messsage: error[:type], url: self.url, archiver: archiver
+      Rails.logger.warn level: 'WARN', message: error[:type], url: self.url, archiver: archiver
       Media.notify_webhook_and_update_cache(archiver, url, data, key_id)
     end
   end
@@ -65,7 +65,7 @@ module MediaArchiver
       if attempts > 20
         error_type = response[:error_type] || 'ARCHIVER_FAILURE'
         Airbrake.notify(StandardError.new(error_type), url: url, archiver: archiver, error_code: response[:code], error_message: response[:message]) if Airbrake.configured?
-        Rails.logger.warn level: 'WARN', messsage: error_type, url: url, archiver: archiver, error_code: response[:code], error_message: response[:message]
+        Rails.logger.warn level: 'WARN', message: "[#{error_type}] #{response[:message]}", url: url, archiver: archiver, error_code: response[:code], error_message: response[:message]
         data = { error: { message: I18n.t(:archiver_failure, message: response[:message], code: response[:code]), code: LapisConstants::ErrorCodes::const_get(error_type) }}
         Media.notify_webhook_and_update_cache(archiver, url, data, key_id)
         return true
@@ -120,7 +120,7 @@ module MediaArchiver
     end
 
     def retry_archiving_after_failure(error_type, archiver, delay_time, params)
-      Rails.logger.warn level: 'WARN', messsage: error_type, url: params[:url], archiver: archiver, error_code: params[:code], error_message: params[:message], attempts: params[:attempts]
+      Rails.logger.warn level: 'WARN', message: "[#{error_type}] #{params[:message]}", url: params[:url], archiver: archiver, error_code: params[:code], error_message: params[:message], attempts: params[:attempts]
       Media.delay_for(delay_time).send("send_to_#{archiver}", params[:url], params[:key_id], params[:attempts] + 1, {code: params[:code], message: params[:message]}, params[:supported])
     end
   end

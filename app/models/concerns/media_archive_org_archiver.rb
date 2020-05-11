@@ -25,7 +25,7 @@ module MediaArchiveOrgArchiver
         http.use_ssl = true
         request = Net::HTTP::Get.new(uri.request_uri)
         response = http.request(request)
-        Rails.logger.info level: 'INFO', messsage: '[archive_org] Sent URL to archive', url: url, code: response.code, response: response.message
+        Rails.logger.info level: 'INFO', message: '[archive_org] Sent URL to archive', url: url, code: response.code, response: response.message
 
         location = response['content-location'] || response['location']
         if location
