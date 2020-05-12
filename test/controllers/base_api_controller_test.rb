@@ -41,22 +41,25 @@ class BaseApiControllerTest < ActionController::TestCase
     assert_equal [{"key"=>"archive_org", "label"=>"Archive.org"}, {"key"=>"video", "label"=>"Video"}], response['data']['archivers']
   end
 
-  test "should return Perma.cc as archiver only if it is declared and enabled" do
+  test "should return Perma.cc as enabled archiver if perma_key is present" do
     authenticate_with_token
-    Media::ARCHIVERS.stubs(:keys).returns('perma_cc')
-    Media::ARCHIVERS.stubs(:slice).returns({ 'perma_cc' => {:patterns=>[/^.*$/], :modifier=>:only, :enabled=>true}})
+
+    assert_nil CONFIG.dig('perma_cc_key')
+
     get :about, format: :json
     assert_response :success
     response = JSON.parse(@response.body)
-    assert_equal [{"key"=>"perma_cc", "label"=>"Perma.cc"}], response['data']['archivers']
+    assert_not_includes response['data']['archivers'], {"key"=>"perma_cc", "label"=>"Perma.cc"}
 
-    Media::ARCHIVERS.stubs(:slice).returns({ 'perma_cc' => {:patterns=>[/^.*$/], :modifier=>:only, :enabled=>false}})
+    CONFIG['perma_cc_key'] = 'perma-cc-key'
+    Media.declare_archiver('perma_cc', [/^.*$/], :only, CONFIG.dig('perma_cc_key').present?)
     get :about, format: :json
     response = JSON.parse(@response.body)
-    assert_equal [], response['data']['archivers']
+    assert_includes response['data']['archivers'], {"key"=>"perma_cc", "label"=>"Perma.cc"}
 
-    Media::ARCHIVERS.unstub(:keys)
-    Media::ARCHIVERS.unstub(:slice)
+    CONFIG.delete('perma_cc_key')
+    Media::ARCHIVERS['perma_cc'][:enabled] = CONFIG.dig('perma_cc_key').present?
+    Media.unstub(:enabled_archivers)
   end
 
 end

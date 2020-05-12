@@ -32,21 +32,21 @@ class ArchiverTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     urls = ['https://twitter.com/marcouza/status/875424957613920256', 'https://twitter.com/marcouza/status/863907872421412864', 'https://twitter.com/marcouza/status/863876311428861952']
     WebMock.enable!
-    allowed_sites = lambda{ |uri| uri.host != 'archive.is' }
+    allowed_sites = lambda{ |uri| uri.host != 'archive.today' }
     WebMock.disable_net_connect!(allow: allowed_sites)
 
     assert_nothing_raised do
-      WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { refresh: '1' })
+      WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { refresh: '1' })
       m = create_media url: urls[0], key: a
       data = m.as_json
 
-      WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
+      WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
       m = create_media url: urls[1], key: a
       data = m.as_json
     end
 
     assert_nothing_raised do
-      WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '')
+      WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '')
       m = create_media url: urls[2], key: a
       data = m.as_json
     end
@@ -99,7 +99,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  test "should update media with error when archive to Archive.org fails" do
+  test "should update media with error when archive to Archive.org fails too many times" do
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
     WebMock.disable_net_connect!(allow: allowed_sites)
@@ -122,12 +122,14 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_nothing_raised do
       urls.each_pair do |url, data|
         m = Media.new url: url
-        m.as_json
-        assert m.data.dig('archives', 'archive_org').nil?
+        m.as_json(archivers: 'none')
+        assert_nil m.data.dig('archives', 'archive_org')
         WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', status: [data[:code], data[:message]], headers: {})
+
         Media.send_to_archive_org(url.to_s, a.id, 20)
         media_data = Pender::Store.read(Media.get_id(url), :json)
-        assert_equal({"message"=>I18n.t(:could_not_archive, error_message: data[:message]), "code"=>data[:code]}, media_data.dig('archives', 'archive_org', 'error'))
+        assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_org', 'error', 'code')
+        assert_equal "#{data[:code]} #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
       end
     end
 
@@ -141,7 +143,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive)
   end
 
-  test "should update media with error when reques to Archive.org fails" do
+  test "should update media with error when request to Archive.org raises error" do
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
     WebMock.disable_net_connect!(allow: allowed_sites)
@@ -158,10 +160,12 @@ class ArchiverTest < ActiveSupport::TestCase
       m = Media.new url: url
       data = m.as_json
       assert m.data.dig('archives', 'archive_org').nil?
-      WebMock.stub_request(:any, /web.archive.org/).to_raise(Net::ReadTimeout)
+      error = Net::ReadTimeout.new('Exception from WebMock')
+      WebMock.stub_request(:any, /web.archive.org/).to_raise(Net::ReadTimeout.new('Exception from WebMock'))
       Media.send_to_archive_org(url, a.id, 20)
       media_data = Pender::Store.read(Media.get_id(url), :json)
-      assert_match /Could not archive/, media_data.dig('archives', 'archive_org', 'error', 'message')
+      assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
+      assert_equal "#{error.class} #{error.message}", media_data.dig('archives', 'archive_org', 'error', 'message')
     end
 
     WebMock.disable!
@@ -174,7 +178,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
   test "should not raise error and update media when unexpected response from Archive.is" do
     WebMock.enable!
-    allowed_sites = lambda{ |uri| uri.host != 'archive.is' }
+    allowed_sites = lambda{ |uri| uri.host != 'archive.today' }
     WebMock.disable_net_connect!(allow: allowed_sites)
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
@@ -194,10 +198,11 @@ class ArchiverTest < ActiveSupport::TestCase
         m.as_json
         assert m.data.dig('archives', 'archive_is').nil?
         response = { code: '200', message: 'OK' }
-        WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', status: [response[:code], response[:message]], headers: {})
+        WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', status: [response[:code], response[:message]], headers: {})
         Media.send_to_archive_is(url.to_s, a.id, 20)
         media_data = Pender::Store.read(Media.get_id(url), :json)
-        assert_equal({"message"=>I18n.t(:could_not_archive, error_message: response[:message]), "code"=> response[:code]}, media_data.dig('archives', 'archive_is', 'error'))
+        assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_is', 'error', 'code')
+        assert_equal "#{response[:code]} #{response[:message]}", media_data.dig('archives', 'archive_is', 'error', 'message')
       end
     end
 
@@ -213,7 +218,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
   test "should update media with error when archive to Archive.is fails" do
     WebMock.enable!
-    allowed_sites = lambda{ |uri| uri.host != 'archive.is' }
+    allowed_sites = lambda{ |uri| uri.host != 'archive.today' }
     WebMock.disable_net_connect!(allow: allowed_sites)
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
@@ -234,10 +239,11 @@ class ArchiverTest < ActiveSupport::TestCase
         m = Media.new url: url
         m.as_json
         assert m.data.dig('archives', 'archive_is').nil?
-        WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', status: [data[:code], data[:message]], headers: { refresh: '0;url=http://archive.is/k5yFO'})
+        WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', status: [data[:code], data[:message]], headers: { refresh: '0;url=http://archive.today/k5yFO'})
         Media.send_to_archive_is(url.to_s, a.id, 20)
         media_data = Pender::Store.read(Media.get_id(url), :json)
-        assert_equal({"message"=>I18n.t(:could_not_archive, error_message: data[:message]), "code"=>data[:code]}, media_data.dig('archives', 'archive_is', 'error'))
+        assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_is', 'error', 'code')
+        assert_equal "#{data[:code]} #{data[:message]}", media_data.dig('archives', 'archive_is', 'error', 'message')
       end
     end
 
@@ -251,76 +257,14 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive)
   end
 
-  test "should archive on all archivers when list is nil" do
-    Media.any_instance.unstub(:archive_to_archive_is)
-    Media.any_instance.unstub(:archive_to_archive_org)
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    WebMock.enable!
-    allowed_sites = lambda{ |uri| !['archive.is', 'web.archive.org'].include?(uri.host) }
-    WebMock.disable_net_connect!(allow: allowed_sites)
-    WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
-    WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
-
-    url = 'https://twitter.com/meedan/status/1095810431367737344'
-    id = Media.get_id(url)
-    m = create_media url: url, key: a
-    m.as_json
-    assert_equal({"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}}, Pender::Store.read(id, :json)[:archives])
-    WebMock.disable!
-  end
-
-  test "should not archive when list is none" do
-    Media.any_instance.unstub(:archive_to_archive_is)
-    Media.any_instance.unstub(:archive_to_archive_org)
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    WebMock.enable!
-    allowed_sites = lambda{ |uri| !['archive.is', 'web.archive.org'].include?(uri.host) }
-    WebMock.disable_net_connect!(allow: allowed_sites)
-    WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
-    WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
-
-    url = 'https://twitter.com/meedan/status/1095711665939759110'
-    id = Media.get_id(url)
-    m = create_media url: url, key: a
-    m.as_json(archivers: 'none')
-    assert_equal({}, Pender::Store.read(id, :json)[:archives])
-    WebMock.disable!
-  end
-
-
-  [['archive_is'], ['archive_org'], ['archive_is', 'archive_org']].each do |archivers|
-    test "should archive on `#{archivers}`" do
-      Media.any_instance.unstub(:archive_to_archive_is)
-      Media.any_instance.unstub(:archive_to_archive_org)
-      a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-      WebMock.enable!
-      allowed_sites = lambda{ |uri| !['archive.is', 'web.archive.org'].include?(uri.host) }
-      WebMock.disable_net_connect!(allow: allowed_sites)
-      WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
-      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
-      archived = {"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}}
-
-      url = 'https://twitter.com/meedan/status/1095755205554200576'
-      id = Media.get_id(url)
-      m = create_media url: url, key: a
-      m.as_json(archivers: archivers.join(','))
-      cached = Pender::Store.read(id, :json)[:archives]
-      assert_equal archivers, cached.keys
-      archivers.each do |archiver|
-        assert_equal(archived[archiver], cached[archiver])
-      end
-      WebMock.disable!
-    end
-  end
-
   test "should update cache for all archivers if refresh" do
     Media.any_instance.unstub(:archive_to_archive_is)
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     WebMock.enable!
-    allowed_sites = lambda{ |uri| !['archive.is', 'web.archive.org'].include?(uri.host) }
+    allowed_sites = lambda{ |uri| !['archive.today', 'web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
-    WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'archive_is/first_archiving' })
+    WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/first_archiving' })
 
     url = 'https://twitter.com/meedan/status/1095035339226431493'
     id = Media.get_id(url)
@@ -328,7 +272,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m.as_json(archivers: 'archive_is')
     assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, Pender::Store.read(id, :json)[:archives])
 
-    WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
+    WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/archiving' })
     m.as_json(force: true, archivers: 'archive_is, archive_org')
     assert_equal({'archive_is' => {'location' => 'archive_is/second_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.read(id, :json)[:archives])
@@ -340,9 +284,9 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     WebMock.enable!
-    allowed_sites = lambda{ |uri| !['archive.is', 'web.archive.org'].include?(uri.host) }
+    allowed_sites = lambda{ |uri| !['archive.today', 'web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
-    WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'archive_is/first_archiving' })
+    WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/first_archiving' })
 
     url = 'https://twitter.com/meedan/status/1095034925420560387'
     id = Media.get_id(url)
@@ -350,7 +294,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m.as_json(archivers: 'archive_is')
     assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, Pender::Store.read(id, :json)[:archives])
 
-    WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
+    WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/archiving' })
     m.as_json(archivers: 'archive_is, archive_org')
     assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.read(id, :json)[:archives])
@@ -362,9 +306,9 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     WebMock.enable!
-    allowed_sites = lambda{ |uri| !['archive.is', 'web.archive.org'].include?(uri.host) }
+    allowed_sites = lambda{ |uri| !['archive.today', 'web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
-    WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'archive_is/first_archiving' })
+    WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/first_archiving' })
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/archiving' })
 
     url = 'https://twitter.com/meedan/status/1095034925420560387'
@@ -373,22 +317,24 @@ class ArchiverTest < ActiveSupport::TestCase
     m.as_json(archivers: 'archive_is, archive_org')
     assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.read(id, :json)[:archives])
 
-    WebMock.stub_request(:any, 'http://archive.is/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
+    WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/second_archiving' })
 
     m.as_json
-    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.read(id, :json)[:archives])
+    assert_equal({'location' => 'archive_is/first_archiving'}, Pender::Store.read(id, :json)[:archives][:archive_is])
+    assert_equal({'location' => 'https://web.archive.org/archiving' }, Pender::Store.read(id, :json)[:archives][:archive_org])
 
     m.as_json(archivers: 'none')
-    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.read(id, :json)[:archives])
+    assert_equal({'location' => 'archive_is/first_archiving'}, Pender::Store.read(id, :json)[:archives][:archive_is])
+    assert_equal({'location' => 'https://web.archive.org/archiving' }, Pender::Store.read(id, :json)[:archives][:archive_org])
 
     WebMock.disable!
   end
 
   test "return the enabled archivers" do
-    assert_equal ['archive_is', 'archive_org'].sort, Media.enabled_archivers('archive_is', 'archive_org').keys
+    assert_equal ['archive_is', 'archive_org'].sort, Media.enabled_archivers(['archive_is', 'archive_org']).keys
     Media::ARCHIVERS['archive_org'][:enabled] = false
-    assert_equal ['archive_is'].sort, Media.enabled_archivers('archive_is', 'archive_org').keys
+    assert_equal ['archive_is'].sort, Media.enabled_archivers(['archive_is', 'archive_org']).keys
     Media::ARCHIVERS['archive_org'][:enabled] = true
   end
 
@@ -396,14 +342,15 @@ class ArchiverTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1095755205554200576'
     m = Media.new url: url, key: a
-    m.as_json
+    m.as_json(archivers: 'none')
 
     Media.any_instance.unstub(:archive_to_perma_cc)
     Pender::Store.stubs(:read).returns(nil)
     response = 'mock';response.stubs(:code).returns('201');response.stubs(:body).returns('{"guid":"AUA8-QNGH"}');response.stubs(:message).returns('OK')
     Net::HTTP.any_instance.stubs(:request).returns(response)
     Media.stubs(:notify_webhook_and_update_cache).with('perma_cc', url, { location: 'http://perma.cc/AUA8-QNGH'}, a.id)
-    Media.stubs(:enabled_archivers).with('perma_cc').returns({ 'perma_cc' => {:patterns=>[/^.*$/], :modifier=>:only, :enabled=>true}})
+    Media.stubs(:available_archivers).returns(['perma_cc'])
+    Media.stubs(:enabled_archivers).returns({ 'perma_cc' => {:patterns=>[/^.*$/], :modifier=>:only, :enabled=>true}})
 
     m.archive('perma_cc')
 
@@ -417,6 +364,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal ['perma_cc'], cached.keys
     assert_equal({ 'location' => 'http://perma.cc/AUA8-QNGH'}, cached['perma_cc'])
     Media.unstub(:enabled_archivers)
+    Media.unstub(:available_archivers)
   end
 
   test "should not try to archive on Perma.cc if already archived on it" do
@@ -434,7 +382,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:notify_webhook_and_update_cache)
   end
 
-  test "should update media with error when archive to Perma.cc fails" do
+  test "should update media with error when no key is present and archive to Perma.cc fails" do
     WebMock.enable!
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
@@ -451,7 +399,8 @@ class ArchiverTest < ActiveSupport::TestCase
       assert m.data.dig('archives', 'perma_cc').nil?
       Media.send_to_perma_cc(url.to_s, a.id, 20)
       media_data = Pender::Store.read(Media.get_id(url), :json)
-      assert_equal({"message"=>I18n.t(:could_not_archive, error_message: 'Unauthorized'), "code"=>"401"}, media_data.dig('archives', 'perma_cc', 'error'))
+      assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'perma_cc', 'error', 'code')
+      assert_equal "401 Unauthorized", media_data.dig('archives', 'perma_cc', 'error', 'message')
     end
 
     WebMock.disable!
@@ -462,9 +411,9 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive)
   end
 
-  test "should not declare Perma.cc as archiver if perma_key is not present" do
+  test "should disable Perma.cc archiver if perma_key is not present" do
     assert_nil CONFIG.dig('perma_cc_key')
-    assert_not_includes Media::ARCHIVERS.keys, 'perma_cc'
+    assert_equal false, Media::ARCHIVERS['perma_cc'][:enabled]
   end
 
   test "should return api key settings" do
@@ -478,7 +427,7 @@ class ArchiverTest < ActiveSupport::TestCase
     end
   end
 
-  test "should call youtube-dl and worker to upload video when archive video" do
+  test "should call youtube-dl and call video upload when archive video" do
     Media.any_instance.unstub(:archive_to_video)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1202732707597307905'
@@ -486,7 +435,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m.as_json
 
     Media.any_instance.unstub(:archive_to_video)
-    Media.stubs(:supported_video?).with(url).returns(true)
+    Media.stubs(:supported_video?).with(url, a.id).returns(true)
     Media.stubs(:notify_video_already_archived).with(url, a.id).returns(nil)
 
     Media.stubs(:store_video_folder).returns('store_video_folder')
@@ -498,7 +447,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_nil Media.send_to_video_archiver(url, a.id, nil, nil, false)
 
     not_video_url = 'https://twitter.com/meedan/status/1214263820484521985'
-    Media.stubs(:supported_video?).with(not_video_url).returns(true)
+    Media.stubs(:supported_video?).with(not_video_url, a.id).returns(true)
     Media.stubs(:notify_video_already_archived).with(not_video_url, a.id).returns(nil)
 
     assert_equal 'delay_send_to_video_archiver', Media.send_to_video_archiver(not_video_url, a.id, 20)
@@ -523,11 +472,30 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:notify_video_already_archived)
   end
 
-  test "should return false when is not supported when archive video" do
+  test "should return false and add error to data when video archiving is not supported" do
     Media.unstub(:supported_video?)
-    assert Media.supported_video?('https://twitter.com/meedan/status/1202732707597307905')
+    Media.any_instance.stubs(:parse)
+    Media.any_instance.stubs(:get_metrics)
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
 
-    assert !Media.supported_video?('https://twitter.com/meedan/status/1214263820484521985')
+    url = 'https://twitter.com/meedan/status/1202732707597307905'
+    m = create_media url: url
+    m.as_json(archivers: 'none')
+    assert Media.supported_video?(m.url, a.id)
+    media_data = Pender::Store.read(Media.get_id(url), :json)
+    assert_nil media_data.dig('archives', 'video_archiver')
+
+    url = 'https://twitter.com/meedan/status/1214263820484521985'
+    m = create_media url: url
+    m.as_json(archivers: 'none')
+    assert !Media.supported_video?(m.url, a.id)
+
+    media_data = Pender::Store.read(Media.get_id(url), :json)
+    assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA'), media_data.dig('archives', 'video_archiver', 'error', 'code')
+    assert_equal I18n.t(:archiver_not_supported_media, code: 1), media_data.dig('archives', 'video_archiver', 'error', 'message')
+
+    Media.any_instance.unstub(:parse)
+    Media.any_instance.unstub(:get_metrics)
   end
 
   test "should check if non-ascii URL support video download" do
@@ -543,7 +511,8 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_nil Media.notify_video_already_archived(url, nil)
 
     data = { archives: { video_archiver: { error: 'could not download video data'}}}
-    Pender::Store.stubs(:read).with(Media.get_id(url), :json).returns()
+    Pender::Store.stubs(:read).with(Media.get_id(url), :json).returns(data)
+    Media.stubs(:notify_webhook).with('video_archiver', url, data, {}).returns('Notify webhook')
     assert_nil Media.notify_video_already_archived(url, nil)
 
     data[:archives][:video_archiver] = { location: 'path_to_video' }
@@ -558,7 +527,7 @@ class ArchiverTest < ActiveSupport::TestCase
   test "should archive video info subtitles, thumbnails and update cache" do
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://www.youtube.com/watch?v=1vSJrexmVWU'
-    Media.stubs(:supported_video?).with(url).returns(true)
+    Media.stubs(:supported_video?).with(url, a.id).returns(true)
     Media.stubs(:yt_download_proxy).with(url).returns(nil)
     id = Media.get_id url
 
@@ -569,6 +538,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
+
     folder = File.join(Media.archiving_folder, id)
     assert_equal ['info', 'location', 'subtitles', 'thumbnails', 'videos'], data.dig('archives', 'video_archiver').keys.sort
     assert_equal "#{folder}/#{id}.mp4", data.dig('archives', 'video_archiver', 'location')
@@ -584,26 +554,29 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:yt_download_proxy)
   end
 
-  test "should handle error and update cache when archiving video fails" do
+  test "should handle error and update cache when upload video when archiving fails" do
     Sidekiq::Testing.fake!
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1202732707597307905'
-    Media.stubs(:supported_video?).with(url).returns(true)
+    Media.stubs(:supported_video?).with(url, a.id).returns(true)
     id = Media.get_id url
 
     m = create_media url: url, key: a
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
 
+    error = StandardError.new('upload error')
     Pender::Store.stubs(:upload_video_folder).raises(StandardError.new('upload error'))
     Media.send_to_video_archiver(url, a.id, 20)
     data = m.as_json
-    assert_not_nil data.dig('archives', 'video_archiver', 'error', 'message')
+    assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), data.dig('archives', 'video_archiver', 'error', 'code')
+    assert_equal "#{error.class} #{error.message}", data.dig('archives', 'video_archiver', 'error', 'message')
+
     Pender::Store.unstub(:upload_video_folder)
     Media.unstub(:supported_video?)
   end
 
-  test "should update media with error when youtube-dl call fails on video archiving" do
+  test "should update media with error when supported video call raises on video archiving" do
     Sidekiq::Testing.fake!
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
@@ -617,10 +590,12 @@ class ArchiverTest < ActiveSupport::TestCase
       m = Media.new url: url
       data = m.as_json
       assert m.data.dig('archives', 'video_archiver').nil?
-      Media.stubs(:supported_video?).with(url).raises(StandardError)
+      error = StandardError.new('some error')
+      Media.stubs(:supported_video?).with(url, a.id).raises(error)
       Media.send_to_video_archiver(url, a.id, 20)
       media_data = Pender::Store.read(Media.get_id(url), :json)
-      assert_match /Could not archive/, media_data.dig('archives', 'video_archiver', 'error', 'message')
+      assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'video_archiver', 'error', 'code')
+      assert_equal "#{error.class} #{error.message}", media_data.dig('archives', 'video_archiver', 'error', 'message')
     end
 
     WebMock.disable!
@@ -631,6 +606,37 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:supported_video?)
   end
 
+  test "should update media with error when video download fails when video archiving" do
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    Media.stubs(:supported_video?).returns(true)
+    mock = 'status'
+    Open3.stubs(:capture3).returns(['', 'ERROR: requested format not available', mock])
+    mock.stubs(:success?).returns(false);mock.stubs(:exitstatus).returns(1)
+
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    url = 'https://www.tiktok.com/@scout2015/video/6771039287917038854'
+
+    assert_nothing_raised do
+      m = Media.new url: url
+      data = m.as_json(archivers: 'none')
+      assert_nil m.data.dig('archives', 'video_archiver')
+      Media.send_to_video_archiver(url, a.id, 20)
+      media_data = Pender::Store.read(Media.get_id(url), :json)
+      assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'video_archiver', 'error', 'code')
+      assert_equal "1 #{I18n.t(:archiver_video_not_downloaded)}", media_data.dig('archives', 'video_archiver', 'error', 'message')
+    end
+
+    WebMock.disable!
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
+    Media.unstub(:supported_video?)
+    Open3.unstub(:capture3)
+  end
   test "should generate the public archiving folder for videos" do
     CONFIG.stubs(:dig).with('storage', 'bucket').returns('default_bucket')
     CONFIG.stubs(:dig).with('storage', 'endpoint').returns('http://local-storage')
@@ -664,5 +670,39 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_nil Media.yt_download_proxy(url)
 
     CONFIG.unstub(:dig)
+  end
+
+  test "include error on data when archiver is skipped" do
+    config = CONFIG['archiver_skip_hosts']
+    CONFIG['archiver_skip_hosts'] = 'example.com'
+
+    url = 'http://example.com'
+    m = Media.new url: url
+    m.data = Media.minimal_data(m)
+    m.archive
+
+    assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_HOST_SKIPPED'), m.data.dig('archives', 'archive_org', 'error', 'code')
+    assert_equal I18n.t(:archiver_host_skipped, info: 'example.com'), m.data.dig('archives', 'archive_org', 'error', 'message')
+
+    CONFIG['archiver_skip_hosts'] = config
+  end
+
+  test "include error on data when archiver is not present or is disabled" do
+    status = Media::ARCHIVERS['archive_org'][:enabled]
+    Media::ARCHIVERS['archive_org'][:enabled] = false
+
+    url = 'http://example.com'
+    m = Media.new url: url
+    m.data = Media.minimal_data(m)
+    archiver = 'archive_org,unexistent_archive'
+    m.archive(archiver)
+
+    assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_FOUND'), m.data.dig('archives', 'unexistent_archive', 'error', 'code')
+    assert_equal I18n.t(:archiver_not_found), m.data.dig('archives', 'unexistent_archive', 'error', 'message')
+
+    assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_DISABLED'), m.data.dig('archives', 'archive_org', 'error', 'code')
+    assert_equal I18n.t(:archiver_disabled), m.data.dig('archives', 'archive_org', 'error', 'message')
+
+    Media::ARCHIVERS['archive_org'][:enabled] = status
   end
 end

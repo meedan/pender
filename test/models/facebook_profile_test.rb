@@ -262,18 +262,15 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal '27/10/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
-  test "should create Facebook post from user photo URL 2" do
-    m = create_media url: 'https://www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3&theater'
-    m = create_media url: 'https://www.facebook.com/photo.php?fbid=981302451896323&set=a.155912291102014.38637.100000497329098&type=3&theater'
+  test "should create Facebook post from page photo URL and get name and url" do
+    m = create_media url: 'https://www.facebook.com/KIKOLOUREIROofficial/photos/a.10150618138397252/10152555300292252/?type=3&theater'
     d = m.as_json
-    assert_equal '155912291102014_981302451896323', d['uuid']
-    assert_equal 'Kiko Loureiro added a new photo.', d['text']
-    assert_equal '155912291102014', d['user_uuid']
+    assert_not_nil d['author_url']
+    assert_match /Bolívia/, d['text']
     assert_equal 'Kiko Loureiro', d['author_name']
     assert_not_nil d['picture']
     assert_equal 1, d['media_count']
-    assert_equal '981302451896323', d['object_id']
-    assert_equal '21/11/2014', Time.parse(d['published_at']).strftime("%d/%m/%Y")
+    assert_equal '20/11/2014', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should create Facebook post from user photo URL 3" do
@@ -332,23 +329,12 @@ class FacebookProfileTest < ActiveSupport::TestCase
   end
 
   test "should create Facebook post from mobile URL" do
-    m = create_media url: 'https://m.facebook.com/photo.php?fbid=981302451896323&set=a.155912291102014.38637.100000497329098&type=3&theater'
+    m = create_media url: 'https://m.facebook.com/KIKOLOUREIROofficial/photos/a.10150618138397252/10152555300292252/?type=3&theater'
     d = m.as_json
-    assert_equal '100000497329098_981302451896323', d['uuid']
-    assert_equal 'Kiko Loureiro added a new photo.', d['text']
-    assert_equal '100000497329098', d['user_uuid']
+    assert_match /Bolívia/, d['text']
     assert_equal 'Kiko Loureiro', d['author_name']
     assert_equal 1, d['media_count']
-    assert_equal '981302451896323', d['object_id']
-    assert_equal '21/11/2014', Time.parse(d['published_at']).strftime("%d/%m/%Y")
-  end
-
-  test "should return author_name and author_url for Facebook post" do
-    m = create_media url: 'https://www.facebook.com/photo.php?fbid=1195161923843707&set=a.155912291102014.38637.100000497329098&type=3&theater'
-    d = m.as_json
-    assert_equal 'http://facebook.com/155912291102014', d['author_url']
-    assert_equal 'Kiko Loureiro', d['author_name']
-    assert_match /12144884_1195161923843707_2568663037890130414/, d['picture']
+    assert_equal '20/11/2014', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should parse Facebook photo post url" do
