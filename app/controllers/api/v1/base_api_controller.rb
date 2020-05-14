@@ -67,29 +67,9 @@ module Api
         render_error I18n.t(:unauthorized), 'UNAUTHORIZED', 401
       end
 
-      # def render_unknown_error
-      #   render_error 'Unknown error', 'UNKNOWN'
-      # end
-
-      # def render_invalid
-      #   render_error 'Invalid value', 'INVALID_VALUE'
-      # end
-
       def render_parameters_missing
         render_error I18n.t(:parameters_missing), 'MISSING_PARAMETERS'
       end
-
-      # def render_not_found
-      #   render_error 'Id not found', 'ID_NOT_FOUND', 404
-      # end
-
-      # def render_not_implemented
-      #   render json: { success: true, message: 'NOT_IMPLEMENTED' }, status: 200
-      # end
-
-      # def render_deleted
-      #   render_error 'This object was deleted', 'ID_NOT_FOUND', 410
-      # end
 
       def render_url_invalid
         render_error I18n.t(:url_not_valid), 'INVALID_VALUE'
