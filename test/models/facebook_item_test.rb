@@ -480,4 +480,24 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'Popor dezamagit on Facebook', data[:title]
   end
+
+  test "should add not found error and return empty html" do
+    urls = ['https://www.facebook.com/danielafeitosa/posts/2074906892567200', 'https://www.facebook.com/caiosba/posts/8457689347638947', 'https://www.facebook.com/photo.php?fbid=158203948564609&set=pb.100031250132368.-2207520000..&type=3&theater']
+    urls.each do |url|
+      m = create_media url: url
+      data = m.as_json
+      assert_equal '', data[:html]
+      assert_equal LapisConstants::ErrorCodes::const_get('NOT_FOUND'), data[:error][:code]
+      assert_equal 'URL Not Found', data[:error][:message]
+    end
+  end
+
+  test "should add login required error and return empty html" do
+    m = create_media url: 'https://www.facebook.com/caiosba/posts/2914211445293757'
+    data = m.as_json
+    assert_equal '', data[:html]
+    assert_equal 'Login required to see this profile', data[:error][:message]
+    assert_equal LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
+  end
+
 end
