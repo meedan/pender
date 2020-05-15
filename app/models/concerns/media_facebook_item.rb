@@ -85,7 +85,6 @@ module MediaFacebookItem
   end
 
   def parse_from_facebook_html
-    self.doc = self.get_html(Media.html_options(self.url))
     return if self.doc.nil?
     self.get_facebook_info_from_metadata
     self.get_facebook_text_from_html
@@ -194,12 +193,11 @@ module MediaFacebookItem
 
   def render_facebook_embed?(username)
     privacy_error = self.get_facebook_privacy_error(self.doc) if self.doc
-    self.data['error'] = privacy_error if privacy_error
     !['groups', 'flx'].include?(username) && !privacy_error && self.url.match(EVENT_URL).nil?
   end
 
   def html_for_facebook_post(username)
-    return '' unless render_facebook_embed?(username)
+    return '' unless render_facebook_embed?(username) && !self.doc.nil?
     '<script>
     window.fbAsyncInit = function() {
       FB.init({

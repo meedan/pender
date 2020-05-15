@@ -88,7 +88,7 @@ module Api
         rescue Pender::UnsafeUrl
           render_error 'Unsafe URL', 'UNSAFE', 400
         rescue StandardError => e
-          data = get_error_data({ message: e.message, code: 'UNKNOWN' }, @media, @url, @id)
+          data = get_error_data({ message: e.message, code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }, @media, @url, @id)
           notify_airbrake(e, data)
           Rails.logger.warn level: 'WARN', message: '[Rendering] Could not render media JSON data', error_class: e.class, error_message: e.message
           data.merge!(@data) unless @data.blank?
@@ -152,7 +152,7 @@ module Api
           render_timeout(true, true) { render_oembed(@media.as_json({ force: @refresh, archivers: @archivers }), @media)}
         rescue StandardError => e
           data = @media.nil? ? {} : @media.data
-          data.merge!(error: { message: e.message, code: 'UNKNOWN' })
+          data.merge!(error: { message: e.message, code: LapisConstants::ErrorCodes::const_get('UNKNOWN') })
           notify_airbrake(e, data)
           Rails.logger.warn level: 'WARN', message: '[Rendering] Could not render media oEmbed data', error_class: e.class, error_message: e.message
           render_media(data)

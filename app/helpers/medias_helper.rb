@@ -16,14 +16,14 @@ module MediasHelper
     CONFIG['timeout'] || 20
   end
 
-  def handle_exceptions(media, exception, message_method = :message, code_method = :code)
+  def handle_exceptions(media, exception)
     begin
       yield
     rescue exception => error
       Airbrake.notify(error, url: media.url, data: media.data ) if Airbrake.configured?
-      code = error.respond_to?(code_method) ? error.send(code_method) : 5
-      media.data.merge!(error: { message: "#{error.class}: #{error.send(message_method)}", code: code })
-      Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse', url: media.url, code: code, error_class: error.class, error_message: error.send(message_method)
+      code = LapisConstants::ErrorCodes::const_get('UNKNOWN')
+      media.data.merge!(error: { message: "#{error.class}: #{error.message}", code: code })
+      Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse', url: media.url, code: code, error_class: error.class, error_message: error.message
       return
     end
   end
@@ -118,7 +118,7 @@ module MediasHelper
   end
 
   def get_timeout_data(media, url, id)
-    get_error_data({ message: 'Timeout', code: 'TIMEOUT' }, media, url, id)
+    get_error_data({ message: 'Timeout', code: LapisConstants::ErrorCodes::const_get('TIMEOUT') }, media, url, id)
   end
 
   def cleanup_data_encoding(data)
