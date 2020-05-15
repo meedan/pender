@@ -84,8 +84,8 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://twitter.com/caiosba32153623', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_equal 'Twitter::Error::NotFound: User not found.', data['error']['message']
-    assert_equal 50, data['error']['code']
+    assert_match /Twitter::Error::NotFound: [0-9]+ User not found./, data['error']['message']
+    assert_equal LapisConstants::ErrorCodes::const_get('INVALID_VALUE'), data['error']['code']
     assert_equal 'twitter', data['provider']
     assert_equal 'profile', data['type']
     assert_not_nil data['embed_tag']
@@ -138,19 +138,19 @@ class MediasControllerTest < ActionController::TestCase
     assert_not_nil data['embed_tag']
   end
 
-  test "should return error message on hash if url does not exist 6" do
+  test "should return error message on hash if twitter post url does not exist" do
     authenticate_with_token
     get :index, url: 'https://twitter.com/caiosba/status/0000000000000', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_equal 'Twitter::Error::NotFound: No data available for specified ID.', data['error']['message']
-    assert_equal 8, data['error']['code']
+    assert_match /Twitter::Error::NotFound: [0-9]+ No data available for specified ID./, data['error']['message']
+    assert_equal LapisConstants::ErrorCodes::const_get('INVALID_VALUE'), data['error']['code']
     assert_equal 'twitter', data['provider']
     assert_equal 'item', data['type']
     assert_not_nil data['embed_tag']
   end
 
-  test "should parse facebook url when url does not exist 7" do
+  test "should parse facebook url when fb post url does not exist" do
     authenticate_with_token
     get :index, url: 'https://www.facebook.com/ahlam.alialshamsi/posts/000000000000000', format: :json
     assert_response 200
@@ -160,14 +160,14 @@ class MediasControllerTest < ActionController::TestCase
     assert_not_nil data['embed_tag']
   end
 
-  test "should return error message on hash if url does not exist 8" do
+  test "should return error message on hash if as_json raises error" do
     Media.any_instance.stubs(:as_json).raises(RuntimeError)
     authenticate_with_token
     get :index, url: 'http://example.com/', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
     assert_equal 'RuntimeError', data['error']['message']
-    assert_equal 'UNKNOWN', data['error']['code']
+    assert_equal LapisConstants::ErrorCodes::const_get('UNKNOWN'), data['error']['code']
     Media.any_instance.unstub(:as_json)
   end
 
@@ -528,7 +528,9 @@ class MediasControllerTest < ActionController::TestCase
     Media.minimal_data(OpenStruct.new(url: url)).except(:parsed_at).each_pair do |key, value|
       assert_equal value, JSON.parse(@response.body)['data'][key]
     end
-    assert_equal({"message"=>"Timeout", "code"=>"TIMEOUT"}, JSON.parse(@response.body)['data']['error'])
+    error = JSON.parse(@response.body)['data']['error']
+    assert_equal 'Timeout', error['message']
+    assert_equal LapisConstants::ErrorCodes::const_get('TIMEOUT'), error['code']
     Airbrake.unstub(:configured?)
     Airbrake.unstub(:notify)
   end
@@ -651,7 +653,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token(a)
 
     url = 'https://ca.ios.ba/files/meedan/sleep.php'
-    timeout_error = { error: { "message"=>"Timeout", "code"=>"TIMEOUT"}}
+    timeout_error = { error: { message: 'Timeout', code: LapisConstants::ErrorCodes::const_get('TIMEOUT')}}
     minimal_data = Media.minimal_data(OpenStruct.new(url: url))
     Media.stubs(:minimal_data).with(OpenStruct.new(url: url)).returns(minimal_data)
 
@@ -695,7 +697,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
     assert_equal 1, MediaParserWorker.jobs.size
 
-    parse_error = { error: { "message"=>"OpenSSL::SSL::SSLError", "code"=>'UNKNOWN'}}
+    parse_error = { error: { "message"=>"OpenSSL::SSL::SSLError", "code"=> LapisConstants::ErrorCodes::const_get('UNKNOWN')}}
     minimal_data = Media.minimal_data(OpenStruct.new(url: url))
     Media.stubs(:minimal_data).returns(minimal_data)
     Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(parse_error), webhook_info)
