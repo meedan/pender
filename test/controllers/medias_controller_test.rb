@@ -651,7 +651,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token(a)
 
     url = 'https://ca.ios.ba/files/meedan/sleep.php'
-    timeout_error = { error: { "message"=>"Timeout", "code"=>"TIMEOUT"}}
+    timeout_error = { error: { message: 'Timeout', code: LapisConstants::ErrorCodes::const_get('TIMEOUT')}}
     minimal_data = Media.minimal_data(OpenStruct.new(url: url))
     Media.stubs(:minimal_data).with(OpenStruct.new(url: url)).returns(minimal_data)
 
