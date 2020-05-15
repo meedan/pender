@@ -84,7 +84,7 @@ class Media
 
   def self.minimal_data(instance)
     data = {}
-    %w(published_at username title description picture author_url author_picture author_name screenshot external_id).each { |field| data[field] = '' }
+    %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field] = '' }
     data[:raw] = {}
     data[:archives] = {}
     data[:metrics] = {}
