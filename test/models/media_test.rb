@@ -412,7 +412,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['username']
     assert_equal '', d['author_url']
     assert_not_nil d['picture']
-    assert_nil d['html']
+    assert d['html'].blank?
     assert_nil d['error']
   end
 
@@ -429,7 +429,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['username']
     assert_equal '', d['author_url']
     assert_not_nil d['picture']
-    assert_nil d['html']
+    assert d['html'].blank?
     assert_nil d['error']
   end
 
@@ -445,7 +445,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['username']
     assert_equal '', d['author_url']
     assert_not_nil d['picture']
-    assert_nil d['html']
+    assert d['html'].blank?
     assert_nil d['error']
   end
 
@@ -461,7 +461,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', d['username']
     assert_equal '', d['author_url']
     assert_not_nil d['picture']
-    assert_nil d['html']
+    assert d['html'].blank?
     assert_nil d['error']
   end
 

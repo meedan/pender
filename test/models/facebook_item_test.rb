@@ -81,7 +81,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal 'South China Morning Post', data['author_name']
     assert_equal 'http://facebook.com/355665009819', data['author_url']
     assert_equal 'https://graph.facebook.com/355665009819/picture', data['author_picture']
-    assert_match /14645700_10154584445939820_3787909207995449344/, data['picture']
+    assert_match /10154584426664820/, data['picture']
   end
 
   test "should parse Facebook live post" do
