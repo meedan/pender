@@ -187,7 +187,7 @@ class Media
     return false if canonical_url.blank?
     if canonical_url && canonical_url != self.url
       self.url = absolute_url(canonical_url)
-      self.doc = self.get_html(Media.html_options(self.url))
+      self.doc = self.get_html(Media.html_options(self.url)) if self.doc.nil?
     end
     true
   end
@@ -239,7 +239,7 @@ class Media
   end
 
   def self.request_url(url, verb = 'Get')
-    uri = Media.parse_url(url)
+    uri = Media.parse_url(decoded_uri(url))
     Media.request_uri(uri, verb)
   end
 
