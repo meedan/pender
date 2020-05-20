@@ -463,6 +463,17 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal 172685102050, data['external_id']
   end
 
+  test "should add not found error and return empty html" do
+    url = 'https://www.facebook.com/profile.php?id=12345678'
+
+    m = create_media url: url
+    data = m.as_json
+    assert_equal '', data[:html]
+    assert_equal LapisConstants::ErrorCodes::const_get('NOT_FOUND'), data[:error][:code]
+    assert_equal 'URL Not Found', data[:error][:message]
+  end
+
+
   # #8137: FIXME Flaky test
   #test "should parse Facebook person profile" do
   #  m = create_media url: 'https://facebook.com/caiosba'

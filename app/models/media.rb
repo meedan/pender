@@ -57,10 +57,10 @@ class Media
       send("#{name}=", value)
     end
     self.original_url = self.url.strip
+    self.data = {}.with_indifferent_access
     self.follow_redirections
     self.url = Media.normalize_url(self.url) unless self.get_canonical_url
     self.try_https
-    self.data = {}.with_indifferent_access
   end
 
   def self.declare(type, patterns)
@@ -84,7 +84,7 @@ class Media
 
   def self.minimal_data(instance)
     data = {}
-    %w(published_at username title description picture author_url author_picture author_name screenshot external_id).each { |field| data[field] = '' }
+    %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field] = '' }
     data[:raw] = {}
     data[:archives] = {}
     data[:metrics] = {}
@@ -151,7 +151,7 @@ class Media
   protected
 
   def parse
-    self.data = Media.minimal_data(self)
+    self.data.merge!(Media.minimal_data(self))
     get_metatags(self)
     get_jsonld_data(self)
     get_schema_data unless self.doc.nil?
@@ -187,7 +187,7 @@ class Media
     return false if canonical_url.blank?
     if canonical_url && canonical_url != self.url
       self.url = absolute_url(canonical_url)
-      self.doc = self.get_html(Media.html_options(self.url))
+      self.doc = self.get_html(Media.html_options(self.url)) if self.doc.nil?
     end
     true
   end
@@ -239,7 +239,7 @@ class Media
   end
 
   def self.request_url(url, verb = 'Get')
-    uri = Media.parse_url(url)
+    uri = Media.parse_url(decoded_uri(url))
     Media.request_uri(uri, verb)
   end
 
@@ -287,6 +287,7 @@ class Media
     rescue OpenURI::HTTPError, Errno::ECONNRESET => e
       Airbrake.notify(e, url: self.url) if Airbrake.configured?
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: self.url, error_class: e.class, error_message: e.message
+      self.data[:error] = { message: 'URL Not Found', code: LapisConstants::ErrorCodes::const_get('NOT_FOUND')}
       return nil
     rescue Zlib::DataError, Zlib::BufError
       self.get_html(Media.html_options(self.url).merge('Accept-Encoding' => 'identity'))

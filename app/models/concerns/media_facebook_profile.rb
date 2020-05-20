@@ -14,9 +14,7 @@ module MediaFacebookProfile
   def get_data_from_facebook
     page = self.get_facebook_profile_page
 
-    if page.blank?
-      return { error: { message: 'Not Found' } }
-    end
+    return if page.blank?
 
     data = {}
     # Try to parse as a user profile first
@@ -34,8 +32,7 @@ module MediaFacebookProfile
     end
     data['id'] = self.get_facebook_id_from_url
 
-    error = self.get_facebook_privacy_error
-    data['error'] = error if error
+    self.get_facebook_privacy_error
     
     data['likes'] = self.get_facebook_likes
     
@@ -47,7 +44,8 @@ module MediaFacebookProfile
     page = doc || self.get_facebook_profile_page
     title = page.css('meta[property="og:title"]')
     if title.present? && title.attr('content') && title.attr('content').value == 'Log In or Sign Up to View'
-      { message: 'Login required to see this profile' }
+      self.data['error'] = { message: 'Login required to see this profile', code: LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED') }
+      return true
     end
   end
 
@@ -107,18 +105,21 @@ module MediaFacebookProfile
   end
 
   def data_from_facebook_profile
-    self.data.merge! self.get_data_from_facebook
-    picture = self.get_value_from_facebook_metatags(self.data['picture'], 'og:image')
-    self.data.merge!({
-      external_id: self.data['id'] || '',
-      username: self.get_facebook_username,
-      title: self.get_value_from_facebook_metatags(self.get_facebook_name, 'og:title'),
-      description: self.get_value_from_facebook_metatags(self.data['description'], 'og:description'),
-      author_url: self.url,
-      author_picture: picture,
-      author_name: self.data['name'],
-      picture: picture
-    })
+    handle_exceptions(self, StandardError) do
+      data = self.get_data_from_facebook
+      self.data.merge!(data) unless data.nil?
+      picture = self.get_value_from_facebook_metatags(self.data['picture'], 'og:image')
+      self.data.merge!({
+        external_id: self.data['id'] || '',
+        username: self.get_facebook_username,
+        title: self.get_value_from_facebook_metatags(self.get_facebook_name, 'og:title'),
+        description: self.get_value_from_facebook_metatags(self.data['description'], 'og:description'),
+        author_url: self.url,
+        author_picture: picture,
+        author_name: self.data['name'],
+        picture: picture
+      })
+    end
   end
 
   def get_value_from_facebook_metatags(current, name)
@@ -155,7 +156,7 @@ module MediaFacebookProfile
       /^https:\/\/(www\.)?facebook\.com\/([0-9]+)$/,
       /^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+)/
     ]
-    username = compare_patterns(URI.decode(self.url), patterns)
+    username = compare_patterns(decoded_uri(self.url), patterns)
     return if ['events', 'livemap', 'watch', 'live', 'story.php'].include? username
     if username === 'pages'
       username = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/pages\/([^\/]+)\/([^\/\?]+).*/)[2]

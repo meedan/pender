@@ -16,8 +16,8 @@ module MediaTwitterItem
       raise Pender::ApiLimitReached.new(e.rate_limit.reset_in)
     rescue Twitter::Error => error
       Airbrake.notify(error, url: self.url ) if Airbrake.configured? && !self.doc.nil?
-      self.data.merge!(error: { message: "#{error.class}: #{error.message}", code: error.code })
-      Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse Twitter URL', url: self.url, code: error.code, error_class: error.class, error_message: error.message
+      self.data.merge!(error: { message: "#{error.class}: #{error.code} #{error.message}", code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') })
+      Rails.logger.warn level: 'WARN', message: "[Parser] #{error.message}", url: self.url, code: error.code, error_class: error.class
       return
     end
   end
@@ -73,7 +73,7 @@ module MediaTwitterItem
       self.twitter_client.user(username).url.to_s
     rescue Twitter::Error => e
       Airbrake.notify(e, url: self.url, username: username ) if Airbrake.configured?
-      Rails.logger.warn level: 'WARN', message: '[Parser] Cannot get Twitter author URL', username: username, error_class: e.class, error_message: e.message
+      Rails.logger.warn level: 'WARN', message: "[Parser] #{e.message}", username: username, error_class: e.class
       nil
     end
   end

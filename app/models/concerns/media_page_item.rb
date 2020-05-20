@@ -31,7 +31,7 @@ module MediaPageItem
 
   def check_if_safe
     if self.unsafe?
-      self.data.merge!(error: { message: 'Unsafe URL', code: 'UNSAFE' })
+      self.data.merge!(error: { message: 'Unsafe URL', code: LapisConstants::ErrorCodes::const_get('UNSAFE') })
       raise Pender::UnsafeUrl
     end
   end

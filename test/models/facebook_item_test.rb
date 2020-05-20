@@ -73,15 +73,13 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should parse Facebook live post from mobile URL" do
     m = create_media url: 'https://m.facebook.com/story.php?story_fbid=10154584426664820&id=355665009819%C2%ACif_t=live_video%C2%ACif_id=1476846578702256&ref=bookmarks'
     data = m.as_json
-    assert_equal 'https://www.facebook.com/scmp/videos/10154584426664820/', m.url
     assert_match /South China Morning Post/, data['title']
     assert_match /SCMP #FacebookLive amid chaotic scenes in #HongKong Legco/, data['description']
     assert_not_nil data['published_at']
-    assert_equal 'scmp', data['username']
     assert_equal 'South China Morning Post', data['author_name']
     assert_equal 'http://facebook.com/355665009819', data['author_url']
     assert_equal 'https://graph.facebook.com/355665009819/picture', data['author_picture']
-    assert_match /14645700_10154584445939820_3787909207995449344/, data['picture']
+    assert !data['picture'].blank?
   end
 
   test "should parse Facebook live post" do
@@ -480,4 +478,35 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'Popor dezamagit on Facebook', data[:title]
   end
+
+  test "should add not found error and return empty html" do
+    urls = ['https://www.facebook.com/danielafeitosa/posts/2074906892567200', 'https://www.facebook.com/caiosba/posts/8457689347638947', 'https://www.facebook.com/photo.php?fbid=158203948564609&set=pb.100031250132368.-2207520000..&type=3&theater']
+    urls.each do |url|
+      m = create_media url: url
+      data = m.as_json
+      assert_equal '', data[:html]
+      assert_equal LapisConstants::ErrorCodes::const_get('NOT_FOUND'), data[:error][:code]
+      assert_equal 'URL Not Found', data[:error][:message]
+    end
+  end
+
+  test "should add login required error and return empty html" do
+    m = create_media url: 'https://www.facebook.com/caiosba/posts/2914211445293757'
+    data = m.as_json
+    assert_equal '', data[:html]
+    assert_equal 'Login required to see this profile', data[:error][:message]
+    assert_equal LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
+  end
+
+  test "should not raise error when canonical URL on meta tags has non-ascii" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML('<meta property="og:title" content="&#x930;&#x93e;&#x91c;&#x928;&#x940;&#x924;&#x93f; no Facebook Watch" /><meta property="og:url" content="https://www.facebook.com/&#x930;&#x93e;&#x91c;&#x928;&#x940;&#x924;&#x93f;-105391010971335/videos/%E0%A4%AF%E0%A5%87-%E0%A4%B5%E0%A4%BF%E0%A4%A1%E0%A5%80%E0%A4%93-%E0%A4%B6%E0%A4%BE%E0%A4%AF%E0%A4%A6-%E0%A4%B0%E0%A4%BE%E0%A4%9C%E0%A4%B8%E0%A5%8D%E0%A4%A5%E0%A4%BE%E0%A4%A8-%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A5%87%E0%A4%A4%E0%A5%8D%E0%A4%B0-%E0%A4%95%E0%A5%87-%E0%A4%95%E0%A4%BF%E0%A4%B8%E0%A5%80-%E0%A4%97%E0%A4%BE%E0%A4%81%E0%A4%B5-%E0%A4%95%E0%A4%BE-%E0%A4%B9%E0%A5%88-%E0%A4%95%E0%A4%BF%E0%A4%B8%E0%A5%80-%E0%A4%A8%E0%A5%87-%E0%A4%AD%E0%A5%87%E0%A4%9C%E0%A4%BE-%E0%A4%B9%E0%A5%88-%E0%A4%AF%E0%A4%A6%E0%A4%BF-%E0%A4%95%E0%A4%BF%E0%A4%B8%E0%A5%80-%E0%A4%AC%E0%A4%A8%E0%A5%8D%E0%A4%A6%E0%A5%87/258392245354246/" />'))
+    assert_nothing_raised do
+      m = create_media url: 'https://www.facebook.com/राजनीति-105391010971335/videos/ये-विडीओ-शायद-राजस्थान-क्षेत्र-के-किसी-गाँव-का-है-किसी-ने-भेजा-है-यदि-किसी-बन्दे/258392245354246/'
+      data = m.as_json
+      assert_equal 'राजनीति no Facebook Watch on Facebook', data['title']
+      assert_nil data['error']
+    end
+    Media.any_instance.unstub(:doc)
+  end
+
 end

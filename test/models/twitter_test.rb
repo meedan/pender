@@ -108,8 +108,8 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should get canonical URL parsed from html tags" do
-    media1 = create_media url: 'https://twitter.com/lila_engel/status/783423627383504896?ref_src=twsrc%5Etfw'
-    media2 = create_media url: 'https://twitter.com/lila_engel/status/783423627383504896'
+    media1 = create_media url: 'https://twitter.com/meedan/status/1262644257996898305?ref_src=twsrc%5Etfw'
+    media2 = create_media url: 'https://twitter.com/meedan/status/1262644257996898305'
     assert_equal media1.url, media2.url
   end
 

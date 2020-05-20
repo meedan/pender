@@ -43,7 +43,7 @@ module MediaFacebookItem
     return unless self.url.match(EVENT_URL).nil?
     user_id = IdsPlease::Grabbers::Facebook.new(self.url, Media.request_url(self.url).body.to_s).grab_link.network_id
     if user_id.blank?
-      uri = URI.parse(self.url)
+      uri = Media.parse_url(self.url)
       params = parse_uri(uri)
       user_id = params['set'].first.split('.').last unless params['set'].blank?
       user_id ||= params['id'].first.match(/([0-9]+).*/)[1] unless params['id'].blank?
@@ -53,7 +53,7 @@ module MediaFacebookItem
   end
 
   def get_facebook_post_id_from_url
-    uri = URI.parse(self.url)
+    uri = Media.parse_url(self.url)
     parts = uri.path.split('/')
     id = parts.last
     id = parts[parts.size - 2] if id == 'posts'
@@ -85,7 +85,6 @@ module MediaFacebookItem
   end
 
   def parse_from_facebook_html
-    self.doc = self.get_html(Media.html_options(self.url))
     return if self.doc.nil?
     self.get_facebook_info_from_metadata
     self.get_facebook_text_from_html
@@ -173,7 +172,7 @@ module MediaFacebookItem
 
   def get_facebook_published_time_from_html
     return if self.doc.nil?
-    time = self.doc.css('div.userContentWrapper').at_css('span.timestampContent')
+    time = self.doc.css('div.userContentWrapper').at_css('span.timestampContent') || self.doc.at_css('#MPhotoContent abbr')
     self.data['published_at'] = verify_published_time(time.inner_html, time.parent.attr('data-utime')) unless time.nil?
   end
 
@@ -194,12 +193,11 @@ module MediaFacebookItem
 
   def render_facebook_embed?(username)
     privacy_error = self.get_facebook_privacy_error(self.doc) if self.doc
-    self.data['error'] = privacy_error if privacy_error
     !['groups', 'flx'].include?(username) && !privacy_error && self.url.match(EVENT_URL).nil?
   end
 
   def html_for_facebook_post(username)
-    return '' unless render_facebook_embed?(username)
+    return '' unless render_facebook_embed?(username) && !self.doc.nil?
     '<script>
     window.fbAsyncInit = function() {
       FB.init({
