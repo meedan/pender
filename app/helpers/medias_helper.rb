@@ -154,5 +154,9 @@ module MediasHelper
         url
       end
     end
+
+    def self.is_a_login_page(url)
+      url.match?(/^https:\/\/www\.instagram\.com\/accounts\/login/)
+    end
   end
 end

@@ -75,7 +75,8 @@ module MediaInstagramItem
     uri = URI.parse(url)
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true unless url.match(/^https/).nil?
-    request = Net::HTTP::Get.new(uri.request_uri)
+    headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'] }
+    request = Net::HTTP::Get.new(uri.request_uri, headers)
     response = http.request(request)
     raise "#{response.class}: #{response.message}" unless %(200 301 302).include?(response.code)
     response = self.get_instagram_json_data(response.header['location']) if %w(301 302).include?(response.code)
