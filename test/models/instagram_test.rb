@@ -22,10 +22,10 @@ class InstagramTest < ActiveSupport::TestCase
   end
 
   test "should get canonical URL parsed from html tags 2" do
-    media1 = create_media url: 'https://www.instagram.com/p/BK4YliEAatH/?taken-by=anxiaostudio'
-    media2 = create_media url: 'https://www.instagram.com/p/BK4YliEAatH/'
-    assert_equal 'https://www.instagram.com/p/BK4YliEAatH?taken-by=anxiaostudio', media1.url
-    assert_equal 'https://www.instagram.com/p/BK4YliEAatH', media2.url
+    media1 = create_media url: 'https://www.instagram.com/p/CAdW7PMlTWc/?taken-by=kikoloureiro'
+    media2 = create_media url: 'https://www.instagram.com/p/CAdW7PMlTWc'
+    assert_match /https:\/\/www.instagram.com\/p\/CAdW7PMlTWc/, media1.url
+    assert_match /https:\/\/www.instagram.com\/p\/CAdW7PMlTWc/, media2.url
   end
 
   test "should return Instagram author picture" do

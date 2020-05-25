@@ -94,7 +94,7 @@ module MediasHelper
   end
 
   def decoded_uri(url)
-    URI.decode(url)
+    Media.decoded_uri(url)
   end
 
   def verify_published_time(time1, time2 = nil)
@@ -144,5 +144,19 @@ module MediasHelper
       content[index] = cleanup_text(value)
     end
     content
+  end
+
+  Media.class_eval do
+    def self.decoded_uri(url)
+      begin
+        URI.decode(url)
+      rescue Encoding::CompatibilityError
+        url
+      end
+    end
+
+    def self.is_a_login_page(url)
+      url.match?(/^https:\/\/www\.instagram\.com\/accounts\/login/)
+    end
   end
 end

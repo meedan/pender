@@ -468,7 +468,6 @@ class FacebookProfileTest < ActiveSupport::TestCase
 
     m = create_media url: url
     data = m.as_json
-    puts data
     assert_equal '', data[:html]
     assert_equal LapisConstants::ErrorCodes::const_get('NOT_FOUND'), data[:error][:code]
     assert_equal 'URL Not Found', data[:error][:message]
