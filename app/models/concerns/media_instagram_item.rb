@@ -74,12 +74,14 @@ module MediaInstagramItem
   def get_instagram_json_data(url)
     uri = URI.parse(url)
     http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true unless url.match(/^https/).nil?
+    http.use_ssl = uri.scheme == 'https'
     headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'] }
     request = Net::HTTP::Get.new(uri.request_uri, headers)
     response = http.request(request)
-    raise "#{response.class}: #{response.message}" unless %(200 301 302).include?(response.code)
-    response = self.get_instagram_json_data(response.header['location']) if %w(301 302).include?(response.code)
-    JSON.parse(response.body)
+    raise StandardError.new("#{response.class}: #{response.message}") unless %(200 301 302).include?(response.code)
+    return JSON.parse(response.body) if response.code == '200'
+    location = response.header['location']
+    raise StandardError.new('Login required') if Media.is_a_login_page(location)
+    response = self.get_instagram_json_data(location)
   end
 end 
