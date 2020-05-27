@@ -82,6 +82,6 @@ module MediaInstagramItem
     return JSON.parse(response.body) if response.code == '200'
     location = response.header['location']
     raise StandardError.new('Login required') if Media.is_a_login_page(location)
-    response = self.get_instagram_json_data(location)
+    self.get_instagram_json_data(location)
   end
 end 

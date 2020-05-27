@@ -12,7 +12,7 @@ script:
 - docker-compose exec pender bundle exec rake "parallel:test[3]"
 after_script:
 - docker-compose exec pender cat tmp/performance.csv
-- docker-compose exec pender test/test-coverage
+- docker-compose exec -e TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST -e TRAVIS_TEST_RESULT=$TRAVIS_TEST_RESULT -e CC_TEST_REPORTER_ID=$CC_TEST_REPORTER_ID pender test/test-coverage
 notifications:
   slack:
     secure: jeHPR5g+4VbyOV4kXEb6kxXmlw1cn67/HEBhpL1V/EdxpnmUbj1DyMcYDHcj4D9A2wjuVNYxhmqVUfkNKeSBYiBR+hqZs4WEvRfSE8WIhnrU+A1u+IfZtv1w5jairrBS9B9+lDhSr/EKTP8FactKLDvWNkZgZTYhSmLxarCUHnAUKo3Kp48cXdt8ywtbVXylnBtE0ofyKSu1qAiM+Oh7mJjgEUymeRNy44DbALnTEpv9y7x+IeDkF0T+IoJYnV7Sk2+vdB18ULVzGfSAnjPIvFPehIQ40I2nfebOksDYqqtTZTXi/yA9tRZdsoIelq1RH8QFSglfqoAR5v/Eamqm13cGO8Xu7e66Lowm0+knSHZrokldFdhcpes1gEYVRiV3CiRbZCJhi69DMuHzm3gvaYyNDWe3Gx9zzekGYGXFpwsLjwOvxWcZSUF3kopFXJIMdMpUKS2OJpGCmsWThXuk4zXm4cEHtZBpWRjxALC+45Lh5/c53Pcv6dUxVx/nN984T8SAdsDfxIMywauYZ3N7CKgVVg5GejX48UaLsh68FczxV5R5ISU3eIOilzU7aslq/vn+uTHTnbx5yQXOpCuTZIoS/eC1PF8wIvq6R9HL7GfZZJv3f7zjddlrdMV9zdM8h1objhfd/4InGncH9YVQbczvO1PTf1CBdNIVSNVEDyE=
