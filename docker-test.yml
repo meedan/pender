@@ -1,6 +1,5 @@
-version: "2.1"
+version: "2.2"
 services:
   pender:
     environment:
       RAILS_ENV: test
-      CODECLIMATE_REPO_TOKEN: TODO

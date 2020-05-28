@@ -185,7 +185,7 @@ class Media
   def get_parsed_url(tag)
     canonical_url = tag.attr('content') || tag.attr('href')
     return false if canonical_url.blank?
-    if canonical_url && canonical_url != self.url
+    if canonical_url != self.url && !Media.is_a_login_page(canonical_url)
       self.url = absolute_url(canonical_url)
       self.doc = self.get_html(Media.html_options(self.url)) if self.doc.nil?
     end
@@ -221,7 +221,7 @@ class Media
 
   def set_url_from_location(response, path)
     if %w(301 302).include?(response.code)
-      self.url = response.header['location']
+      self.url = response.header['location'] if !Media.is_a_login_page(response.header['location'])
       if self.url !~ /^https?:/
         self.url.prepend('/') unless self.url.match(/^\//)
         previous = path.last.match(/^https?:\/\/[^\/]+/)[0]

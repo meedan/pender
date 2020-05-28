@@ -7,7 +7,7 @@ class ApplicationController < ActionController::Base
     case
       when payload[:status] < 300
         payload[:level] = 'INFO'
-      when payload[:status] < 500
+      when payload[:status] < 400
         payload[:level] = 'WARN'
       else
         payload[:level] = 'ERROR'

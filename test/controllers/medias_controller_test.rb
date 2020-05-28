@@ -517,22 +517,23 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return timeout error with minimal data if cannot parse url" do
-    stub_configs({ 'timeout' => 0.1 })
-    url = 'https://changescamming.net/halalan-2019/maria-ressa-to-bong-go-um-attend-ka-ng-senatorial-debate-di-yung-nagtatapon-ka-ng-pera'
-    Airbrake.stubs(:configured?).returns(true)
-    Airbrake.stubs(:notify).never
+    stub_configs({ 'timeout' => 0.1, 'cloudflare_auth_email' => nil }) do
+      url = 'https://changescamming.net/halalan-2019/maria-ressa-to-bong-go-um-attend-ka-ng-senatorial-debate-di-yung-nagtatapon-ka-ng-pera'
+      Airbrake.stubs(:configured?).returns(true)
+      Airbrake.stubs(:notify).never
 
-    authenticate_with_token
-    get :index, url: url, refresh: '1', format: :json
-    assert_response 200
-    Media.minimal_data(OpenStruct.new(url: url)).except(:parsed_at).each_pair do |key, value|
-      assert_equal value, JSON.parse(@response.body)['data'][key]
+      authenticate_with_token
+      get :index, url: url, refresh: '1', format: :json
+      assert_response 200
+      Media.minimal_data(OpenStruct.new(url: url)).except(:parsed_at).each_pair do |key, value|
+        assert_equal value, JSON.parse(@response.body)['data'][key]
+      end
+      error = JSON.parse(@response.body)['data']['error']
+      assert_equal 'Timeout', error['message']
+      assert_equal LapisConstants::ErrorCodes::const_get('TIMEOUT'), error['code']
+      Airbrake.unstub(:configured?)
+      Airbrake.unstub(:notify)
     end
-    error = JSON.parse(@response.body)['data']['error']
-    assert_equal 'Timeout', error['message']
-    assert_equal LapisConstants::ErrorCodes::const_get('TIMEOUT'), error['code']
-    Airbrake.unstub(:configured?)
-    Airbrake.unstub(:notify)
   end
 
   test "should archive on all archivers when no archiver parameter is sent" do

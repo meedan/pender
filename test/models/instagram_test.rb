@@ -7,7 +7,7 @@ class InstagramTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal '@megadeth', d['username']
     assert_equal 'item', d['type']
-    assert_equal 'Megadeth', d['author_name']
+    assert_equal 'megadeth', d['author_name'].downcase
     assert_not_nil d['picture']
   end
 
@@ -22,23 +22,17 @@ class InstagramTest < ActiveSupport::TestCase
   end
 
   test "should get canonical URL parsed from html tags 2" do
-    media1 = create_media url: 'https://www.instagram.com/p/BK4YliEAatH/?taken-by=anxiaostudio'
-    media2 = create_media url: 'https://www.instagram.com/p/BK4YliEAatH/'
-    assert_equal 'https://www.instagram.com/p/BK4YliEAatH?taken-by=anxiaostudio', media1.url
-    assert_equal 'https://www.instagram.com/p/BK4YliEAatH', media2.url
-  end
-
-  test "should return Instagram author picture" do
-    m = create_media url: 'https://www.instagram.com/p/BOXV2-7BPAu'
-    d = m.as_json
-    assert_match /^http/, d['author_picture']
+    media1 = create_media url: 'https://www.instagram.com/p/CAdW7PMlTWc/?taken-by=kikoloureiro'
+    media2 = create_media url: 'https://www.instagram.com/p/CAdW7PMlTWc'
+    assert_match /https:\/\/www.instagram.com\/p\/CAdW7PMlTWc/, media1.url
+    assert_match /https:\/\/www.instagram.com\/p\/CAdW7PMlTWc/, media2.url
   end
 
   test "should parse Instagram post from page and get username and name" do
     m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
     d = m.as_json
     assert_equal '@megadeth', d['username']
-    assert_equal 'Megadeth', d['author_name']
+    assert_equal 'megadeth', d['author_name'].downcase
   end
 
   test "should store data of post returned by instagram api and graphql" do
@@ -56,8 +50,7 @@ class InstagramTest < ActiveSupport::TestCase
     assert !data[:picture].blank?
     assert_equal "https://www.instagram.com/megadeth", data[:author_url]
     assert !data[:html].blank?
-    assert !data[:author_picture].blank?
-    assert_equal 'Megadeth', data[:author_name]
+    assert_equal 'megadeth', data[:author_name].downcase
     assert !data[:published_at].blank?
   end
 
@@ -99,7 +92,7 @@ class InstagramTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal 'item', d['type']
     assert_equal '@biakicis', d['username']
-    assert_equal 'Bia Kicis', d['author_name']
+    assert_match /kicis/, d['author_name'].downcase
   end
 
   test "should return error on data when can't get info from api and graphql" do
@@ -134,6 +127,47 @@ class InstagramTest < ActiveSupport::TestCase
     assert_equal 'https://instagram.net/v/29_n.jpg', d['picture']
     assert_equal 'https://instagram.net/v/56_n.jpg', d['author_picture']
     Media.any_instance.unstub(:get_instagram_json_data)
+  end
+
+  test "should raise error if api redirects to login page" do
+    m = create_media url: 'https://www.instagram.com/p/CAOdQ2Hha4k/'
+    id = 'CAOdQ2Hha4k'
+    api_url = "https://api.instagram.com/oembed/?url=http://instagr.am/p/#{id}"
+    api_uri = URI.parse api_url
+    http1 = 'mock';http1.stubs(:use_ssl=)
+    Net::HTTP.stubs(:new).with(api_uri.host, api_uri.port).returns(http1)
+    response_api = 'mock';response_api.stubs(:code).returns('301');response_api.stubs(:header).returns({'location' => 'https://www.instagram.com/accounts/login'})
+    http1.stubs(:request).returns(response_api)
+    error = assert_raise StandardError do
+      m.get_instagram_json_data(api_url)
+    end
+    assert_equal 'Login required', error.message
+
+    Net::HTTP.unstub(:new)
+  end
+
+  test "should parse redirected page when requesting api" do
+    m = create_media url: 'https://www.instagram.com/p/CAOdQ2Hha4k/'
+    id = 'CAOdQ2Hha4k'
+    api_url = "https://api.instagram.com/oembed/?url=http://instagr.am/p/#{id}"
+    api_uri = URI.parse api_url
+    http1 = 'mock';http1.stubs(:use_ssl=)
+    Net::HTTP.stubs(:new).with(api_uri.host, api_uri.port).returns(http1)
+    response_api = 'mock';response_api.stubs(:code).returns('301');response_api.stubs(:header).returns({'location' => 'https://www.instagram.com/redirection'})
+    http1.stubs(:request).returns(response_api)
+
+    redirected_uri = URI.parse 'https://www.instagram.com/redirection'
+    http2 = 'mock';http2.stubs(:use_ssl=)
+    Net::HTTP.stubs(:new).with(redirected_uri.host, redirected_uri.port).returns(http2)
+    response_api2 = 'mock';response_api2.stubs(:code).returns('200');response_api2.stubs(:body).returns("{\"username\":\"megadeth\"}")
+    http2.stubs(:request).returns(response_api2)
+
+    assert_nothing_raised do
+      data = m.get_instagram_json_data(api_url)
+      assert_equal 'megadeth', data['username']
+    end
+
+    Net::HTTP.unstub(:new)
   end
 
 end 
