@@ -11,10 +11,8 @@ module MediaYoutubeItem
       title
       published_at
       thumbnails
-      embed_html
       channel_title
       channel_id
-      duration
       id
     )
   end
@@ -23,6 +21,7 @@ module MediaYoutubeItem
     video = video_data = nil
 
     begin
+      Yt.configuration.api_key = Media.get_config(self)[:google_api_key]
       video = Yt::Video.new url: self.url
       video_data = video.snippet.data
     rescue Yt::Errors::NoItems
@@ -37,14 +36,15 @@ module MediaYoutubeItem
     end
 
     data = self.data
+    id = data[:raw][:api][:id]
 
     self.data.merge!({
-      external_id: data[:raw][:api][:id],
+      external_id: id,
       username: data[:raw][:api]['channel_title'],
       description: data[:raw][:api]['description'],
       title: data[:raw][:api]['title'],
       picture: self.get_youtube_thumbnail,
-      html: data[:raw][:api]['embed_html'],
+      html: html_for_youtube_item(id),
       author_name: data[:raw][:api]['channel_title'],
       author_picture: self.get_youtube_item_author_picture, 
       author_url: self.get_youtube_item_author_url,
@@ -76,5 +76,10 @@ module MediaYoutubeItem
 
   def youtube_oembed_url
     "https://www.youtube.com/oembed?format=json&url=#{self.url}"
+  end
+
+  def html_for_youtube_item(id)
+    return '' if data[:raw][:api]['channel_id'].blank?
+    "<iframe width='480' height='270' src='//www.youtube.com/embed/#{id}' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe>"
   end
 end

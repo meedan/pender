@@ -36,4 +36,12 @@ class ApiKeyTest < ActiveSupport::TestCase
       create_api_key application: 'invalid'
     end
   end
+
+  test "should get config from api key if present" do
+    key = create_api_key
+    assert_equal CONFIG['google_api_key'], key.config[:google_api_key]
+    key.application_settings =  { config: { google_api_key: 'specific_key' }}; key.save
+    assert_equal 'specific_key', ApiKey.find(key.id).config[:google_api_key]
+  end
+
 end

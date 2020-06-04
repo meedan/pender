@@ -158,5 +158,15 @@ module MediasHelper
     def self.is_a_login_page(url)
       url.match?(/^https:\/\/www\.instagram\.com\/accounts\/login/)
     end
+
+    def self.get_config(media)
+      media.key ? media.key.config : CONFIG
+    end
+
+    def self.api_key_settings(key_id)
+      key = ApiKey.where(id: key_id).last
+      key ? key.settings : {}
+    end
+
   end
 end

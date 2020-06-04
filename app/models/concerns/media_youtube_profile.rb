@@ -20,6 +20,7 @@ module MediaYoutubeProfile
   end
 
   def data_from_youtube_profile
+    Yt.configuration.api_key = Media.get_config(self)[:google_api_key]
     channel = Yt::Channel.new url: self.url
     video_data = channel.snippet.data
     video_statistics = channel.statistics_set.data
