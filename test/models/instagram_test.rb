@@ -12,6 +12,7 @@ class InstagramTest < ActiveSupport::TestCase
   end
 
   test "should parse Instagram profile" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:title' content='megadeth'><meta property='og:image' content='https://www.instagram.com/megadeth.png'>"))
     m = create_media url: 'https://www.instagram.com/megadeth'
     d = m.as_json
     assert_equal '@megadeth', d['username']
@@ -19,6 +20,7 @@ class InstagramTest < ActiveSupport::TestCase
     assert_equal 'megadeth', d['title']
     assert_equal 'megadeth', d['author_name']
     assert_match /^http/, d['picture']
+    Media.any_instance.unstub(:doc)
   end
 
   test "should get canonical URL parsed from html tags 2" do
