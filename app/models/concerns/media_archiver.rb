@@ -73,11 +73,6 @@ module MediaArchiver
       false
     end
 
-    def api_key_settings(key_id)
-      key = ApiKey.where(id: key_id).last
-      key && key.application_settings ? key.application_settings.with_indifferent_access : {}
-    end
-
     def notify_webhook_and_update_cache(archiver, url, data, key_id)
       settings = Media.api_key_settings(key_id)
       Media.notify_webhook(archiver, url, data, settings)

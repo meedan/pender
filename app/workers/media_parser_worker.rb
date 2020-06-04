@@ -7,7 +7,8 @@ class MediaParserWorker
 
   def perform(url, key_id, refresh, archivers)
     key = ApiKey.where(id: key_id).first
-    settings = key ? key.application_settings.with_indifferent_access : {}
+    settings = key ? key.settings : {}
+
     type, data = is_url?(url) ? self.parse(url, key, refresh, archivers) : ['error', invalid_url_error]
     Media.notify_webhook(type, url, data, settings)
   end

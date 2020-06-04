@@ -5,9 +5,9 @@ class ApplicationController < ActionController::Base
   def append_info_to_payload(payload)
     super
     case
-      when payload[:status] < 300
+      when payload[:status].to_i < 300
         payload[:level] = 'INFO'
-      when payload[:status] < 400
+      when payload[:status].to_i < 400
         payload[:level] = 'WARN'
       else
         payload[:level] = 'ERROR'

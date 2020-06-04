@@ -48,4 +48,26 @@ class MediasHelperTest < ActionView::TestCase
     assert_equal '2018-08-21 00:19:25 +0000', verify_published_time('1534810765').to_s
     assert_equal '2018-08-20 22:05:01 +0000', verify_published_time('1534810765', '1534802701').to_s
   end
+
+  test "should get config from api key or default config" do
+    url = 'http://example.com'
+    timeout = CONFIG['timeout']
+    key1 = create_api_key application_settings: { config: { timeout: 10 }}
+    key2 = create_api_key application_settings: {}
+    key3 = create_api_key
+
+    m = Media.new url: url
+    assert_equal timeout, Media.get_config(m)[:timeout]
+
+    m.key = key1
+    assert_equal 10, Media.get_config(m)[:timeout]
+
+    m.key = key2
+    assert_equal timeout, Media.get_config(m)[:timeout]
+
+    m.key = key3
+    assert_equal timeout, Media.get_config(m)[:timeout]
+
+  end
+
 end

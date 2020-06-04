@@ -37,7 +37,7 @@ module MediaPageItem
   end
 
   def unsafe?
-    return nil if CONFIG['google_api_key'].blank?
+    return nil if Media.get_config(self)['google_api_key'].blank?
     unsafe = false
     [self.url, self.data['author_url'], self.data['author_picture'], self.data['picture']].each do |url|
       next if url.blank? || unsafe
