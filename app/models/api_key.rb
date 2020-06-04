@@ -16,6 +16,14 @@ class ApiKey < ActiveRecord::Base
   
   validates :application, inclusion: { in: proc { ApiKey.applications } }
 
+  def settings
+    self.application_settings ? self.application_settings.with_indifferent_access : {}
+  end
+
+  def config
+    self.settings[:config] ? CONFIG.merge(self.settings[:config]) : CONFIG
+  end
+
   private
 
   def generate_access_token
