@@ -2,7 +2,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 require 'cc_deville'
 
 class InstagramTest < ActiveSupport::TestCase
-  test "should parse Instagram link" do
+  test "should parse Instagram post" do
     m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
     d = m.as_json
     assert_equal '@megadeth', d['username']
@@ -30,13 +30,6 @@ class InstagramTest < ActiveSupport::TestCase
     assert_match /https:\/\/www.instagram.com\/p\/CAdW7PMlTWc/, media2.url
   end
 
-  test "should parse Instagram post from page and get username and name" do
-    m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
-    d = m.as_json
-    assert_equal '@megadeth', d['username']
-    assert_equal 'megadeth', d['author_name'].downcase
-  end
-
   test "should store data of post returned by instagram api and graphql" do
     m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
     data = m.as_json
@@ -57,12 +50,12 @@ class InstagramTest < ActiveSupport::TestCase
   end
 
   test "should store oembed data of a instagram post" do
-    m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
+    m = create_media url: 'https://www.instagram.com/p/CBJDglTpFUT/'
     data = m.as_json
 
     assert data['raw']['oembed'].is_a? Hash
-    assert_equal 'megadeth', data['raw']['oembed']['author_name']
-    assert_match /Peace Sells/, data['raw']['oembed']['title']
+    assert_equal 'theintercept', data['raw']['oembed']['author_name']
+    assert_match /It was a week/, data['raw']['oembed']['title']
   end
 
   test "should use username as author_name on Instagram profile when a full name is not available" do
@@ -78,15 +71,19 @@ class InstagramTest < ActiveSupport::TestCase
   end
 
   test "should have external id for post" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:url' content='https://www.instagram.com/p/BxxBzJmiR00/'>"))
     m = create_media url: 'https://www.instagram.com/p/BxxBzJmiR00/'
     data = m.as_json
     assert_equal 'BxxBzJmiR00', data['external_id']
+    Media.any_instance.unstub(:doc)
   end
 
   test "should have external id for profile" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:url' content='https://www.instagram.com/ironmaiden/'>"))
     m = create_media url: 'https://www.instagram.com/ironmaiden/'
     data = m.as_json
     assert_equal 'ironmaiden', data['external_id']
+    Media.any_instance.unstub(:doc)
   end
 
   test "should parse IGTV link as item" do
