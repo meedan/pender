@@ -59,9 +59,11 @@ class InstagramTest < ActiveSupport::TestCase
   end
 
   test "should use username as author_name on Instagram profile when a full name is not available" do
+    Media.any_instance.stubs(:get_instagram_author_name).returns(nil)
     m = create_media url: 'https://www.instagram.com/emeliiejanssonn/'
     data = m.as_json
     assert_equal 'emeliiejanssonn', data['author_name']
+    Media.any_instance.unstub(:get_instagram_author_name)
   end
 
   test "should not have the subkey json+ld if the tag is not present on page" do

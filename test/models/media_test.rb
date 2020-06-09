@@ -202,7 +202,7 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
-  test "should parse url 1" do
+  test "should parse url scheme http" do
     m = create_media url: 'http://www.theatlantic.com/magazine/archive/2016/11/war-goes-viral/501125/'
     d = m.as_json
     assert_equal 'War Goes Viral', d['title']
@@ -213,7 +213,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /theatlantic/, d['picture']
   end
 
-  test "should parse url 2" do
+  test "should parse url scheme https" do
     m = create_media url: 'https://www.theguardian.com/politics/2016/oct/19/larry-sanders-on-brother-bernie-and-why-tony-blair-was-destructive'
     d = m.as_json
     assert_equal 'Larry Sanders on brother Bernie and why Tony Blair was ‘destructive’', d['title']
@@ -355,7 +355,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:try_https)
     OpenURI.unstub(:open_uri)
     Airbrake.unstub(:configured?)
-  end
+  end 
 
   test "should redirect to HTTPS if available and not already HTTPS" do
     m = create_media url: 'http://imotorhead.com'
@@ -642,6 +642,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: url
     data = m.as_json
     assert_equal 'ClaimReview', data['schema']['ClaimReview'].first['@type']
+    assert_equal 'http://schema.org', data['schema']['ClaimReview'].first['@context']
     assert_equal ['@context', '@type', 'author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview'].first.keys.sort
   end
 
