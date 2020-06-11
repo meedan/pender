@@ -228,17 +228,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /640132509497749_4281523565478374345/, d['picture']
   end
 
-  test "should parse album post with a permalink" do
-    m = create_media url: 'https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406'
-    d = m.as_json
-    assert_match /Mariano Rajoy Brey/, d['title']
-    assert_equal 'item', d['type']
-    assert_match /54212446406/, d['author_picture']
-    assert_match /14543767_10154534111016407_5167486558738906371/, d['picture']
-    assert_not_nil Time.parse(d['published_at'])
-    assert_equal '10154534111016407', d['object_id']
-  end
-
   test "should parse Facebook photo post within an album url" do
     m = create_media url: 'https://www.facebook.com/ESCAPE.Egypt/photos/ms.c.eJxNk8d1QzEMBDvyQw79N2ZyaeD7osMIwAZKLGTUViod1qU~;DCBNHcpl8gfMKeR8bz2gH6ABlHRuuHYM6AdywPkEsH~;gqAjxqLAKJtQGZFxw7CzIa6zdF8j1EZJjXRgTzAP43XBa4HfFa1REA2nXugScCi3wN7FZpF5BPtaVDEBqwPNR60O9Lsi0nbDrw3KyaPCVZfqAYiWmZO13YwvSbtygCWeKleh9KEVajW8FfZz32qcUrNgA5wfkA4Xfh004x46d9gdckQt2xR74biSOegwIcoB9OW~_oVIxKML0JWYC0XHvDkdZy0oY5bgjvBAPwdBpRuKE7kZDNGtnTLoCObBYqJJ4Ky5FF1kfh75Gnyl~;Qxqsv.bps.a.1204090389632094.1073742218.423930480981426/1204094906298309/?type=3&theater'
     d = m.as_json
@@ -299,7 +288,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal 'scmp', d['username']
     assert_match /355665009819/, d['author_picture']
     assert_match /10154584426664820/, d['picture']
-    assert_equal 'http://facebook.com/355665009819', d['author_url']
+    assert_match 'http://facebook.com/355665009819', d['author_url']
     assert_not_nil Time.parse(d['published_at'])
   end
 
@@ -330,7 +319,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
     assert_equal 'Dina El Hawary', d['author_name']
     assert_equal 'dina.hawary', d['username']
-    assert_equal 'http://facebook.com/813705320', d['author_url']
+    assert_match 'http://facebook.com/813705320', d['author_url']
     assert_equal 'https://graph.facebook.com/813705320/picture', d['author_picture']
     assert_not_nil d['picture']
     assert_nil d['error']
@@ -346,7 +335,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
     assert_equal 'nostalgia.y', d['username']
     assert_equal 'Nostalgia', d['author_name']
-    assert_equal 'http://facebook.com/456182634511888', d['author_url']
+    assert_match 'http://facebook.com/456182634511888', d['author_url']
     assert_equal 'https://graph.facebook.com/456182634511888/picture', d['author_picture']
     assert_match /15181134_928269767303170_7195169848911975270/, d['picture']
     assert_nil d['error']
@@ -375,7 +364,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_not_nil d['published_at']
     assert_equal 'Classic.mou', d['username']
     assert_equal 'Classic', d['author_name']
-    assert_equal 'http://facebook.com/136985363145802', d['author_url']
+    assert_match 'http://facebook.com/136985363145802', d['author_url']
     assert_equal 'https://graph.facebook.com/136985363145802/picture', d['author_picture']
     assert_match /16473884_666508790193454_8112186335057907723/, d['picture']
     assert_equal 'https://www.facebook.com/Classic.mou/photos/a.136991166478555/666508790193454/?type=3', m.url
