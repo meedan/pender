@@ -434,7 +434,6 @@ class ArchiverTest < ActiveSupport::TestCase
     m = Media.new url: url, key: a
     m.as_json
 
-    Media.any_instance.unstub(:archive_to_video)
     Media.stubs(:supported_video?).with(url, a.id).returns(true)
     Media.stubs(:notify_video_already_archived).with(url, a.id).returns(nil)
 
@@ -456,6 +455,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:notify_video_already_archived)
     Media.unstub(:store_video_folder)
     Media.unstub(:delay_for)
+    Media.unstub(:send_to_video_archiver)
   end
 
   test "should not raise error when try to download video from non-ascii URL" do
