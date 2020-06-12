@@ -434,7 +434,6 @@ class ArchiverTest < ActiveSupport::TestCase
     m = Media.new url: url, key: a
     m.as_json
 
-    Media.any_instance.unstub(:archive_to_video)
     Media.stubs(:supported_video?).with(url, a.id).returns(true)
     Media.stubs(:notify_video_already_archived).with(url, a.id).returns(nil)
 

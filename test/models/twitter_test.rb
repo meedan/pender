@@ -63,9 +63,11 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should remove line breaks from Twitter item title" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta name='twitter:title' content='LA Times- USC Dornsife Sunday Poll: <br/> Donald Trump Retains 2 Point <br/> Lead Over Hillary:'>"))
     m = create_media url: 'https://twitter.com/realDonaldTrump/status/785148463868735488'
     d = m.as_json
     assert_equal 'LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary: https://t.co/n05rul4Ycw', d['title']
+    Media.any_instance.unstub(:doc)
   end
 
   test "should parse twitter metatags" do
@@ -150,14 +152,14 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should store data of profile returned by twitter API" do
-    m = create_media url: 'https://twitter.com/caiosba'
+    m = create_media url: 'https://twitter.com/RailsGirlsSSA'
     data = m.as_json
     assert data['raw']['api'].is_a? Hash
     assert !data['raw']['api'].empty?
   end
 
   test "should store oembed data of a twitter post" do
-    m = create_media url: 'https://twitter.com/caiosba/status/742779467521773568'
+    m = create_media url: 'https://twitter.com/caiosba/status/1205175134400733184'
     data = m.as_json
 
     assert data['raw']['oembed'].is_a? Hash
@@ -166,7 +168,7 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should store oembed data of a twitter profile" do
-    m = create_media url: 'https://twitter.com/caiosba'
+    m = create_media url: 'https://twitter.com/TEDTalks'
     data = m.as_json
 
     assert data['raw']['oembed'].is_a? Hash
@@ -252,14 +254,18 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should have external id for profile" do
-    m = create_media url: 'https://twitter.com/meedan'
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:url' content='https://twitter.com/estadao' data-rdm="">"))
+    m = create_media url: 'https://twitter.com/Estadao'
     data = m.as_json
-    assert_equal 'meedan', data['external_id']
+    assert_equal 'estadao', data['external_id']
+    Media.any_instance.unstub(:doc)
   end
 
   test "should have external id for post" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:url' content='https://twitter.com/meedan/status/1130872630674972673' data-rdm="">"))
     m = create_media url: 'https://twitter.com/meedan/status/1130872630674972673'
     data = m.as_json
     assert_equal '1130872630674972673', data['external_id']
+    Media.any_instance.unstub(:doc)
   end
 end
