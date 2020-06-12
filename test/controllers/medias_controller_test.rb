@@ -102,7 +102,8 @@ class MediasControllerTest < ActionController::TestCase
     assert_not_nil data['embed_tag']
   end
 
-  test "should return error message on hash if url does not exist 3" do
+  test "should return error message on hash if url does not exist and page returns empty doc" do
+    Media.any_instance.stubs(:doc).returns(nil)
     authenticate_with_token
     get :index, url: 'https://www.instagram.com/kjdahsjkdhasjdkhasjk/', format: :json
     assert_response 200
@@ -112,6 +113,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal 'instagram', data['provider']
     assert_equal 'profile', data['type']
     assert_not_nil data['embed_tag']
+    Media.any_instance.unstub(:doc)
   end
 
   test "should return error message on hash if url does not exist 4" do
