@@ -198,7 +198,7 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal '', d['username']
       assert_match /^https?:\/\/www\.aljazeera\.net$/, d['author_url']
       assert_nil d['error']
-      assert_match /^https?:\/\/www\.aljazeera\.net\/.*\.jpeg/, d['picture']
+      assert_match /^https?:\/\/www\.aljazeera\.net/, d['picture']
     end
   end
 
