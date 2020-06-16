@@ -544,7 +544,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal "#{folder}/#{id}.info.json", data.dig('archives', 'video_archiver', 'info')
     assert_equal "#{folder}/#{id}.mp4", data.dig('archives', 'video_archiver', 'videos').first
     data.dig('archives', 'video_archiver', 'subtitles').each do |sub|
-      assert_match /\A#{folder}\/#{id}.*\.vtt\z/, sub
+      assert_match /\A#{folder}\/#{id}/, sub
     end
     data.dig('archives', 'video_archiver', 'thumbnails').each do |thumb|
       assert_match /\A#{folder}\/#{id}.*\.jpg\z/, thumb
