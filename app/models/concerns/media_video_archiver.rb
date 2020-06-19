@@ -23,9 +23,8 @@ module MediaVideoArchiver
         local_folder = File.join(Rails.root, 'tmp', 'videos', id)
         Media.give_up('video_archiver', url, key_id, attempts, response) and return
         uri = URI.encode(url)
-        proxy = "--proxy=#{Media.yt_download_proxy(uri)}"
         output = "-o#{local_folder}/#{id}.%(ext)s"
-        system('youtube-dl', uri, proxy, output, '--restrict-filenames', '--no-warnings', '-q', '--write-all-thumbnails', '--write-info-json', '--all-subs', '-fogg/mp4/webm')
+        system('youtube-dl', uri, output, '--restrict-filenames', '--no-warnings', '-q', '--write-all-thumbnails', '--write-info-json', '--all-subs', '-fogg/mp4/webm')
 
         if $?.success?
           Media.store_video_folder(url, local_folder, self.archiving_folder, key_id)
@@ -49,19 +48,12 @@ module MediaVideoArchiver
 
     def supported_video?(url, key_id = nil)
       uri = URI.encode url
-      system('youtube-dl', uri, "--proxy=#{Media.yt_download_proxy(uri)}", '--restrict-filenames', '--no-warnings', '-g', '-q')
+      system('youtube-dl', uri, '--restrict-filenames', '--no-warnings', '-g', '-q')
       unless $?.success?
         data = { error: { message: I18n.t(:archiver_not_supported_media, code: $?.exitstatus), code: LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA') }}
         Media.notify_webhook_and_update_cache('video_archiver', url, data, key_id)
       end
       $?.success?
-    end
-
-    def yt_download_proxy(url)
-      uri = URI.parse(url)
-      return unless uri.host.match(/youtube\.com/)
-      ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG.dig(config).blank? }
-      "http://#{CONFIG.dig('proxy_user_prefix').gsub(/-country$/, "-session-#{Random.rand(100000)}")}:#{CONFIG.dig('proxy_pass')}@#{CONFIG.dig('proxy_host')}:#{CONFIG.dig('proxy_port')}"
     end
 
     def store_video_folder(url, local_path, public_path, key_id)

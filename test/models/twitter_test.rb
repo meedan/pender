@@ -268,4 +268,13 @@ class TwitterTest < ActiveSupport::TestCase
     assert_equal '1130872630674972673', data['external_id']
     Media.any_instance.unstub(:doc)
   end
+
+  test "should leave html blank and add error on media data when private tweet" do
+    url = 'https://twitter.com/danieleerze/status/1261075107583127552'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal '', data['html']
+    assert_match(/Twitter::Error::Forbidden/, data['error']['message'])
+  end
+
 end
