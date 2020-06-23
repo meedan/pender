@@ -11,4 +11,5 @@ d=configurator/check/${DEPLOY_ENV}/${APP}/; for f in $(find $d -type f); do cp "
 
 
 echo "starting sidekiq"
-bundle exec sidekiq
+bundle exec sidekiq -C config/sidekiq.yml
+if [ -s config/sidekiq-videos.yml ]; then bundle exec sidekiq -C config/sidekiq-videos.yml; fi

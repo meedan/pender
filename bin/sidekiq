@@ -11,8 +11,10 @@ sigint_handler()
 trap sigint_handler INT
 
 while true; do
-  bundle exec sidekiq -P /app/tmp/pids/sidekiq-$RAILS_ENV.pid -L log/sidekiq.log -d
+  bundle exec sidekiq -C config/sidekiq.yml -P /app/tmp/pids/sidekiq-$RAILS_ENV.pid -L log/sidekiq.log -d
+  if [ -s config/sidekiq-videos.yml ]; then bundle exec sidekiq -C config/sidekiq-videos.yml -P /app/tmp/pids/sidekiq-videos-$RAILS_ENV.pid -L log/sidekiq.log -d; fi
   inotifywait -e modify -e move -e create -e delete -e attrib /app/tmp/restart.txt
   echo "Restarting Sidekiq..."
   pkill -F /app/tmp/pids/sidekiq-$RAILS_ENV.pid
+  pkill -F /app/tmp/pids/sidekiq-videos-$RAILS_ENV.pid
 done
