@@ -527,7 +527,6 @@ class ArchiverTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://www.youtube.com/watch?v=1vSJrexmVWU'
     Media.stubs(:supported_video?).with(url, a.id).returns(true)
-    Media.stubs(:yt_download_proxy).with(url).returns(nil)
     id = Media.get_id url
 
     m = create_media url: url, key: a
@@ -544,13 +543,12 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal "#{folder}/#{id}.info.json", data.dig('archives', 'video_archiver', 'info')
     assert_equal "#{folder}/#{id}.mp4", data.dig('archives', 'video_archiver', 'videos').first
     data.dig('archives', 'video_archiver', 'subtitles').each do |sub|
-      assert_match /\A#{folder}\/#{id}.*\.vtt\z/, sub
+      assert_match /\A#{folder}\/#{id}/, sub
     end
     data.dig('archives', 'video_archiver', 'thumbnails').each do |thumb|
       assert_match /\A#{folder}\/#{id}.*\.jpg\z/, thumb
     end
     Media.unstub(:supported_video?)
-    Media.unstub(:yt_download_proxy)
   end
 
   test "should handle error and update cache when upload video when archiving fails" do
@@ -648,25 +646,6 @@ class ArchiverTest < ActiveSupport::TestCase
 
     CONFIG.stubs(:dig).with('storage', 'video_asset_path').returns('http://public-storage/my-videos')
     assert_equal "http://public-storage/my-videos", Media.archiving_folder
-
-    CONFIG.unstub(:dig)
-  end
-
-  test "should use proxy to download yt video" do
-    url = 'https://www.youtube.com/watch?v=oDNuxzfuq8M'
-
-    CONFIG.stubs(:dig).with('proxy_host').returns('example.proxy')
-    CONFIG.stubs(:dig).with('proxy_port').returns('1111')
-    CONFIG.stubs(:dig).with('proxy_user_prefix').returns('user-country')
-    CONFIG.stubs(:dig).with('proxy_pass').returns('proxy-test')
-    assert_match /http:\/\/user-session-\d+:proxy-test@example.proxy:1111/, Media.yt_download_proxy(url)
-
-    CONFIG.stubs(:dig).with('proxy_user_prefix').returns('')
-    CONFIG.stubs(:dig).with('proxy_pass').returns('')
-    assert_nil Media.yt_download_proxy(url)
-
-    CONFIG.stubs(:dig).returns(nil)
-    assert_nil Media.yt_download_proxy(url)
 
     CONFIG.unstub(:dig)
   end
