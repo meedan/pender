@@ -12,7 +12,7 @@ module MediaVideoArchiver
 
   module ClassMethods
     def archive_video_in_background(url, key_id)
-      self.delay_for(15.seconds).send_to_video_archiver(url, key_id)
+      self.delay(queue: 'video_archiving').send_to_video_archiver(url, key_id)
     end
 
     def send_to_video_archiver(url, key_id, attempts = 1, response = nil, supported = nil)
