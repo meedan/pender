@@ -123,7 +123,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://meedan.com/en/check/'
     d = m.as_json
     assert_equal 'Product', d['title']
-    assert_match(/Check is an online workspace/, d['description'])
+    assert_match(/Engage your audience/, d['description'])
     assert_equal '', d['published_at']
     assert_equal '', d['username']
     assert_equal 'https://meedan.com/check', m.url

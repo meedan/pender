@@ -371,18 +371,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /Pictures/, d['text']
   end
 
-  test "should parse Facebook post from a user" do
-    m = create_media url: 'https://www.facebook.com/photo.php?fbid=10156907731480246&set=pb.735450245.-2207520000.1502314039.&type=3&theater'
-    d = m.as_json
-    assert_match /Mohamed Nanabhay/, d['title']
-    assert_match /Somewhere off the Aegean Coast..../, d['description']
-    assert_equal 'Mohamed Nanabhay', d['author_name']
-    assert_equal 'nanabhay', d['username']
-    assert_match /735450245/, d['author_picture']
-    assert_equal 1, d['media_count']
-    assert_not_nil d['picture']
-  end
-
   test "should parse facebook url without identified pattern as item" do
     m = create_media url: 'https://www.facebook.com/Bimbo.Memories/photos/pb.235404669918505.-2207520000.1481570271./1051597428299221/?type=3&theater'
     d = m.as_json
@@ -463,7 +451,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal '27/10/2015', Time.parse(d['published_at']).strftime("%d/%m/%Y")
   end
 
-  test "should create Facebook post from user photo URL" do
+  test "should parse Facebook post from user photo URL" do
     m = create_media url: 'https://www.facebook.com/photo.php?fbid=10155150801660195&set=p.10155150801660195&type=1&theater'
     d = m.as_json
     assert_equal '10155150801660195_10155150801660195', d['uuid']
@@ -471,6 +459,9 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal 'David Marcus', d['author_name']
     assert_equal 1, d['media_count']
     assert_equal '10155150801660195', d['object_id']
+    assert_match /David Marcus/, d['title']
+    assert_match /10155150801660195/, d['author_picture']
+    assert_not_nil d['picture']
     assert_match /always working on ways to make Messenger more useful/, d['text']
   end
 
