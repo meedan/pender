@@ -171,7 +171,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_not_nil d['picture']
     assert_not_nil Time.parse(d['published_at'])
   end
-  
+
   test "should parse Facebook video url from a page with another url pattern" do
     m = create_media url: 'https://www.facebook.com/democrats/videos/10154268929856943'
     d = m.as_json
