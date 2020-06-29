@@ -56,7 +56,7 @@ module MediaTwitterItem
   end
 
   def html_for_twitter_item
-    return '' if self.doc.nil? || data[:raw][:api].blank?
+    return '' if data[:raw][:api].blank?
     '<blockquote class="twitter-tweet">' +
     '<a href="' + self.url + '"></a>' +
     '</blockquote>' +
