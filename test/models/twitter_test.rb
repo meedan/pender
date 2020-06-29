@@ -277,4 +277,14 @@ class TwitterTest < ActiveSupport::TestCase
     assert_match(/Twitter::Error::Forbidden/, data['error']['message'])
   end
 
+  test "should fill in html when html parsing fails but API works" do
+    url = 'https://twitter.com/codinghorror/status/1276934067015974912'
+    OpenURI.stubs(:open_uri).raises(OpenURI::HTTPError.new('','429 Too Many Requests'))
+    m = create_media url: url
+    data = m.as_json
+    assert_match /twitter-tweet.*#{url}/, data[:html]
+    assert_match(/URL Not Found/, data['error']['message'])
+    OpenURI.unstub(:open_uri)
+  end
+
 end
