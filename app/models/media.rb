@@ -247,11 +247,11 @@ class Media
     require 'uri'
     uri = URI.parse(URI.encode(url))
     ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG.dig(config).blank? }
-    return ["http://#{CONFIG['proxy_host']}:#{CONFIG['proxy_port']}", CONFIG['proxy_user_prefix'].concat("-sessid-#{Random.rand(100000)}"), CONFIG['proxy_pass']] if uri.host.match(/facebook\.com/)
+    return ["http://#{CONFIG['proxy_host']}:#{CONFIG['proxy_port']}", CONFIG['proxy_user_prefix'].gsub(/-country$/, "-session-#{Random.rand(100000)}"), CONFIG['proxy_pass']] if uri.host.match(/facebook\.com/)
     country = nil
     country = CONFIG['hosts'][uri.host]['country'] unless CONFIG.dig('hosts', uri.host, 'country').nil?
     return nil if country.nil?
-    proxy_user = CONFIG['proxy_user_prefix'] + '-cc-' + country.upcase
+    proxy_user = CONFIG['proxy_user_prefix'] + '-' + country
     ["http://#{CONFIG['proxy_host']}:#{CONFIG['proxy_port']}", proxy_user, CONFIG['proxy_pass']]
   end
 
@@ -263,7 +263,7 @@ class Media
     request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
     request['Cookie'] = Media.set_cookies(uri)
     if uri.host.match(/facebook\.com/) && CONFIG['proxy_host']
-      proxy = Net::HTTP::Proxy(CONFIG['proxy_host'], CONFIG['proxy_port'], CONFIG['proxy_user_prefix'].concat("-sessid-#{Random.rand(100000)}"), CONFIG['proxy_pass'])
+      proxy = Net::HTTP::Proxy(CONFIG['proxy_host'], CONFIG['proxy_port'], CONFIG['proxy_user_prefix'].gsub(/-country$/, "-session-#{Random.rand(100000)}"), CONFIG['proxy_pass'])
       proxy.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http2|
         http2.request(request)
       end

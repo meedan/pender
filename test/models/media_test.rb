@@ -755,7 +755,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
     host, user, pass = Media.get_proxy(m.url)
     assert_match CONFIG['proxy_host'], host
-    assert_match "#{CONFIG['proxy_user_prefix']}-cc-GB", user
+    assert_match "#{CONFIG['proxy_user_prefix']}-gb", user
     assert_equal CONFIG['proxy_pass'], pass
 
     data = m.as_json
