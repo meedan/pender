@@ -111,7 +111,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match 'http://facebook.com/5823419603', data['author_url']
     assert_match /5823419603/, data['author_picture']
     assert_match /^https/, data['picture']
-    assert_match /10154783484119604/, data['picture']
+    assert_match /10154783812779604/, data['picture']
   end
 
   test "should parse Facebook removed live post" do
@@ -188,7 +188,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /Eddie/, d['title']
     assert_equal 'item', d['type']
     assert_match /^http/, d['picture']
-    assert_match /10154242961741620/, d['picture']
+    assert_match /10154242963196620/, d['picture']
     assert_not_nil d['author_picture']
     assert_not_nil Time.parse(d['published_at'])
   end
@@ -200,7 +200,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /SCMP #FacebookLive/, d['description']
     assert_equal 'scmp', d['username']
     assert_match /355665009819/, d['author_picture']
-    assert_match /10154584426664820/, d['picture']
+    assert_match /10154584445939820/, d['picture']
     assert_match 'http://facebook.com/355665009819', d['author_url']
     assert_not_nil Time.parse(d['published_at'])
     assert_match /South China Morning Post/, d['author_name']
