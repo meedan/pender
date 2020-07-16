@@ -114,10 +114,9 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /10154783484119604/, data['picture']
   end
 
-  test "should parse Facebook removed live post Travis" do
+  test "should parse Facebook removed live post" do
     m = create_media url: 'https://www.facebook.com/teste637621352/posts/1538843716180215/'
     data = m.as_json
-    puts data
     assert_equal 'https://www.facebook.com/teste637621352/posts/1538843716180215', m.url
     assert_match /Not Identified/, data['title']
     assert_equal '', data['description']
@@ -183,27 +182,25 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_not_nil Time.parse(d['published_at'])
   end
 
-  test "should parse Facebook video url from a profile Travis" do
+  test "should parse Facebook video url from a profile" do
     m = create_media url: 'https://www.facebook.com/edwinscott143/videos/vb.737361619/10154242961741620/?type=2&theater'
     d = m.as_json
-    puts d
     assert_match /Eddie/, d['title']
     assert_equal 'item', d['type']
     assert_match /^http/, d['picture']
-    assert_match /10154242961741620/, d['picture']
+    assert_match /10154242963196620/, d['picture']
     assert_not_nil d['author_picture']
     assert_not_nil Time.parse(d['published_at'])
   end
 
-  test "should parse Facebook video on page album Travis" do
+  test "should parse Facebook video on page album" do
     m = create_media url: 'https://www.facebook.com/scmp/videos/vb.355665009819/10154584426664820/?type=2&theater'
     d = m.as_json
-    puts d
     assert_match /South China Morning Post/, d['title']
     assert_match /SCMP #FacebookLive/, d['description']
     assert_equal 'scmp', d['username']
     assert_match /355665009819/, d['author_picture']
-    assert_match /10154584426664820/, d['picture']
+    assert_match /10154584445939820/, d['picture']
     assert_match 'http://facebook.com/355665009819', d['author_url']
     assert_not_nil Time.parse(d['published_at'])
     assert_match /South China Morning Post/, d['author_name']
