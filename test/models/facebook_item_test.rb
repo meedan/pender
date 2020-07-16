@@ -111,7 +111,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match 'http://facebook.com/5823419603', data['author_url']
     assert_match /5823419603/, data['author_picture']
     assert_match /^https/, data['picture']
-    assert_match /10154783484119604/, data['picture']
+    assert_match /10154783812779604/, data['picture']
   end
 
   test "should parse Facebook removed live post" do
