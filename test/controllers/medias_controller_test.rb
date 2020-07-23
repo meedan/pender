@@ -538,7 +538,7 @@ class MediasControllerTest < ActionController::TestCase
     end
   end
 
-  test "should archive on all archivers when no archiver parameter is sent" do
+  test "should not archive in any archiver when no archiver parameter is sent" do
     Media.any_instance.unstub(:archive_to_archive_is)
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
@@ -552,7 +552,7 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://twitter.com/meedan/status/1095693211681673218'
     get :index, url: url, format: :json
     id = Media.get_id(url)
-    assert_equal({"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}, "perma_cc" => {"error"=>{"message"=>I18n.t(:archiver_disabled), "code"=>22}}}, Pender::Store.read(id, :json)[:archives].sort.to_h)
+    assert_equal({}, Pender::Store.read(id, :json)[:archives].sort.to_h)
 
     WebMock.disable!
   end
