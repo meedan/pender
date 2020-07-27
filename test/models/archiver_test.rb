@@ -65,17 +65,17 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_nothing_raised do
       WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: {})
       m = create_media url: urls[0], key: a
-      data = m.as_json
+      data = m.as_json(archivers: 'archive_org')
       assert_not_nil data['archives']['archive_org']['error']['message']
 
       WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
       m = create_media url: urls[1], key: a
-      data = m.as_json
+      data = m.as_json(archivers: 'archive_org')
       assert_equal 'https://web.archive.org/web/123456/test', data['archives']['archive_org']['location']
 
       WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'location' => 'https://web.archive.org/web/123456/test' })
       m = create_media url: urls[2], key: a
-      data = m.as_json
+      data = m.as_json(archivers: 'archive_org')
       assert_equal 'https://web.archive.org/web/123456/test', data['archives']['archive_org']['location']
     end
 
@@ -257,7 +257,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive)
   end
 
-  test "should update cache for all archivers if refresh" do
+  test "should update cache for all archivers sent if refresh" do
     Media.any_instance.unstub(:archive_to_archive_is)
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
@@ -276,6 +276,34 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/archiving' })
     m.as_json(force: true, archivers: 'archive_is, archive_org')
     assert_equal({'archive_is' => {'location' => 'archive_is/second_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.read(id, :json)[:archives])
+    WebMock.disable!
+  end
+
+  test "should not archive in any archiver if don't send or it's none" do
+    Media.any_instance.unstub(:archive_to_archive_is)
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| !['archive.today', 'web.archive.org'].include?(uri.host) }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/first_archiving' })
+
+    url = 'https://twitter.com/meedan/status/1095034925420560387'
+    id = Media.get_id(url)
+    m = create_media url: url, key: a
+    m.as_json
+    assert_equal({}, Pender::Store.read(id, :json)[:archives])
+
+    m.as_json(archivers: '')
+    assert_equal({}, Pender::Store.read(id, :json)[:archives])
+
+    m.as_json(archivers: nil)
+    assert_equal({}, Pender::Store.read(id, :json)[:archives])
+
+    m.as_json(archivers: 'none')
+    assert_equal({}, Pender::Store.read(id, :json)[:archives])
+
+    m.as_json(archivers: 'archive_is')
+    assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, Pender::Store.read(id, :json)[:archives])
     WebMock.disable!
   end
 
@@ -657,7 +685,7 @@ class ArchiverTest < ActiveSupport::TestCase
     url = 'http://example.com'
     m = Media.new url: url
     m.data = Media.minimal_data(m)
-    m.archive
+    m.archive('archive_org')
 
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_HOST_SKIPPED'), m.data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal I18n.t(:archiver_host_skipped, info: 'example.com'), m.data.dig('archives', 'archive_org', 'error', 'message')
@@ -672,8 +700,8 @@ class ArchiverTest < ActiveSupport::TestCase
     url = 'http://example.com'
     m = Media.new url: url
     m.data = Media.minimal_data(m)
-    archiver = 'archive_org,unexistent_archive'
-    m.archive(archiver)
+    archivers = 'archive_org,unexistent_archive'
+    m.archive(archivers)
 
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_FOUND'), m.data.dig('archives', 'unexistent_archive', 'error', 'code')
     assert_equal I18n.t(:archiver_not_found), m.data.dig('archives', 'unexistent_archive', 'error', 'message')
@@ -682,5 +710,27 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal I18n.t(:archiver_disabled), m.data.dig('archives', 'archive_org', 'error', 'message')
 
     Media::ARCHIVERS['archive_org'][:enabled] = status
+  end
+
+  test "should send to video archiver when call archive to video" do
+    Media.any_instance.unstub(:archive_to_video)
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.stubs(:send_to_video_archiver).returns('archive_video')
+
+    mock = 'delay'
+    Media.stubs(:delay).returns(mock)
+    mock.stubs(:send_to_video_archiver).returns('delay_send_to_video_archiver')
+
+    url = 'http://example.com'
+    m = Media.new url: url
+    assert_equal 'delay_send_to_video_archiver', m.archive_to_video
+
+    Media.unstub(:follow_redirections)
+    Media.unstub(:get_canonical_url)
+    Media.unstub(:try_https)
+    Media.unstub(:send_to_video_archiver)
+    Media.unstub(:delay_for)
   end
 end

@@ -159,7 +159,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /#{data['user_uuid']}/, data['author_picture']
     assert_match /^https:/, data['picture']
     assert_match /Zawya/, data['title']
-    assert_equal 'Zawya', data['username']
+    assert_match 'Zawya', data['username']
   end
 
   test "should parse Facebook video url from a page" do
