@@ -162,6 +162,16 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match 'Zawya', data['username']
   end
 
+  test "should parse Facebook event url" do
+    m = create_media url: 'https://www.facebook.com/events/1090503577698748'
+    d = m.as_json
+    assert_match /Nancy Ajram/, d['title']
+    assert_not_nil d['description']
+    assert_match /^http/, d['picture']
+    assert_not_nil d['published_at']
+    assert_match /1090503577698748/, d['author_picture']
+  end
+
   test "should parse Facebook video url from a page" do
     m = create_media url: 'https://www.facebook.com/144585402276277/videos/1127489833985824'
     d = m.as_json
