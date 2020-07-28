@@ -105,7 +105,7 @@ module MediaFacebookItem
   def get_facebook_info_from_metadata
     metadata = get_facebook_metadata
     self.data['author_name'] = self.get_facebook_author_name_from_html
-    if (metadata['author_name'].nil? || !metadata['author_name'].match(/\A@?Facebook Watch\z/)) && !metadata['title'].nil?
+    if metadata['author_name'].nil? && !metadata['title'].nil?
       self.data['author_name'] = metadata['title']
     end
     self.data['text'] = metadata['description'].nil? ? self.get_facebook_description_from_html : metadata['description']
@@ -118,7 +118,6 @@ module MediaFacebookItem
 
   def get_facebook_author_name_from_html
     author_link = self.doc.at_css('.fbPhotoAlbumActionList a') || self.doc.at_css('.uiHeaderTitle a[href^="https://"]') || self.doc.css('div.userContentWrapper').at_css('h5 > span.fwn > span.fcg > a') || self.doc.at_css('.userContentWrapper .profileLink')
-
     author_link.blank? ? self.get_facebook_title_from_html : author_link.text
   end
 
@@ -127,7 +126,10 @@ module MediaFacebookItem
   end
 
   def get_facebook_photos_from_html
-    photos = self.doc.css('.scaledImageFitHeight').collect{ |i| i['src'] }
+    photos = []
+    ['.scaledImageFitHeight', '.scaledImageFitWidth'].each do |k|
+      photos.concat self.doc.css(k).collect{ |i| i['src'] }
+    end
     photos
   end
 
@@ -159,15 +161,18 @@ module MediaFacebookItem
   end
 
   def get_facebook_owner_name_from_html
-    event_name = self.get_facebook_event_name_from_html
-    current_name = self.data['author_name']
+    self.get_facebook_event_info_from_html
     user_name = self.doc.to_s.match(/"?ownerName"?:"([^"]+)"/)
-    self.data['author_name'] = event_name.nil? ? (user_name.nil? ? (current_name.blank? ? 'Not Identified' : current_name) : user_name[1]) : event_name
+    self.data['author_name'] ||= (user_name.nil? ? 'Not Identified' : user_name[1])
   end
 
-  def get_facebook_event_name_from_html
-    event_name = self.doc.at_css('div[data-testid="event_permalink_feature_line"]')
-    event_name.nil? ? nil : event_name.attr('content')
+  def get_facebook_event_info_from_html
+    author_name = self.doc.at_css('h1[data-testid="event-permalink-event-name"]')
+    self.data['title'] = author_name.content if author_name.respond_to?(:content)
+    if author = self.doc.at_css('div#event_header_primary a.profileLink')
+      self.data['author_name'] = author.content
+      self.data['author_url'] = author.attr('href')
+    end
   end
 
   def get_facebook_published_time_from_html
@@ -219,8 +224,6 @@ module MediaFacebookItem
 
   # First method
   def data_from_facebook_item
-    ## Screenshots are disabled
-    # self.screenshot_script = 'function closeLoginModal(){if(document.getElementById("headerArea")){document.getElementById("headerArea").style.display="none";}else{setTimeout(closeLoginModal,1000);}}closeLoginModal();'
     handle_exceptions(self, StandardError) do
       self.parse_facebook_uuid
       self.parse_from_facebook_html
@@ -229,17 +232,16 @@ module MediaFacebookItem
       self.data['text'].strip! if self.data['text']
       self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
       self.data['author_name'] = 'Not Identified' if self.data['author_name'].blank?
+      self.data['title'] = (self.data['title'].blank? ? self.data['author_name'] : self.data['title']) + ' on Facebook'
+      self.data['author_url'] = 'http://facebook.com/' + self.data['user_uuid'].to_s if self.data['author_url'].blank?
       self.get_original_post
       username = self.get_facebook_username || self.data['author_name']
       self.data.merge!({
         external_id: self.data['object_id'],
         username: username,
-        title: self.data['author_name'] + ' on Facebook',
         description: description,
         picture: self.set_facebook_picture,
-        html: self.html_for_facebook_post(username),
-        author_name: self.data['author_name'],
-        author_url: 'http://facebook.com/' + self.data['user_uuid'].to_s
+        html: self.html_for_facebook_post(username)
       })
     end
   end

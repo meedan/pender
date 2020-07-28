@@ -59,16 +59,6 @@ class FacebookProfileTest < ActiveSupport::TestCase
     end
   end
 
-  test "should parse Facebook event url" do
-    m = create_media url: 'https://www.facebook.com/events/1090503577698748'
-    d = m.as_json
-    assert_match /Nancy Ajram/, d['title']
-    assert_not_nil d['description']
-    assert_match /^http/, d['picture']
-    assert_not_nil d['published_at']
-    assert_match /1090503577698748/, d['author_picture']
-  end
-
   test "should get Facebook name when metatag is not present" do
     m = create_media url: 'https://www.facebook.com/ironmaiden/'
     doc = ''
