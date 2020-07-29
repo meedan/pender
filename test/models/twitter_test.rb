@@ -119,7 +119,7 @@ class TwitterTest < ActiveSupport::TestCase
     m = create_media url: 'http://twitter.com/#!/salmaeldaly/status/45532711472992256'
     data = m.as_json
     assert_match 'https://twitter.com/salmaeldaly/status/45532711472992256', m.url
-    assert_match ['twitter', 'item'], [m.provider, m.type]
+    assert_equal ['twitter', 'item'], [m.provider, m.type]
     assert_match 'وعشان نبقى على بياض أنا مش موافقة على فكرة الاعتصام اللي في التحرير، بس دة حقهم وأنا بدافع عن حقهم الشرعي، بغض النظر عن اختلافي معهم', data['title']
     assert_match data['title'], data['description']
     assert_not_nil data['published_at']
