@@ -7,7 +7,7 @@ class InstagramTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal '@megadeth', d['username']
     assert_equal 'item', d['type']
-    assert_equal 'megadeth', d['author_name'].downcase
+    assert_match 'megadeth', d['author_name'].downcase
     assert_not_nil d['picture']
   end
 
@@ -17,8 +17,8 @@ class InstagramTest < ActiveSupport::TestCase
     d = m.as_json
     assert_equal '@megadeth', d['username']
     assert_equal 'profile', d['type']
-    assert_equal 'megadeth', d['title']
-    assert_equal 'megadeth', d['author_name']
+    assert_match 'megadeth', d['title']
+    assert_match 'megadeth', d['author_name']
     assert_match /^http/, d['picture']
     Media.any_instance.unstub(:doc)
   end
@@ -54,7 +54,7 @@ class InstagramTest < ActiveSupport::TestCase
     data = m.as_json
 
     assert data['raw']['oembed'].is_a? Hash
-    assert_equal 'theintercept', data['raw']['oembed']['author_name']
+    assert_match 'theintercept', data['raw']['oembed']['author_name']
     assert_match /It was a week/, data['raw']['oembed']['title']
   end
 
@@ -62,7 +62,7 @@ class InstagramTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:get_instagram_author_name).returns(nil)
     m = create_media url: 'https://www.instagram.com/emeliiejanssonn/'
     data = m.as_json
-    assert_equal 'emeliiejanssonn', data['author_name']
+    assert_match 'emeliiejanssonn', data['author_name']
     Media.any_instance.unstub(:get_instagram_author_name)
   end
 

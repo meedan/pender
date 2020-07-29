@@ -6,8 +6,8 @@ class FacebookProfileTest < ActiveSupport::TestCase
   test "should parse Facebook page" do
     m = create_media url: 'https://www.facebook.com/ironmaiden/?fref=ts'
     data = m.as_json
-    assert_equal 'Iron Maiden', data['title']
-    assert_equal 'ironmaiden', data['username']
+    assert_match 'Iron Maiden', data['title']
+    assert_match 'ironmaiden', data['username']
     assert_equal 'facebook', data['provider']
     assert_equal 'page', data['subtype']
     assert_not_nil data['description']
@@ -18,8 +18,8 @@ class FacebookProfileTest < ActiveSupport::TestCase
   test "should parse Facebook page with numeric id" do
     m = create_media url: 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
     data = m.as_json
-    assert_equal 'Meedan', data['title']
-    assert_equal 'Meedan', data['username']
+    assert_match 'Meedan', data['title']
+    assert_match 'Meedan', data['username']
     assert_equal 'facebook', data['provider']
     assert_equal 'page', data['subtype']
     assert_not_nil data['description']
@@ -31,12 +31,12 @@ class FacebookProfileTest < ActiveSupport::TestCase
     m = create_media url: 'http://facebook.com/513415662050479'
     data = m.as_json
     assert_match 'https://www.facebook.com/NautilusMag', data['url']
-    assert_equal 'Nautilus Magazine', data['title']
-    assert_equal 'NautilusMag', data['username']
+    assert_match 'Nautilus Magazine', data['title']
+    assert_match 'NautilusMag', data['username']
     assert !data['description'].blank?
     assert_match 'https://www.facebook.com/NautilusMag', data['author_url']
     assert_not_nil data['author_picture']
-    assert_equal 'Nautilus Magazine', data['author_name']
+    assert_match 'Nautilus Magazine', data['author_name']
     assert_not_nil data['picture']
   end
 
