@@ -72,7 +72,7 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_match 'CaioSBA', data['title']
     assert_match 'Personal website of Caio Sacramento de Britto Almeida', data['description']
-    assert_equal '', data['puxblished_at']
+    assert_equal '', data['published_at']
     assert_equal '', data['username']
     assert_match 'https://ca.ios.ba', data['author_url']
     assert_equal '', data['picture']
@@ -487,7 +487,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'item', data['type']
     assert_equal 'page', data['provider']
     assert_match /Acompanhe as últimas notícias do Brasil e do mundo/, data['title']
-    assert_not_nil data['dataescription']
+    assert_not_nil data['description']
     assert_not_nil data['published_at']
     assert_equal '', data['username']
     assert_equal 'https://noticias.uol.com.br', data['author_url']
