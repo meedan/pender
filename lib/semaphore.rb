@@ -1,23 +1,24 @@
 class Semaphore
   def initialize(key)
-    unless CONFIG.nil?
+    redis_config = PenderConfig.get('redis', {})
+    unless redis_config.empty?
       @key = "semaphore:#{key}"
-      @redis = Redis.new({ host: CONFIG['redis_host'], port: CONFIG['redis_port'], db: CONFIG['redis_database'] })
+      @redis = Redis.new({ host: redis_config['host'], port: redis_config['port'], db: redis_config['database'] })
     end
   end
 
   def lock
-    # CONFIG['timeout'] sets the max time for a page to be parsed,
+    # PenderConfig('timeout') sets the max time for a page to be parsed,
     # so the lock duration needs to be at least higher than its value
-    timeout = (CONFIG['timeout'] || 20) + 4
-    @redis.set(@key, Time.now, ex: timeout.round) unless CONFIG.nil?
+    timeout = (PenderConfig.get('timeout') || 20) + 4
+    @redis.set(@key, Time.now, ex: timeout.round) if @redis
   end
 
   def locked?
-    CONFIG.nil? ? false : !@redis.get(@key).nil?
+    @redis ? !@redis.get(@key).nil? : false
   end
 
   def unlock
-    @redis.del(@key) unless CONFIG.nil?
+    @redis.del(@key) if @redis
   end
 end

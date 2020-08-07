@@ -13,7 +13,7 @@ module MediasHelper
   end
 
   def timeout_value
-    CONFIG['timeout'] || 20
+    PenderConfig.get('timeout') || 20
   end
 
   def handle_exceptions(media, exception)
@@ -113,7 +113,7 @@ module MediasHelper
   def get_error_data(error_data, media, url, id)
     data = media.nil? ? Media.minimal_data(OpenStruct.new(url: url)) : media.data
     data = data.merge(error: error_data)
-    Pender::Store.write(id, :json, data)
+    Pender::Store.current.write(id, :json, data)
     data
   end
 
@@ -157,10 +157,6 @@ module MediasHelper
 
     def self.is_a_login_page(url)
       url.match?(/^https:\/\/www\.instagram\.com\/accounts\/login/)
-    end
-
-    def self.get_config(media)
-      media.key ? media.key.config : CONFIG
     end
 
     def self.api_key_settings(key_id)

@@ -17,6 +17,7 @@ module Pender
     end
     
     config.active_record.raise_in_transactional_callbacks = true
+    config.autoload_paths << "#{config.root}/lib"
 
     cfg = YAML.load_file("#{Rails.root}/config/config.yml")[Rails.env]
     config.middleware.insert_before 0, "Rack::Cors" do

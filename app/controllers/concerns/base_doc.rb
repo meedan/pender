@@ -8,7 +8,7 @@ module BaseDoc
     swagger_api :about do
       summary 'Information about this application'
       notes 'Use this method to get the archivers enabled on this application'
-      authed = { CONFIG['authorization_header'] => 'test' }
+      authed = { PenderConfig.get('authorization_header') => 'test' }
       response :ok, 'Information about the application', { query: {}, headers: authed }
       response 401, 'Access denied', { query: {} }
     end

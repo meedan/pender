@@ -23,7 +23,7 @@ module MediaArchiver
   def skip_archive_if_needed(archivers)
     return true if archivers.include?('none')
     url = self.url
-    skip = CONFIG['archiver_skip_hosts']
+    skip = PenderConfig.get('archiver_skip_hosts')
     unless skip.blank?
       host = begin URI.parse(url).host rescue '' end
       update_data_with_archivers_errors(archivers, { type: 'ARCHIVER_HOST_SKIPPED', info: host }) and return true if skip.split(',').include?(host)
@@ -34,7 +34,6 @@ module MediaArchiver
   def update_data_with_archivers_errors(archivers, error)
     return if archivers.empty?
     self.data['archives'] ||= {}
-    key_id = self.key ? self.key.id : nil
     archivers.each do |archiver|
       message = if error[:info]
                   I18n.t(error[:type].downcase.to_sym, info: error[:info])
@@ -44,13 +43,13 @@ module MediaArchiver
       data = { error: { message: message, code: LapisConstants::ErrorCodes::const_get(error[:type]) }}
       self.data['archives'].merge!({"#{archiver}": data })
       Rails.logger.warn level: 'WARN', message: error[:type], url: self.url, archiver: archiver
-      Media.notify_webhook_and_update_cache(archiver, url, data, key_id)
+      Media.notify_webhook_and_update_cache(archiver, url, data, ApiKey.current&.id)
     end
   end
 
   def filter_archivers(archivers)
     id = Media.get_id(url)
-    data = Pender::Store.read(id, :json)
+    data = Pender::Store.current.read(id, :json)
     return archivers if data.nil? || data.dig(:archives).nil?
     archivers - data[:archives].keys
   end

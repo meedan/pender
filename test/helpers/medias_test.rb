@@ -52,21 +52,25 @@ class MediasHelperTest < ActionView::TestCase
   test "should get config from api key or default config" do
     url = 'http://example.com'
     timeout = CONFIG['timeout']
+
     key1 = create_api_key application_settings: { config: { timeout: 10 }}
     key2 = create_api_key application_settings: {}
     key3 = create_api_key
 
     m = Media.new url: url
-    assert_equal timeout, Media.get_config(m)[:timeout]
+    assert_equal timeout, m.timeout_value
 
-    m.key = key1
-    assert_equal 10, Media.get_config(m)[:timeout]
+    PenderConfig.current = nil
+    m = Media.new url: url, key: key1
+    assert_equal 10, m.timeout_value
 
-    m.key = key2
-    assert_equal timeout, Media.get_config(m)[:timeout]
+    PenderConfig.current = nil
+    m = Media.new url: url, key: key2
+    assert_equal timeout, m.timeout_value
 
-    m.key = key3
-    assert_equal timeout, Media.get_config(m)[:timeout]
+    PenderConfig.current = nil
+    m = Media.new url: url, key: key3
+    assert_equal timeout, m.timeout_value
 
   end
 

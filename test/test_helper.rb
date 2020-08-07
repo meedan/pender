@@ -20,6 +20,7 @@ require 'webmock'
 require 'mocha/test_unit'
 require 'sample_data'
 require 'pender_exceptions'
+require 'pender_store'
 require 'sidekiq/testing'
 require 'minitest/retry'
 Minitest::Retry.use!(retry_count: 15)
@@ -60,6 +61,7 @@ class ActiveSupport::TestCase
     Media.any_instance.unstub(:doc)
     Media::ARCHIVERS['archive_is'][:enabled] = true
     Media::ARCHIVERS['archive_org'][:enabled] = true
+    ApiKey.current = Pender::Store.current = PenderConfig.current = nil
     clear_bucket(create: true)
     Media.stubs(:request_metrics_from_facebook).returns({ 'share_count' => 123 })
     Media.stubs(:supported_video?).returns(false)
@@ -81,18 +83,14 @@ class ActiveSupport::TestCase
     Media::ARCHIVERS['archive_org'][:enabled] = false
     CONFIG.unstub(:[])
     clear_bucket
+    #ApiKey.current = Pender::Store.current = PenderConfig.current = nil
   end
 
   def clear_bucket(options = {})
-    resource = Aws::S3::Resource.new
-    [Pender::Store.bucket_name, Pender::Store.video_bucket_name].each do |name|
-      bucket = resource.bucket(name)
-      if bucket.exists?
-        bucket.objects.each { |obj| obj.delete }
-      else
-        bucket.create if options.dig(:create)
-      end
-    end
+    @pender_store = Pender::Store.current
+    @pender_store.destroy_buckets
+    @pender_store.create_buckets if options.dig(:create)
+    ApiKey.current = Pender::Store.current = PenderConfig.current = nil
   end
 
   def authenticate_with_token(api_key = nil)
