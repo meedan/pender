@@ -133,7 +133,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.reddit.com/r/Art/comments/58a8kp/emotions_language_youngjoo_namgung_ai_livesurface/'
     data = m.as_json
     assert_match /emotion's language, Youngjoo Namgung/, data['title']
-    assert_match /.* (points|votes) anata .* so far on [Rr]eddit/, data['description']
+    assert_match /.* (points|votes) and .* so far on [Rr]eddit/, data['description']
     assert_equal '', data['published_at']
     assert_equal '', data['username']
     assert_equal 'https://www.reddit.com', data['author_url']

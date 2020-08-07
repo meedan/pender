@@ -176,7 +176,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/144585402276277/videos/1127489833985824'
     data = m.as_json
     assert_match /Trent Aric - Meteorologist/, data['title']
-    assert_match /MATTHEW YOU ARE dataRUNK...GO HOME!/, data['description']
+    assert_match /MATTHEW YOU ARE DRUNK...GO HOME!/, data['description']
     assert_equal 'item', data['type']
     assert_not_nil data['picture']
     assert_not_nil Time.parse(data['published_at'])
@@ -186,7 +186,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/democrats/videos/10154268929856943'
     data = m.as_json
     assert_match /Democratic Party/, data['title']
-    assert_match /On National Voter Registration day/, data['description']
+    assert_match /On National Voter Registration Day/, data['description']
     assert_equal 'item', data['type']
     assert_not_nil data['picture']
     assert_not_nil Time.parse(data['published_at'])
@@ -195,7 +195,7 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should parse Facebook video url from a profile" do
     m = create_media url: 'https://www.facebook.com/edwinscott143/videos/vb.737361619/10154242961741620/?type=2&theater'
     data = m.as_json
-    assert_match /Eddataie/, data['title']
+    assert_match /Eddie Scott on Facebook/, data['title']
     assert_equal 'item', data['type']
     assert_match /^http/, data['picture']
     assert_match /10154242963196620/, data['picture']
