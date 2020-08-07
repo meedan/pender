@@ -37,14 +37,14 @@ module MediaPageItem
   end
 
   def unsafe?
-    return nil if Media.get_config(self)['google_api_key'].blank?
+    return nil if PenderConfig.get('google_api_key').blank?
     unsafe = false
     [self.url, self.data['author_url'], self.data['author_picture'], self.data['picture']].each do |url|
       next if url.blank? || unsafe
       begin
         http = Net::HTTP.new('safebrowsing.googleapis.com', 443)
         http.use_ssl = true
-        req = Net::HTTP::Post.new('/v4/threatMatches:find?key=' + CONFIG['google_api_key'], 'Content-Type' => 'application/json')
+        req = Net::HTTP::Post.new('/v4/threatMatches:find?key=' + PenderConfig.get('google_api_key'), 'Content-Type' => 'application/json')
         req.body = {
           client: {
             clientId: 'pender',

@@ -3,9 +3,10 @@ development: &default
   authorization_header: 'X-Pender-Token'
   timeout: 25
   public_url: 'http://localhost:3200'
-  redis_host: 'redis'
-  redis_port: 6379
-  redis_database: 1
+  redis:
+    host: 'redis'
+    port: 6379
+    database: 1
 
   # File storage on S3 or API equivalent
   #
@@ -43,26 +44,43 @@ development: &default
   #
   # REQUIRED for Twitter posts
   #
-  twitter_consumer_key: # '<TWITTER APP CONSUMER KEY>'
-  twitter_consumer_secret: # '<TWITTER APP CONSUMER SECRET>'
-  twitter_access_token: # '<TWITTER APP ACCESS TOKEN>'
-  twitter_access_token_secret: # '<TWITTER APP ACCESS TOKEN SECRET>'
+  twitter:
+    consumer_key: # '<TWITTER APP CONSUMER KEY>'
+    consumer_secret: # '<TWITTER APP CONSUMER SECRET>'
+    access_token: # '<TWITTER APP ACCESS TOKEN>'
+    access_token_secret: # '<TWITTER APP ACCESS TOKEN SECRET>'
 
   # Facebook API
   #
   # REQUIRED for Facebook social metrics
   #
-  facebook_app_id: # '<FACEBOOK APP ID>'
-  facebook_app_secret: # '<FACEBOOK APP SECRET>'
+  facebook:
+    app_id: # '<FACEBOOK APP ID>'
+    app_secret: # '<FACEBOOK APP SECRET>'
 
   # Luminati proxy service https://luminati.io/
   #
   # OPTIONAL
   #
-  proxy_host: # '<LUMINATI HOST>'
-  proxy_port: # '<LUMINATI PORT>'
-  proxy_user_prefix: # '<LUMINATI ACCOUNT PREFIX>'
-  proxy_pass: # '<LUMINATI ACCOUNT PASSWORD>'
+  proxy:
+    host: # '<LUMINATI HOST>'
+    port: # '<LUMINATI PORT>'
+    user_prefix: # '<LUMINATI ACCOUNT PREFIX>'
+    country_prefix: #'<LUMINATI COUNTRY PREFIX>'
+    session_prefix: #'<LUMINATI SESSION PREFIX>'
+    pass: # '<LUMINATI ACCOUNT PASSWORD>'
+
+  # Proxy service to download videos using youtube-dl https://youtube-dl.org/
+  #
+  # OPTIONAL
+  #
+  ytdl_proxy:
+    host: # '<HOST>'
+    port: # '<PORT>'
+    user_prefix: # '<ACCOUNT PREFIX>'
+    country_prefix: #'<COUNTRY PREFIX>'
+    session_prefix: #'<SESSION PREFIX>'
+    pass: # '<ACCOUNT PASSWORD>'
 
   # Special instructions to access specific domains
   #
@@ -77,9 +95,10 @@ development: &default
   #
   # OPTIONAL
   #
-  cloudflare_auth_email: # '<CLOUDFLARE AUTH EMAIL>'
-  cloudflare_auth_key: # '<CLOUDFLARE AUTH KEY>'
-  cloudflare_zone: # '<CLOUDFLARE ZONE>'
+  cloudflare:
+    auth_email: # '<CLOUDFLARE AUTH EMAIL>'
+    auth_key: # '<CLOUDFLARE AUTH KEY>'
+    zone: # '<CLOUDFLARE ZONE>'
 
 test:
   <<: *default

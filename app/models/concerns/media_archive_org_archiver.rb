@@ -6,8 +6,7 @@ module MediaArchiveOrgArchiver
   end
 
   def archive_to_archive_org
-    key_id = self.key ? self.key.id : nil
-    self.class.send_to_archive_org_in_background(self.url, key_id)
+    self.class.send_to_archive_org_in_background(self.url, ApiKey.current&.id)
   end
 
   module ClassMethods

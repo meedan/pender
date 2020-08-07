@@ -12,7 +12,7 @@ module MediasDoc
       param :query, :url, :string, :required, 'URL to be parsed/rendered'
       param :query, :refresh, :integer, :optional, 'Force a refresh from the URL instead of the cache'
       param :query, :archivers, :string, :optional, 'List of archivers to target. Can be empty, `none` or a list of archives separated by commas'
-      authed = { CONFIG['authorization_header'] => 'test' }
+      authed = { PenderConfig.get('authorization_header') => 'test' }
       url = 'https://www.youtube.com/user/MeedanTube'
       response :ok, 'Parsed data', { query: { url: url }, headers: authed }
       response 400, 'URL not provided', { query: { url: nil }, headers: authed }
@@ -26,7 +26,7 @@ module MediasDoc
       summary 'Delete cache for given URL(s)'
       notes 'Delete cache for the URL(s) passed as parameter, you can use the HTTP verbs DELETE or PURGE'
       param :query, :url, :string, :required, 'URL(s) whose cache should be delete... can be an array of URLs, a single URL or a list of URLs separated by a space'
-      authed = { CONFIG['authorization_header'] => 'test' }
+      authed = { PenderConfig.get('authorization_header') => 'test' }
       url = 'https://www.youtube.com/user/MeedanTube'
       response :ok, 'Success', { query: { url: url }, headers: authed }
       response 401, 'Access denied', { query: { url: url } }
@@ -39,7 +39,7 @@ module MediasDoc
 '
       param :query, :refresh, :integer, :optional, 'Force a refresh from the URL instead of the cache. Will be applied to all URLs'
       param :query, :archivers, :string, :optional, 'List of archivers to target. Can be empty, `none` or a list of archives separated by commas. Will be applied to all URLs'
-      authed = { CONFIG['authorization_header'] => 'test' }
+      authed = { PenderConfig.get('authorization_header') => 'test' }
       url1 = 'https://www.youtube.com/user/MeedanTube'
       url2 = 'https://twitter.com/meedan'
       response :ok, 'Enqueued URLs', { query: { url: [url1, url2] }, headers: authed }

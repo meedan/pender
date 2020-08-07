@@ -6,8 +6,7 @@ module MediaVideoArchiver
   end
 
   def archive_to_video
-    key_id = self.key ? self.key.id : nil
-    self.class.archive_video_in_background(self.url, key_id)
+    self.class.archive_video_in_background(self.url, ApiKey.current&.id)
   end
 
   module ClassMethods
@@ -35,12 +34,13 @@ module MediaVideoArchiver
     end
 
     def archiving_folder
-      CONFIG.dig('storage', 'video_asset_path') || "#{CONFIG.dig('storage', 'endpoint')}/#{Pender::Store.video_bucket_name}/video"
+      storage = PenderConfig.get('storage')
+      storage.dig('video_asset_path') || "#{storage.dig('endpoint')}/#{Pender::Store.current.video_bucket_name}/video"
     end
 
     def notify_video_already_archived(url, key_id)
       id = Media.get_id(url)
-      data = Pender::Store.read(id, :json)
+      data = Pender::Store.current.read(id, :json)
       return if data.nil? || data.dig(:archives, :video_archiver, :location).nil?
       settings = Media.api_key_settings(key_id)
       Media.notify_webhook('video_archiver', url, data, settings)
@@ -57,7 +57,7 @@ module MediaVideoArchiver
     end
 
     def store_video_folder(url, local_path, public_path, key_id)
-      Pender::Store.upload_video_folder(local_path)
+      Pender::Store.current.upload_video_folder(local_path)
       id = File.basename(local_path)
       public_path = File.join(public_path, id)
       data = organize_video_files(public_path, local_path)

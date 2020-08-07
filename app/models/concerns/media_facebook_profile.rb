@@ -43,7 +43,7 @@ module MediaFacebookProfile
   def get_facebook_privacy_error(doc = nil)
     page = doc || self.get_facebook_profile_page
     title = page.css('meta[property="og:title"]')
-    if title.present? && title.attr('content') && title.attr('content').value == 'Log In or Sign Up to View'
+    if title.present? && title.attr('content') && title.attr('content').value.downcase == 'log in or sign up to view'
       self.data['error'] = { message: 'Login required to see this profile', code: LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED') }
       return true
     end

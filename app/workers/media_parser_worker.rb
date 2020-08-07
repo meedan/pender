@@ -15,7 +15,7 @@ class MediaParserWorker
 
   def parse(url, key, refresh, archivers)
     id = Media.get_id(url)
-    cached = Pender::Store.read(id, :json)
+    cached = Pender::Store.current.read(id, :json)
     data = {}
     type = 'media_parsed'
     media = nil

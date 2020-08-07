@@ -36,11 +36,11 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html
     name = Digest::MD5.hexdigest('https://twitter.com/caiosba/status/742779467521773568')
     [:html, :json].each do |type|
-      assert Pender::Store.read(name, type), "#{name}.#{type} is missing"
+      assert Pender::Store.current.read(name, type), "#{name}.#{type} is missing"
     end
     sleep 1
     get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json
-    assert !Pender::Store.read(name, :html), "#{name}.html should not exist"
+    assert !Pender::Store.current.read(name, :html), "#{name}.html should not exist"
     second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     assert second_parsed_at > first_parsed_at
   end
@@ -60,10 +60,10 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://twitter.com/GyenesNat/status/1220020473955635200'
     get :index, url: url, refresh: '1', format: :html
     id = Digest::MD5.hexdigest(url)
-    first_parsed_at = Pender::Store.get(id, :html).last_modified
+    first_parsed_at = Pender::Store.current.get(id, :html).last_modified
     sleep 1
     get :index, url: url, refresh: '1', format: :html
-    second_parsed_at = Pender::Store.get(id, :html).last_modified
+    second_parsed_at = Pender::Store.current.get(id, :html).last_modified
     assert second_parsed_at > first_parsed_at
   end
 
@@ -72,14 +72,14 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://twitter.com/GyenesNat/status/1220020473955635200'
     id = Digest::MD5.hexdigest(url)
     get :index, url: url, refresh: '0', format: :html
-    first_parsed_at = Pender::Store.get(id, :html).last_modified
+    first_parsed_at = Pender::Store.current.get(id, :html).last_modified
     sleep 1
     get :index, url: url, format: :html
-    second_parsed_at = Pender::Store.get(id, :html).last_modified
+    second_parsed_at = Pender::Store.current.get(id, :html).last_modified
     assert_equal first_parsed_at, second_parsed_at
   end
 
-  test "should return error message on hash if url does not exist" do
+  test "should return error message on hash if twitter url does not exist" do
     authenticate_with_token
     get :index, url: 'https://twitter.com/caiosba32153623', format: :json
     assert_response 200
@@ -91,7 +91,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_not_nil data['embed_tag']
   end
 
-  test "should return error message on hash if url does not exist 2" do
+  test "should return error message on hash if facebook url does not exist" do
     authenticate_with_token
     get :index, url: 'https://www.facebook.com/blah_blah', format: :json
     assert_response 200
@@ -183,13 +183,13 @@ class MediasControllerTest < ActionController::TestCase
   test "should return message with HTML error 2" do
     url = 'https://example.com'
     id = Media.get_id(url)
-    Pender::Store.stubs(:read).with(id, :json)
-    Pender::Store.stubs(:read).with(id, :html).raises
+    Pender::Store.any_instance.stubs(:read).with(id, :json)
+    Pender::Store.any_instance.stubs(:read).with(id, :html).raises
     get :index, url: url, format: :html
     assert_response 200
 
     assert_match /Could not parse this media/, response.body
-    Pender::Store.unstub(:read)
+    Pender::Store.any_instance.unstub(:read)
   end
 
   test "should be able to fetch JS without token" do
@@ -355,7 +355,7 @@ class MediasControllerTest < ActionController::TestCase
     id2 = Media.get_id(url2)
     [:html, :json].each do |type|
       [id1, id2].each do |id|
-        assert !Pender::Store.read(id, type), "#{id}.#{type} should not exist"
+        assert !Pender::Store.current.read(id, type), "#{id}.#{type} should not exist"
       end
     end
 
@@ -363,7 +363,7 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: url2
     [:html, :json].each do |type|
       [id1, id2].each do |id|
-        assert Pender::Store.read(id, type), "#{id}.#{type} is missing"
+        assert Pender::Store.current.read(id, type), "#{id}.#{type} is missing"
       end
     end
 
@@ -371,7 +371,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_response :success
     [:html, :json].each do |type|
       [id1, id2].each do |id|
-        assert !Pender::Store.read(id, type), "#{id}.#{type} is missing"
+        assert !Pender::Store.current.read(id, type), "#{id}.#{type} is missing"
       end
     end
   end
@@ -394,7 +394,7 @@ class MediasControllerTest < ActionController::TestCase
     url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
     id = Digest::MD5.hexdigest(url)
     Media.stubs(:as_oembed).raises(StandardError)
-    Pender::Store.delete(id, :json)
+    Pender::Store.current.delete(id, :json)
     get :index, url: url, format: :oembed
     assert_response :success
     data = JSON.parse(response.body)['data']
@@ -409,7 +409,7 @@ class MediasControllerTest < ActionController::TestCase
     Media.any_instance.stubs(:oembed_get_data_from_url).returns(oembed_response)
     url = 'https://example.com'
     get :index, url: url, format: :oembed
-    json = Pender::Store.read(Digest::MD5.hexdigest(Media.normalize_url(url)), :json)
+    json = Pender::Store.current.read(Digest::MD5.hexdigest(Media.normalize_url(url)), :json)
     assert_nil json[:raw][:oembed]['title']
     assert_match(/unexpected token/, json[:raw][:oembed]['error']['message'])
     assert_match(/Example Domain/, json['oembed']['title'])
@@ -425,13 +425,13 @@ class MediasControllerTest < ActionController::TestCase
     url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
     id = Digest::MD5.hexdigest(url)
 
-    assert_nil Pender::Store.read(id, :json)
+    assert_nil Pender::Store.current.read(id, :json)
     get :index, url: url, format: :oembed
     assert_not_nil assigns(:media)
     assert_response :success
     assert_nil JSON.parse(response.body)['error']
 
-    assert_not_nil Pender::Store.read(assigns(:id), :json)
+    assert_not_nil Pender::Store.current.read(assigns(:id), :json)
     get :index, url: url, format: :oembed
     assert_response :success
     assert_nil JSON.parse(response.body)['error']
@@ -552,7 +552,7 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://twitter.com/meedan/status/1095693211681673218'
     get :index, url: url, format: :json
     id = Media.get_id(url)
-    assert_equal({}, Pender::Store.read(id, :json)[:archives].sort.to_h)
+    assert_equal({}, Pender::Store.current.read(id, :json)[:archives].sort.to_h)
 
     WebMock.disable!
   end
@@ -571,7 +571,7 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://twitter.com/meedan/status/1095035775736078341'
     get :index, url: url, archivers: 'none', format: :json
     id = Media.get_id(url)
-    assert_equal({}, Pender::Store.read(id, :json)[:archives])
+    assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
 
     WebMock.disable!
   end
@@ -592,7 +592,7 @@ class MediasControllerTest < ActionController::TestCase
       url = 'https://twitter.com/meedan/status/1095035552221540354'
       get :index, url: url, archivers: archivers.join(','), format: :json
       id = Media.get_id(url)
-      data = Pender::Store.read(id, :json)
+      data = Pender::Store.current.read(id, :json)
       archivers.each do |archiver|
         archiver.strip!
         assert_equal(archived[archiver], data[:archives][archiver])
@@ -636,17 +636,17 @@ class MediasControllerTest < ActionController::TestCase
     url2 = 'https://twitter.com/meedan/status/1098556958590816260'
     id1 = Media.get_id(url1)
     id2 = Media.get_id(url2)
-    assert_nil Pender::Store.read(id1, :json)
-    assert_nil Pender::Store.read(id2, :json)
+    assert_nil Pender::Store.current.read(id1, :json)
+    assert_nil Pender::Store.current.read(id2, :json)
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     authenticate_with_token(a)
     post :bulk, url: "#{url1}, #{url2}", format: :json
     assert_response :success
     sleep 2
-    data1 = Pender::Store.read(id1, :json)
+    data1 = Pender::Store.current.read(id1, :json)
     assert_match /The Checklist: How Google Fights #Disinformation/, data1['title']
-    data2 = Pender::Store.read(id2, :json)
+    data2 = Pender::Store.current.read(id2, :json)
     assert_match /The internet is as much about affirmation as information/, data2['title']
   end
 
@@ -760,7 +760,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     url = 'https://twitter.com/knowloitering/status/1140462371820826624'
     assert !Semaphore.new(url).locked?
-    Pender::Store.stubs(:read).raises(RuntimeError.new('error'))
+    Pender::Store.any_instance.stubs(:read).raises(RuntimeError.new('error'))
     [:js, :json, :html, :oembed].each do |format|
       assert_nothing_raised do
         get :index, url: url, format: format
@@ -769,7 +769,7 @@ class MediasControllerTest < ActionController::TestCase
         assert_equal 'error', JSON.parse(response.body)['data']['message']
       end
     end
-    Pender::Store.unstub(:read)
+    Pender::Store.any_instance.unstub(:read)
   end
 
   test "should unlock url after timeout" do
@@ -804,12 +804,12 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://twitter.com/meedan/status/1132948729424691201'
     id = Media.get_id(url)
     [:html, :json].each do |type|
-      assert !Pender::Store.read(id, type), "#{id}.#{type} should not exist"
+      assert !Pender::Store.current.read(id, type), "#{id}.#{type} should not exist"
     end
 
     get :index, url: url, format: :html
     [:html, :json].each do |type|
-      assert Pender::Store.read(id, type), "#{id}.#{type} is missing"
+      assert Pender::Store.current.read(id, type), "#{id}.#{type} is missing"
     end
   end
 

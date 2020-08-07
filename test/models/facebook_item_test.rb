@@ -590,7 +590,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal 300, data['width']
     assert_equal 150, data['height']
 
-    json = Pender::Store.read(Media.get_id(url), :json)
+    json = Pender::Store.current.read(Media.get_id(url), :json)
     assert_equal 552, json[:raw][:oembed][:width]
     assert_nil json[:raw][:oembed][:height]
   end

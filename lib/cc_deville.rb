@@ -1,11 +1,12 @@
 class CcDeville
   def self.clear_cache_for_url(url)
-    if CONFIG['cloudflare_auth_email']
+    cloudflare = PenderConfig.get('cloudflare')
+    if cloudflare['auth_email']
       # https://api.cloudflare.com/#zone-purge-files-by-url
-      uri = URI("https://api.cloudflare.com/client/v4/zones/#{CONFIG['cloudflare_zone']}/purge_cache")
+      uri = URI("https://api.cloudflare.com/client/v4/zones/#{cloudflare['zone']}/purge_cache")
       req = Net::HTTP::Post.new(uri.path)
-      req['X-Auth-Email'] = CONFIG['cloudflare_auth_email']
-      req['X-Auth-Key'] = CONFIG['cloudflare_auth_key']
+      req['X-Auth-Email'] = cloudflare['auth_email']
+      req['X-Auth-Key'] = cloudflare['auth_key']
       req['Content-Type'] = 'application/json'
       req.body = {
         'files': [url]

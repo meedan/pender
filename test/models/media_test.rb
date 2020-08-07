@@ -748,31 +748,41 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
-  test "should use proxy for some domains" do
+  test "should use specific country on proxy for domains on hosts" do
     config = CONFIG['hosts']
-    
-    CONFIG['hosts'] = { 'time.com' => { 'country' => 'gb' } }
-    m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
-    host, user, pass = Media.get_proxy(m.url)
-    assert_match CONFIG['proxy_host'], host
-    assert_match "#{CONFIG['proxy_user_prefix']}-gb", user
-    assert_equal CONFIG['proxy_pass'], pass
 
-    data = m.as_json
-    assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title']
+    ['gb', 'us'].each do |country|
+      CONFIG['hosts'] = { 'time.com' => { 'country' => country } }
+      m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
+      host, user, pass = m.send(:get_proxy)
+      assert_match CONFIG['proxy']['host'], host
+      assert_match "#{CONFIG['proxy']['user_prefix']}#{CONFIG['proxy']['country_prefix']}#{country}", user
+      assert_equal CONFIG['proxy']['pass'], pass
 
+      data = m.as_json
+      assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title']
+    end
     CONFIG['hosts'] = config
   end
 
-  test "should use proxy for some domains 2" do
-    config = CONFIG['hosts']
+  test "should use data from api key to set proxy" do
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    a = create_api_key application_settings: { config: { hosts: { 'example.com': { country: 'gb'}}, proxy: { host: 'my-host', port: '11111', user_prefix: 'my-user-prefix', country_prefix: '-cc-', session_prefix: '-sid-', pass: 'mypass' }}}
     
-    CONFIG['hosts'] = { 'time.com' => { 'country' => 'us' } }
-    m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
-    data = m.as_json
-    assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title'] 
-    
-    CONFIG['hosts'] = config
+    m = create_media url: 'http://example.com', key: a
+    host, user, pass = m.send(:get_proxy)
+    proxy = PenderConfig.get('proxy')
+    assert_match 'http://my-host:11111', host
+    assert_match 'my-user-prefix-cc-gb', user
+    assert_equal 'mypass', pass
+
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
   end
 
   test "should not replace sharethefacts url if the sharethefacts js is not present" do
@@ -824,9 +834,9 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: url
     m.as_json
 
-    assert_equal({}, Pender::Store.read(id, :json)['archives'])
+    assert_equal({}, Pender::Store.current.read(id, :json)['archives'])
     Media.update_cache(url, { archives: { 'archive_org' => 'new-data' } })
-    assert_equal({'archive_org' => 'new-data'}, Pender::Store.read(id, :json)['archives'])
+    assert_equal({'archive_org' => 'new-data'}, Pender::Store.current.read(id, :json)['archives'])
   end
 
   test "should not send errbit error when twitter username is a default" do
@@ -969,7 +979,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:parse)
 
     assert_raises JSON::GeneratorError do
-      Pender::Store.write(Media.get_id(m.original_url), :json, data_with_encoding_error)
+      Pender::Store.current.write(Media.get_id(m.original_url), :json, data_with_encoding_error)
     end
 
     assert_nothing_raised do
@@ -992,22 +1002,21 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should get metrics from Facebook" do
     Media.unstub(:request_metrics_from_facebook)
-    app_id = CONFIG['facebook_test_app_id'] || CONFIG['facebook_app_id']
-    app_secret = CONFIG['facebook_test_app_secret'] || CONFIG['facebook_app_secret']
-    stub_configs({ 'facebook_app_id' => app_id, 'facebook_app_secret' => app_secret }) do
-      url = 'https://www.google.com/'
-      m = create_media url: url
-      m.as_json
-      id = Media.get_id(url)
-      data = Pender::Store.read(id, :json)
-      assert data['metrics']['facebook']['share_count'] > 0
-    end
+    app_id = CONFIG['facebook']['test_app_id'] || CONFIG['facebook']['app_id']
+    app_secret = CONFIG['facebook']['test_app_secret'] || CONFIG['facebook']['app_secret']
+    stub_configs({'facebook' => {"app_id" => app_id, 'app_secret' => app_secret }})
+    url = 'https://www.google.com/'
+    m = create_media url: url
+    m.as_json
+    id = Media.get_id(url)
+    data = Pender::Store.current.read(id, :json)
+    assert data['metrics']['facebook']['share_count'] > 0
     Media.stubs(:request_metrics_from_facebook).raises(StandardError.new)
     url = 'https://meedan.com'
     m = create_media url: url
     m.as_json
     id = Media.get_id(url)
-    data = Pender::Store.read(id, :json)
+    data = Pender::Store.current.read(id, :json)
     assert_equal({}, data['metrics']['facebook'])
   end
 

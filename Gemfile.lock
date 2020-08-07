@@ -326,6 +326,7 @@ DEPENDENCIES
   rails-html-sanitizer (= 1.0.4)
   rails-perftest
   redis-namespace
+  request_store
   responders
   retryable
   ruby-prof (= 0.15.9)
