@@ -99,6 +99,17 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
+  test "should update media cache" do
+    url = 'http://www.example.com'
+    id = Media.get_id(url)
+    m = create_media url: url
+    m.as_json
+
+    assert_equal({}, Pender::Store.read(id, :json)['archives'])
+    Media.update_cache(url, { archives: { 'archive_org' => 'new-data' } })
+    assert_equal({'archive_org' => 'new-data'}, Pender::Store.read(id, :json)['archives'])
+  end
+
   test "should update media with error when archive to Archive.org fails too many times" do
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
