@@ -9,7 +9,7 @@ class TiktokTest < ActiveSupport::TestCase
     assert_equal 'profile', data['type']
     assert_match 'Scout and Suki', data['title']
     assert_match 'Scout and Suki', data['author_name']
-    assert_equal '@scout2015', data['external_idata']
+    assert_equal '@scout2015', data['external_id']
     assert_not_nil data['picture']
     assert_match 'https://www.tiktok.com/@scout2015', m.url
     assert_nil data['error']
