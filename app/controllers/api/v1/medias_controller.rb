@@ -1,5 +1,6 @@
 require 'timeout'
 require 'pender_exceptions'
+require 'pender_store'
 require 'cc_deville'
 require 'semaphore'
 
