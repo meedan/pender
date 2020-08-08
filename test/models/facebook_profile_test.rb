@@ -65,9 +65,9 @@ class FacebookProfileTest < ActiveSupport::TestCase
     open('test/data/fb-page-without-og-title-metatag.html') { |f| doc = f.read }
     Media.any_instance.stubs(:get_facebook_profile_page).returns(Nokogiri::HTML(doc))
 
-    d = m.as_json
-    assert d['error'].nil?
-    assert_equal 'Page without `og:title` defined', d['title']
+    data = m.as_json
+    assert data['error'].nil?
+    assert_equal 'Page without `og:title` defined', data['title']
     Media.any_instance.unstub(:get_facebook_profile_page)
   end
 
