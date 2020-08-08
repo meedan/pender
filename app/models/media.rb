@@ -70,16 +70,15 @@ class Media
   end
 
   def as_json(options = {})
-    store = Pender::Store.current
-    if options.delete(:force) || store.read(Media.get_id(self.original_url), :json).nil?
+    if options.delete(:force) || Pender::Store.current.read(Media.get_id(self.original_url), :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
       data = self.data.merge(Media.required_fields(self)).with_indifferent_access
 
-      store.write(Media.get_id(self.original_url), :json, cleanup_data_encoding(data))
+      Pender::Store.current.write(Media.get_id(self.original_url), :json, cleanup_data_encoding(data))
     end
     self.archive(options.delete(:archivers))
     self.get_metrics
-    store.read(Media.get_id(self.original_url), :json)
+    Pender::Store.current.read(Media.get_id(self.original_url), :json)
   end
 
   # Parsers and archivers
@@ -88,9 +87,7 @@ class Media
   def self.minimal_data(instance)
     data = {}
     %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field] = '' }
-    data[:raw] = {}
-    data[:archives] = {}
-    data[:metrics] = {}
+    data[:raw] = data[:archives] = data[:metrics] = {}
     data.merge(Media.required_fields(instance)).with_indifferent_access
   end
 
@@ -249,15 +246,12 @@ class Media
   def get_proxy
     require 'uri'
     uri = URI.parse(URI.encode(url))
-    proxy = PenderConfig.get('proxy', {})
-    ['host', 'port', 'pass', 'user_prefix', 'country_prefix', 'session_prefix'].each { |config| return nil if proxy.dig(config).blank? }
-    proxy_user = proxy['user_prefix'] + proxy['session_prefix'] + Random.rand(100000).to_s
-    return ["http://#{proxy['host']}:#{proxy['port']}", proxy_user, proxy['pass']] if uri.host.match(/facebook\.com/)
-    hosts = PenderConfig.get('hosts', {})
-    country = hosts.dig(uri.host, 'country')
-    return nil if country.nil?
-    proxy_user = proxy['user_prefix'] + proxy['country_prefix'] + country
-    ["http://#{proxy['host']}:#{proxy['port']}", proxy_user, proxy['pass']]
+    proxy = Media.valid_proxy
+    if proxy
+      return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['session_prefix'] + Random.rand(100000).to_s, proxy['pass']] if uri.host.match(/facebook\.com/)
+      country = PenderConfig.get('hosts', {}).dig(uri.host, 'country')
+      return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['country_prefix'] + country, proxy['pass']] unless country.nil?
+    end
   end
 
   def self.request_uri(uri, verb = 'Get')
@@ -267,8 +261,8 @@ class Media
     headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }.merge(Media.get_cf_credentials(uri))
     request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
     request['Cookie'] = Media.set_cookies(uri)
-    proxy_config = PenderConfig.get('proxy', {})
-    if uri.host.match(/facebook\.com/) && proxy_config['host']
+    proxy_config = Media.valid_proxy
+    if uri.host.match(/facebook\.com/) && proxy_config
       proxy = Net::HTTP::Proxy(proxy_config['host'], proxy_config['port'], proxy_config['user_prefix'] + proxy_config['session_prefix'] + Random.rand(100000).to_s, proxy_config['pass'])
       proxy.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http2|
         http2.request(request)
@@ -282,8 +276,7 @@ class Media
     html = ''
     begin
       proxy = self.get_proxy
-      options = header_options
-      options = { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } if proxy
+      options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
       OpenURI.open_uri(Media.parse_url(decoded_uri(self.url)), options) do |f|
         f.binmode
         html = f.read

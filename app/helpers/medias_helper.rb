@@ -164,5 +164,10 @@ module MediasHelper
       key ? key.settings : {}
     end
 
+    def self.valid_proxy
+      proxy = PenderConfig.get('proxy', {})
+      ['host', 'port', 'pass', 'user_prefix', 'country_prefix', 'session_prefix'].each { |config| return nil if proxy.dig(config).blank? }
+      proxy
+    end
   end
 end

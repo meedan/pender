@@ -62,7 +62,7 @@ class ActiveSupport::TestCase
     Media::ARCHIVERS['archive_is'][:enabled] = true
     Media::ARCHIVERS['archive_org'][:enabled] = true
     ApiKey.current = Pender::Store.current = PenderConfig.current = nil
-    clear_bucket(create: true)
+    clear_bucket
     Media.stubs(:request_metrics_from_facebook).returns({ 'share_count' => 123 })
     Media.stubs(:supported_video?).returns(false)
   end
@@ -86,10 +86,9 @@ class ActiveSupport::TestCase
     #ApiKey.current = Pender::Store.current = PenderConfig.current = nil
   end
 
-  def clear_bucket(options = {})
+  def clear_bucket
     @pender_store = Pender::Store.current
     @pender_store.destroy_buckets
-    @pender_store.create_buckets if options.dig(:create)
     ApiKey.current = Pender::Store.current = PenderConfig.current = nil
   end
 

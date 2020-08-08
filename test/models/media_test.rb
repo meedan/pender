@@ -723,13 +723,28 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:try_https)
     Media.any_instance.stubs(:parse)
     a = create_api_key application_settings: { config: { hosts: { 'example.com': { country: 'gb'}}, proxy: { host: 'my-host', port: '11111', user_prefix: 'my-user-prefix', country_prefix: '-cc-', session_prefix: '-sid-', pass: 'mypass' }}}
-    
+
     m = create_media url: 'http://example.com', key: a
     host, user, pass = m.send(:get_proxy)
-    proxy = PenderConfig.get('proxy')
     assert_match 'http://my-host:11111', host
     assert_match 'my-user-prefix-cc-gb', user
     assert_equal 'mypass', pass
+
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
+  end
+
+  test "should return nil as proxy if missing any config info" do
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    a = create_api_key application_settings: { config: { hosts: { 'example.com': { country: 'gb'}}, proxy: { host: 'my-host', port: '11111', user_prefix: '', country_prefix: '', session_prefix: '', pass: '' }}}
+
+    m = create_media url: 'http://example.com', key: a
+    assert_nil m.send(:get_proxy)
 
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_canonical_url)

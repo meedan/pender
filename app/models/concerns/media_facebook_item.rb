@@ -169,7 +169,8 @@ module MediaFacebookItem
   def get_facebook_event_info_from_html
     author_name = self.doc.at_css('h1[data-testid="event-permalink-event-name"]')
     self.data['title'] = author_name.content if author_name.respond_to?(:content)
-    if author = self.doc.at_css('div#event_header_primary a.profileLink')
+    author = self.doc.at_css('div#event_header_primary a.profileLink')
+    if author
       self.data['author_name'] = author.content
       self.data['author_url'] = author.attr('href')
     end
@@ -188,7 +189,7 @@ module MediaFacebookItem
 
   def get_facebook_media_count_from_html
     media = self.doc.css('a > div.uiScaledImageContainer')
-    if media.empty? && !self.url.match(/\/photos\//).nil?
+    if media.empty? && (!self.url.match(/\/photos\//).nil? || !self.url.match(/photo\.php/).nil?)
       self.data['media_count'] = 1
     else
       self.data['media_count'] = media.empty? ? 0 : media.size
@@ -227,10 +228,7 @@ module MediaFacebookItem
     handle_exceptions(self, StandardError) do
       self.parse_facebook_uuid
       self.parse_from_facebook_html
-      description = self.data['text'] || self.data['description']
-      description.gsub!(/\s+/, ' ')
       self.data['text'].strip! if self.data['text']
-      self.data['media_count'] = 1 unless self.url.match(/photo\.php/).nil?
       self.data['author_name'] = 'Not Identified' if self.data['author_name'].blank?
       self.data['title'] = (self.data['title'].blank? ? self.data['author_name'] : self.data['title']) + ' on Facebook'
       self.data['author_url'] = 'http://facebook.com/' + self.data['user_uuid'].to_s if self.data['author_url'].blank?
@@ -239,7 +237,7 @@ module MediaFacebookItem
       self.data.merge!({
         external_id: self.data['object_id'],
         username: username,
-        description: description,
+        description: get_facebook_description,
         picture: self.set_facebook_picture,
         html: self.html_for_facebook_post(username)
       })
@@ -273,5 +271,10 @@ module MediaFacebookItem
   def facebook_oembed_url
     uri = Media.parse_url(self.url)
     "https://www.facebook.com/plugins/post/oembed.json/?url=#{uri}"
+  end
+
+  def get_facebook_description
+    description = self.data['text'] || self.data['description']
+    description.gsub!(/\s+/, ' ')
   end
 end

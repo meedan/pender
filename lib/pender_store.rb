@@ -11,7 +11,7 @@ module Pender
       RequestStore.store[:store] = store
     end
 
-    def initialize(api_key_id = nil)
+    def initialize
       @storage = PenderConfig.get('storage', {})
       Aws.config.update(
         endpoint: @storage.dig('endpoint'),
@@ -21,6 +21,7 @@ module Pender
         region: @storage.dig('bucket_region')
       )
       @resource = Aws::S3::Resource.new
+      create_buckets
     end
 
 
