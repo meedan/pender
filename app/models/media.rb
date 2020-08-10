@@ -46,13 +46,15 @@ class Media
   [ActiveModel::Validations, ActiveModel::Conversion, MediasHelper, MediaOembed, MediaArchiver, MediaMetrics].each { |concern| include concern }
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :key
+  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url
 
   TYPES = {}
 
   LANG = 'en-US;q=0.6,en;q=0.4'
 
   def initialize(attributes = {})
+    key = attributes.delete(:key)
+    ApiKey.current = key if key
     attributes.each do |name, value|
       send("#{name}=", value)
     end
@@ -68,26 +70,24 @@ class Media
   end
 
   def as_json(options = {})
-    if options.delete(:force) || Pender::Store.read(Media.get_id(self.original_url), :json).nil?
+    if options.delete(:force) || Pender::Store.current.read(Media.get_id(self.original_url), :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
       data = self.data.merge(Media.required_fields(self)).with_indifferent_access
 
-      Pender::Store.write(Media.get_id(self.original_url), :json, cleanup_data_encoding(data))
+      Pender::Store.current.write(Media.get_id(self.original_url), :json, cleanup_data_encoding(data))
     end
     self.archive(options.delete(:archivers))
     self.get_metrics
-    Pender::Store.read(Media.get_id(self.original_url), :json)
+    Pender::Store.current.read(Media.get_id(self.original_url), :json)
   end
 
   # Parsers and archivers
-  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaDropboxItem, MediaTiktokItem, MediaTiktokProfile, MediaPageItem, MediaOembedItem, MediaScreenshotArchiver, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg, MediaPermaCcArchiver, MediaVideoArchiver, MediaFacebookEngagementMetrics].each { |concern| include concern }
+  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaDropboxItem, MediaTiktokItem, MediaTiktokProfile, MediaPageItem, MediaOembedItem, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg, MediaPermaCcArchiver, MediaVideoArchiver, MediaFacebookEngagementMetrics].each { |concern| include concern }
 
   def self.minimal_data(instance)
     data = {}
     %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field] = '' }
-    data[:raw] = {}
-    data[:archives] = {}
-    data[:metrics] = {}
+    data[:raw] = data[:archives] = data[:metrics] = {}
     data.merge(Media.required_fields(instance)).with_indifferent_access
   end
 
@@ -121,13 +121,13 @@ class Media
 
   def self.update_cache(url, newdata)
     id = Media.get_id(url)
-    data = Pender::Store.read(id, :json)
+    data = Pender::Store.current.read(id, :json)
     unless data.blank?
       newdata.each do |key, value|
         data[key] = data[key].is_a?(Hash) ? data[key].merge(value) : value
       end
       data['webhook_called'] = @webhook_called ? 1 : 0
-      Pender::Store.write(id, :json, data)
+      Pender::Store.current.write(id, :json, data)
     end
   end
 
@@ -233,7 +233,7 @@ class Media
   def request_media_url
     response = nil
     Retryable.retryable(tries: 3, sleep: 1) do
-      response = Media.request_url(self.url, 'Head')
+      response = Media.request_url(url, 'Head')
     end
     response
   end
@@ -243,27 +243,27 @@ class Media
     Media.request_uri(uri, verb)
   end
 
-  def self.get_proxy(url)
+  def get_proxy
     require 'uri'
     uri = URI.parse(URI.encode(url))
-    ['proxy_host', 'proxy_port', 'proxy_pass', 'proxy_user_prefix'].each { |config| return nil if CONFIG.dig(config).blank? }
-    return ["http://#{CONFIG['proxy_host']}:#{CONFIG['proxy_port']}", CONFIG['proxy_user_prefix'].gsub(/-country$/, "-session-#{Random.rand(100000)}"), CONFIG['proxy_pass']] if uri.host.match(/facebook\.com/)
-    country = nil
-    country = CONFIG['hosts'][uri.host]['country'] unless CONFIG.dig('hosts', uri.host, 'country').nil?
-    return nil if country.nil?
-    proxy_user = CONFIG['proxy_user_prefix'] + '-' + country
-    ["http://#{CONFIG['proxy_host']}:#{CONFIG['proxy_port']}", proxy_user, CONFIG['proxy_pass']]
+    proxy = Media.valid_proxy
+    if proxy
+      return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['session_prefix'] + Random.rand(100000).to_s, proxy['pass']] if uri.host.match(/facebook\.com/)
+      country = PenderConfig.get('hosts', {}).dig(uri.host, 'country')
+      return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['country_prefix'] + country, proxy['pass']] unless country.nil?
+    end
   end
 
-  def self.request_uri(uri, verb)
+  def self.request_uri(uri, verb = 'Get')
     http = Net::HTTP.new(uri.host, uri.port)
-    http.read_timeout = CONFIG['timeout'] || 30
+    http.read_timeout = PenderConfig.get('timeout', 30)
     http.use_ssl = uri.scheme == 'https'
     headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }.merge(Media.get_cf_credentials(uri))
     request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
     request['Cookie'] = Media.set_cookies(uri)
-    if uri.host.match(/facebook\.com/) && CONFIG['proxy_host']
-      proxy = Net::HTTP::Proxy(CONFIG['proxy_host'], CONFIG['proxy_port'], CONFIG['proxy_user_prefix'].gsub(/-country$/, "-session-#{Random.rand(100000)}"), CONFIG['proxy_pass'])
+    proxy_config = Media.valid_proxy
+    if uri.host.match(/facebook\.com/) && proxy_config
+      proxy = Net::HTTP::Proxy(proxy_config['host'], proxy_config['port'], proxy_config['user_prefix'] + proxy_config['session_prefix'] + Random.rand(100000).to_s, proxy_config['pass'])
       proxy.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http2|
         http2.request(request)
       end
@@ -275,9 +275,8 @@ class Media
   def get_html(header_options = {})
     html = ''
     begin
-      proxy = Media.get_proxy(self.url)
-      options = header_options
-      options = { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } if proxy
+      proxy = self.get_proxy
+      options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
       OpenURI.open_uri(Media.parse_url(decoded_uri(self.url)), options) do |f|
         f.binmode
         html = f.read
@@ -304,12 +303,11 @@ class Media
   end
 
   def self.get_cf_credentials(uri)
-    unless CONFIG['hosts'].nil?
-      config = CONFIG['hosts'][uri.host]
-      if !config.nil? && config.has_key?('cf_credentials')
-        id, secret = config['cf_credentials'].split(':')
-        credentials = { 'CF-Access-Client-Id' => id, 'CF-Access-Client-Secret' => secret }
-      end
+    hosts = PenderConfig.get('hosts', {})
+    config = hosts[uri.host]
+    if config && config.has_key?('cf_credentials')
+      id, secret = config['cf_credentials'].split(':')
+      credentials = { 'CF-Access-Client-Id' => id, 'CF-Access-Client-Secret' => secret }
     end
     credentials || {}
   end

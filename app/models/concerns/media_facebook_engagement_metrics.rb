@@ -6,8 +6,7 @@ module MediaFacebookEngagementMetrics
   end
 
   def get_metrics_from_facebook
-    key_id = self.key ? self.key.id : nil
-    self.class.get_metrics_from_facebook_in_background(self.url, key_id)
+    self.class.get_metrics_from_facebook_in_background(self.url, ApiKey.current&.id)
   end
 
   module ClassMethods
@@ -16,7 +15,8 @@ module MediaFacebookEngagementMetrics
     end
 
     def request_metrics_from_facebook(url)
-      api = "https://graph.facebook.com/oauth/access_token?client_id=#{CONFIG['facebook_app_id']}&client_secret=#{CONFIG['facebook_app_secret']}&grant_type=client_credentials"
+      facebook = PenderConfig.get('facebook')
+      api = "https://graph.facebook.com/oauth/access_token?client_id=#{facebook.dig('app_id')}&client_secret=#{facebook.dig('app_secret')}&grant_type=client_credentials"
       response = Net::HTTP.get_response(URI(api))
       token = JSON.parse(response.body)['access_token']
       api = "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=#{token}"

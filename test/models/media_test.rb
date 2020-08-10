@@ -6,11 +6,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_kind_of Media, create_media
   end
 
-  test "should have URL" do
-    m = create_media url: 'http://ca.ios.ba/'
-    assert_equal 'https://ca.ios.ba/', m.url
-  end
-
   test "should normalize URL" do
     expected = 'https://ca.ios.ba/'
     variations = %w(
@@ -71,67 +66,59 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal Nokogiri::HTML::Document, m.send(:get_html, Media.send(:html_options, m.url)).class
   end
 
-  test "should parse opengraph metatags" do
-    m = create_media url: 'http://hacktoon.com/nerdson/2016/poker-planning'
-    d = m.as_json
-    assert_equal 'Poker planning | Hacktoon!', d['title']
-    assert_equal 'Programming comics and digital culture', d['description']
-    assert_equal '', d['published_at']
-    assert_equal 'Karlisson M. Bezerra', d['username']
-    assert_equal 'https://hacktoon.com/static/img/facebook-image.png', d['picture']
-    assert_equal 'https://hacktoon.com', d['author_url']
-  end
-
   test "should parse meta tags as fallback" do
-    m = create_media url: 'https://xkcd.com/1479'
-    d = m.as_json
-    assert_match /Troubleshooting/, d['title']
-    assert_equal '', d['description']
-    assert_equal '', d['published_at']
-    assert_equal '', d['username']
-    assert_equal 'https://xkcd.com', d['author_url']
-    assert_match /troubleshooting/, d['picture']
-  end
-
-  test "should parse meta tags as fallback 2" do
     m = create_media url: 'http://ca.ios.ba/'
-    d = m.as_json
-    assert_equal 'CaioSBA', d['title']
-    assert_equal 'Personal website of Caio Sacramento de Britto Almeida', d['description']
-    assert_equal '', d['published_at']
-    assert_equal '', d['username']
-    assert_equal 'https://ca.ios.ba', d['author_url']
-    assert_equal '', d['picture']
+    assert_match 'https://ca.ios.ba/', m.url
+    data = m.as_json
+    assert_match 'CaioSBA', data['title']
+    assert_match 'Personal website of Caio Sacramento de Britto Almeida', data['description']
+    assert_equal '', data['published_at']
+    assert_equal '', data['username']
+    assert_match 'https://ca.ios.ba', data['author_url']
+    assert_equal '', data['picture']
   end
 
- test "should not overwrite metatags with nil" do
+  test "should parse opengraph metatags" do
+    m = create_media url: 'https://meedan.com/en/check/'
+    data = m.as_json
+    assert_match 'Product', data['title']
+    assert_match(/Engage your audience/, data['description'])
+    assert_equal '', data['published_at']
+    assert_equal '', data['username']
+    assert_match 'https://meedan.com/check', m.url
+    assert_match 'https://meedan.com', data['author_url']
+    assert_not_nil data['picture']
+    assert_equal '' , data['external_id']
+  end
+  
+  test "should not overwrite metatags with nil" do
     m = create_media url: 'http://meedan.com'
     m.expects(:get_opengraph_metadata).returns({author_url: nil})
     m.expects(:get_twitter_metadata).returns({author_url: nil})
     m.expects(:get_oembed_metadata).returns({})
     m.expects(:get_basic_metadata).returns({description: "", title: "Meedan Checkdesk", username: "Tom", published_at: "", author_url: "https://meedan.checkdesk.org", picture: 'meedan.png'})
-    d = m.as_json
-    assert_equal 'Meedan Checkdesk', d['title']
-    assert_equal 'Tom', d['username']
-    assert_not_nil d['description']
-    assert_not_nil d['picture']
-    assert_not_nil d['published_at']
-    assert_equal 'https://meedan.checkdesk.org', d['author_url']
+    data = m.as_json
+    assert_match 'Meedan Checkdesk', data['title']
+    assert_match 'Tom', data['username']
+    assert_not_nil data['description']
+    assert_not_nil data['picture']
+    assert_not_nil data['published_at']
+    assert_match 'https://meedan.checkdesk.org', data['author_url']
   end
 
-  test "should parse meta tags 2" do
-    m = create_media url: 'https://meedan.com/en/check/'
-    d = m.as_json
-    assert_equal 'Product', d['title']
-    assert_match(/Engage your audience/, d['description'])
-    assert_equal '', d['published_at']
-    assert_equal '', d['username']
-    assert_equal 'https://meedan.com/check', m.url
-    assert_equal 'https://meedan.com', d['author_url']
-    assert_not_nil d['picture']
+  test "should get relative canonical URL parsed from html tags" do
+    m = create_media url: 'https://www.bbc.com'
+    data = m.as_json
+    assert_equal 'https://www.bbc.com/', m.url
+    assert_match 'BBC', data['title']
+    assert_match /Breaking news/, data['description']
+    assert_equal '', data['published_at']
+    assert_equal '', data['username']
+    assert_equal 'https://www.bbc.com', data['author_url']
+    assert_equal '', data['picture']
   end
-
-  test "should get canonical URL parsed from html tags 3" do
+  
+  test "should get canonical URL parsed from html tags" do
     doc = ''
     open('test/data/page-with-url-on-tag.html') { |f| doc = f.read }
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
@@ -142,92 +129,83 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:doc)
   end
 
-  test "should return success to any valid link" do
+  test "should parse reddit page" do
     m = create_media url: 'https://www.reddit.com/r/Art/comments/58a8kp/emotions_language_youngjoo_namgung_ai_livesurface/'
-    d = m.as_json
-    assert_match /emotion's language, Youngjoo Namgung/, d['title']
-    assert_match /.* (points|votes) and .* so far on [Rr]eddit/, d['description']
-    assert_equal '', d['published_at']
-    assert_equal '', d['username']
-    assert_equal 'https://www.reddit.com', d['author_url']
-    assert_match /https:\/\/preview.redd.it\/dj1nk467nfsx.png/, d['picture']
+    data = m.as_json
+    assert_match /emotion's language, Youngjoo Namgung/, data['title']
+    assert_match /.* (points|votes) and .* so far on [Rr]eddit/, data['description']
+    assert_equal '', data['published_at']
+    assert_equal '', data['username']
+    assert_equal 'https://www.reddit.com', data['author_url']
+    assert_match /https:\/\/preview.redd.it\/dj1nk467nfsx.png/, data['picture']
   end
 
-  test "should return success to any valid link 2" do
+  test "should parse arabic url page" do
     m = create_media url: 'http://www.youm7.com/story/2016/7/6/بالصور-مياه-الشرب-بالإسماعيلية-تواصل-عملها-لحل-مشكلة-طفح-الصرف/2790125'
-    d = m.as_json
-    assert_equal 'بالصور.. مياه الشرب بالإسماعيلية تواصل عملها لحل مشكلة طفح الصرف ببعض الشوارع - اليوم السابع', d['title']
-    assert_match /واصلت غرفة عمليات شركة/, d['description']
-    assert_not_nil d['published_at']
-    assert_equal '', d['username']
-    assert_match /https?:\/\/www.youm7.com/, d['author_url']
-    assert_equal 'https://img.youm7.com/large/72016619556415g.jpg', d['picture']
+    data = m.as_json
+    assert_equal 'بالصور.. مياه الشرب بالإسماعيلية تواصل عملها لحل مشكلة طفح الصرف ببعض الشوارع - اليوم السابع', data['title']
+    assert_match /واصلت غرفة عمليات شركة/, data['description']
+    assert_not_nil data['published_at']
+    assert_equal '', data['username']
+    assert_match /https?:\/\/www.youm7.com/, data['author_url']
+    assert_equal 'https://img.youm7.com/large/72016619556415g.jpg', data['picture']
   end
 
   test "should store the picture address" do
     m = create_media url: 'http://xkcd.com/448/'
-    d = m.as_json
-    assert_match /Good Morning/, d['title']
-    assert_equal '', d['description']
-    assert_equal '', d['published_at']
-    assert_equal '', d['username']
-    assert_equal 'https://xkcd.com', d['author_url']
-    assert_equal '', d['screenshot']
+    data = m.as_json
+    assert_match /Good Morning/, data['title']
+    assert_equal '', data['description']
+    assert_equal '', data['published_at']
+    assert_equal '', data['username']
+    assert_match 'https://xkcd.com', data['author_url']
+    assert_equal '', data['screenshot']
+    assert_match /imgs/, data['picture']
   end
-
-  test "should get relative canonical URL parsed from html tags" do
-    m = create_media url: 'http://meedan.com'
-    d = m.as_json
-    assert_equal 'https://meedan.com/', m.url
-    assert_equal 'Meedan', d['title']
-    assert_match /This is Meedan/, d['description']
-    assert_equal '', d['published_at']
-    assert_equal '', d['username']
-    assert_equal 'https://meedan.com', d['author_url']
-    assert_match /meedan_logo/, d['picture']
-  end
-
+  
   test "should parse url with arabic or already encoded chars" do
     urls = ['http://www.aljazeera.net/news/arabic/2016/10/19/تحذيرات-أممية-من-احتمال-نزوح-مليون-مدني-من-الموصل', 'http://www.aljazeera.net/news/arabic/2016/10/19/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1%D8%A7%D8%AA-%D8%A3%D9%85%D9%85%D9%8A%D8%A9-%D9%85%D9%86-%D8%A7%D8%AD%D8%AA%D9%85%D8%A7%D9%84-%D9%86%D8%B2%D9%88%D8%AD-%D9%85%D9%84%D9%8A%D9%88%D9%86-%D9%85%D8%AF%D9%86%D9%8A-%D9%85%D9%86-%D8%A7%D9%84%D9%85%D9%88%D8%B5%D9%84']
     urls.each do |url|
       m = create_media url: url
-      d = m.as_json
-      assert_equal 'تحذيرات أممية من احتمال نزوح مليون مدني من الموصل', d['title']
-      assert_equal 'عبرت الأمم المتحدة عن قلقها البالغ على سلامة 1.5 مليون شخص بالموصل، محذرة من احتمال نزوح مليون منهم، وقالت إن أكثر من 900 نازح فروا إلى سوريا بأول موجة نزوح.', d['description']
-      assert_equal '', d['published_at']
-      assert_equal '', d['username']
-      assert_match /^https?:\/\/www\.aljazeera\.net$/, d['author_url']
-      assert_nil d['error']
-      assert_match /^https?:\/\/www\.aljazeera\.net/, d['picture']
+      data = m.as_json
+      assert_equal 'تحذيرات أممية من احتمال نزوح مليون مدني من الموصل', data['title']
+      assert_equal 'عبرت الأمم المتحدة عن قلقها البالغ على سلامة 1.5 مليون شخص بالموصل، محذرة من احتمال نزوح مليون منهم، وقالت إن أكثر من 900 نازح فروا إلى سوريا بأول موجة نزوح.', data['description']
+      assert_equal '', data['published_at']
+      assert_equal '', data['username']
+      assert_match /^https?:\/\/www\.aljazeera\.net$/, data['author_url']
+      assert_nil data['error']
+      assert_match /^https?:\/\/www\.aljazeera\.net/, data['picture']
     end
   end
 
   test "should parse url scheme http" do
     m = create_media url: 'http://www.theatlantic.com/magazine/archive/2016/11/war-goes-viral/501125/'
-    d = m.as_json
-    assert_equal 'War Goes Viral', d['title']
-    assert_equal 'How social media is being weaponized across the world', d['description']
-    assert_equal '', d['published_at']
-    assert_equal 'Emerson T. Brooking and P. W. Singer', d['username']
-    assert_equal 'https://www.theatlantic.com', d['author_url']
-    assert_match /theatlantic/, d['picture']
+    data = m.as_json
+    assert_match 'War Goes Viral', data['title']
+    assert_match 'How social media is being weaponized across the world', data['description']
+    assert_equal '', data['published_at']
+    assert_match 'Emerson T. Brooking and P. W. Singer', data['username']
+    assert_match 'https://www.theatlantic.com', data['author_url']
+    assert_match /theatlantic/, data['picture']
   end
 
   test "should parse url scheme https" do
     m = create_media url: 'https://www.theguardian.com/politics/2016/oct/19/larry-sanders-on-brother-bernie-and-why-tony-blair-was-destructive'
-    d = m.as_json
-    assert_equal 'Larry Sanders on brother Bernie and why Tony Blair was ‘destructive’', d['title']
-    assert_match /The Green party candidate, who is fighting the byelection in David Cameron’s old seat/, d['description']
-    assert_match /2016-10/, d['published_at']
-    assert_equal '@zoesqwilliams', d['username']
-    assert_equal 'https://twitter.com/zoesqwilliams', d['author_url']
-    assert_match /\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, d['picture']
+    data = m.as_json
+    assert_match 'Larry Sanders on brother Bernie and why Tony Blair was ‘destructive’', data['title']
+    assert_match /The Green party candidate, who is fighting the byelection in David Cameron’s old seat/, data['description']
+    assert_match /2016-10/, data['published_at']
+    assert_match '@zoesqwilliams', data['username']
+    assert_match 'https://twitter.com/zoesqwilliams', data['author_url']
+    assert_match /\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, data['picture']
   end
 
   test "should return author picture" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:image' content='https://github.githubassets.com/images/modules/open_graph/github-logo.png'>"))
     m = create_media url: 'http://github.com'
-    d = m.as_json
-    assert_match /github-logo.png/, d['author_picture']
+    data = m.as_json
+    assert_match /github-logo.png/, data['author_picture']
+    Media.any_instance.unstub(:doc)
   end
 
   test "should handle connection reset by peer error" do
@@ -243,32 +221,32 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should parse ca yahoo site" do
     m = create_media url: 'https://ca.yahoo.com/'
-    d = m.as_json
-    assert_equal 'item', d['type']
-    assert_equal 'page', d['provider']
-    assert_equal 'Yahoo', d['title']
-    assert_not_nil d['description']
-    assert_not_nil d['published_at']
-    assert_equal '', d['username']
-    assert_equal 'https://ca.yahoo.com', d['author_url']
-    assert_equal 'Yahoo', d['author_name']
-    assert_not_nil d['picture']
-    assert_nil d['error']
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal 'page', data['provider']
+    assert_match 'Yahoo', data['title']
+    assert_not_nil data['description']
+    assert_not_nil data['published_at']
+    assert_equal '', data['username']
+    assert_match 'https://ca.yahoo.com', data['author_url']
+    assert_match 'Yahoo', data['author_name']
+    assert_not_nil data['picture']
+    assert_nil data['error']
   end
 
   test "should parse us yahoo site" do
     m = create_media url: 'https://www.yahoo.com/'
-    d = m.as_json
-    assert_equal 'item', d['type']
-    assert_equal 'page', d['provider']
-    assert_match /Yahoo/, d['title']
-    assert_not_nil d['description']
-    assert_not_nil d['published_at']
-    assert_equal '', d['username']
-    assert_not_nil d['author_url']
-    assert_match /Yahoo/, d['author_name']
-    assert_not_nil d['picture']
-    assert_nil d['error']
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal 'page', data['provider']
+    assert_match /Yahoo/, data['title']
+    assert_not_nil data['description']
+    assert_not_nil data['published_at']
+    assert_equal '', data['username']
+    assert_not_nil data['author_url']
+    assert_match /Yahoo/, data['author_name']
+    assert_not_nil data['picture']
+    assert_nil data['error']
   end
 
   test "should return absolute url" do
@@ -375,67 +353,67 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse dropbox video url" do
     url = 'https://www.dropbox.com/s/t25htjxk3b3p8oo/A%20Progressive%20Journey%20%2350.mov?dl=0'
     m = create_media url: url
-    d = m.as_json
+    data = m.as_json
     assert_match /https:\/\/www.dropbox.com\/s\/t25htjxk3b3p8oo\/.*Progressive.*Journey.*2350.mov\?dl=0/, m.url
-    assert_equal 'item', d['type']
-    assert_equal 'dropbox', d['provider']
-    assert_match /A Progressive Journey/, d['title']
-    assert_equal 'Shared with Dropbox', d['description']
-    assert_not_nil d['published_at']
-    assert_equal '', d['username']
-    assert_equal '', d['author_url']
-    assert_not_nil d['picture']
-    assert d['html'].blank?
-    assert_nil d['error']
+    assert_equal 'item', data['type']
+    assert_equal 'dropbox', data['provider']
+    assert_match /A Progressive Journey/, data['title']
+    assert_match 'Shared with Dropbox', data['description']
+    assert_not_nil data['published_at']
+    assert_equal '', data['username']
+    assert_equal '', data['author_url']
+    assert_not_nil data['picture']
+    assert data['html'].blank?
+    assert_nil data['error']
   end
 
   test "should parse dropbox image url" do
     m = create_media url: 'https://www.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg'
-    d = m.as_json
+    data = m.as_json
     assert_equal 'https://www.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg',
     m.url
-    assert_equal 'item', d['type']
-    assert_equal 'dropbox', d['provider']
-    assert_equal 'b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', d['title']
-    assert_equal 'Shared with Dropbox', d['description']
-    assert_not_nil d['published_at']
-    assert_equal '', d['username']
-    assert_equal '', d['author_url']
-    assert_not_nil d['picture']
-    assert d['html'].blank?
-    assert_nil d['error']
+    assert_equal 'item', data['type']
+    assert_equal 'dropbox', data['provider']
+    assert_match 'b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', data['title']
+    assert_match 'Shared with Dropbox', data['description']
+    assert_not_nil data['published_at']
+    assert_equal '', data['username']
+    assert_equal '', data['author_url']
+    assert_not_nil data['picture']
+    assert data['html'].blank?
+    assert_nil data['error']
   end
 
-  test "should parse dropbox image url 2" do
+  test "should parse dropbox image url with another url pattern" do
     m = create_media url: 'https://dl.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg'
-    d = m.as_json
+    data = m.as_json
     assert_equal 'https://dl.dropboxusercontent.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', m.url
-    assert_equal 'item', d['type']
-    assert_equal 'dropbox', d['provider']
-    assert_equal 'b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', d['title']
-    assert_equal 'Shared with Dropbox', d['description']
-    assert_not_nil d['published_at']
-    assert_equal '', d['username']
-    assert_equal '', d['author_url']
-    assert_not_nil d['picture']
-    assert d['html'].blank?
-    assert_nil d['error']
+    assert_equal 'item', data['type']
+    assert_equal 'dropbox', data['provider']
+    assert_match 'b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', data['title']
+    assert_match 'Shared with Dropbox', data['description']
+    assert_not_nil data['published_at']
+    assert_equal '', data['username']
+    assert_equal '', data['author_url']
+    assert_not_nil data['picture']
+    assert data['html'].blank?
+    assert_nil data['error']
   end
 
   test "should parse dropbox url with sh" do
     m = create_media url: 'https://www.dropbox.com/sh/748f94925f0gesq/AAAMSoRJyhJFfkupnAU0wXuva?dl=0'
-    d = m.as_json
-    assert_equal 'https://www.dropbox.com/sh/748f94925f0gesq/AAAMSoRJyhJFfkupnAU0wXuva?dl=0', m.url
-    assert_equal 'item', d['type']
-    assert_equal 'dropbox', d['provider']
-    assert !d['title'].blank?
-    assert_equal 'Shared with Dropbox', d['description']
-    assert_not_nil d['published_at']
-    assert_equal '', d['username']
-    assert_equal '', d['author_url']
-    assert_not_nil d['picture']
-    assert d['html'].blank?
-    assert_nil d['error']
+    data = m.as_json
+    assert_match 'https://www.dropbox.com/sh/748f94925f0gesq/AAAMSoRJyhJFfkupnAU0wXuva?dl=0', m.url
+    assert_equal 'item', data['type']
+    assert_equal 'dropbox', data['provider']
+    assert !data['title'].blank?
+    assert_match 'Shared with Dropbox', data['description']
+    assert_not_nil data['published_at']
+    assert_equal '', data['username']
+    assert_equal '', data['author_url']
+    assert_not_nil data['picture']
+    assert data['html'].blank?
+    assert_nil data['error']
   end
 
   test "should return empty html on oembed when frame is not allowed" do
@@ -490,32 +468,32 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should parse url with redirection https -> http" do
     m = create_media url: 'https://noticias.uol.com.br/cotidiano/ultimas-noticias/2017/07/18/nove-anos-apos-ser-condenado-por-moro-beira-mar-repete-trafico-em-presidio-federal.htm'
-    d = m.as_json
-    assert_equal 'item', d['type']
-    assert_equal 'page', d['provider']
-    assert_match /Nove anos após ser condenado/, d['title']
-    assert_not_nil d['description']
-    assert_not_nil d['published_at']
-    assert_equal '', d['username']
-    assert_equal 'https://noticias.uol.com.br', d['author_url']
-    assert_equal 'UOLNoticias @UOL', d['author_name']
-    assert_not_nil d['picture']
-    assert_nil d['error']
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal 'page', data['provider']
+    assert_match /Nove anos após ser condenado/, data['title']
+    assert_not_nil data['description']
+    assert_not_nil data['published_at']
+    assert_equal '', data['username']
+    assert_equal 'https://noticias.uol.com.br', data['author_url']
+    assert_equal 'UOLNoticias @UOL', data['author_name']
+    assert_not_nil data['picture']
+    assert_nil data['error']
   end
 
   test "should get author_name from site" do
     m = create_media url: 'https://noticias.uol.com.br/'
-    d = m.as_json
-    assert_equal 'item', d['type']
-    assert_equal 'page', d['provider']
-    assert_match /Acompanhe as últimas notícias do Brasil e do mundo/, d['title']
-    assert_not_nil d['description']
-    assert_not_nil d['published_at']
-    assert_equal '', d['username']
-    assert_equal 'https://noticias.uol.com.br', d['author_url']
-    assert_equal 'UOLNoticias @UOL', d['author_name']
-    assert_not_nil d['picture']
-    assert_nil d['error']
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal 'page', data['provider']
+    assert_match /Acompanhe as últimas notícias do Brasil e do mundo/, data['title']
+    assert_not_nil data['description']
+    assert_not_nil data['published_at']
+    assert_equal '', data['username']
+    assert_equal 'https://noticias.uol.com.br', data['author_url']
+    assert_equal 'UOLNoticias @UOL', data['author_name']
+    assert_not_nil data['picture']
+    assert_nil data['error']
   end
 
   test "should check if article:author is a url and add it to author_url" do
@@ -524,7 +502,7 @@ class MediaTest < ActiveSupport::TestCase
     m.data[:raw] = { metatags: tag }
     data = m.get_opengraph_metadata
     assert_nil data['username']
-    assert_equal 'https://www.nytimes.com/by/michael-s-schmidt', data['author_url']
+    assert_match 'https://www.nytimes.com/by/michael-s-schmidt', data['author_url']
   end
 
   test "should return blank on post_process_oembed for unexistent keys on oembed" do
@@ -566,27 +544,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /script.*src="http:\/\//, JSON.parse(response.body)['html']
     assert_equal '', data['html']
     Media.any_instance.unstub(:oembed_get_data_from_url)
-  end
-
-  test "should skip screenshots" do
-    config = CONFIG['archiver_skip_hosts']
-
-    CONFIG['archiver_skip_hosts'] = ''
-
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    url = 'https://checkmedia.org/caio-screenshots/project/1121/media/8390'
-    id = Media.get_id(url)
-    m = create_media url: url, key: a
-    data = m.as_json
-
-    CONFIG['archiver_skip_hosts'] = 'checkmedia.org'
-
-    url = 'https://checkmedia.org/caio-screenshots/project/1121/media/8390?hide_tasks=1'
-    id = Media.get_id(url)
-    m = create_media url: url, key: a
-    data = m.as_json
-
-    CONFIG['archiver_skip_hosts'] = config
   end
 
   test "should store ClaimReview schema" do
@@ -682,21 +639,14 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
-  test "should parse website" do
-    url = 'http://www.acdc.com'
-    m = create_media url: url
-    data = m.as_json
-    assert_equal 'Homepage', data['title']
-  end
-
   test "should parse page when item on microdata doesn't have type" do
     url = 'https://medium.com/meedan-updates/meedan-at-mediaparty-2019-378f7202d460'
     m = create_media url: url
     Mida::Document.stubs(:new).with(m.doc).returns(OpenStruct.new(items: [OpenStruct.new(id: 'id')]))
-    d = m.as_json
-    assert_equal 'item', d['type']
-    assert_equal 'page', d['provider']
-    assert_nil d['error']
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal 'page', data['provider']
+    assert_nil data['error']
     Mida::Document.unstub(:new)
   end
 
@@ -712,23 +662,25 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should convert published_time to time without error" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='article:published_time' content='1534810765'>"))
     url = 'https://www.pagina12.com.ar/136611-tecnologias-de-la-desinformacion'
-    m = Media.new(url: url)
+    m = create_media url: url
     data = m.as_json
     assert_nothing_raised do
       data['published_at'].to_time
     end
+    Media.any_instance.unstub(:doc)
   end
 
   test "should add cookie from cookie.txt on header if domain matches" do
-    url_no_cookie = 'http://ca.ios.ba/'
+    url_no_cookie = 'https://www.istqb.org/'
     assert_equal "", Media.send(:html_options, url_no_cookie)['Cookie']
     url_with_cookie = 'https://www.washingtonpost.com/politics/winter-is-coming-allies-fear-trump-isnt-prepared-for-gathering-legal-storm/2018/08/29/b07fc0a6-aba0-11e8-b1da-ff7faa680710_story.html'
     assert_match "wp_devicetype=0", Media.send(:html_options, url_with_cookie)['Cookie']
   end
 
   test "should rescue error on set_cookies" do
-    uri = Media.parse_url('http://ca.ios.ba/')
+    uri = Media.parse_url('https://www.bbc.com/')
     PublicSuffix.stubs(:parse).with(uri.host).raises
     assert_equal "", Media.set_cookies(uri)
     PublicSuffix.unstub(:parse)
@@ -748,31 +700,56 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
-  test "should use proxy for some domains" do
+  test "should use specific country on proxy for domains on hosts" do
     config = CONFIG['hosts']
-    
-    CONFIG['hosts'] = { 'time.com' => { 'country' => 'gb' } }
-    m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
-    host, user, pass = Media.get_proxy(m.url)
-    assert_match CONFIG['proxy_host'], host
-    assert_match "#{CONFIG['proxy_user_prefix']}-gb", user
-    assert_equal CONFIG['proxy_pass'], pass
 
-    data = m.as_json
-    assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title']
+    ['gb', 'us'].each do |country|
+      CONFIG['hosts'] = { 'time.com' => { 'country' => country } }
+      m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
+      host, user, pass = m.send(:get_proxy)
+      assert_match CONFIG['proxy']['host'], host
+      assert_match "#{CONFIG['proxy']['user_prefix']}#{CONFIG['proxy']['country_prefix']}#{country}", user
+      assert_equal CONFIG['proxy']['pass'], pass
 
+      data = m.as_json
+      assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title']
+    end
     CONFIG['hosts'] = config
   end
 
-  test "should use proxy for some domains 2" do
-    config = CONFIG['hosts']
-    
-    CONFIG['hosts'] = { 'time.com' => { 'country' => 'us' } }
-    m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
-    data = m.as_json
-    assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title'] 
-    
-    CONFIG['hosts'] = config
+  test "should use data from api key to set proxy" do
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    a = create_api_key application_settings: { config: { hosts: { 'example.com': { country: 'gb'}}, proxy: { host: 'my-host', port: '11111', user_prefix: 'my-user-prefix', country_prefix: '-cc-', session_prefix: '-sid-', pass: 'mypass' }}}
+
+    m = create_media url: 'http://example.com', key: a
+    host, user, pass = m.send(:get_proxy)
+    assert_match 'http://my-host:11111', host
+    assert_match 'my-user-prefix-cc-gb', user
+    assert_equal 'mypass', pass
+
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
+  end
+
+  test "should return nil as proxy if missing any config info" do
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    a = create_api_key application_settings: { config: { hosts: { 'example.com': { country: 'gb'}}, proxy: { host: 'my-host', port: '11111', user_prefix: '', country_prefix: '', session_prefix: '', pass: '' }}}
+
+    m = create_media url: 'http://example.com', key: a
+    assert_nil m.send(:get_proxy)
+
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
   end
 
   test "should not replace sharethefacts url if the sharethefacts js is not present" do
@@ -824,9 +801,9 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: url
     m.as_json
 
-    assert_equal({}, Pender::Store.read(id, :json)['archives'])
+    assert_equal({}, Pender::Store.current.read(id, :json)['archives'])
     Media.update_cache(url, { archives: { 'archive_org' => 'new-data' } })
-    assert_equal({'archive_org' => 'new-data'}, Pender::Store.read(id, :json)['archives'])
+    assert_equal({'archive_org' => 'new-data'}, Pender::Store.current.read(id, :json)['archives'])
   end
 
   test "should not send errbit error when twitter username is a default" do
@@ -898,12 +875,6 @@ class MediaTest < ActiveSupport::TestCase
     assert !data['error']
   end
 
-  test "should have external id" do
-    m = create_media url: 'http://ca.ios.ba/'
-    data = m.as_json
-    assert_equal '', data['external_id']
-  end
-
   test "should not reach an infinite loop when parsing Twitter URL" do
     class HttpRedirectionLoop < StandardError
     end
@@ -969,7 +940,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:parse)
 
     assert_raises JSON::GeneratorError do
-      Pender::Store.write(Media.get_id(m.original_url), :json, data_with_encoding_error)
+      Pender::Store.current.write(Media.get_id(m.original_url), :json, data_with_encoding_error)
     end
 
     assert_nothing_raised do
@@ -992,22 +963,21 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should get metrics from Facebook" do
     Media.unstub(:request_metrics_from_facebook)
-    app_id = CONFIG['facebook_test_app_id'] || CONFIG['facebook_app_id']
-    app_secret = CONFIG['facebook_test_app_secret'] || CONFIG['facebook_app_secret']
-    stub_configs({ 'facebook_app_id' => app_id, 'facebook_app_secret' => app_secret }) do
-      url = 'https://www.google.com/'
-      m = create_media url: url
-      m.as_json
-      id = Media.get_id(url)
-      data = Pender::Store.read(id, :json)
-      assert data['metrics']['facebook']['share_count'] > 0
-    end
+    app_id = CONFIG['facebook']['test_app_id'] || CONFIG['facebook']['app_id']
+    app_secret = CONFIG['facebook']['test_app_secret'] || CONFIG['facebook']['app_secret']
+    stub_configs({'facebook' => {"app_id" => app_id, 'app_secret' => app_secret }})
+    url = 'https://www.google.com/'
+    m = create_media url: url
+    m.as_json
+    id = Media.get_id(url)
+    data = Pender::Store.current.read(id, :json)
+    assert data['metrics']['facebook']['share_count'] > 0
     Media.stubs(:request_metrics_from_facebook).raises(StandardError.new)
     url = 'https://meedan.com'
     m = create_media url: url
     m.as_json
     id = Media.get_id(url)
-    data = Pender::Store.read(id, :json)
+    data = Pender::Store.current.read(id, :json)
     assert_equal({}, data['metrics']['facebook'])
   end
 

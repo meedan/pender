@@ -13,15 +13,19 @@ class ApiKey < ActiveRecord::Base
   def self.applications
     [nil]
   end
+
+  def self.current
+    RequestStore.store[:api_key]
+  end
+
+  def self.current=(api_key)
+    RequestStore.store[:api_key] = api_key
+  end
   
   validates :application, inclusion: { in: proc { ApiKey.applications } }
 
   def settings
     self.application_settings ? self.application_settings.with_indifferent_access : {}
-  end
-
-  def config
-    self.settings[:config] ? CONFIG.merge(self.settings[:config]) : CONFIG
   end
 
   private

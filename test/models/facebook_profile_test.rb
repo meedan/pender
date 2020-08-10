@@ -6,8 +6,8 @@ class FacebookProfileTest < ActiveSupport::TestCase
   test "should parse Facebook page" do
     m = create_media url: 'https://www.facebook.com/ironmaiden/?fref=ts'
     data = m.as_json
-    assert_equal 'Iron Maiden', data['title']
-    assert_equal 'ironmaiden', data['username']
+    assert_match 'Iron Maiden', data['title']
+    assert_match 'ironmaiden', data['username']
     assert_equal 'facebook', data['provider']
     assert_equal 'page', data['subtype']
     assert_not_nil data['description']
@@ -18,8 +18,8 @@ class FacebookProfileTest < ActiveSupport::TestCase
   test "should parse Facebook page with numeric id" do
     m = create_media url: 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
     data = m.as_json
-    assert_equal 'Meedan', data['title']
-    assert_equal 'Meedan', data['username']
+    assert_match 'Meedan', data['title']
+    assert_match 'Meedan', data['username']
     assert_equal 'facebook', data['provider']
     assert_equal 'page', data['subtype']
     assert_not_nil data['description']
@@ -31,12 +31,12 @@ class FacebookProfileTest < ActiveSupport::TestCase
     m = create_media url: 'http://facebook.com/513415662050479'
     data = m.as_json
     assert_match 'https://www.facebook.com/NautilusMag', data['url']
-    assert_equal 'Nautilus Magazine', data['title']
-    assert_equal 'NautilusMag', data['username']
+    assert_match 'Nautilus Magazine', data['title']
+    assert_match 'NautilusMag', data['username']
     assert !data['description'].blank?
     assert_match 'https://www.facebook.com/NautilusMag', data['author_url']
     assert_not_nil data['author_picture']
-    assert_equal 'Nautilus Magazine', data['author_name']
+    assert_match 'Nautilus Magazine', data['author_name']
     assert_not_nil data['picture']
   end
 
@@ -59,25 +59,15 @@ class FacebookProfileTest < ActiveSupport::TestCase
     end
   end
 
-  test "should parse Facebook event url" do
-    m = create_media url: 'https://www.facebook.com/events/1090503577698748'
-    d = m.as_json
-    assert_match /Nancy Ajram/, d['title']
-    assert_not_nil d['description']
-    assert_match /^http/, d['picture']
-    assert_not_nil d['published_at']
-    assert_match /1090503577698748/, d['author_picture']
-  end
-
   test "should get Facebook name when metatag is not present" do
     m = create_media url: 'https://www.facebook.com/ironmaiden/'
     doc = ''
     open('test/data/fb-page-without-og-title-metatag.html') { |f| doc = f.read }
     Media.any_instance.stubs(:get_facebook_profile_page).returns(Nokogiri::HTML(doc))
 
-    d = m.as_json
-    assert d['error'].nil?
-    assert_equal 'Page without `og:title` defined', d['title']
+    data = m.as_json
+    assert data['error'].nil?
+    assert_equal 'Page without `og:title` defined', data['title']
     Media.any_instance.unstub(:get_facebook_profile_page)
   end
 

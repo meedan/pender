@@ -1,5 +1,6 @@
 require 'timeout'
 require 'pender_exceptions'
+require 'pender_store'
 require 'cc_deville'
 require 'semaphore'
 
@@ -24,8 +25,7 @@ module Api
           (render_url_invalid; return) unless is_url?(@url)
 
           @id = Media.get_id(@url)
-
-          (render_uncached_media and return) if @refresh || Pender::Store.read(@id, :json).nil?
+          (render_uncached_media and return) if @refresh || Pender::Store.current.read(@id, :json).nil?
           respond_to do |format|
             list_formats.each do |f|
               format.send(f) { send("render_as_#{f}") }
@@ -39,9 +39,9 @@ module Api
         urls = params[:url].is_a?(Array) ? params[:url] : params[:url].split(' ')
         urls.each do |url|
           @id = Media.get_id(url)
-          cc_url = CONFIG['public_url'] + '/api/medias.html?url=' + url
+          cc_url = PenderConfig.get('public_url') + '/api/medias.html?url=' + url
           CcDeville.clear_cache_for_url(cc_url)
-          Pender::Store.delete(@id, :json, :html)
+          Pender::Store.current.delete(@id, :json, :html)
         end
         render json: { type: 'success' }, status: 200
       end
@@ -54,7 +54,7 @@ module Api
           rescue_block = Proc.new { |_e| result[:failed] << url }
           handle_exceptions(StandardError, rescue_block, {url: url}) do
             @url = url
-            MediaParserWorker.perform_async(url, @key.id, @refresh, @archivers)
+            MediaParserWorker.perform_async(url, ApiKey.current&.id, @refresh, @archivers)
             result[:enqueued] << url
           end
         end
@@ -68,7 +68,7 @@ module Api
           (render_url_invalid and return true) unless valid_url?
           rescue_block = Proc.new { |_e| render_url_invalid and return true }
           handle_exceptions(OpenSSL::SSL::SSLError, rescue_block, {url: @url, request: request}) do
-            @media = Media.new(url: @url, request: request, key: @key)
+            @media = Media.new(url: @url, request: request)
           end
         end and return true
         false
@@ -98,7 +98,7 @@ module Api
       end
 
       def render_timeout(must_render, oembed = false)
-        data = Pender::Store.read(@id, :json)
+        data = Pender::Store.current.read(@id, :json)
         if !data.nil? && !@refresh
           render_timeout_media(data, must_render, oembed) and return true
         end
@@ -131,10 +131,10 @@ module Api
 
       def render_as_html
         begin
-          if @refresh || !Pender::Store.exist?(@id, :html)
+          if @refresh || !Pender::Store.current.exist?(@id, :html)
             save_cache
           end
-          render text: Pender::Store.read(@id, :html), status: 200
+          render text: Pender::Store.current.read(@id, :html), status: 200
         rescue
           render html: 'Could not parse this media'
         end
@@ -160,7 +160,7 @@ module Api
       def save_cache
         av = ActionView::Base.new(Rails.root.join('app', 'views'))
         template = locals = nil
-        cache = Pender::Store.read(@id, :json)
+        cache = Pender::Store.current.read(@id, :json)
         data = cache && !@refresh ? cache : @media.as_json({ force: @refresh, archivers: @archivers })
         if should_serve_external_embed?(data)
           title = data['title'].truncate(50, separator: ' ')
@@ -175,7 +175,7 @@ module Api
         ActionView::Base.send :include, MediasHelper
         content = av.render(template: "medias/#{template}.html.erb", layout: 'layouts/application.html.erb')
 
-        Pender::Store.write(@id, :html, content)
+        Pender::Store.current.write(@id, :html, content)
         clear_upstream_cache if @refresh
       end
 
@@ -195,13 +195,13 @@ module Api
       end
 
       def clear_html_cache
-        Pender::Store.delete(@id, :html)
+        Pender::Store.current.delete(@id, :html)
         url = public_url(request).gsub(/medias(\.[a-z]+)?\?/, 'medias.html?')
         CcDeville.clear_cache_for_url(url)
       end
 
       def public_url(request)
-        request.original_url.gsub(request.base_url, CONFIG['public_url'])
+        request.original_url.gsub(request.base_url, PenderConfig.get('public_url'))
       end
 
       def lock_url
@@ -228,7 +228,7 @@ module Api
         supported_params = ['url', 'refresh', 'maxwidth', 'maxheight', 'version']
         url_params = params.keys - rails_params
         if (url_params & supported_params) == ['url'] && url_params.size > 1
-          redirect_to(host: CONFIG['public_url'], action: :index, format: :html, url: params[:url]) and return
+          redirect_to(host: PenderConfig.get('public_url'), action: :index, format: :html, url: params[:url]) and return
         end
       end
 

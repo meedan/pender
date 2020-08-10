@@ -28,8 +28,8 @@ class TwitterTest < ActiveSupport::TestCase
     m = create_media url: 'http://bit.ly/23qFxCn'
     data = m.as_json
     assert_equal 'https://twitter.com/caiosba', data['url']
-    assert_equal 'Caio Almeida', data['title']
-    assert_equal '@caiosba', data['username']
+    assert_match 'Caio Almeida', data['title']
+    assert_match '@caiosba', data['username']
     assert_equal 'twitter', data['provider']
     assert_not_nil data['description']
     assert_not_nil data['picture']
@@ -40,9 +40,9 @@ class TwitterTest < ActiveSupport::TestCase
   test "should parse tweet" do
     m = create_media url: 'https://twitter.com/caiosba/status/742779467521773568'
     data = m.as_json
-    assert_equal 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
-    assert_equal 'Caio Almeida', data['author_name']
-    assert_equal '@caiosba', data['username']
+    assert_match 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
+    assert_match 'Caio Almeida', data['author_name']
+    assert_match '@caiosba', data['username']
     assert_nil data['picture']
     assert_not_nil data['author_picture']
   end
@@ -58,15 +58,15 @@ class TwitterTest < ActiveSupport::TestCase
 
   test "should return author_url for Twitter post" do
     m = create_media url: 'https://twitter.com/TheConfMalmo_AR/status/765474989277638657'
-    d = m.as_json
-    assert_equal 'https://twitter.com/TheConfMalmo_AR', d['author_url']
+    data = m.as_json
+    assert_equal 'https://twitter.com/TheConfMalmo_AR', data['author_url']
   end
 
   test "should remove line breaks from Twitter item title" do
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta name='twitter:title' content='LA Times- USC Dornsife Sunday Poll: <br/> Donald Trump Retains 2 Point <br/> Lead Over Hillary:'>"))
     m = create_media url: 'https://twitter.com/realDonaldTrump/status/785148463868735488'
-    d = m.as_json
-    assert_equal 'LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary: https://t.co/n05rul4Ycw', d['title']
+    data = m.as_json
+    assert_match 'LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary: https://t.co/n05rul4Ycw', data['title']
     Media.any_instance.unstub(:doc)
   end
 
@@ -75,38 +75,38 @@ class TwitterTest < ActiveSupport::TestCase
     open('test/data/flickr.html') { |f| doc = f.read }
     Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(doc))
     m = create_media url: 'https://www.flickr.com/photos/bees/2341623661'
-    d = m.as_json
-    assert_equal 'ZB8T0193', d['title']
-    assert_match /Explore .* photos on Flickr!/, d['description']
-    assert_equal '', d['published_at']
-    assert_match /https:\/\/.*staticflickr.com\/.*3123\/2341623661_7c99f48bbf_b.jpg/, d['picture']
-    assert_match /www.flickr.com/, d['author_url']
+    data = m.as_json
+    assert_match 'ZB8T0193', data['title']
+    assert_match /Explore .* photos on Flickr!/, data['description']
+    assert_equal '', data['published_at']
+    assert_match /https:\/\/.*staticflickr.com\/.*3123\/2341623661_7c99f48bbf_b.jpg/, data['picture']
+    assert_match /www.flickr.com/, data['author_url']
     Media.any_instance.unstub(:get_html)
   end
 
   test "should parse twitter metatags 2" do
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta name='twitter:title' content='Hong Kong Free Press'><br/><meta name='twitter:creator' content='@krislc'><meta name='twitter:description' content='Chief executive'><meta name='twitter:image' content='http://example.com/image.png'>"))
     m = create_media url: 'https://www.hongkongfp.com/2017/03/08/top-officials-suing-defamation-may-give-perception-bullying-says-chief-exec-candidate-woo/'
-    d = m.as_json
-    assert_equal 'Hong Kong Free Press', d['title']
-    assert_equal 'http://example.com/image.png', d['picture']
-    assert_equal 'Chief executive', d['description']
-    assert_equal '@krislc', d['username']
-    assert_equal 'https://twitter.com/krislc', d['author_url']
+    data = m.as_json
+    assert_match 'Hong Kong Free Press', data['title']
+    assert_match 'http://example.com/image.png', data['picture']
+    assert_match 'Chief executive', data['description']
+    assert_match '@krislc', data['username']
+    assert_match 'https://twitter.com/krislc', data['author_url']
     Media.any_instance.unstub(:doc)
   end
 
   test "should parse valid link with blank spaces" do
     m = create_media url: ' https://twitter.com/meedan/status/1095034925420560387 '
-    d = m.as_json
+    data = m.as_json
     assert_equal 'https://twitter.com/meedan/status/1095034925420560387', m.url
-    assert_match 'Eleven news organizations and 3 universities are teaming up to fact-check claims related to the May 13, 2019 midterm elections. #TsekPH https://t.co/lXk5ryiQuJ', d['title']
-    assert_match 'Eleven news organizations and 3 universities are teaming up to fact-check claims related to the May 13, 2019 midterm elections. #TsekPH', d['description']
-    assert_not_nil d['published_at']
-    assert_equal '@meedan', d['username']
-    assert_equal 'https://twitter.com/meedan', d['author_url']
-    assert_nil d['picture']
-    assert_not_nil d['author_picture']
+    assert_match 'Eleven news organizations and 3 universities are teaming up to fact-check claims related to the May 13, 2019 midterm elections. #TsekPH https://t.co/lXk5ryiQuJ', data['title']
+    assert_match 'Eleven news organizations and 3 universities are teaming up to fact-check claims related to the May 13, 2019 midterm elections. #TsekPH', data['description']
+    assert_not_nil data['published_at']
+    assert_equal '@meedan', data['username']
+    assert_equal 'https://twitter.com/meedan', data['author_url']
+    assert_nil data['picture']
+    assert_not_nil data['author_picture']
   end
 
   test "should get canonical URL parsed from html tags" do
@@ -118,28 +118,28 @@ class TwitterTest < ActiveSupport::TestCase
   test "should parse tweet url with special chars" do
     m = create_media url: 'http://twitter.com/#!/salmaeldaly/status/45532711472992256'
     data = m.as_json
-    assert_equal 'https://twitter.com/salmaeldaly/status/45532711472992256', m.url
+    assert_match 'https://twitter.com/salmaeldaly/status/45532711472992256', m.url
     assert_equal ['twitter', 'item'], [m.provider, m.type]
-    assert_equal 'وعشان نبقى على بياض أنا مش موافقة على فكرة الاعتصام اللي في التحرير، بس دة حقهم وأنا بدافع عن حقهم الشرعي، بغض النظر عن اختلافي معهم', data['title']
-    assert_equal data['title'], data['description']
+    assert_match 'وعشان نبقى على بياض أنا مش موافقة على فكرة الاعتصام اللي في التحرير، بس دة حقهم وأنا بدافع عن حقهم الشرعي، بغض النظر عن اختلافي معهم', data['title']
+    assert_match data['title'], data['description']
     assert_not_nil data['published_at']
-    assert_equal '@salmaeldaly', data['username']
-    assert_equal 'https://twitter.com/salmaeldaly', data['author_url']
+    assert_match '@salmaeldaly', data['username']
+    assert_match 'https://twitter.com/salmaeldaly', data['author_url']
     assert_nil data['picture']
     assert_not_nil data['author_picture']
   end
 
   test "should return Twitter author picture" do
     m = create_media url: 'https://twitter.com/meedan/status/773947372527288320'
-    d = m.as_json
-    assert_match /^http/, d['author_picture']
+    data = m.as_json
+    assert_match /^http/, data['author_picture']
   end
 
   test "should get all information of a truncated tweet" do
     m = create_media url: 'https://twitter.com/bradymakesstuff/status/844240817334247425'
-    d = m.as_json
-    assert_equal 'Anti immigrant graffiti in a portajon on a residential construction site in Mtn Brook, AL. Job has about 50% Latino workers. https://t.co/bS5vI4Jq7I', d['description']
-    assert_not_nil d['raw']['api']['entities']['media'][0]['media_url_https']
+    data = m.as_json
+    assert_match 'Anti immigrant graffiti in a portajon on a residential construction site in Mtn Brook, AL. Job has about 50% Latino workers. https://t.co/bS5vI4Jq7I', data['description']
+    assert_not_nil data['raw']['api']['entities']['media'][0]['media_url_https']
   end
 
   test "should store data of post returned by twitter API" do
@@ -148,7 +148,7 @@ class TwitterTest < ActiveSupport::TestCase
     assert data['raw']['api'].is_a? Hash
     assert !data['raw']['api'].empty?
 
-    assert_equal 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
+    assert_match 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
   end
 
   test "should store data of profile returned by twitter API" do
@@ -213,8 +213,8 @@ class TwitterTest < ActiveSupport::TestCase
       assert_equal 'twitter', data['provider']
       assert_equal 'item', data['type']
       assert_match /A guide to anti-misinformation/, data['title']
-      assert_equal '@meedan', data['username']
-      assert_equal 'meedan', data['author_name']
+      assert_match '@meedan', data['username']
+      assert_match 'meedan', data['author_name']
       assert_not_nil data['description']
       assert_not_nil data['published_at']
       assert_nil data['error']

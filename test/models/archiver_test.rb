@@ -127,7 +127,7 @@ class ArchiverTest < ActiveSupport::TestCase
         WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', status: [data[:code], data[:message]], headers: {})
 
         Media.send_to_archive_org(url.to_s, a.id, 20)
-        media_data = Pender::Store.read(Media.get_id(url), :json)
+        media_data = Pender::Store.current.read(Media.get_id(url), :json)
         assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_org', 'error', 'code')
         assert_equal "#{data[:code]} #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
       end
@@ -163,7 +163,7 @@ class ArchiverTest < ActiveSupport::TestCase
       error = Net::ReadTimeout.new('Exception from WebMock')
       WebMock.stub_request(:any, /web.archive.org/).to_raise(Net::ReadTimeout.new('Exception from WebMock'))
       Media.send_to_archive_org(url, a.id, 20)
-      media_data = Pender::Store.read(Media.get_id(url), :json)
+      media_data = Pender::Store.new.read(Media.get_id(url), :json)
       assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
       assert_equal "#{error.class} #{error.message}", media_data.dig('archives', 'archive_org', 'error', 'message')
     end
@@ -200,7 +200,7 @@ class ArchiverTest < ActiveSupport::TestCase
         response = { code: '200', message: 'OK' }
         WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', status: [response[:code], response[:message]], headers: {})
         Media.send_to_archive_is(url.to_s, a.id, 20)
-        media_data = Pender::Store.read(Media.get_id(url), :json)
+        media_data = Pender::Store.current.read(Media.get_id(url), :json)
         assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_is', 'error', 'code')
         assert_equal "#{response[:code]} #{response[:message]}", media_data.dig('archives', 'archive_is', 'error', 'message')
       end
@@ -241,7 +241,7 @@ class ArchiverTest < ActiveSupport::TestCase
         assert m.data.dig('archives', 'archive_is').nil?
         WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', status: [data[:code], data[:message]], headers: { refresh: '0;url=http://archive.today/k5yFO'})
         Media.send_to_archive_is(url.to_s, a.id, 20)
-        media_data = Pender::Store.read(Media.get_id(url), :json)
+        media_data = Pender::Store.current.read(Media.get_id(url), :json)
         assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_is', 'error', 'code')
         assert_equal "#{data[:code]} #{data[:message]}", media_data.dig('archives', 'archive_is', 'error', 'message')
       end
@@ -270,12 +270,12 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json(archivers: 'archive_is')
-    assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, Pender::Store.read(id, :json)[:archives])
+    assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, Pender::Store.current.read(id, :json)[:archives])
 
     WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/archiving' })
     m.as_json(force: true, archivers: 'archive_is, archive_org')
-    assert_equal({'archive_is' => {'location' => 'archive_is/second_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.read(id, :json)[:archives])
+    assert_equal({'archive_is' => {'location' => 'archive_is/second_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.current.read(id, :json)[:archives])
     WebMock.disable!
   end
 
@@ -291,19 +291,19 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json
-    assert_equal({}, Pender::Store.read(id, :json)[:archives])
+    assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
 
     m.as_json(archivers: '')
-    assert_equal({}, Pender::Store.read(id, :json)[:archives])
+    assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
 
     m.as_json(archivers: nil)
-    assert_equal({}, Pender::Store.read(id, :json)[:archives])
+    assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
 
     m.as_json(archivers: 'none')
-    assert_equal({}, Pender::Store.read(id, :json)[:archives])
+    assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
 
     m.as_json(archivers: 'archive_is')
-    assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, Pender::Store.read(id, :json)[:archives])
+    assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, Pender::Store.current.read(id, :json)[:archives])
     WebMock.disable!
   end
 
@@ -320,12 +320,12 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json(archivers: 'archive_is')
-    assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, Pender::Store.read(id, :json)[:archives])
+    assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, Pender::Store.current.read(id, :json)[:archives])
 
     WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/archiving' })
     m.as_json(archivers: 'archive_is, archive_org')
-    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.read(id, :json)[:archives])
+    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.current.read(id, :json)[:archives])
     WebMock.disable!
   end
 
@@ -343,18 +343,18 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json(archivers: 'archive_is, archive_org')
-    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.read(id, :json)[:archives])
+    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.current.read(id, :json)[:archives])
 
     WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/second_archiving' })
 
     m.as_json
-    assert_equal({'location' => 'archive_is/first_archiving'}, Pender::Store.read(id, :json)[:archives][:archive_is])
-    assert_equal({'location' => 'https://web.archive.org/archiving' }, Pender::Store.read(id, :json)[:archives][:archive_org])
+    assert_equal({'location' => 'archive_is/first_archiving'}, Pender::Store.current.read(id, :json)[:archives][:archive_is])
+    assert_equal({'location' => 'https://web.archive.org/archiving' }, Pender::Store.current.read(id, :json)[:archives][:archive_org])
 
     m.as_json(archivers: 'none')
-    assert_equal({'location' => 'archive_is/first_archiving'}, Pender::Store.read(id, :json)[:archives][:archive_is])
-    assert_equal({'location' => 'https://web.archive.org/archiving' }, Pender::Store.read(id, :json)[:archives][:archive_org])
+    assert_equal({'location' => 'archive_is/first_archiving'}, Pender::Store.current.read(id, :json)[:archives][:archive_is])
+    assert_equal({'location' => 'https://web.archive.org/archiving' }, Pender::Store.current.read(id, :json)[:archives][:archive_org])
 
     WebMock.disable!
   end
@@ -366,37 +366,30 @@ class ArchiverTest < ActiveSupport::TestCase
     Media::ARCHIVERS['archive_org'][:enabled] = true
   end
 
-  test "should archive to perma.cc and store the URL on archives" do
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    url = 'https://twitter.com/meedan/status/1095755205554200576'
-    m = Media.new url: url, key: a
-    m.as_json(archivers: 'none')
-
+  test "should archive to perma.cc and store the URL on archives if perma_cc_key is present" do
     Media.any_instance.unstub(:archive_to_perma_cc)
-    Pender::Store.stubs(:read).returns(nil)
-    response = 'mock';response.stubs(:code).returns('201');response.stubs(:body).returns('{"guid":"AUA8-QNGH"}');response.stubs(:message).returns('OK')
-    Net::HTTP.any_instance.stubs(:request).returns(response)
-    Media.stubs(:notify_webhook_and_update_cache).with('perma_cc', url, { location: 'http://perma.cc/AUA8-QNGH'}, a.id)
     Media.stubs(:available_archivers).returns(['perma_cc'])
-    Media.stubs(:enabled_archivers).returns({ 'perma_cc' => {:patterns=>[/^.*$/], :modifier=>:only, :enabled=>true}})
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'api.perma.cc' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    WebMock.stub_request(:any, /api.perma.cc/).to_return(body: '{"guid":"AUA8-QNGH"}')
 
-    m.archive('perma_cc')
-
-    Pender::Store.unstub(:read)
-    Net::HTTP.any_instance.unstub(:request)
-    Media.unstub(:notify_webhook_and_update_cache)
-    Media.notify_webhook_and_update_cache('perma_cc', url, { location: 'http://perma.cc/AUA8-QNGH'}, a.id)
-
+    url = 'https://twitter.com/meedan/status/1095755205554200576'
     id = Media.get_id(url)
-    cached = Pender::Store.read(id, :json)[:archives]
+
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test', config: { 'perma_cc_key': 'my-perma-key' }}
+    m = Media.new url: url, key: a
+    m.as_json(archivers: 'perma_cc')
+
+    cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
     assert_equal({ 'location' => 'http://perma.cc/AUA8-QNGH'}, cached['perma_cc'])
-    Media.unstub(:enabled_archivers)
     Media.unstub(:available_archivers)
+    WebMock.disable!
   end
 
   test "should not try to archive on Perma.cc if already archived on it" do
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test', config: { perma_cc_key: 'perma_key'} }
     url = 'https://twitter.com/meedan/status/1095755205554200576'
     m = Media.new url: url, key: a
     m.as_json
@@ -410,28 +403,26 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:notify_webhook_and_update_cache)
   end
 
-  test "should update media with error when no key is present and archive to Perma.cc fails" do
-    WebMock.enable!
+  test "should update media with error when archive to Perma.cc fails" do
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)
     Media.any_instance.stubs(:parse)
     Media.any_instance.stubs(:archive)
 
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test', config: { perma_cc_key: 'perma_key'} }
     url = 'http://example.com'
 
     assert_nothing_raised do
-      m = Media.new url: url
+      m = Media.new url: url, key: a
       m.as_json
       assert m.data.dig('archives', 'perma_cc').nil?
       Media.send_to_perma_cc(url.to_s, a.id, 20)
-      media_data = Pender::Store.read(Media.get_id(url), :json)
+      media_data = Pender::Store.current.read(Media.get_id(url), :json)
       assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'perma_cc', 'error', 'code')
       assert_equal "401 Unauthorized", media_data.dig('archives', 'perma_cc', 'error', 'message')
     end
 
-    WebMock.disable!
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_canonical_url)
     Media.any_instance.unstub(:try_https)
@@ -439,9 +430,20 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive)
   end
 
-  test "should disable Perma.cc archiver if perma_key is not present" do
-    assert_nil CONFIG.dig('perma_cc_key')
-    assert_equal false, Media::ARCHIVERS['perma_cc'][:enabled]
+  test "should add disabled Perma.cc archiver error message if perma_key is not present" do
+    Media.any_instance.unstub(:archive_to_perma_cc)
+    Media.stubs(:available_archivers).returns(['perma_cc'])
+
+    url = 'https://twitter.com/meedan/status/1095755205554200576'
+    id = Media.get_id(url)
+
+    m = Media.new url: url, key: create_api_key
+    m.as_json(archivers: 'perma_cc')
+    cached = Pender::Store.current.read(id, :json)[:archives]
+    assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_MISSING_KEY'), cached.dig('perma_cc', 'error', 'code')
+    assert_equal I18n.t(:archiver_missing_key), cached.dig('perma_cc', 'error', 'message')
+
+    Media.unstub(:available_archivers)
   end
 
   test "should return api key settings" do
@@ -509,7 +511,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m = create_media url: url
     m.as_json(archivers: 'none')
     assert Media.supported_video?(m.url, a.id)
-    media_data = Pender::Store.read(Media.get_id(url), :json)
+    media_data = Pender::Store.current.read(Media.get_id(url), :json)
     assert_nil media_data.dig('archives', 'video_archiver')
 
     url = 'https://twitter.com/meedan/status/1214263820484521985'
@@ -517,7 +519,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m.as_json(archivers: 'none')
     assert !Media.supported_video?(m.url, a.id)
 
-    media_data = Pender::Store.read(Media.get_id(url), :json)
+    media_data = Pender::Store.current.read(Media.get_id(url), :json)
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA'), media_data.dig('archives', 'video_archiver', 'error', 'code')
     assert_equal I18n.t(:archiver_not_supported_media, code: 1), media_data.dig('archives', 'video_archiver', 'error', 'message')
 
@@ -534,20 +536,20 @@ class ArchiverTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1202732707597307905'
 
-    Pender::Store.stubs(:read).with(Media.get_id(url), :json).returns(nil)
+    Pender::Store.any_instance.stubs(:read).with(Media.get_id(url), :json).returns(nil)
     assert_nil Media.notify_video_already_archived(url, nil)
 
     data = { archives: { video_archiver: { error: 'could not download video data'}}}
-    Pender::Store.stubs(:read).with(Media.get_id(url), :json).returns(data)
+    Pender::Store.any_instance.stubs(:read).with(Media.get_id(url), :json).returns(data)
     Media.stubs(:notify_webhook).with('video_archiver', url, data, {}).returns('Notify webhook')
     assert_nil Media.notify_video_already_archived(url, nil)
 
     data[:archives][:video_archiver] = { location: 'path_to_video' }
-    Pender::Store.stubs(:read).with(Media.get_id(url), :json).returns(data)
+    Pender::Store.any_instance.stubs(:read).with(Media.get_id(url), :json).returns(data)
     Media.stubs(:notify_webhook).with('video_archiver', url, data, {}).returns('Notify webhook')
     assert_equal 'Notify webhook', Media.notify_video_already_archived(url, nil)
 
-    Pender::Store.unstub(:read)
+    Pender::Store.any_instance.unstub(:read)
     Media.unstub(:notify_webhook)
   end
 
@@ -591,13 +593,13 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_nil data.dig('archives', 'video_archiver')
 
     error = StandardError.new('upload error')
-    Pender::Store.stubs(:upload_video_folder).raises(StandardError.new('upload error'))
+    Pender::Store.any_instance.stubs(:upload_video_folder).raises(StandardError.new('upload error'))
     Media.send_to_video_archiver(url, a.id, 20)
     data = m.as_json
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), data.dig('archives', 'video_archiver', 'error', 'code')
     assert_equal "#{error.class} #{error.message}", data.dig('archives', 'video_archiver', 'error', 'message')
 
-    Pender::Store.unstub(:upload_video_folder)
+    Pender::Store.any_instance.unstub(:upload_video_folder)
     Media.unstub(:supported_video?)
   end
 
@@ -618,7 +620,7 @@ class ArchiverTest < ActiveSupport::TestCase
       error = StandardError.new('some error')
       Media.stubs(:supported_video?).with(url, a.id).raises(error)
       Media.send_to_video_archiver(url, a.id, 20)
-      media_data = Pender::Store.read(Media.get_id(url), :json)
+      media_data = Pender::Store.current.read(Media.get_id(url), :json)
       assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'video_archiver', 'error', 'code')
       assert_equal "#{error.class} #{error.message}", media_data.dig('archives', 'video_archiver', 'error', 'message')
     end
@@ -649,7 +651,7 @@ class ArchiverTest < ActiveSupport::TestCase
       data = m.as_json(archivers: 'none')
       assert_nil m.data.dig('archives', 'video_archiver')
       Media.send_to_video_archiver(url, a.id, 20)
-      media_data = Pender::Store.read(Media.get_id(url), :json)
+      media_data = Pender::Store.current.read(Media.get_id(url), :json)
       assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'video_archiver', 'error', 'code')
       assert_equal "1 #{I18n.t(:archiver_video_not_downloaded)}", media_data.dig('archives', 'video_archiver', 'error', 'message')
     end
@@ -662,20 +664,26 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:supported_video?)
     Open3.unstub(:capture3)
   end
+
   test "should generate the public archiving folder for videos" do
-    CONFIG.stubs(:dig).with('storage', 'bucket').returns('default_bucket')
-    CONFIG.stubs(:dig).with('storage', 'endpoint').returns('http://local-storage')
-    CONFIG.stubs(:dig).with('storage', 'video_asset_path').returns(nil)
-    CONFIG.stubs(:dig).with('storage', 'video_bucket').returns(nil)
-    assert_equal "http://local-storage/#{Pender::Store.video_bucket_name}/video", Media.archiving_folder
+    Aws::S3::Bucket.any_instance.stubs(:exists?).returns(true)
+    a = create_api_key application_settings: { config: { storage: { bucket: 'default_bucket', endpoint: 'http://local-storage', video_asset_path: nil, video_bucket: nil, access_key: 'access_key', secret_key: 'secret_key', bucket_region: 'us-east-1' } }}
+    ApiKey.current = a
 
-    CONFIG.stubs(:dig).with('storage', 'video_bucket').returns('bucket_for_videos')
-    assert_equal "http://local-storage/#{Pender::Store.video_bucket_name}/video", Media.archiving_folder
+    assert_match /http:\/\/local-storage\/default_bucket\d*\/video/, Media.archiving_folder
 
-    CONFIG.stubs(:dig).with('storage', 'video_asset_path').returns('http://public-storage/my-videos')
+    a.application_settings[:config][:storage][:video_bucket] = 'bucket_for_videos'; a.save
+    ApiKey.current = a
+    Pender::Store.current = nil
+    PenderConfig.current = nil
+    assert_match /http:\/\/local-storage\/bucket_for_videos\d*\/video/, Media.archiving_folder
+
+    a.application_settings[:config][:storage][:video_asset_path] = 'http://public-storage/my-videos'; a.save
+    ApiKey.current = a
+    Pender::Store.current = nil
+    PenderConfig.current = nil
     assert_equal "http://public-storage/my-videos", Media.archiving_folder
-
-    CONFIG.unstub(:dig)
+    Aws::S3::Bucket.any_instance.unstub(:exists?)
   end
 
   test "include error on data when archiver is skipped" do

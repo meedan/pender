@@ -25,6 +25,7 @@ en:
   archiver_disabled: "This archiver is disabled"
   archiver_not_supported_media: "%{code} Unsupported URL"
   archiver_video_not_downloaded: "Requested video not available for download"
+  archiver_missing_key: "Missing authentication key"
   archiver_failure: "%{code} %{message}"
   url_not_valid: 'The URL is not valid'
   unauthorized: 'Unauthorized'

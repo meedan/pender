@@ -4,22 +4,22 @@ require 'cc_deville'
 class InstagramTest < ActiveSupport::TestCase
   test "should parse Instagram post" do
     m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
-    d = m.as_json
-    assert_equal '@megadeth', d['username']
-    assert_equal 'item', d['type']
-    assert_equal 'megadeth', d['author_name'].downcase
-    assert_not_nil d['picture']
+    data = m.as_json
+    assert_equal '@megadeth',data['username']
+    assert_equal 'item',data['type']
+    assert_match 'megadeth',data['author_name'].downcase
+    assert_not_nil data['picture']
   end
 
   test "should parse Instagram profile" do
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:title' content='megadeth'><meta property='og:image' content='https://www.instagram.com/megadeth.png'>"))
     m = create_media url: 'https://www.instagram.com/megadeth'
-    d = m.as_json
-    assert_equal '@megadeth', d['username']
-    assert_equal 'profile', d['type']
-    assert_equal 'megadeth', d['title']
-    assert_equal 'megadeth', d['author_name']
-    assert_match /^http/, d['picture']
+    data = m.as_json
+    assert_equal '@megadeth',data['username']
+    assert_equal 'profile',data['type']
+    assert_match 'megadeth',data['title']
+    assert_match 'megadeth',data['author_name']
+    assert_match /^http/,data['picture']
     Media.any_instance.unstub(:doc)
   end
 
@@ -54,7 +54,7 @@ class InstagramTest < ActiveSupport::TestCase
     data = m.as_json
 
     assert data['raw']['oembed'].is_a? Hash
-    assert_equal 'theintercept', data['raw']['oembed']['author_name']
+    assert_match 'theintercept', data['raw']['oembed']['author_name']
     assert_match /It was a week/, data['raw']['oembed']['title']
   end
 
@@ -62,7 +62,7 @@ class InstagramTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:get_instagram_author_name).returns(nil)
     m = create_media url: 'https://www.instagram.com/emeliiejanssonn/'
     data = m.as_json
-    assert_equal 'emeliiejanssonn', data['author_name']
+    assert_match 'emeliiejanssonn', data['author_name']
     Media.any_instance.unstub(:get_instagram_author_name)
   end
 
@@ -90,23 +90,23 @@ class InstagramTest < ActiveSupport::TestCase
 
   test "should parse IGTV link as item" do
     m = create_media url: 'https://www.instagram.com/tv/B47W-ZVJpBv/?igshid=l5tx0fnl421e'
-    d = m.as_json
-    assert_equal 'item', d['type']
-    assert_equal '@biakicis', d['username']
-    assert_match /kicis/, d['author_name'].downcase
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal '@biakicis', data['username']
+    assert_match /kicis/, data['author_name'].downcase
   end
 
   test "should return error on data when can't get info from api and graphql" do
     id = 'B6_wqMHgQ12'
     Media.any_instance.stubs(:get_instagram_json_data).raises('Net::HTTPNotFound: Not Found')
     m = create_media url: "https://www.instagram.com/p/#{id}/"
-    d = m.as_json
-    assert_equal id, d['external_id']
-    assert_equal 'item', d['type']
-    assert_equal '', d['username']
-    assert_equal '', d['author_name']
-    assert_match /Not Found/, d['raw']['api']['error']['message']
-    assert_match /Not Found/, d['raw']['graphql']['error']['message']
+    data = m.as_json
+    assert_equal id, data['external_id']
+    assert_equal 'item', data['type']
+    assert_equal '', data['username']
+    assert_equal '', data['author_name']
+    assert_match /Not Found/, data['raw']['api']['error']['message']
+    assert_match /Not Found/, data['raw']['graphql']['error']['message']
     Media.any_instance.unstub(:get_instagram_json_data)
   end
 
@@ -119,14 +119,14 @@ class InstagramTest < ActiveSupport::TestCase
       "edge_media_to_caption"=>{"edges"=>[{"node"=>{"text"=>"Verify misinformation on WhatsApp"}}]},
       "owner"=>{"profile_pic_url"=>"https://instagram.net/v/56_n.jpg", "username"=>"c.afpfact", "full_name"=>"AFP Fact Check"}}}}
     Media.any_instance.stubs(:get_instagram_json_data).with("https://www.instagram.com/p/#{id}/?__a=1").returns(graphql_response)
-    d = m.as_json
-    assert_equal 'B6_wqMHgQ12', d['external_id']
-    assert_equal 'item', d['type']
-    assert_equal '@c.afpfact', d['username']
-    assert_equal 'AFP Fact Check', d['author_name']
-    assert_equal 'Verify misinformation on WhatsApp', d['title']
-    assert_equal 'https://instagram.net/v/29_n.jpg', d['picture']
-    assert_equal 'https://instagram.net/v/56_n.jpg', d['author_picture']
+    data = m.as_json
+    assert_equal 'B6_wqMHgQ12',data['external_id']
+    assert_equal 'item',data['type']
+    assert_equal '@c.afpfact',data['username']
+    assert_match 'AFP Fact Check',data['author_name']
+    assert_match 'Verify misinformation on WhatsApp',data['title']
+    assert_match 'https://instagram.net/v/29_n.jpg',data['picture']
+    assert_match 'https://instagram.net/v/56_n.jpg',data['author_picture']
     Media.any_instance.unstub(:get_instagram_json_data)
   end
 

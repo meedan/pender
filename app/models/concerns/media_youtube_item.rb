@@ -21,7 +21,7 @@ module MediaYoutubeItem
     video = video_data = nil
 
     begin
-      Yt.configuration.api_key = Media.get_config(self)[:google_api_key]
+      Yt.configuration.api_key = PenderConfig.get(:google_api_key)
       video = Yt::Video.new url: self.url
       video_data = video.snippet.data
     rescue Yt::Errors::NoItems
