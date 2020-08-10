@@ -686,6 +686,24 @@ class MediaTest < ActiveSupport::TestCase
     PublicSuffix.unstub(:parse)
   end
 
+  test "should use cookies from api key config if present" do
+    api_key = create_api_key
+    uri = Media.parse_url('http://example.com')
+
+    assert_not_includes CONFIG['cookies'].keys, 'example.com'
+    assert_equal "", Media.set_cookies(uri)
+
+    PenderConfig.current = nil
+    ApiKey.current = api_key
+    assert_equal "", Media.set_cookies(uri)
+
+    api_key.application_settings = { config: { cookies: { 'example.com' => { "example_cookies" => "true", "devicetype"=>"0" }}}}
+    api_key.save
+    PenderConfig.current = nil
+    ApiKey.current = api_key
+    assert_equal "example_cookies=true; devicetype=0", Media.set_cookies(uri)
+  end
+
   test "should return empty html when FB url cannot be embedded" do
     urls = %w(
       https://www.facebook.com/groups/976472102413753/permalink/2013383948722558/
