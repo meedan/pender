@@ -358,7 +358,7 @@ class Media
     begin
       host = PublicSuffix.parse(uri.host).domain
       cookies = []
-      CONFIG['cookies'].each do |domain, content|
+      PenderConfig.get('cookies', {}).each do |domain, content|
         next unless domain.match(host)
         content.each { |k, v| cookies << "#{k}=#{v}" }
       end
