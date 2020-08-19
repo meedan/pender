@@ -78,8 +78,6 @@ development: &default
     host: # '<HOST>'
     port: # '<PORT>'
     user_prefix: # '<ACCOUNT PREFIX>'
-    country_prefix: #'<COUNTRY PREFIX>'
-    session_prefix: #'<SESSION PREFIX>'
     pass: # '<ACCOUNT PASSWORD>'
 
   # Special instructions to access specific domains

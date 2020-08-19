@@ -89,18 +89,9 @@ module MediaArchiver
       enabled
     end
 
-    def url_hash(url)
-      ## Screenshots are disabled
-      # Digest::MD5.hexdigest(url.parameterize)
-    end
-
-    def image_filename(url)
-      ## Screenshots are disabled
-      # url_hash(url) + '.png'
-    end
-
     def handle_archiving_exceptions(archiver, delay_time, params)
       begin
+        ApiKey.current = ApiKey.find_by(id: params.dig(:key_id))
         yield
       rescue StandardError => error
         error_type = 'ARCHIVER_ERROR'

@@ -831,4 +831,19 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: url, format: 'json'
     assert_response :success
   end
+
+  test "should get config from api key if defined" do
+    api_key = create_api_key
+    authenticate_with_token(api_key)
+
+    get :index, url: 'http://meedan.com', format: :json
+    assert_response 200
+    assert_equal CONFIG['google_api_key'], PenderConfig.get('google_api_key')
+
+    api_key.application_settings = { config: { google_api_key: 'specific_key' }}; api_key.save
+    get :index, url: 'http://meedan.com', format: :json
+    assert_response 200
+    assert_equal 'specific_key', PenderConfig.get('google_api_key')
+  end
+
 end

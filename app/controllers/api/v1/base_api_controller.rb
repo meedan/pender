@@ -28,6 +28,7 @@ module Api
         header = PenderConfig.get('authorization_header') || 'X-Token'
         token = request.headers[header]
         ApiKey.current = ApiKey.where(access_token: token).where('expire_at > ?', Time.now).last
+        PenderConfig.reload
         (render_unauthorized and return false) if ApiKey.current.nil?
       end
 

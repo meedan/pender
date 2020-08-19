@@ -270,7 +270,7 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should leave html blank and add error on media data when private tweet" do
-    url = 'https://twitter.com/danieleerze/status/1261075107583127552'
+    url = 'https://twitter.com/DanieleErze/status/1273973293079580672'
     m = create_media url: url
     data = m.as_json
     assert_equal '', data['html']

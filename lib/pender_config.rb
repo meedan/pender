@@ -8,6 +8,10 @@ class PenderConfig
     RequestStore.store[:config] = config
   end
 
+  def self.reload
+    PenderConfig.current = PenderConfig.load
+  end
+
   def self.load
     api_key = ApiKey.current
     api_key && api_key.settings[:config] ? CONFIG.merge(api_key.settings[:config]) : CONFIG

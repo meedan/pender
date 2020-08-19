@@ -15,7 +15,7 @@ module MediaFacebookEngagementMetrics
     end
 
     def request_metrics_from_facebook(url)
-      facebook = PenderConfig.get('facebook')
+      facebook = PenderConfig.get('facebook', {})
       api = "https://graph.facebook.com/oauth/access_token?client_id=#{facebook.dig('app_id')}&client_secret=#{facebook.dig('app_secret')}&grant_type=client_credentials"
       response = Net::HTTP.get_response(URI(api))
       token = JSON.parse(response.body)['access_token']
@@ -25,6 +25,7 @@ module MediaFacebookEngagementMetrics
     end
 
     def get_metrics_from_facebook(url, key_id, count)
+      ApiKey.current = ApiKey.find_by(id: key_id)
       value = begin
                 self.request_metrics_from_facebook(url)
               rescue StandardError => e
