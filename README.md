@@ -24,10 +24,16 @@ A parsing, archiving and rendering service.
 
 #### Archivers
 
-* Screenshot
 * Archive.is
 * Archive.org
-* Video Vault
+* Perma.cc
+  * This archiver requires a `key` on `config` to be enabled.
+* Video Archiver
+  * Pender uses `youtube-dl` to download videos from any page
+  * Many requests in a short period of time to a domain (~20 requests/min) can lead to IP blocking.
+  * To avoid IP blocking when downloading Youtube videos Pender can use a proxy. We have tested two proxies:
+    * Oxylabs (recommended)
+    * Luminati is not recommended for downloading videos: https://github.com/ytdl-org/youtube-dl/issues/23521
 
 ### Running
 

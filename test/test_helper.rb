@@ -83,7 +83,6 @@ class ActiveSupport::TestCase
     Media::ARCHIVERS['archive_org'][:enabled] = false
     CONFIG.unstub(:[])
     clear_bucket
-    #ApiKey.current = Pender::Store.current = PenderConfig.current = nil
   end
 
   def clear_bucket

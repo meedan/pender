@@ -1007,4 +1007,29 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
+  test "should use api key config to get metrics from facebook if present" do
+    Media.unstub(:request_metrics_from_facebook)
+    url = 'https://www.google.com/'
+
+    Media.get_metrics_from_facebook(url, nil, 10)
+    assert_nil ApiKey.current
+    assert_equal CONFIG['facebook'], PenderConfig.get('facebook')
+    assert_equal CONFIG[:storage], Pender::Store.current.instance_variable_get(:@storage)
+
+    ApiKey.current = PenderConfig.current = Pender::Store.current = nil
+    api_key = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    Media.get_metrics_from_facebook(url, api_key.id, 10)
+    assert_equal api_key, ApiKey.current
+    assert_equal CONFIG['facebook'], PenderConfig.get('facebook')
+    assert_equal CONFIG[:storage], Pender::Store.current.instance_variable_get(:@storage)
+
+    ApiKey.current = PenderConfig.current = Pender::Store.current = nil
+    api_key.application_settings = { config: { facebook: { app_id: 'fb-app-id', app_secret: 'fb-app-secret' }, storage: { endpoint: CONFIG['storage']['endpoint'], access_key: CONFIG['storage']['access_key'], secret_key: CONFIG['storage']['secret_key'], bucket: 'my-bucket', bucket_region: CONFIG['storage']['bucket_region'], video_bucket: 'video-bucket'}}}; api_key.save
+    Media.get_metrics_from_facebook(url, api_key.id, 10)
+    assert_equal api_key, ApiKey.current
+    assert_equal api_key.settings[:config][:facebook], PenderConfig.current[:facebook]
+    assert_equal api_key.settings[:config][:storage], PenderConfig.current[:storage]
+    assert_equal api_key.settings[:config][:storage], Pender::Store.current.instance_variable_get(:@storage)
+  end
+
 end

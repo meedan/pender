@@ -74,4 +74,28 @@ class MediasHelperTest < ActionView::TestCase
 
   end
 
+  test 'should validate proxies subkeys' do
+    default_proxy = CONFIG['proxy']
+    api_key = create_api_key
+
+    ApiKey.current = api_key
+    assert_equal default_proxy, Media.valid_proxy('proxy')
+    assert_nil Media.valid_proxy('ytdl_proxy')
+
+    proxy = { 'host' => 'my-proxy.mine', 'port' => '1111', 'user_prefix' => 'my-user-prefix', 'pass' => '12345', 'country_prefix' => '-cc-', 'session_prefix' => '-ss-' }
+    video_proxy = { 'host' => 'my-video-proxy.mine', 'port' => '1111', 'user_prefix' => 'my-user-prefix', 'pass' => '12345' }
+    api_key.application_settings = { config: { proxy: proxy, ytdl_proxy: video_proxy }}; api_key.save
+    ApiKey.current = api_key
+    PenderConfig.current = nil
+    assert_equal proxy, Media.valid_proxy('proxy')
+    assert_equal video_proxy, Media.valid_proxy('ytdl_proxy')
+
+    proxy_with_empty_values = { 'host' => 'my-proxy.mine', 'port' => '1111', 'user_prefix' => '', 'pass' => nil, 'session_prefix' => '-ss-' }
+    video_proxy_with_empty_values= { 'host' => 'my-video-proxy.mine', 'user_prefix' => '', 'pass' => nil }
+    api_key.application_settings = { config: { proxy: proxy_with_empty_values, ytdl_proxy: video_proxy_with_empty_values }}; api_key.save
+    ApiKey.current = api_key
+    PenderConfig.current = nil
+    assert_nil Media.valid_proxy('proxy')
+    assert_nil Media.valid_proxy('ytdl_proxy')
+  end
 end
