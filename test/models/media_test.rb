@@ -979,7 +979,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', m.get_oembed_url
   end
 
-  test "should get metrics from Facebook" do
+  test "should get metrics from Facebook Travis" do
     Media.unstub(:request_metrics_from_facebook)
     app_id = CONFIG['facebook']['test_app_id'] || CONFIG['facebook']['app_id']
     app_secret = CONFIG['facebook']['test_app_secret'] || CONFIG['facebook']['app_secret']
@@ -987,8 +987,11 @@ class MediaTest < ActiveSupport::TestCase
     url = 'https://www.google.com/'
     m = create_media url: url
     m.as_json
+    puts m.as_json
     id = Media.get_id(url)
+    puts "id: #{id}"
     data = Pender::Store.current.read(id, :json)
+    puts data 
     assert data['metrics']['facebook']['share_count'] > 0
     Media.stubs(:request_metrics_from_facebook).raises(StandardError.new)
     url = 'https://meedan.com'
@@ -1034,6 +1037,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should not get metrics from Facebook when facebook api key is empty" do
+    Media.unstub(:request_metrics_from_facebook)
     url = 'http://www.facebook.com/people/\u091C\u0941\u0928\u0948\u0926-\u0905\u0939\u092E\u0926/100014835514496'
     api_key = create_api_key application_settings: { config: { facebook:{ app_id: '', app_secret: '' } }}
     response = Media.get_metrics_from_facebook(url, api_key.id, 10)
