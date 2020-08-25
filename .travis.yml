@@ -9,7 +9,7 @@ before_install:
 before_script:
 - docker-compose exec pender test/setup-parallel
 script:
-docker-compose exec pender bundle exec ruby -Itest test/models/facebook_item_test.rb -n /Travis/
+docker-compose exec pender bundle exec ruby -Itest test/models/media_test.rb -n /Travis/
 after_script:
 - docker-compose exec pender cat tmp/performance.csv
 - docker-compose exec -e TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST -e TRAVIS_TEST_RESULT=$TRAVIS_TEST_RESULT -e CC_TEST_REPORTER_ID=$CC_TEST_REPORTER_ID pender test/test-coverage
