@@ -23,7 +23,7 @@ require 'pender_exceptions'
 require 'pender_store'
 require 'sidekiq/testing'
 require 'minitest/retry'
-# Minitest::Retry.use!(retry_count: 15)
+Minitest::Retry.use!(retry_count: 15)
 
 Minitest::Retry.on_failure do |_klass, _test_name|
   sleep 10
