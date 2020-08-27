@@ -287,4 +287,21 @@ class TwitterTest < ActiveSupport::TestCase
     OpenURI.unstub(:open_uri)
   end
 
+  test "should not parse a twitter post when passing the twitter api key or subkey missing" do
+    key = create_api_key application_settings: { config: { twitter: {consumer_key: 'consumer_key', consumer_secret: '' }} }
+    m = create_media url: 'https://twitter.com/cal_fire/status/919029734847025152', key: key
+    assert_equal 'consumer_key', PenderConfig.get(:twitter)[:consumer_key]
+    data = m.as_json
+    assert_equal "", data['title']
+    assert_match "Twitter::Error::BadRequest: 215 Bad Authentication data", data['error']['message']
+    PenderConfig.current = nil
+
+    key = create_api_key application_settings: { config: { twitter:'' } }
+    m = create_media url: 'https://twitter.com/cal_fire/status/919029734847025152' , key: key
+    assert_equal "", PenderConfig.get(:twitter)
+    data = m.as_json
+    assert_equal "", data['title']
+    assert_match "Twitter::Error::BadRequest: 215 Bad Authentication data", data['error']['message']
+  end
+  
 end

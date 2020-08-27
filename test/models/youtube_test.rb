@@ -160,14 +160,27 @@ class YoutubeTest < ActiveSupport::TestCase
   end
 
   test "should have external id for video" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:url' content='https://www.youtube.com/watch?v=qMfu1GLVsiM'>"))
     m = create_media url: 'https://www.youtube.com/watch?v=qMfu1GLVsiM'
     data = m.as_json
     assert_equal 'qMfu1GLVsiM', data['external_id']
+    Media.any_instance.unstub(:doc)
   end
 
   test "should have external id for profile" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:url' content='https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'>"))
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
     data = m.as_json
     assert_equal 'UCaisXKBdNOYqGr2qOXCLchQ', data['external_id']
+    Media.any_instance.unstub(:doc)
+  end
+
+  test "should not parse a youtube post when passing the google_api_key is empty" do
+    key = create_api_key application_settings: { config: { google_api_key: '' } }
+    m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ', key: key
+    assert_equal '', PenderConfig.get(:google_api_key)
+    data = m.as_json
+    assert_equal "", data['title']
+    assert_match "The request is missing a valid API key.", data['error']['message']
   end
 end
