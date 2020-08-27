@@ -979,34 +979,34 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', m.get_oembed_url
   end
 
-  # test "should get metrics from Facebook" do
-  #   Media.unstub(:request_metrics_from_facebook)
-  #   app_id = CONFIG['facebook']['test_app_id'] || CONFIG['facebook']['app_id']
-  #   app_secret = CONFIG['facebook']['test_app_secret'] || CONFIG['facebook']['app_secret']
-  #   stub_configs({'facebook' => {"app_id" => app_id, 'app_secret' => app_secret }})
-  #   url = 'https://www.google.com/'
-  #   m = create_media url: url
-  #   m.as_json
-  #   id = Media.get_id(url)
-  #   data = Pender::Store.current.read(id, :json)
-  #   assert data['metrics']['facebook']['share_count'] > 0
-  #   Media.stubs(:request_metrics_from_facebook).raises(StandardError.new)
-  #   url = 'https://meedan.com'
-  #   m = create_media url: url
-  #   m.as_json
-  #   id = Media.get_id(url)
-  #   data = Pender::Store.current.read(id, :json)
-  #   assert_equal({}, data['metrics']['facebook'])
-  # end
+  test "should get metrics from Facebook" do
+    Media.unstub(:request_metrics_from_facebook)
+    app_id = CONFIG['facebook']['test_app_id'] || CONFIG['facebook']['app_id']
+    app_secret = CONFIG['facebook']['test_app_secret'] || CONFIG['facebook']['app_secret']
+    stub_configs({'facebook' => {"app_id" => app_id, 'app_secret' => app_secret }})
+    url = 'https://www.google.com/'
+    m = create_media url: url
+    m.as_json
+    id = Media.get_id(url)
+    data = Pender::Store.current.read(id, :json)
+    assert data['metrics']['facebook']['share_count'] > 0
+    Media.stubs(:request_metrics_from_facebook).raises(StandardError.new)
+    url = 'https://meedan.com'
+    m = create_media url: url
+    m.as_json
+    id = Media.get_id(url)
+    data = Pender::Store.current.read(id, :json)
+    assert_equal({}, data['metrics']['facebook'])
+  end
 
-  # test "should get metrics from Facebook when URL has non-ascii" do
-  #   Media.unstub(:request_metrics_from_facebook)
-  #   assert_nothing_raised do
-  #     response = Media.request_metrics_from_facebook("http://www.facebook.com/people/\u091C\u0941\u0928\u0948\u0926-\u0905\u0939\u092E\u0926/100014835514496")
-  #     assert_kind_of Hash, response
-  #     assert_not_nil response
-  #   end
-  # end
+  test "should get metrics from Facebook when URL has non-ascii" do
+    Media.unstub(:request_metrics_from_facebook)
+    assert_nothing_raised do
+      response = Media.request_metrics_from_facebook("http://www.facebook.com/people/\u091C\u0941\u0928\u0948\u0926-\u0905\u0939\u092E\u0926/100014835514496")
+      assert_kind_of Hash, response
+      assert_not_nil response
+    end
+  end
   
   test "should use api key config to get metrics from facebook if present" do
     Media.unstub(:request_metrics_from_facebook)
