@@ -1004,10 +1004,9 @@ class MediaTest < ActiveSupport::TestCase
     assert_nothing_raised do
       response = Media.request_metrics_from_facebook("http://www.facebook.com/people/\u091C\u0941\u0928\u0948\u0926-\u0905\u0939\u092E\u0926/100014835514496")
       assert_kind_of Hash, response
-      assert_not_nil response
     end
   end
-  
+
   test "should use api key config to get metrics from facebook if present" do
     Media.unstub(:request_metrics_from_facebook)
     url = 'https://www.google.com/'
