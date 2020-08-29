@@ -98,4 +98,20 @@ class MediasHelperTest < ActionView::TestCase
     assert_nil Media.valid_proxy('proxy')
     assert_nil Media.valid_proxy('ytdl_proxy')
   end
+
+  test 'should upload images to s3 and update media data' do
+    urls = %w(
+      https://meedan.com
+      https://twitter.com/meedan/status/1292864876361154561
+      https://www.youtube.com/watch?v=qAogQrF7NFs
+    )
+    urls.each do |url|
+      id = Media.get_id(url)
+      m = Media.new url: url
+      data = m.as_json
+      assert_match /\/medias\/#{id}\/author_picture.(jpg|png)/, data[:author_picture], "Can't get `author_picture` from url #{url}"
+      assert_match /\/medias\/#{id}\/picture.(jpg|png)/, data[:picture], "Can't get `picture` from url #{url}"
+    end
+  end
+
 end

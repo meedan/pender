@@ -146,6 +146,36 @@ module MediasHelper
     content
   end
 
+  def upload_images
+    id = Media.get_id(self.original_url)
+    updates = {}
+    [:author_picture, :picture].each do |attr|
+      img_url = self.data.dig(attr)
+      next if img_url.blank?
+      parsed_url = Media.parse_url(img_url)
+      if upload_image(id, attr, parsed_url)
+        updates[attr] = self.data[attr]
+      end
+    end
+    Media.update_cache(self.original_url, updates) unless updates.empty?
+  end
+
+  def upload_image(id, attr, url)
+    extension = File.extname(url.path)
+    extension = '.jpg' if extension.blank? || extension == '.php'
+    filename = "#{id}/#{attr}#{extension}"
+    begin
+      open(url) do |content|
+        Pender::Store.current.store_object(filename, content, 'medias/')
+      end
+      self.data[attr] = "#{Pender::Store.current.storage_path('medias')}/#{filename}"
+      return true
+    rescue StandardError => error
+      Airbrake.notify(StandardError.new("Could not get '#{attr}' image"), url: self.url, img_url: url, error: { class: error.class, message: error.message } ) if Airbrake.configured?
+      Rails.logger.warn level: 'WARN', message: '[Parser] Could not get image', url: self.url, img_url: url, error_class: error.class, error_message: error.message
+    end
+  end
+
   Media.class_eval do
     def self.decoded_uri(url)
       begin

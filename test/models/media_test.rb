@@ -130,25 +130,29 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse reddit page" do
-    m = create_media url: 'https://www.reddit.com/r/Art/comments/58a8kp/emotions_language_youngjoo_namgung_ai_livesurface/'
+    url = 'https://www.reddit.com/r/Art/comments/58a8kp/emotions_language_youngjoo_namgung_ai_livesurface/'
+    id = Media.get_id url
+    m = create_media url: url
     data = m.as_json
     assert_match /emotion's language, Youngjoo Namgung/, data['title']
     assert_match /.* (points|votes) and .* so far on [Rr]eddit/, data['description']
     assert_equal '', data['published_at']
     assert_equal '', data['username']
     assert_equal 'https://www.reddit.com', data['author_url']
-    assert_match /https:\/\/preview.redd.it\/dj1nk467nfsx.png/, data['picture']
+    assert_match /\/medias\/#{id}\/picture/, data['picture']
   end
 
   test "should parse arabic url page" do
-    m = create_media url: 'http://www.youm7.com/story/2016/7/6/بالصور-مياه-الشرب-بالإسماعيلية-تواصل-عملها-لحل-مشكلة-طفح-الصرف/2790125'
+    url = 'http://www.youm7.com/story/2016/7/6/بالصور-مياه-الشرب-بالإسماعيلية-تواصل-عملها-لحل-مشكلة-طفح-الصرف/2790125'
+    id = Media.get_id url
+    m = create_media url: url
     data = m.as_json
     assert_equal 'بالصور.. مياه الشرب بالإسماعيلية تواصل عملها لحل مشكلة طفح الصرف ببعض الشوارع - اليوم السابع', data['title']
     assert_match /واصلت غرفة عمليات شركة/, data['description']
     assert_not_nil data['published_at']
     assert_equal '', data['username']
     assert_match /https?:\/\/www.youm7.com/, data['author_url']
-    assert_equal 'https://img.youm7.com/large/72016619556415g.jpg', data['picture']
+    assert_match /https:\/\/.+\/medias\/#{id}\/picture/, data['picture']
   end
 
   test "should store the picture address" do
@@ -166,6 +170,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse url with arabic or already encoded chars" do
     urls = ['http://www.aljazeera.net/news/arabic/2016/10/19/تحذيرات-أممية-من-احتمال-نزوح-مليون-مدني-من-الموصل', 'http://www.aljazeera.net/news/arabic/2016/10/19/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1%D8%A7%D8%AA-%D8%A3%D9%85%D9%85%D9%8A%D8%A9-%D9%85%D9%86-%D8%A7%D8%AD%D8%AA%D9%85%D8%A7%D9%84-%D9%86%D8%B2%D9%88%D8%AD-%D9%85%D9%84%D9%8A%D9%88%D9%86-%D9%85%D8%AF%D9%86%D9%8A-%D9%85%D9%86-%D8%A7%D9%84%D9%85%D9%88%D8%B5%D9%84']
     urls.each do |url|
+      id = Media.get_id url
       m = create_media url: url
       data = m.as_json
       assert_equal 'تحذيرات أممية من احتمال نزوح مليون مدني من الموصل', data['title']
@@ -174,37 +179,42 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal '', data['username']
       assert_match /^https?:\/\/www\.aljazeera\.net$/, data['author_url']
       assert_nil data['error']
-      assert_match /^https?:\/\/www\.aljazeera\.net/, data['picture']
+      assert_match /^https:\/\/.+\/medias\/#{id}\/picture/, data['picture']
     end
   end
 
   test "should parse url scheme http" do
-    m = create_media url: 'http://www.theatlantic.com/magazine/archive/2016/11/war-goes-viral/501125/'
+    url = 'http://www.theatlantic.com/magazine/archive/2016/11/war-goes-viral/501125/'
+    id = Media.get_id url
+    m = create_media url: url
     data = m.as_json
     assert_match 'War Goes Viral', data['title']
     assert_match 'How social media is being weaponized across the world', data['description']
     assert_equal '', data['published_at']
     assert_match 'Emerson T. Brooking and P. W. Singer', data['username']
     assert_match 'https://www.theatlantic.com', data['author_url']
-    assert_match /theatlantic/, data['picture']
+    assert_match /\/#{id}\/picture/, data['picture']
   end
 
   test "should parse url scheme https" do
-    m = create_media url: 'https://www.theguardian.com/politics/2016/oct/19/larry-sanders-on-brother-bernie-and-why-tony-blair-was-destructive'
+    url = 'https://www.theguardian.com/politics/2016/oct/19/larry-sanders-on-brother-bernie-and-why-tony-blair-was-destructive'
+    m = create_media url: url
     data = m.as_json
     assert_match 'Larry Sanders on brother Bernie and why Tony Blair was ‘destructive’', data['title']
     assert_match /The Green party candidate, who is fighting the byelection in David Cameron’s old seat/, data['description']
     assert_match /2016-10/, data['published_at']
     assert_match '@zoesqwilliams', data['username']
     assert_match 'https://twitter.com/zoesqwilliams', data['author_url']
-    assert_match /\/img\/media\/d43d8d320520d7f287adab71fd3a1d337baf7516\/0_945_3850_2310\/master\/3850.jpg/, data['picture']
+    assert !data['picture'].blank?
   end
 
   test "should return author picture" do
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:image' content='https://github.githubassets.com/images/modules/open_graph/github-logo.png'>"))
-    m = create_media url: 'http://github.com'
+    url = 'http://github.com'
+    id = Media.get_id url
+    m = create_media url: url
     data = m.as_json
-    assert_match /github-logo.png/, data['author_picture']
+    assert_match /\/medias\/#{id}\/author_picture/, data['author_picture']
     Media.any_instance.unstub(:doc)
   end
 

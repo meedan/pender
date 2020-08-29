@@ -6,7 +6,7 @@ module MediaArchiveIsArchiver
   end
 
   def archive_to_archive_is
-    self.class.send_to_archive_is_in_background(self.url, ApiKey.current&.id)
+    self.class.send_to_archive_is_in_background(self.original_url, ApiKey.current&.id)
   end
 
   module ClassMethods

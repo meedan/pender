@@ -66,13 +66,15 @@ class YoutubeTest < ActiveSupport::TestCase
   end
 
   test "should return YouTube fields" do
-    m = create_media url: 'https://www.youtube.com/watch?v=mtLxD7r4BZQ'
+    url = 'https://www.youtube.com/watch?v=mtLxD7r4BZQ'
+    id = Media.get_id url
+    m = create_media url: url
     data = m.as_json
     assert_match /^http/, data['author_picture']
     assert_equal data[:raw][:api]['channel_title'], data['username']
     assert_equal data[:raw][:api]['description'], data['description']
     assert_equal data[:raw][:api]['title'], data['title']
-    assert_equal data[:raw][:api]['thumbnails']['maxres']['url'], data['picture']
+    assert_match /#{id}\/picture/, data['picture']
     assert_equal m.html_for_youtube_item('mtLxD7r4BZQ'), data['html']
     assert_equal data[:raw][:api]['channel_title'], data['author_name']
     assert_equal 'https://www.youtube.com/channel/' + data[:raw][:api]['channel_id'], data['author_url']
@@ -126,10 +128,20 @@ class YoutubeTest < ActiveSupport::TestCase
       'https://www.youtube.com/watch?v=WxnN05vOuSM' => { available: ['default', 'high', 'medium', 'standard', 'maxres'], best: 'maxres' }
     }
     urls.each_pair do |url, thumbnails|
+      id = Media.get_id url
       m = create_media url: url
       data = m.as_json
       assert_equal thumbnails[:available].sort, data[:raw][:api]['thumbnails'].keys.sort
-      assert_equal data[:raw][:api]['thumbnails'][thumbnails[:best]]['url'], data['picture']
+
+      assert_match /#{id}\/picture.jpg/, data[:picture]
+      saved_img = Pender::Store.current.read(data['picture'].match(/medias\/#{id}\/picture.jpg/)[0])
+
+      open(Media.parse_url(data[:raw][:api]['thumbnails'][thumbnails[:best]]['url'])) do |content|
+        Pender::Store.current.store_object("#{id}/parsed-image.jpg", content, 'medias/')
+      end
+      parsed_img = Pender::Store.current.read("medias/#{id}/parsed-image.jpg")
+
+      assert_equal parsed_img, saved_img
     end
   end
 
@@ -139,10 +151,20 @@ class YoutubeTest < ActiveSupport::TestCase
       'https://www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQ' => { available: ['default', 'high', 'medium'], best: 'high' }
     }
     urls.each_pair do |url, thumbnails|
+      id = Media.get_id url
       m = create_media url: url
       data = m.as_json
       assert_equal thumbnails[:available].sort, data[:raw][:api]['thumbnails'].keys.sort
-      assert_equal data[:raw][:api]['thumbnails'][thumbnails[:best]]['url'], data['picture']
+
+      assert_match /#{id}\/picture.jpg/, data[:picture]
+      saved_img = Pender::Store.current.read(data['picture'].match(/medias\/#{id}\/picture.jpg/)[0])
+
+      open(Media.parse_url(data[:raw][:api]['thumbnails'][thumbnails[:best]]['url'])) do |content|
+        Pender::Store.current.store_object("#{id}/parsed-image.jpg", content, 'medias/')
+      end
+      parsed_img = Pender::Store.current.read("medias/#{id}/parsed-image.jpg")
+
+      assert_equal parsed_img, saved_img
     end
   end
 

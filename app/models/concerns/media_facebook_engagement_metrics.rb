@@ -6,7 +6,7 @@ module MediaFacebookEngagementMetrics
   end
 
   def get_metrics_from_facebook
-    self.class.get_metrics_from_facebook_in_background(self.url, ApiKey.current&.id)
+    self.class.get_metrics_from_facebook_in_background(self.original_url, ApiKey.current&.id)
   end
 
   module ClassMethods
