@@ -8,7 +8,7 @@ module MediaVideoArchiver
   end
 
   def archive_to_video
-    self.class.archive_video_in_background(self.url, ApiKey.current&.id)
+    self.class.archive_video_in_background(self.original_url, ApiKey.current&.id)
   end
 
   module ClassMethods
@@ -37,8 +37,7 @@ module MediaVideoArchiver
     end
 
     def archiving_folder
-      storage = PenderConfig.get('storage')
-      storage.dig('video_asset_path') || "#{storage.dig('endpoint')}/#{Pender::Store.current.video_bucket_name}/video"
+      Pender::Store.current.storage_path('video')
     end
 
     def notify_video_already_archived(url, key_id)

@@ -6,7 +6,7 @@ module MediaPermaCcArchiver
   end
 
   def archive_to_perma_cc
-    self.class.send_to_perma_cc_in_background(self.url, ApiKey.current&.id)
+    self.class.send_to_perma_cc_in_background(self.original_url, ApiKey.current&.id)
   end
 
   module ClassMethods

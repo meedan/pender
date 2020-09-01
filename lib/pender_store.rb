@@ -21,6 +21,7 @@ module Pender
         region: @storage.dig('bucket_region')
       )
       @resource = Aws::S3::Resource.new
+      @client = Aws::S3::Client.new
       create_buckets
     end
 
@@ -44,8 +45,8 @@ module Pender
       end
     end
 
-    def key(id, type)
-      "#{id}.#{type}"
+    def key(id, type = '')
+      type.blank? ? id : "#{id}.#{type}"
     end
 
     def bucket_name
@@ -57,52 +58,53 @@ module Pender
       video_bucket ? "#{video_bucket}#{ENV['TEST_ENV_NUMBER']}" : bucket_name
     end
 
+    def storage_path(data = 'medias')
+      bucket = (data == 'medias') ? bucket_name : video_bucket_name
+      @storage.dig("#{data}_asset_path") || "#{@storage.dig('endpoint')}/#{bucket}/#{data}"
+    end
+
     def exist?(id, type)
       bucket = @resource.bucket(bucket_name)
       bucket.object(key(id, type)).exists?
     end
 
-    def read(id, type)
+    def read(id, type = '')
       data = get(id, type)
       return unless data
       data = data.body.read
       type == :json ? JSON.parse(data).with_indifferent_access : data
     end
 
-    def get(id, type)
-      client = Aws::S3::Client.new
+    def get(id, type = '')
       begin
-        client.get_object(bucket: bucket_name, key: key(id, type))
+        @client.get_object(bucket: bucket_name, key: key(id, type))
       rescue Aws::S3::Errors::NoSuchKey
         nil
       end
     end
 
-    def write(id, type, content)
-      content = JSON.pretty_generate(content) if type == :json
-      content_type = type == :json ? 'application/json' : 'text/html'
-      client = Aws::S3::Client.new
-      client.put_object(
-        key: key(id, type),
+    def store_object(file_key, content, key_prefix = '')
+      content_type = Rack::Mime.mime_type(File.extname(file_key))
+      @client.put_object(
+        key: key_prefix + file_key,
         body: content,
         bucket: bucket_name,
         content_type: content_type
       )
     end
 
+
+    def write(id, type, content)
+      content = JSON.pretty_generate(content) if type == :json
+      store_object(key(id, type), content)
+    end
+
     def upload_video_folder(local_path)
       response = nil
       key_prefix = "video/#{File.basename(local_path)}/"
-      client = Aws::S3::Client.new
       Dir.glob(local_path + '/*').each do |filepath|
-        File.open(filepath, 'rb') do |file|
-          content_type = Rack::Mime.mime_type(File.extname(filepath))
-          response = client.put_object(
-            key: key_prefix + File.basename(filepath),
-            body: file,
-            bucket: video_bucket_name,
-            content_type: content_type
-          )
+        File.open(filepath, 'rb') do |content|
+          response = store_object(File.basename(filepath), content, key_prefix)
         end
       end
       response.to_h
@@ -113,8 +115,7 @@ module Pender
       types.each do |type|
         objects << { key: key(id, type)}
       end
-      client = Aws::S3::Client.new
-      client.delete_objects(bucket: bucket_name, delete: { objects: objects })
+      @client.delete_objects(bucket: bucket_name, delete: { objects: objects })
     end
   end
 end
