@@ -122,7 +122,8 @@ module MediaFacebookItem
   end
 
   def get_facebook_title_from_html
-    self.doc.css('#pageTitle').text
+    title = self.doc.at_css('#pageTitle') || self.doc.at_css('title')
+    title ? title.text : ''
   end
 
   def get_facebook_photos_from_html
@@ -234,6 +235,7 @@ module MediaFacebookItem
       self.data['author_url'] = 'http://facebook.com/' + self.data['user_uuid'].to_s if self.data['author_url'].blank?
       self.get_original_post
       username = self.get_facebook_username || self.data['author_name']
+      replace_facebook_url(username)
       self.data.merge!({
         external_id: self.data['object_id'],
         username: username,
@@ -276,5 +278,9 @@ module MediaFacebookItem
   def get_facebook_description
     description = self.data['text'] || self.data['description']
     description.gsub!(/\s+/, ' ')
+  end
+
+  def replace_facebook_url(username)
+    self.url = self.original_url if username == 'groups'
   end
 end

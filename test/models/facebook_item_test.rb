@@ -700,4 +700,12 @@ class FacebookItemTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:doc)
   end
 
+  test "should get the group name when parsing group post" do
+    url = 'https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/'
+    m = Media.new url: url
+    data = m.as_json
+    assert_no_match "Not Identified", data['title']
+    assert !data['description'].blank?
+    assert_equal url, data['url']
+  end
 end
