@@ -11,20 +11,23 @@ module Pender
       RequestStore.store[:store] = store
     end
 
+    def self.public_policy(bucket)
+      {:Version=>"2012-10-17", :Statement=>[{:Effect=>"Allow", :Principal=>"*", :Action=>"s3:GetObject", :Resource=>"arn:aws:s3:::#{bucket}/*"}]}.to_json
+    end
+
     def initialize
       @storage = PenderConfig.get('storage', {})
-      Aws.config.update(
+      config = {
         endpoint: @storage.dig('endpoint'),
         access_key_id: @storage.dig('access_key'),
         secret_access_key: @storage.dig('secret_key'),
         force_path_style: true,
         region: @storage.dig('bucket_region')
-      )
-      @resource = Aws::S3::Resource.new
-      @client = Aws::S3::Client.new
+      }
+      @client = Aws::S3::Client.new(config)
+      @resource = Aws::S3::Resource.new(client: @client)
       create_buckets
     end
-
 
     def create_buckets
       [bucket_name, video_bucket_name].each do |name|
@@ -32,6 +35,7 @@ module Pender
         unless bucket.exists?
           bucket.create
         end
+        @client.put_bucket_policy(policy: Pender::Store.public_policy(name), bucket: name) unless Rails.env.production?
       end
     end
 
