@@ -708,4 +708,11 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert !data['description'].blank?
     assert_equal url, data['url']
   end
+
+  test "should parse post date" do
+    url = 'https://www.facebook.com/nytimes/posts/10152441141079999'
+    m = Media.new url: url
+    data = m.as_json
+    assert_equal '2020-09-04T21:25:04.000+00:00', data['published_at']
+  end
 end

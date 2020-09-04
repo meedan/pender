@@ -128,9 +128,7 @@ module MediaFacebookItem
 
   def get_facebook_photos_from_html
     photos = []
-    ['.scaledImageFitHeight', '.scaledImageFitWidth'].each do |k|
-      photos.concat self.doc.css(k).collect{ |i| i['src'] }
-    end
+    ['.scaledImageFitHeight', '.scaledImageFitWidth'].each { |k| photos.concat(self.doc.css(k).collect{ |i| i['src'] }) }
     photos
   end
 
@@ -179,8 +177,13 @@ module MediaFacebookItem
 
   def get_facebook_published_time_from_html
     return if self.doc.nil?
-    time = self.doc.css('div.userContentWrapper').at_css('span.timestampContent') || self.doc.at_css('#MPhotoContent abbr')
-    self.data['published_at'] = verify_published_time(time.inner_html, time.parent.attr('data-utime')) unless time.nil?
+    timestamp = self.doc.to_s.match(/\\"publish_time\\":([0-9]+)/)
+    if timestamp
+      self.data['published_at'] = Time.at(timestamp[1].to_i)
+    else
+      time = self.doc.css('div.userContentWrapper').at_css('span.timestampContent') || self.doc.at_css('#MPhotoContent abbr')
+      self.data['published_at'] = verify_published_time(time.inner_html, time.parent.attr('data-utime')) unless time.nil?
+    end
   end
 
   def get_facebook_url_from_html
@@ -271,8 +274,7 @@ module MediaFacebookItem
   end
 
   def facebook_oembed_url
-    uri = Media.parse_url(self.url)
-    "https://www.facebook.com/plugins/post/oembed.json/?url=#{uri}"
+    "https://www.facebook.com/plugins/post/oembed.json/?url=#{Media.parse_url(self.url)}"
   end
 
   def get_facebook_description
