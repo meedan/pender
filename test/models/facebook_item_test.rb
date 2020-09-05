@@ -721,5 +721,10 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = Media.new url: url
     data = m.as_json
     assert_equal '2020-09-04T22:57:41.000+00:00', data['published_at']
+
+    url = 'https://www.facebook.com/julien.caidos/posts/10158477528272170'
+    m = Media.new url: url
+    data = m.as_json
+    assert_equal '2020-09-03T11:01:21.000+00:00', data['published_at']
   end
 end

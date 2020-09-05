@@ -98,10 +98,11 @@ module MediasHelper
   end
 
   def verify_published_time(time1, time2 = nil)
+    return Time.at(time2.to_i) unless time2.nil?
     begin
       Time.parse(time1)
     rescue ArgumentError
-      time2.nil? ? Time.at(time1.to_i) : Time.at(time2.to_i)
+      Time.at(time1.to_i)
     end
   end
 
