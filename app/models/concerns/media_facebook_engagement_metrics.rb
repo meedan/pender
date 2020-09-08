@@ -25,7 +25,7 @@ module MediaFacebookEngagementMetrics
       value = begin
                 self.request_metrics_from_facebook(url)
               rescue StandardError => e
-                Airbrake.notify(e, url: url) if Airbrake.configured?
+                PenderAirbrake.notify(e, url: url)
                 {}
               end
       Media.notify_webhook_and_update_metrics_cache(url, 'facebook', value, key_id)

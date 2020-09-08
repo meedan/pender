@@ -15,7 +15,7 @@ module MediaTwitterItem
     rescue Twitter::Error::TooManyRequests => e
       raise Pender::ApiLimitReached.new(e.rate_limit.reset_in)
     rescue Twitter::Error => error
-      Airbrake.notify(error, url: self.url ) if Airbrake.configured? && !self.doc.nil?
+      PenderAirbrake.notify(error, url: self.url ) && !self.doc.nil?
       self.data.merge!(error: { message: "#{error.class}: #{error.code} #{error.message}", code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') })
       Rails.logger.warn level: 'WARN', message: "[Parser] #{error.message}", url: self.url, code: error.code, error_class: error.class
       return
@@ -72,7 +72,7 @@ module MediaTwitterItem
     begin
       self.twitter_client.user(username).url.to_s
     rescue Twitter::Error => e
-      Airbrake.notify(e, url: self.url, username: username ) if Airbrake.configured?
+      PenderAirbrake.notify(e, url: self.url, username: username )
       Rails.logger.warn level: 'WARN', message: "[Parser] #{e.message}", username: username, error_class: e.class
       nil
     end

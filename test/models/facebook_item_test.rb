@@ -727,4 +727,18 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal '2020-09-03T11:01:21.000+00:00', data['published_at']
   end
+
+  test "should parse post from public group" do
+    url = 'https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/'
+    m = Media.new url: url
+    data = m.as_json
+    assert_match /This group is a gathering for those interested in exploring belief systems/, data['description']
+  end
+
+  test "should get full text of Facebook post" do
+    url = 'https://www.facebook.com/ironmaiden/posts/10157024746512051'
+    m = Media.new url: url
+    data = m.as_json
+    assert_match /However, we are now in a position to give you details of our touring plans in respect to those shows we had hoped to play this year/, data['description']
+  end
 end

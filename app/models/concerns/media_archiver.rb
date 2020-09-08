@@ -62,7 +62,7 @@ module MediaArchiver
     def give_up(archiver, url, key_id, attempts, response = {})
       if attempts > 20
         error_type = response[:error_type] || 'ARCHIVER_FAILURE'
-        Airbrake.notify(StandardError.new(error_type), url: url, archiver: archiver, error_code: response[:code], error_message: response[:message]) if Airbrake.configured?
+        PenderAirbrake.notify(StandardError.new(error_type), url: url, archiver: archiver, error_code: response[:code], error_message: response[:message])
         Rails.logger.warn level: 'WARN', message: "[#{error_type}] #{response[:message]}", url: url, archiver: archiver, error_code: response[:code], error_message: response[:message]
         data = { error: { message: I18n.t(:archiver_failure, message: response[:message], code: response[:code]), code: LapisConstants::ErrorCodes::const_get(error_type) }}
         Media.notify_webhook_and_update_cache(archiver, url, data, key_id)

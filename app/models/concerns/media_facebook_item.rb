@@ -211,10 +211,7 @@ module MediaFacebookItem
   def html_for_facebook_post(username)
     return '' unless render_facebook_embed?(username) && !self.doc.nil?
     '<script>
-    window.fbAsyncInit = function() {
-      FB.init({ xfbml: true, version: "v2.6" });
-      FB.Canvas.setAutoGrow();
-    }; 
+    window.fbAsyncInit = function() { FB.init({ xfbml: true, version: "v2.6" }); FB.Canvas.setAutoGrow(); }; 
     (function(d, s, id) {
       var js, fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) return;
@@ -277,7 +274,10 @@ module MediaFacebookItem
   end
 
   def get_facebook_description
-    description = self.data['text'] || self.data['description']
+    default_description = self.data['text'] || self.data['description']
+    post_full_text = self.doc && self.doc.at_css('div[data-testid="post_message"]') ? self.doc.css('div[data-testid="post_message"]').text : nil
+    group_post_content = self.doc.to_s.match(/"message":{[^}]+"text":"([^"]+)"/)
+    description = group_post_content ? group_post_content[1].gsub('\\n', ' ') : (post_full_text || default_description)
     description.gsub!(/\s+/, ' ')
   end
 
