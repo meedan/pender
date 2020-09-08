@@ -1042,4 +1042,12 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal api_key.settings[:config][:storage], Pender::Store.current.instance_variable_get(:@storage)
   end
 
+  test "should not change media url if url parsed on metatags is not valid" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:url' content='aosfatos.org/noticias/em-video-difundido-por-trump-medica-engana-ao-dizer-que-cloroquina-cura-covid19'>"))
+    url = 'https://www.aosfatos.org/noticias/em-video-difundido-por-trump-medica-engana-ao-dizer-que-cloroquina-cura-covid19'
+    m = Media.new url: url
+    m.as_json
+    assert_equal url, m.url
+    Media.any_instance.unstub(:doc)
+  end
 end
