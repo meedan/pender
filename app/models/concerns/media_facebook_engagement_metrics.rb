@@ -24,23 +24,23 @@ module MediaFacebookEngagementMetrics
 
     def get_metrics_from_facebook(url, key_id, count)
       ApiKey.current = ApiKey.find_by(id: key_id)
-      value = begin
-                self.request_metrics_from_facebook(url, count)
-              rescue StandardError => e
-                PenderAirbrake.notify(e, url: url)
-                {}
-              end
-      if value
-        Media.notify_webhook_and_update_metrics_cache(url, 'facebook', value, key_id)
-        self.delay_for(24.hours).get_metrics_from_facebook(url, key_id, count + 1) if count < 10
+      value = {}
+      begin
+        value = self.request_metrics_from_facebook(url, count)
+      rescue StandardError => e
+        PenderAirbrake.notify(e, url: url)
       end
+      Media.notify_webhook_and_update_metrics_cache(url, 'facebook', value, key_id)
+      self.delay_for(24.hours).get_metrics_from_facebook(url, key_id, count + 1) if count < 10 && value
     end
 
     def verify_facebook_metrics_response(url, response, count)
       return true if response.code.to_i == 200
       error = JSON.parse(response.body)['error']
-      self.delay_for(1.hour).get_metrics_from_facebook(url, ApiKey.current&.id, count) if error['code'].to_i == 4 # Error code for 'Application request limit reached'
-      PenderAirbrake.notify(StandardError.new('Could not get facebook metrics'), url: url, key_id: ApiKey.current&.id, error_code: response.code, error_message: response.message, error_body: error)
+      if error['code'].to_i != 10 # Error code for 'Requires FB page permissions'
+        self.delay_for(1.hour).get_metrics_from_facebook(url, ApiKey.current&.id, count) if error['code'].to_i == 4 # Error code for 'Application request limit reached'
+        PenderAirbrake.notify("Facebook metrics: #{error.dig('message')}", url: url, key_id: ApiKey.current&.id, error_code: response.code, error_message: response.message, error_body: error)
+      end
       false
     end
   end
