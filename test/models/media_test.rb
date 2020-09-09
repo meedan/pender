@@ -152,7 +152,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
     assert_equal '', data['username']
     assert_match /https?:\/\/www.youm7.com/, data['author_url']
-    assert_match /https:\/\/.+\/medias\/#{id}\/picture/, data['picture']
+    assert_match /\/medias\/#{id}\/picture/, data['picture']
   end
 
   test "should store the picture address" do
@@ -179,7 +179,7 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal '', data['username']
       assert_match /^https?:\/\/www\.aljazeera\.net$/, data['author_url']
       assert_nil data['error']
-      assert_match /^https:\/\/.+\/medias\/#{id}\/picture/, data['picture']
+      assert_match /\/medias\/#{id}\/picture/, data['picture']
     end
   end
 
@@ -1014,6 +1014,29 @@ class MediaTest < ActiveSupport::TestCase
     assert_nothing_raised do
       response = Media.request_metrics_from_facebook("http://www.facebook.com/people/\u091C\u0941\u0928\u0948\u0926-\u0905\u0939\u092E\u0926/100014835514496")
       assert_kind_of Hash, response
+    end
+  end
+
+  {
+    missing_app_id: { body: "{\"error\":{\"message\":\"Missing client_id parameter.\",\"type\":\"OAuthException\",\"code\":101}}", code: "400", message: "Bad Request"},
+    invalid_app_secret: { body: "{\"error\":{\"message\":\"Error validating client secret.\",\"type\":\"OAuthException\",\"code\":1}}", code: "400", message: "Bad Request"},
+    api_limit_reached: { body: "{\"error\":{\"message\":\"(#4) Application request limit reached\",\"type\":\"OAuthException\",\"is_transient\":true,\"code\":4}}", code: "403", message: "Forbidden"}
+  }.each do |error, response_info|
+    test "should return nil when try to get fb metrics and #{error}" do
+      url = 'https://www.example.com/'
+      m = create_media url: url
+      Sidekiq::Testing.fake! do
+        data = m.as_json
+        Media.unstub(:request_metrics_from_facebook)
+        WebMock.enable!
+        WebMock.disable_net_connect!(allow: 'graph.facebook.com')
+        WebMock.stub_request(:any, /graph.facebook.com\/oauth\/access_token/).to_return(body: {"access_token":"token"}.to_json)
+        WebMock.stub_request(:any, "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=token").to_return(body: response_info[:body], status: response_info[:code].to_i)
+        PenderAirbrake.stubs(:notify)
+        assert_nil Media.request_metrics_from_facebook(url)
+        WebMock.disable!
+        PenderAirbrake.unstub(:notify)
+      end
     end
   end
 

@@ -114,7 +114,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match 'cbcnews', data['username']
     assert_match 'http://facebook.com/5823419603', data['author_url']
     assert_match /#{id}\/author_picture.jpg/, data['author_picture']
-    assert_match /^https/, data['picture']
     assert_match /#{id}\/picture.jpg/, data['picture']
   end
 
@@ -422,7 +421,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /Escape(\.Egypt)? added a new photo./, data['description']
     assert_match /#{id}\/author_picture.jpg/, data['author_picture']
     assert_equal 1, data['photos'].size
-    assert_match /^https:/, data['picture']
+    assert_match /#{id}\/picture/, data['picture']
     assert_match '1204094906298309', data['object_id']
   end
 
@@ -506,25 +505,31 @@ class FacebookItemTest < ActiveSupport::TestCase
   end
 
   test "should create Facebook post with picture and photos" do
-    m = create_media url: 'https://www.facebook.com/teste637621352/posts/1028795030518422'
+    url = 'https://www.facebook.com/teste637621352/posts/1028795030518422'
+    id = Media.get_id url
+    m = create_media url: url
     data = m.as_json
-    assert_match /^https/, data['picture']
+    assert_match /#{id}\/picture/, data['picture']
     assert_kind_of Array, data['photos']
     assert_equal 2, data['media_count']
     assert_equal 1, data['photos'].size
 
-    m = create_media url: 'https://www.facebook.com/teste637621352/posts/1035783969819528'
+    url = 'https://www.facebook.com/teste637621352/posts/1035783969819528'
+    id = Media.get_id url
+    m = create_media url: url
     data = m.as_json
-    assert_not_nil data['picture']
-    assert_match /^https/, data['author_picture']
+    assert_match /#{id}\/picture/, data['picture']
+    assert_match /#{id}\/author_picture/, data['author_picture']
     assert_kind_of Array, data['photos']
     assert_equal 0, data['media_count']
     assert_equal 1, data['photos'].size
 
-    m = create_media url: 'https://www.facebook.com/teste637621352/posts/2194142813983632'
+    url = 'https://www.facebook.com/teste637621352/posts/2194142813983632'
+    id = Media.get_id url
+    m = create_media url: url
     data = m.as_json
-    assert_match /^https/, data['author_picture']
-    assert_match /^https/, data['picture']
+    assert_match /#{id}\/picture/, data['picture']
+    assert_match /#{id}\/author_picture/, data['author_picture']
     assert_kind_of Array, data['photos']
     assert_equal 2, data['media_count']
     assert_equal 1, data['photos'].size

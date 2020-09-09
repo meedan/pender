@@ -20,6 +20,6 @@ class PenderConfig
   def self.get(config_key, default = nil)
     config = PenderConfig.current
     return default if !config.has_key?(config_key)
-    config[config_key]
+    config[config_key] || default
   end
 end
