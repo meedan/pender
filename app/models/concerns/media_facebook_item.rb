@@ -122,14 +122,13 @@ module MediaFacebookItem
   end
 
   def get_facebook_title_from_html
-    self.doc.css('#pageTitle').text
+    title = self.doc.at_css('#pageTitle') || self.doc.at_css('title')
+    title ? title.text : ''
   end
 
   def get_facebook_photos_from_html
     photos = []
-    ['.scaledImageFitHeight', '.scaledImageFitWidth'].each do |k|
-      photos.concat self.doc.css(k).collect{ |i| i['src'] }
-    end
+    ['.scaledImageFitHeight', '.scaledImageFitWidth'].each { |k| photos.concat(self.doc.css(k).collect{ |i| i['src'] }) }
     photos
   end
 
@@ -178,8 +177,15 @@ module MediaFacebookItem
 
   def get_facebook_published_time_from_html
     return if self.doc.nil?
-    time = self.doc.css('div.userContentWrapper').at_css('span.timestampContent') || self.doc.at_css('#MPhotoContent abbr')
-    self.data['published_at'] = verify_published_time(time.inner_html, time.parent.attr('data-utime')) unless time.nil?
+    timestamp = self.doc.to_s.match(/\\"publish_time\\":([0-9]+)/)
+    if timestamp
+      self.data['published_at'] = Time.at(timestamp[1].to_i)
+    elsif self.doc.at_css('abbr.timestamp')
+      self.data['published_at'] = Time.at(self.doc.at_css('abbr.timestamp').attr('data-utime').to_i)
+    else
+      time = self.doc.css('div.userContentWrapper').at_css('span.timestampContent') || self.doc.at_css('#MPhotoContent abbr')
+      self.data['published_at'] = verify_published_time(time.inner_html, time.parent.attr('data-utime')) unless time.nil?
+    end
   end
 
   def get_facebook_url_from_html
@@ -205,13 +211,7 @@ module MediaFacebookItem
   def html_for_facebook_post(username)
     return '' unless render_facebook_embed?(username) && !self.doc.nil?
     '<script>
-    window.fbAsyncInit = function() {
-      FB.init({
-        xfbml      : true,
-        version    : "v2.6"
-      });
-      FB.Canvas.setAutoGrow();
-    }; 
+    window.fbAsyncInit = function() { FB.init({ xfbml: true, version: "v2.6" }); FB.Canvas.setAutoGrow(); }; 
     (function(d, s, id) {
       var js, fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) return;
@@ -234,6 +234,7 @@ module MediaFacebookItem
       self.data['author_url'] = 'http://facebook.com/' + self.data['user_uuid'].to_s if self.data['author_url'].blank?
       self.get_original_post
       username = self.get_facebook_username || self.data['author_name']
+      replace_facebook_url(username)
       self.data.merge!({
         external_id: self.data['object_id'],
         username: username,
@@ -269,12 +270,18 @@ module MediaFacebookItem
   end
 
   def facebook_oembed_url
-    uri = Media.parse_url(self.url)
-    "https://www.facebook.com/plugins/post/oembed.json/?url=#{uri}"
+    "https://www.facebook.com/plugins/post/oembed.json/?url=#{Media.parse_url(self.url)}"
   end
 
   def get_facebook_description
-    description = self.data['text'] || self.data['description']
+    default_description = self.data['text'] || self.data['description']
+    post_full_text = self.doc && self.doc.at_css('div[data-testid="post_message"]') ? self.doc.css('div[data-testid="post_message"]').text : nil
+    group_post_content = self.doc.to_s.match(/"message":{[^}]+"text":"([^"]+)"/)
+    description = group_post_content ? group_post_content[1].gsub('\\n', ' ') : (post_full_text || default_description)
     description.gsub!(/\s+/, ' ')
+  end
+
+  def replace_facebook_url(username)
+    self.url = self.original_url if username == 'groups'
   end
 end

@@ -666,24 +666,23 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should generate the public archiving folder for videos" do
-    Aws::S3::Bucket.any_instance.stubs(:exists?).returns(true)
-    a = create_api_key application_settings: { config: { storage: { bucket: 'default_bucket', endpoint: 'http://local-storage', video_asset_path: nil, video_bucket: nil, access_key: 'access_key', secret_key: 'secret_key', bucket_region: 'us-east-1' } }}
+    storage = CONFIG[:storage].merge(bucket: 'default-bucket', video_asset_path: nil, video_bucket: nil)
+    a = create_api_key application_settings: { config: { storage: storage }}
     ApiKey.current = a
 
-    assert_match /http:\/\/local-storage\/default_bucket\d*\/video/, Media.archiving_folder
+    assert_match /#{storage[:endpoint]}\/default-bucket\d*\/video/, Media.archiving_folder
 
-    a.application_settings[:config][:storage][:video_bucket] = 'bucket_for_videos'; a.save
+    a.application_settings[:config][:storage][:video_bucket] = 'bucket-for-videos'; a.save
     ApiKey.current = a
     Pender::Store.current = nil
     PenderConfig.current = nil
-    assert_match /http:\/\/local-storage\/bucket_for_videos\d*\/video/, Media.archiving_folder
+    assert_match /#{storage[:endpoint]}\/bucket-for-videos\d*\/video/, Media.archiving_folder
 
     a.application_settings[:config][:storage][:video_asset_path] = 'http://public-storage/my-videos'; a.save
     ApiKey.current = a
     Pender::Store.current = nil
     PenderConfig.current = nil
     assert_equal "http://public-storage/my-videos", Media.archiving_folder
-    Aws::S3::Bucket.any_instance.unstub(:exists?)
   end
 
   test "include error on data when archiver is skipped" do

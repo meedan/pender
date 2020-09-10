@@ -114,7 +114,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match 'cbcnews', data['username']
     assert_match 'http://facebook.com/5823419603', data['author_url']
     assert_match /#{id}\/author_picture.jpg/, data['author_picture']
-    assert_match /^https/, data['picture']
     assert_match /#{id}\/picture.jpg/, data['picture']
   end
 
@@ -422,7 +421,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /Escape(\.Egypt)? added a new photo./, data['description']
     assert_match /#{id}\/author_picture.jpg/, data['author_picture']
     assert_equal 1, data['photos'].size
-    assert_match /^https:/, data['picture']
+    assert_match /#{id}\/picture/, data['picture']
     assert_match '1204094906298309', data['object_id']
   end
 
@@ -506,25 +505,31 @@ class FacebookItemTest < ActiveSupport::TestCase
   end
 
   test "should create Facebook post with picture and photos" do
-    m = create_media url: 'https://www.facebook.com/teste637621352/posts/1028795030518422'
+    url = 'https://www.facebook.com/teste637621352/posts/1028795030518422'
+    id = Media.get_id url
+    m = create_media url: url
     data = m.as_json
-    assert_match /^https/, data['picture']
+    assert_match /#{id}\/picture/, data['picture']
     assert_kind_of Array, data['photos']
     assert_equal 2, data['media_count']
     assert_equal 1, data['photos'].size
 
-    m = create_media url: 'https://www.facebook.com/teste637621352/posts/1035783969819528'
+    url = 'https://www.facebook.com/teste637621352/posts/1035783969819528'
+    id = Media.get_id url
+    m = create_media url: url
     data = m.as_json
-    assert_not_nil data['picture']
-    assert_match /^https/, data['author_picture']
+    assert_match /#{id}\/picture/, data['picture']
+    assert_match /#{id}\/author_picture/, data['author_picture']
     assert_kind_of Array, data['photos']
     assert_equal 0, data['media_count']
     assert_equal 1, data['photos'].size
 
-    m = create_media url: 'https://www.facebook.com/teste637621352/posts/2194142813983632'
+    url = 'https://www.facebook.com/teste637621352/posts/2194142813983632'
+    id = Media.get_id url
+    m = create_media url: url
     data = m.as_json
-    assert_match /^https/, data['author_picture']
-    assert_match /^https/, data['picture']
+    assert_match /#{id}\/picture/, data['picture']
+    assert_match /#{id}\/author_picture/, data['author_picture']
     assert_kind_of Array, data['photos']
     assert_equal 2, data['media_count']
     assert_equal 1, data['photos'].size
@@ -700,4 +705,45 @@ class FacebookItemTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:doc)
   end
 
+  test "should get the group name when parsing group post" do
+    url = 'https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/'
+    m = Media.new url: url
+    data = m.as_json
+    assert_no_match "Not Identified", data['title']
+    assert !data['description'].blank?
+    assert_equal url, data['url']
+  end
+
+  test "should parse page post date from public page profile" do
+    url = 'https://www.facebook.com/nytimes/posts/10152441141079999'
+    m = Media.new url: url
+    data = m.as_json
+    assert_equal '2020-09-04T21:25:04.000+00:00', data['published_at']
+  end
+
+  test "should parse post date from public person profile" do
+    url = 'https://www.facebook.com/marc.smolowitz/posts/10158161767684331'
+    m = Media.new url: url
+    data = m.as_json
+    assert_equal '2020-09-04T22:57:41.000+00:00', data['published_at']
+
+    url = 'https://www.facebook.com/julien.caidos/posts/10158477528272170'
+    m = Media.new url: url
+    data = m.as_json
+    assert_equal '2020-09-03T11:01:21.000+00:00', data['published_at']
+  end
+
+  test "should parse post from public group" do
+    url = 'https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/'
+    m = Media.new url: url
+    data = m.as_json
+    assert_match /This group is a gathering for those interested in exploring belief systems/, data['description']
+  end
+
+  test "should get full text of Facebook post" do
+    url = 'https://www.facebook.com/ironmaiden/posts/10157024746512051'
+    m = Media.new url: url
+    data = m.as_json
+    assert_match /However, we are now in a position to give you details of our touring plans in respect to those shows we had hoped to play this year/, data['description']
+  end
 end

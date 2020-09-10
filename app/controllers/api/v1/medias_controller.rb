@@ -238,7 +238,7 @@ module Api
       end
 
       def notify_airbrake(e, extra_info = {})
-        Airbrake.notify(e, {url: @url}.merge(extra_info)) if Airbrake.configured?
+        PenderAirbrake.notify(e, {url: @url}.merge(extra_info))
       end
 
       def handle_exceptions(exception, rescue_block, error_info = {})

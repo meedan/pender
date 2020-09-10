@@ -95,13 +95,7 @@ class Media
   def self.required_fields(instance = nil)
     provider = instance.respond_to?(:provider) ? instance.provider : 'page'
     type = instance.respond_to?(:type) ? instance.type : 'item'
-    {
-      url: instance.url,
-      provider: provider || 'page',
-      type: type || 'item',
-      parsed_at: Time.now.to_s,
-      favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, '')}"
-    }
+    { url: instance.url, provider: provider || 'page', type: type || 'item', parsed_at: Time.now.to_s, favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, '')}" }
   end
 
   def self.validate_url(url)
@@ -110,7 +104,7 @@ class Media
       return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
       Media.request_url(url, 'Head')
     rescue OpenSSL::SSL::SSLError, URI::InvalidURIError, SocketError => e
-      Airbrake.notify(e, url: url) if Airbrake.configured?
+      PenderAirbrake.notify(e, url: url)
       Rails.logger.warn level: 'WARN', message: '[Parser] Invalid URL', url: url, error_class: e.class, error_message: e.message
       return false
     end
@@ -124,9 +118,7 @@ class Media
     id = Media.get_id(url)
     data = Pender::Store.current.read(id, :json)
     unless data.blank?
-      newdata.each do |key, value|
-        data[key] = data[key].is_a?(Hash) ? data[key].merge(value) : value
-      end
+      newdata.each { |key, value| data[key] = data[key].is_a?(Hash) ? data[key].merge(value) : value }
       data['webhook_called'] = @webhook_called ? 1 : 0
       Pender::Store.current.write(id, :json, data)
     end
@@ -185,7 +177,7 @@ class Media
 
   def get_parsed_url(tag)
     canonical_url = tag.attr('content') || tag.attr('href')
-    return false if canonical_url.blank?
+    return false if !Media.validate_url(canonical_url)
     if canonical_url != self.url && !Media.is_a_login_page(canonical_url)
       self.url = absolute_url(canonical_url)
       self.doc = self.get_html(Media.html_options(self.url)) if self.doc.nil?
@@ -274,25 +266,33 @@ class Media
   end
 
   def get_html(header_options = {})
-    html = ''
     begin
       proxy = self.get_proxy
       options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
-      OpenURI.open_uri(Media.parse_url(decoded_uri(self.url)), options) do |f|
+      uri = Media.parse_url(decoded_uri(self.url))
+      if self.url.match(/facebook\.com\/groups/)
+        options.merge!({
+          'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
+          'Accept' =>  'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+          'Accept-Language' => 'en-US',
+          'Cookie' => Media.set_cookies(uri)
+        })
+      end
+      html = ''
+      OpenURI.open_uri(uri, options) do |f|
         f.binmode
         html = f.read
       end
-      html = preprocess_html(html)
-      Nokogiri::HTML html.gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
+      Nokogiri::HTML preprocess_html(html).gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
     rescue OpenURI::HTTPError, Errno::ECONNRESET => e
-      Airbrake.notify(e, url: self.url) if Airbrake.configured?
+      PenderAirbrake.notify(e, url: self.url)
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: self.url, error_class: e.class, error_message: e.message
       self.data[:error] = { message: 'URL Not Found', code: LapisConstants::ErrorCodes::const_get('NOT_FOUND')}
       return nil
     rescue Zlib::DataError, Zlib::BufError
       self.get_html(Media.html_options(self.url).merge('Accept-Encoding' => 'identity'))
     rescue RuntimeError => e
-      Airbrake.notify(e, url: self.url) if !redirect_https_to_http?(header_options, e.message) && Airbrake.configured?
+      PenderAirbrake.notify(e, url: self.url) if !redirect_https_to_http?(header_options, e.message) && Airbrake.configured?
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: self.url, error_class: e.class, error_message: e.message
       return nil
     end

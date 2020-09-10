@@ -18,7 +18,7 @@ class CcDeville
         raise StandardError.new "#{res['errors'][0]['code']} #{res['errors'][0]['message']}" if !res['success']
       rescue StandardError => e
         Rails.logger.error "[Cloudflare] #{e.message}"
-        Airbrake.notify(e, params: { url: url }) if Airbrake.configured?
+        PenderAirbrake.notify(e, params: { url: url })
       end
     end
   end

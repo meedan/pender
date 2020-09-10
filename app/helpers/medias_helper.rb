@@ -20,7 +20,7 @@ module MediasHelper
     begin
       yield
     rescue exception => error
-      Airbrake.notify(error, url: media.url, data: media.data ) if Airbrake.configured?
+      PenderAirbrake.notify(error, url: media.url, data: media.data )
       code = LapisConstants::ErrorCodes::const_get('UNKNOWN')
       media.data.merge!(error: { message: "#{error.class}: #{error.message}", code: code })
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse', url: media.url, code: code, error_class: error.class, error_message: error.message
@@ -98,10 +98,11 @@ module MediasHelper
   end
 
   def verify_published_time(time1, time2 = nil)
+    return Time.at(time2.to_i) unless time2.nil?
     begin
       Time.parse(time1)
     rescue ArgumentError
-      time2.nil? ? Time.at(time1.to_i) : Time.at(time2.to_i)
+      Time.at(time1.to_i)
     end
   end
 
@@ -171,7 +172,7 @@ module MediasHelper
       self.data[attr] = "#{Pender::Store.current.storage_path('medias')}/#{filename}"
       return true
     rescue StandardError => error
-      Airbrake.notify(StandardError.new("Could not get '#{attr}' image"), url: self.url, img_url: url, error: { class: error.class, message: error.message } ) if Airbrake.configured?
+      PenderAirbrake.notify(StandardError.new("Could not get '#{attr}' image"), url: self.url, img_url: url, error: { class: error.class, message: error.message } )
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not get image', url: self.url, img_url: url, error_class: error.class, error_message: error.message
     end
   end

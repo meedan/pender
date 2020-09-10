@@ -91,4 +91,14 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_equal LapisConstants::ErrorCodes::const_get('NOT_FOUND'), data[:error][:code]
     assert_equal 'URL Not Found', data[:error][:message]
   end
+
+  test "should not get metrics from Facebook page" do
+    Media.unstub(:request_metrics_from_facebook)
+    PenderAirbrake.stubs(:notify).never
+    url = 'https://www.facebook.com/ironmaiden/'
+    m = Media.new url: url
+    data = m.as_json
+    assert_nil data['metrics']['facebook']
+    PenderAirbrake.unstub(:notify)
+  end
 end
