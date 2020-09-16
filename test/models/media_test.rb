@@ -1040,6 +1040,17 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
+  test "should return nil when fb metrics returns a permanent error" do
+    url = 'https://www.example.com/'
+    {
+      10 => 'Requires Facebook page permissions',
+      100 => 'Unsupported get request. Facebook object ID does not support this operation',
+      803 => 'The Facebook object ID is not correct or invalid'
+    }.each do |code, message|
+      assert Media.fb_metrics_permanent_error?(url, { 'code' => code, 'message' => message}), "The error code `#{code}` should be listed as permanent error"
+    end
+  end
+
   test "should use api key config to get metrics from facebook if present" do
     Media.unstub(:request_metrics_from_facebook)
     url = 'https://www.google.com/'

@@ -37,11 +37,22 @@ module MediaFacebookEngagementMetrics
     def verify_facebook_metrics_response(url, response, count)
       return true if response.code.to_i == 200
       error = JSON.parse(response.body)['error']
-      if error['code'].to_i != 10 # Error code for 'Requires FB page permissions'
+      unless fb_metrics_permanent_error?(url, error)
         self.delay_for(1.hour).get_metrics_from_facebook(url, ApiKey.current&.id, count) if error['code'].to_i == 4 # Error code for 'Application request limit reached'
         PenderAirbrake.notify("Facebook metrics: #{error.dig('message')}", url: url, key_id: ApiKey.current&.id, error_code: response.code, error_message: response.message, error_body: error)
       end
       false
+    end
+
+    def fb_metrics_permanent_error?(url, response_error)
+      permanent_error = {
+        10 => 'Requires Facebook page permissions',
+        100 => 'Unsupported get request. Facebook object ID does not support this operation',
+        803 => 'The Facebook object ID is not correct or invalid'
+      }.dig(response_error['code'].to_i)
+      return unless permanent_error
+      Rails.logger.warn level: 'WARN', message: "[Parser] Facebook metrics error: #{permanent_error}", url: url, key_id: ApiKey.current&.id, error: response_error
+      true
     end
   end
 end
