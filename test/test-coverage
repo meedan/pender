@@ -10,7 +10,7 @@ then
   git clone https://github.com/codeclimate/test-reporter /tmp/go/src/github.com/codeclimate/test-reporter
   cd test
   echo 'Format coverage...' && ./cc-test-reporter format-coverage -t simplecov --output ../coverage/codeclimate.json ../coverage/.resultset.json
-  echo 'Upload coverage...' && cat ../coverage/codeclimate.json | sed 's/\/home\/travis\/build\/meedan\/pender\///g' | ./cc-test-reporter upload-coverage -r $CC_TEST_REPORTER_ID --input -
+  echo 'Upload coverage...' && cat ../coverage/codeclimate.json | sed 's/\/app\/app\//app\//g' | ./cc-test-reporter upload-coverage -r $CC_TEST_REPORTER_ID --input -
   ./cc-test-reporter show-coverage ../coverage/codeclimate.json
   cd -
 fi
