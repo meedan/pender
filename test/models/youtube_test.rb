@@ -104,12 +104,15 @@ class YoutubeTest < ActiveSupport::TestCase
   end
 
   test "should store oembed data of a youtube item" do
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<link rel='alternate' type='application/json+oembed' href='http://www.youtube.com/oembed?format=json&amp;url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DmtLxD7r4BZQ' title='RubyConf Portugal 2016 - Best Of'>"))
     m = create_media url: 'https://www.youtube.com/watch?v=mtLxD7r4BZQ'
     data = m.as_json
 
     assert data['raw']['oembed'].is_a? Hash
     assert_equal "https:\/\/www.youtube.com\/", data['raw']['oembed']['provider_url']
     assert_equal "YouTube", data['raw']['oembed']['provider_name']
+
+    Media.any_instance.unstub(:get_html)
   end
 
   test "should store oembed data of a youtube profile" do
