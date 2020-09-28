@@ -20,7 +20,7 @@ module MediaDropboxItem
 
   def parse_from_dropbox_html
     metatags = { title: 'og:title', picture: 'og:image', description: 'og:description' }
-    data.merge!(get_html_metadata(self, 'property', metatags))
+    data.merge!(get_html_metadata(self, metatags))
   end
 
   def get_title_from_url

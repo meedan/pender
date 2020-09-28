@@ -25,7 +25,7 @@ module MediaPageItem
   end
 
   def check_cookie_absent
-    metatag = self.get_html_metadata(self, 'name', { cookie: 'pbContext' })
+    metatag = self.get_html_metadata(self, { cookie: 'pbContext' })
     self.url = self.original_url if !metatag.empty? && !metatag[:cookie].match(/Cookie Absent/).nil?
   end
 
@@ -77,8 +77,7 @@ module MediaPageItem
 
   def get_twitter_metadata
     metatags = { title: 'twitter:title', picture: 'twitter:image', description: 'twitter:description', username: 'twitter:creator', author_name: 'twitter:site' }
-    data = get_html_metadata(self, 'name', metatags).with_indifferent_access
-    data.merge!(get_html_metadata(self, 'property', metatags))
+    data = get_html_metadata(self, metatags).with_indifferent_access
     data['author_url'] = twitter_author_url(data['username'])
     data.delete('author_name') if ignore_twitter_metatag(data['author_name'])
     unless data['author_url']
@@ -90,7 +89,7 @@ module MediaPageItem
 
   def get_opengraph_metadata
     metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time', author_name: 'og:site_name' }
-    data = get_html_metadata(self, 'property', metatags)
+    data = get_html_metadata(self, metatags)
     if (data['username'] =~ /\A#{URI::regexp}\z/)
       data['author_url'] = data['username']
       data.delete('username')
@@ -106,7 +105,7 @@ module MediaPageItem
 
   def get_basic_metadata
     metatags = { title: 'title',  description: 'description', username: 'author', author_name: 'application-name' }
-    data = get_html_metadata(self, 'name', metatags)
+    data = get_html_metadata(self, metatags)
     title = self.doc.at_css("title")
     data[:title] ||= title.nil? ? '' : title.content
     data[:description] ||= ''
