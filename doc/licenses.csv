@@ -37,7 +37,7 @@ Ruby Gem: http,HTTP should be easy,MIT,https://github.com/httprb/http
 Ruby Gem: http-cookie,A Ruby library to handle HTTP Cookies based on RFC 6265,MIT,https://github.com/sparklemotion/http-cookie
 Ruby Gem: http-form_data,http-form_data-2.0.0,MIT,https://github.com/httprb/form_data.rb
 Ruby Gem: http_parser.rb,Simple callback-based HTTP request/response parser,MIT,http://github.com/tmm1/http_parser.rb
-Ruby Gem: i18n,New wave Internationalization support for Ruby,MIT,http://github.com/svenfuchs/i18n
+Ruby Gem: i18n,New wave Internationalization support for Ruby,MIT,https://github.com/ruby-i18n/i18n
 Ruby Gem: ids_please,Helps to get ids or screen names from links to social network accounts,MIT,http://github.com/gazay/ids_please
 Ruby Gem: logstash-logger,LogStash Logger for ruby,MIT,http://github.com/dwbutler/logstash-logger
 Ruby Gem: loofah,Loofah is a general library for manipulating and transforming HTML/XML documents and fragments,MIT,https://github.com/flavorjones/loofah
@@ -51,10 +51,10 @@ Ruby Gem: minitest,minitest provides a complete suite of testing facilities supp
 Ruby Gem: minitest-retry,re-run the test when the test fails,MIT,https://github.com/y-yagi/minitest-retry
 Ruby Gem: mocha,Mocking and stubbing library,MIT,http://gofreerange.com/mocha/docs
 Ruby Gem: multi_json,A common interface to multiple JSON libraries.,MIT,http://github.com/intridea/multi_json
-Ruby Gem: multipart-post,A multipart form post accessory for Net::HTTP.,MIT,https://github.com/nicksieger/multipart-post
+Ruby Gem: multipart-post,A multipart form post accessory for Net::HTTP.,MIT,https://github.com/socketry/multipart-post
 Ruby Gem: naught,Naught is a toolkit for building Null Objects,MIT,https://github.com/avdi/naught
-Ruby Gem: nokogiri,Nokogiri (鋸) is an HTML XML SAX and Reader parser,MIT,
-Ruby Gem: open_uri_redirections,OpenURI patch to allow redirections between HTTP and HTTPS,MIT,https://github.com/jaimeiniesta/open_uri_redirections
+Ruby Gem: nokogiri,Nokogiri (鋸) is an HTML XML SAX and Reader parser,MIT,https://github.com/sparklemotion/nokogiri
+Ruby Gem: open_uri_redirections,OpenURI patch to allow redirections between HTTP and HTTPS,MIT,https://github.com/open-uri-redirections/open_uri_redirections
 Ruby Gem: parallel,Run any kind of code in parallel processes,MIT,https://github.com/grosser/parallel
 Ruby Gem: parallel_tests,Run Test::Unit / RSpec / Cucumber / Spinach in parallel,MIT,http://github.com/grosser/parallel_tests
 Ruby Gem: postrank-uri,URI normalization c14n escaping and extraction,MIT,http://github.com/postrank-labs/postrank-uri
@@ -63,7 +63,7 @@ Ruby Gem: public_suffix,Domain name parser based on the Public Suffix List.,MIT,
 Ruby Gem: rack,a modular Ruby webserver interface,MIT,http://rack.github.io/
 Ruby Gem: rack-cors,Middleware for enabling Cross-Origin Resource Sharing in Rack apps,MIT,https://github.com/cyu/rack-cors
 Ruby Gem: rack-protection,Protect against typical web attacks works with all Rack apps including Rails.,MIT,http://www.sinatrarb.com/protection/
-Ruby Gem: rack-test,Simple testing API built on Rack,MIT,http://github.com/brynary/rack-test
+Ruby Gem: rack-test,Simple testing API built on Rack,MIT,https://github.com/rack/rack-test
 Ruby Gem: rails,Full-stack web application framework.,MIT,http://www.rubyonrails.org
 Ruby Gem: rails-deprecated_sanitizer,Deprecated sanitizer API extracted from Action View.,MIT,https://github.com/rails/rails-deprecated_sanitizer
 Ruby Gem: rails-dom-testing,Dom and Selector assertions for Rails applications,MIT,https://github.com/rails/rails-dom-testing
@@ -75,7 +75,7 @@ Ruby Gem: rb-fsevent,Very simple & usable FSEvents API,MIT,http://rubygems.org/g
 Ruby Gem: rb-inotify,A Ruby wrapper for Linux inotify using FFI,MIT,https://github.com/guard/rb-inotify
 Ruby Gem: redis,A Ruby client library for Redis,MIT,https://github.com/redis/redis-rb
 Ruby Gem: redis-namespace,Namespaces Redis commands.,MIT,http://github.com/resque/redis-namespace
-Ruby Gem: responders,A set of Rails responders to dry up your application,MIT,http://github.com/plataformatec/responders
+Ruby Gem: responders,A set of Rails responders to dry up your application,MIT,https://github.com/heartcombo/responders
 Ruby Gem: retryable,Retryable#retryable allow for retrying of code blocks.,MIT,http://github.com/nfedyashev/retryable
 Ruby Gem: rufus-scheduler,job scheduler for Ruby (at cron in and every jobs),MIT,http://github.com/jmettraux/rufus-scheduler
 Ruby Gem: safe_yaml,SameYAML provides an alternative implementation of YAML.load suitable for accepting user input in Ruby applications.,MIT,https://github.com/dtao/safe_yaml
@@ -84,8 +84,8 @@ Ruby Gem: sass-listen,Fork of guard/listen,MIT,https://github.com/sass/listen
 Ruby Gem: sass-rails,Sass adapter for the Rails asset pipeline.,MIT,https://github.com/rails/sass-rails
 Ruby Gem: sidekiq-scheduler,Light weight job scheduling extension for Sidekiq,MIT,https://moove-it.github.io/sidekiq-scheduler/
 Ruby Gem: simple_oauth,Simply builds and verifies OAuth headers,MIT,https://github.com/laserlemon/simple_oauth
-Ruby Gem: simplecov,Code coverage for Ruby 1.9+ with a powerful configuration library and automatic merging of coverage across test suites,MIT,http://github.com/colszowka/simplecov
-Ruby Gem: simplecov-html,Default HTML formatter for SimpleCov code coverage tool for ruby 1.9+,MIT,https://github.com/colszowka/simplecov-html
+Ruby Gem: simplecov,Code coverage for Ruby 1.9+ with a powerful configuration library and automatic merging of coverage across test suites,MIT,https://github.com/simplecov-ruby/simplecov
+Ruby Gem: simplecov-html,Default HTML formatter for SimpleCov code coverage tool for ruby 1.9+,MIT,https://github.com/simplecov-ruby/simplecov
 Ruby Gem: sprockets,Rack-based asset packaging system,MIT,https://github.com/rails/sprockets
 Ruby Gem: sprockets-rails,Sprockets Rails integration,MIT,https://github.com/rails/sprockets-rails
 Ruby Gem: swagger-docs,Generates swagger-ui json files for rails apps with APIs. You add the swagger DSL to your controller classes and then run one rake task to generate the json files.,MIT,https://github.com/richhollis/swagger-docs
@@ -101,15 +101,15 @@ Ruby Gem: addressable,URI Implementation,Apache 2.0,https://github.com/sporkmong
 Ruby Gem: thread_safe,Thread-safe collections and utilities for Ruby,Apache 2.0,https://github.com/ruby-concurrency/thread_safe
 Ruby Gem: eventmachine,Ruby/EventMachine library,Ruby,http://rubyeventmachine.com
 Ruby Gem: json,JSON Implementation for Ruby,Ruby,http://flori.github.com/json
-Ruby Gem: thin,A thin and fast web server,Ruby,http://code.macournoyer.com/thin/
+Ruby Gem: thin,A thin and fast web server,Ruby,https://github.com/macournoyer/thin
 Ruby Gem: domain_name,Domain Name manipulation library for Ruby,bsd-3-clause,https://github.com/knu/ruby-domain_name
-Ruby Gem: ffi,Ruby FFI,bsd-3-clause,http://wiki.github.com/ffi/ffi
+Ruby Gem: ffi,Ruby FFI,bsd-3-clause,https://github.com/ffi/ffi/wiki
 Ruby Gem: pg,Pg is the Ruby interface to the {PostgreSQL RDBMS}[http://www.postgresql.org/],bsd-3-clause,https://bitbucket.org/ged/ruby-pg
 Ruby Gem: puma,Puma is a simple fast threaded and highly concurrent HTTP 1.1 server for Ruby/Rack applications,bsd-3-clause,http://puma.io
 Ruby Gem: domain_name,Domain Name manipulation library for Ruby,mpl-2.0,https://github.com/knu/ruby-domain_name
 Ruby Gem: eventmachine,Ruby/EventMachine library,gpl-2.0,http://rubyeventmachine.com
-Ruby Gem: logstash-event,Library that contains the classes required to create LogStash events,apache license (2.0),https://github.com/logstash/logstash
+Ruby Gem: logstash-event,Library that contains the classes required to create LogStash events,apache license (2.0),https://github.com/elastic/logstash
 Ruby Gem: railroady,Ruby on Rails 3/4 model and controller UML class diagram generator.,GPLv2,http://github.com/preston/railroady
-Ruby Gem: thin,A thin and fast web server,GPLv2,http://code.macournoyer.com/thin/
+Ruby Gem: thin,A thin and fast web server,GPLv2,https://github.com/macournoyer/thin
 Ruby Gem: sidekiq,Simple efficient background processing for Ruby,LGPLv3,http://sidekiq.org
 Ruby Gem: sqlite3,This module allows Ruby programs to interface with the SQLite3 database engine (http://www.sqlite.org),bsd-3,https://github.com/sparklemotion/sqlite3-ruby
