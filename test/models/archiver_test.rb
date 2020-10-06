@@ -487,20 +487,6 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:delay_for)
   end
 
-  test "should not raise error when try to download video from non-ascii URL" do
-    Media.any_instance.unstub(:archive_to_video)
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-
-    Media.any_instance.unstub(:archive_to_video)
-    Media.stubs(:notify_video_already_archived).returns(nil)
-
-    assert_nothing_raised do
-      Media.send_to_video_archiver('http://www.facebook.com/pages/category/Musician-Band/चौधरी-कमला-बाड़मेर-108960273957085', a.id, true, 20)
-    end
-
-    Media.unstub(:notify_video_already_archived)
-  end
-
   test "should return false and add error to data when video archiving is not supported" do
     Media.unstub(:supported_video?)
     Media.any_instance.stubs(:parse)
@@ -553,16 +539,23 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:notify_webhook)
   end
 
+  # FIXME Mocking Youtube-DL to avoid `HTTP Error 429: Too Many Requests`
   test "should archive video info subtitles, thumbnails and update cache" do
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://www.youtube.com/watch?v=1vSJrexmVWU'
-    Media.stubs(:supported_video?).with(url, a.id).returns(true)
     id = Media.get_id url
+
+    Media.stubs(:supported_video?).with(url, a.id).returns(true)
+    Media.stubs(:system).returns(`(exit 0)`)
+    local_folder = File.join(Rails.root, 'tmp', 'videos', id)
+    video_files = "#{local_folder}/#{id}/#{id}.es.vtt", "#{local_folder}/#{id}/#{id}.jpg", "#{local_folder}/#{id}/#{id}.vtt", "#{local_folder}/#{id}/#{id}.mp4", "#{local_folder}/#{id}/#{id}.jpg", "#{local_folder}/#{id}/#{id}.info.json"
+    Dir.stubs(:glob).returns(video_files)
+    Pender::Store.any_instance.stubs(:upload_video_folder)
 
     m = create_media url: url, key: a
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
-    Media.send_to_video_archiver(url, a.id)
+    Media.send_to_video_archiver(url, a.id, 20)
 
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver', 'error', 'message')
@@ -579,6 +572,9 @@ class ArchiverTest < ActiveSupport::TestCase
       assert_match /\A#{folder}\/#{id}.*\.jpg\z/, thumb
     end
     Media.unstub(:supported_video?)
+    Media.unstub(:system)
+    Dir.unstub(:glob)
+    Pender::Store.any_instance.unstub(:upload_video_folder)
   end
 
   test "should handle error and update cache when upload video when archiving fails" do
@@ -738,7 +734,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:get_canonical_url)
     Media.unstub(:try_https)
     Media.unstub(:send_to_video_archiver)
-    Media.unstub(:delay_for)
+    Media.unstub(:delay)
   end
 
   test "should get proxy to download video from api key if present" do

@@ -29,7 +29,7 @@ module MediaInstagramProfile
     raise 'Could not parse this media' if self.doc.blank?
     data = {}
     metatags = { image: 'og:image', title: 'og:title', description: 'og:description' }
-    data.merge! get_html_metadata(self, 'property', metatags)
+    data.merge! get_html_metadata(self, metatags)
     data
   end
 

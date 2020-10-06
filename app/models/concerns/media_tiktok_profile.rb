@@ -13,14 +13,13 @@ module MediaTiktokProfile
     username = match['username']
 
     handle_exceptions(self, StandardError) do
-      self.data.merge!(self.data_from_html_metadata)
+      metatags = { picture: 'og:image', title: 'twitter:creator', description: 'description' }
+      data.merge! get_html_metadata(self, metatags)
 
       self.data.merge!({
         username: username,
         external_id: username,
-        title: data['title'],
-        picture: data['image'],
-        author_picture: data['image'],
+        author_picture: data['picture'],
         author_name: data['title'],
         author_url: self.url,
         url: self.url
