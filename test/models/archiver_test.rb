@@ -515,7 +515,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
   test "should check if non-ascii URL support video download" do
     Media.unstub(:supported_video?)
-    assert !Media.supported_video?('http://www.facebook.com/pages/category/Musician-Band/चौधरी-कमला-बाड़मेर-108960273957085')
+    assert !Media.supported_video?('http://example.com/pages/category/Musician-Band/चौधरी-कमला-बाड़मेर-108960273957085')
   end
 
   test "should notify if URL was already parsed and has a location on data when archive video" do
