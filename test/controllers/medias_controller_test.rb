@@ -792,7 +792,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return error if URL is not safe" do
     authenticate_with_token
-    url = 'http://malware.wicar.org/data/ms14_064_ole_xp.html' # More examples: https://www.wicar.org/test-malware.html
+    url = 'http://malware.wicar.org/data/ms14_064_ole_not_xp.html' # More examples: https://www.wicar.org/test-malware.html
     get :index, url: url, format: 'json'
     response = JSON.parse(@response.body)
     assert_equal 'error', response['type']
