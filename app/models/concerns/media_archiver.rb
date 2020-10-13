@@ -61,7 +61,7 @@ module MediaArchiver
     end
 
     def give_up(archiver, url, key_id, error = {})
-      PenderAirbrake.notify(StandardError.new(error[:error_class]), url: url, archiver: archiver, error_message: error[:error_message])
+      PenderAirbrake.notify(StandardError.new(error[:error_class]), url: url, archiver: archiver, error_message: error[:error_message], exception: error[:exception])
       Rails.logger.warn level: 'WARN', message: "[#{error[:error_class]}] #{error[:error_message]}", url: url, archiver: archiver
       data = { error: { message: I18n.t(:archiver_failure, message: error[:error_message]), code: LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE') }}
       Media.notify_webhook_and_update_cache(archiver, url, data, key_id)

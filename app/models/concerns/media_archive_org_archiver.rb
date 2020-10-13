@@ -15,6 +15,7 @@ module MediaArchiveOrgArchiver
     end
 
     def send_to_archive_org(url, key_id, _supported = nil)
+      ApiKey.current = ApiKey.find_by(id: key_id)
       encoded_uri = URI.encode(URI.decode(url))
       uri = URI.parse("https://web.archive.org/save/#{encoded_uri}")
       http = Net::HTTP.new(uri.host, uri.port)

@@ -17,6 +17,7 @@ module MediaVideoArchiver
     end
 
     def send_to_video_archiver(url, key_id, supported = nil)
+      ApiKey.current = ApiKey.find_by(id: key_id)
       supported = supported_video?(url, key_id) if supported.nil?
       return if supported.is_a?(FalseClass) || notify_video_already_archived(url, key_id)
       id = Media.get_id(url)

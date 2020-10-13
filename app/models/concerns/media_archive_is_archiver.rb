@@ -15,6 +15,7 @@ module MediaArchiveIsArchiver
     end
 
     def send_to_archive_is(url, key_id, _supported = nil)
+      ApiKey.current = ApiKey.find_by(id: key_id)
       uri = URI.parse('http://archive.today/submit/')
       http = Net::HTTP.new(uri.host, uri.port)
       request = Net::HTTP::Post.new(uri.request_uri)

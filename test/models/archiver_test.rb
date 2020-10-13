@@ -232,7 +232,7 @@ class ArchiverTest < ActiveSupport::TestCase
       'http://www.dutertenewsupdate.info/2018/01/duterte-turned-philippines-into.html' => {code: '200', message: 'OK'}
     }
 
-    assert_nothing_raised do
+    assert_raises Pender::RetryLater do
       urls.each_pair do |url, data|
         m = Media.new url: url
         m.as_json
@@ -411,7 +411,7 @@ class ArchiverTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test', config: { perma_cc_key: 'perma_key'} }
     url = 'http://example.com'
 
-    assert_nothing_raised do
+    assert_raises Pender::RetryLater do
       m = Media.new url: url, key: a
       m.as_json
       assert m.data.dig('archives', 'perma_cc').nil?
@@ -582,20 +582,20 @@ class ArchiverTest < ActiveSupport::TestCase
     url = 'https://twitter.com/meedan/status/1202732707597307905'
     Media.stubs(:supported_video?).with(url, a.id).returns(true)
     id = Media.get_id url
-
     m = create_media url: url, key: a
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
 
-    error = StandardError.new('upload error')
-    Pender::Store.any_instance.stubs(:upload_video_folder).raises(StandardError.new('upload error'))
-    Media.send_to_video_archiver(url, a.id, 20)
+    Media.stubs(:system).returns(`(exit 1)`)
+    assert_raises Pender::RetryLater do
+      Media.send_to_video_archiver(url, a.id)
+    end
+    Sidekiq::Worker.drain_all
     data = m.as_json
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), data.dig('archives', 'video_archiver', 'error', 'code')
     assert_equal "#{error.class} #{error.message}", data.dig('archives', 'video_archiver', 'error', 'message')
-
-    Pender::Store.any_instance.unstub(:upload_video_folder)
     Media.unstub(:supported_video?)
+    Media.unstub(:system)
   end
 
   test "should update media with error when supported video call raises on video archiving" do
@@ -719,21 +719,18 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)
-    Media.stubs(:send_to_video_archiver).returns('archive_video')
 
-    mock = 'delay'
-    Media.stubs(:delay).returns(mock)
-    mock.stubs(:send_to_video_archiver).returns('delay_send_to_video_archiver')
-
-    url = 'http://example.com'
-    m = Media.new url: url
-    assert_equal 'delay_send_to_video_archiver', m.archive_to_video
+    Sidekiq::Testing.fake! do
+      url = 'http://example.com'
+      m = Media.new url: url
+      assert_difference 'ArchiverWorker.jobs.size', 1 do
+        m.archive_to_video
+      end
+    end
 
     Media.unstub(:follow_redirections)
     Media.unstub(:get_canonical_url)
     Media.unstub(:try_https)
-    Media.unstub(:send_to_video_archiver)
-    Media.unstub(:delay)
   end
 
   test "should get proxy to download video from api key if present" do
@@ -754,14 +751,14 @@ class ArchiverTest < ActiveSupport::TestCase
     url = 'https://www.youtube.com/watch?v=o1V1LnUU5VM'
     Media.stubs(:system).returns(`(exit 0)`)
 
-    Media.send_to_video_archiver(url, nil, 20)
+    Media.send_to_video_archiver(url, nil)
     assert_nil ApiKey.current
     assert_equal CONFIG, PenderConfig.current
     assert_equal CONFIG[:storage], Pender::Store.current.instance_variable_get(:@storage)
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
     api_key = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    Media.send_to_video_archiver(url, api_key.id, 20)
+    Media.send_to_video_archiver(url, api_key.id)
     assert_equal api_key, ApiKey.current
     assert_equal CONFIG, PenderConfig.current
     assert_equal CONFIG[:storage], Pender::Store.current.instance_variable_get(:@storage)

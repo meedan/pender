@@ -15,6 +15,7 @@ module MediaPermaCcArchiver
     end
 
     def send_to_perma_cc(url, key_id, _supported = nil)
+      ApiKey.current = ApiKey.find_by(id: key_id)
       perma_cc_key = PenderConfig.get('perma_cc_key')
       return if skip_perma_cc_archiver(perma_cc_key, url, key_id)
 
