@@ -83,7 +83,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
   end
 
   test "should add not found error and return empty html" do
-    url = 'https://www.facebook.com/profile.php?id=12345678'
+    url = 'https://www.facebook.com/ldfkgjdfghodhg'
 
     m = create_media url: url
     data = m.as_json

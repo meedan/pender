@@ -676,7 +676,7 @@ class FacebookItemTest < ActiveSupport::TestCase
   end
 
   test "should add not found error and return empty html" do
-    urls = ['https://www.facebook.com/danielafeitosa/posts/2074906892567200', 'https://www.facebook.com/caiosba/posts/8457689347638947', 'https://www.facebook.com/photo.php?fbid=158203948564609&set=pb.100031250132368.-2207520000..&type=3&theater']
+    urls = ['https://www.facebook.com/danielafeitosa/posts/2074906892567200', 'https://www.facebook.com/caiosba/posts/8457689347638947']
     urls.each do |url|
       m = create_media url: url
       data = m.as_json
