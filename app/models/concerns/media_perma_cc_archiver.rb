@@ -11,32 +11,29 @@ module MediaPermaCcArchiver
 
   module ClassMethods
     def send_to_perma_cc_in_background(url, key_id)
-      self.delay_for(15.seconds).send_to_perma_cc(url, key_id)
+      ArchiverWorker.perform_async(url, :perma_cc, key_id)
     end
 
-    def send_to_perma_cc(url, key_id, attempts = 1, response = nil, _supported = nil)
+    def send_to_perma_cc(url, key_id, _supported = nil)
       perma_cc_key = PenderConfig.get('perma_cc_key')
       return if skip_perma_cc_archiver(perma_cc_key, url, key_id)
-      Media.give_up('perma_cc', url, key_id, attempts, response) and return
 
-      handle_archiving_exceptions('perma_cc', 24.hours, { url: url, key_id: key_id, attempts: attempts }) do
-        encoded_uri = URI.encode(URI.decode(url))
-        uri = URI.parse("https://api.perma.cc/v1/archives/?api_key=#{perma_cc_key}")
-        headers = { 'Content-Type': 'application/json' }
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true
-        request = Net::HTTP::Post.new(uri.request_uri, headers)
-        request.body = { url: encoded_uri }.to_json
-        response = http.request(request)
-        Rails.logger.info level: 'INFO', message: '[perma_cc] Sent URL to archive', url: url, code: response.code, response: response.message
+      encoded_uri = URI.encode(URI.decode(url))
+      uri = URI.parse("https://api.perma.cc/v1/archives/?api_key=#{perma_cc_key}")
+      headers = { 'Content-Type': 'application/json' }
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      request = Net::HTTP::Post.new(uri.request_uri, headers)
+      request.body = { url: encoded_uri }.to_json
+      response = http.request(request)
+      Rails.logger.info level: 'INFO', message: '[perma_cc] Sent URL to archive', url: url, code: response.code, response: response.message
 
-        if !response.nil? && [200,201].include?(response.code.to_i) && !response.body.blank?
-          body = JSON.parse(response.body)
-          data = { location: 'http://perma.cc/' + body['guid'] }
-          Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
-        else
-          retry_archiving_after_failure('ARCHIVER_FAILURE', 'perma_cc', 3.minutes, { url: url, key_id: key_id, attempts: attempts, code: response.code, message: response.message })
-        end
+      if !response.nil? && [200,201].include?(response.code.to_i) && !response.body.blank?
+        body = JSON.parse(response.body)
+        data = { location: 'http://perma.cc/' + body['guid'] }
+        Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
+      else
+        retry_archiving_after_failure('perma_cc', { url: url, key_id: key_id, code: response.code, message: response.message })
       end
     end
 

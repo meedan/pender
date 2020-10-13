@@ -1,3 +1,5 @@
+require 'pender_exceptions'
+
 module MediaFacebookEngagementMetrics
   extend ActiveSupport::Concern
 
@@ -38,8 +40,8 @@ module MediaFacebookEngagementMetrics
       return true if response.code.to_i == 200
       error = JSON.parse(response.body)['error']
       unless fb_metrics_permanent_error?(url, error)
-        self.delay_for(1.hour).get_metrics_from_facebook(url, ApiKey.current&.id, count) if error['code'].to_i == 4 # Error code for 'Application request limit reached'
         PenderAirbrake.notify("Facebook metrics: #{error.dig('message')}", url: url, key_id: ApiKey.current&.id, error_code: response.code, error_message: response.message, error_body: error)
+        raise Pender::RetryLater, 'Metrics request failed' if error['code'].to_i == 4 # Error code for 'Application request limit reached'
       end
       false
     end
