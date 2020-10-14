@@ -29,9 +29,10 @@ module MediaFacebookEngagementMetrics
       MetricsWorker.perform_async(url, key_id, count + 1) if count < 10
       begin
         value = self.request_metrics_from_facebook(url, count)
-      rescue Pender::RetryLater => e
+      rescue Pender::RetryLater
         raise Pender::RetryLater, 'Metrics request failed'
       rescue StandardError => e
+        value = {}
         PenderAirbrake.notify("Facebook metrics: #{e.message}", url: url, key_id: ApiKey.current&.id)
       end
       Media.notify_webhook_and_update_metrics_cache(url, 'facebook', value, key_id)
@@ -40,20 +41,29 @@ module MediaFacebookEngagementMetrics
     def verify_facebook_metrics_response(url, response, count)
       return true if response.code.to_i == 200
       error = JSON.parse(response.body)['error']
-      unless fb_metrics_permanent_error?(url, error)
-        raise Pender::RetryLater, 'Metrics request failed' if error['code'].to_i == 4 # Error code for 'Application request limit reached'
+      unless fb_metrics_error(:permanent, url, error)
+        PenderAirbrake.notify("Facebook metrics: #{error['message']}", url: url, key_id: ApiKey.current&.id, error_code: error['code'], error_class: error['type'])
+        raise Pender::RetryLater, 'Metrics request failed' if fb_metrics_error(:retryable, url, error)
       end
       false
     end
 
-    def fb_metrics_permanent_error?(url, response_error)
-      permanent_error = {
-        10 => 'Requires Facebook page permissions',
-        100 => 'Unsupported get request. Facebook object ID does not support this operation',
-        803 => 'The Facebook object ID is not correct or invalid'
-      }.dig(response_error['code'].to_i)
-      return unless permanent_error
-      Rails.logger.warn level: 'WARN', message: "[Parser] Facebook metrics error: #{permanent_error}", url: url, key_id: ApiKey.current&.id, error: response_error
+    def fb_metrics_error(type, url, response_error)
+      errors = {
+        permanent: {
+          10 => 'Requires Facebook page permissions',
+          100 => 'Unsupported get request. Facebook object ID does not support this operation',
+          803 => 'The Facebook object ID is not correct or invalid'
+        },
+        retryable: {
+          1 => 'Error validating client secret.',
+          4 => 'Application request limit reached.',
+          101 => 'Missing client_id parameter.'
+        }
+      }
+      error = errors[type].dig(response_error['code'].to_i)
+      return unless error
+      Rails.logger.warn level: 'WARN', message: "[Parser] Facebook metrics error: #{error}", url: url, key_id: ApiKey.current&.id, error: response_error
       true
     end
   end
