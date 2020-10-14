@@ -1022,21 +1022,22 @@ class MediaTest < ActiveSupport::TestCase
     invalid_app_secret: { body: "{\"error\":{\"message\":\"Error validating client secret.\",\"type\":\"OAuthException\",\"code\":1}}", code: "400", message: "Bad Request"},
     api_limit_reached: { body: "{\"error\":{\"message\":\"(#4) Application request limit reached\",\"type\":\"OAuthException\",\"is_transient\":true,\"code\":4}}", code: "403", message: "Forbidden"}
   }.each do |error, response_info|
-    test "should return nil when try to get fb metrics and #{error}" do
+    test "should raise retry error when fails to get fb metrics and #{error}" do
       url = 'https://www.example.com/'
       m = create_media url: url
-      Sidekiq::Testing.fake! do
+      Media.unstub(:request_metrics_from_facebook)
+      Media.any_instance.stubs(:unsafe?).returns(false)
+      WebMock.enable!
+      WebMock.disable_net_connect!(allow: 'graph.facebook.com')
+      WebMock.stub_request(:any, /graph.facebook.com\/oauth\/access_token/).to_return(body: {"access_token":"token"}.to_json)
+      WebMock.stub_request(:any, "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=token").to_return(body: response_info[:body], status: response_info[:code].to_i)
+      PenderAirbrake.stubs(:notify)
+      assert_raises Pender::RetryLater do
         data = m.as_json
-        Media.unstub(:request_metrics_from_facebook)
-        WebMock.enable!
-        WebMock.disable_net_connect!(allow: 'graph.facebook.com')
-        WebMock.stub_request(:any, /graph.facebook.com\/oauth\/access_token/).to_return(body: {"access_token":"token"}.to_json)
-        WebMock.stub_request(:any, "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=token").to_return(body: response_info[:body], status: response_info[:code].to_i)
-        PenderAirbrake.stubs(:notify)
-        assert_nil Media.request_metrics_from_facebook(url)
-        WebMock.disable!
-        PenderAirbrake.unstub(:notify)
       end
+      WebMock.disable!
+      PenderAirbrake.unstub(:notify)
+      Media.any_instance.unstub(:unsafe?)
     end
   end
 

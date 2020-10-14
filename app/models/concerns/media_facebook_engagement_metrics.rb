@@ -26,21 +26,21 @@ module MediaFacebookEngagementMetrics
 
     def get_metrics_from_facebook(url, key_id, count)
       ApiKey.current = ApiKey.find_by(id: key_id)
-      value = {}
+      MetricsWorker.perform_async(url, key_id, count + 1) if count < 10
       begin
         value = self.request_metrics_from_facebook(url, count)
+      rescue Pender::RetryLater => e
+        raise Pender::RetryLater, 'Metrics request failed'
       rescue StandardError => e
-        PenderAirbrake.notify(e, url: url)
+        PenderAirbrake.notify("Facebook metrics: #{e.message}", url: url, key_id: ApiKey.current&.id)
       end
       Media.notify_webhook_and_update_metrics_cache(url, 'facebook', value, key_id)
-      self.delay_for(24.hours).get_metrics_from_facebook(url, key_id, count + 1) if count < 10 && value
     end
 
     def verify_facebook_metrics_response(url, response, count)
       return true if response.code.to_i == 200
       error = JSON.parse(response.body)['error']
       unless fb_metrics_permanent_error?(url, error)
-        PenderAirbrake.notify("Facebook metrics: #{error.dig('message')}", url: url, key_id: ApiKey.current&.id, error_code: response.code, error_message: response.message, error_body: error)
         raise Pender::RetryLater, 'Metrics request failed' if error['code'].to_i == 4 # Error code for 'Application request limit reached'
       end
       false

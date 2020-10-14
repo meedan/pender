@@ -1,10 +1,11 @@
 class ArchiverWorker
   include Sidekiq::Worker
 
-  sidekiq_retries_exhausted do |error_info, exception|
-    args = error_info['args']
-    error = { error_class: error_info['error_class'], error_message: error_info['error_message'] }.with_indifferent_access
-    Media.give_up(args[0], args[1], args[2], error)
+  sidekiq_retries_exhausted { |msg, e| retries_exhausted_callback(msg, e) }
+
+  def self.retries_exhausted_callback(msg, _e)
+    args = msg['args']
+    Media.give_up(args[0], args[1], args[2], msg.with_indifferent_access)
   end
 
   def perform(url, archiver, key_id, supported = nil)
