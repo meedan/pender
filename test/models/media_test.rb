@@ -1048,7 +1048,7 @@ class MediaTest < ActiveSupport::TestCase
       100 => 'Unsupported get request. Facebook object ID does not support this operation',
       803 => 'The Facebook object ID is not correct or invalid'
     }.each do |code, message|
-      assert Media.fb_metrics_permanent_error?(url, { 'code' => code, 'message' => message}), "The error code `#{code}` should be listed as permanent error"
+      assert Media.fb_metrics_error(:permanent, url, { 'code' => code, 'message' => message}), "The error code `#{code}` should be listed as permanent error"
     end
   end
 
@@ -1070,7 +1070,9 @@ class MediaTest < ActiveSupport::TestCase
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
     api_key.application_settings = { config: { facebook: { app_id: 'fb-app-id', app_secret: 'fb-app-secret' }, storage: { endpoint: CONFIG['storage']['endpoint'], access_key: CONFIG['storage']['access_key'], secret_key: CONFIG['storage']['secret_key'], bucket: 'my-bucket', bucket_region: CONFIG['storage']['bucket_region'], video_bucket: 'video-bucket'}}}; api_key.save
-    Media.get_metrics_from_facebook(url, api_key.id, 10)
+    assert_raises Pender::RetryLater do
+      Media.get_metrics_from_facebook(url, api_key.id, 10)
+    end
     assert_equal api_key, ApiKey.current
     assert_equal api_key.settings[:config][:facebook], PenderConfig.current[:facebook]
     assert_equal api_key.settings[:config][:storage], PenderConfig.current[:storage]
