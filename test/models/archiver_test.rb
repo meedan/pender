@@ -419,7 +419,6 @@ class ArchiverTest < ActiveSupport::TestCase
 
   test "should call youtube-dl and call video upload when archive video" do
     Media.any_instance.unstub(:archive_to_video)
-    assert_equal 0, ArchiverWorker.jobs.size
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1202732707597307905'
     m = Media.new url: url, key: a
