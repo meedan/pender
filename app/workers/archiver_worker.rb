@@ -9,7 +9,6 @@ class ArchiverWorker
   end
 
   def perform(url, archiver, key_id, supported = nil)
-    key = ApiKey.where(id: key_id).first
     Media.send("send_to_#{archiver}", url, key_id, supported)
   end
 end

@@ -12,15 +12,15 @@ module MediaFacebookEngagementMetrics
   end
 
   module ClassMethods
-    def request_metrics_from_facebook(url, count = 0)
+    def request_metrics_from_facebook(url)
       facebook = PenderConfig.get('facebook', {})
       api = "https://graph.facebook.com/oauth/access_token?client_id=#{facebook.dig('app_id')}&client_secret=#{facebook.dig('app_secret')}&grant_type=client_credentials"
       response = Net::HTTP.get_response(URI(api))
-      return unless verify_facebook_metrics_response(url, response, count)
+      return unless verify_facebook_metrics_response(url, response)
       token = JSON.parse(response.body)['access_token']
       api = "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=#{token}"
       response = Net::HTTP.get_response(URI(URI.encode(api)))
-      return unless verify_facebook_metrics_response(url, response, count)
+      return unless verify_facebook_metrics_response(url, response)
       JSON.parse(response.body)['engagement']
     end
 
@@ -28,7 +28,7 @@ module MediaFacebookEngagementMetrics
       ApiKey.current = ApiKey.find_by(id: key_id)
       MetricsWorker.perform_async(url, key_id, count + 1) if count < 10
       begin
-        value = self.request_metrics_from_facebook(url, count)
+        value = self.request_metrics_from_facebook(url)
       rescue Pender::RetryLater
         raise Pender::RetryLater, 'Metrics request failed'
       rescue StandardError => e
@@ -38,7 +38,7 @@ module MediaFacebookEngagementMetrics
       Media.notify_webhook_and_update_metrics_cache(url, 'facebook', value, key_id)
     end
 
-    def verify_facebook_metrics_response(url, response, count)
+    def verify_facebook_metrics_response(url, response)
       return true if response.code.to_i == 200
       error = JSON.parse(response.body)['error']
       unless fb_metrics_error(:permanent, url, error)
