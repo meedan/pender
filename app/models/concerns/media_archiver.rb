@@ -1,4 +1,5 @@
 require 'error_codes'
+require 'pender_exceptions'
 
 module MediaArchiver
   extend ActiveSupport::Concern
@@ -59,16 +60,12 @@ module MediaArchiver
       ARCHIVERS[name] = { patterns: patterns, modifier: modifier, enabled: enabled }
     end
 
-    def give_up(archiver, url, key_id, attempts, response = {})
-      if attempts > 20
-        error_type = response[:error_type] || 'ARCHIVER_FAILURE'
-        PenderAirbrake.notify(StandardError.new(error_type), url: url, archiver: archiver, error_code: response[:code], error_message: response[:message])
-        Rails.logger.warn level: 'WARN', message: "[#{error_type}] #{response[:message]}", url: url, archiver: archiver, error_code: response[:code], error_message: response[:message]
-        data = { error: { message: I18n.t(:archiver_failure, message: response[:message], code: response[:code]), code: LapisConstants::ErrorCodes::const_get(error_type) }}
-        Media.notify_webhook_and_update_cache(archiver, url, data, key_id)
-        return true
-      end
-      false
+    def give_up(archiver, url, key_id, error = {})
+      PenderAirbrake.notify(StandardError.new(error[:error_message]), { url: url, archiver: archiver }.merge(error))
+      Rails.logger.warn level: 'WARN', message: "[#{error[:error_class]}] #{error[:error_message]}", url: url, archiver: archiver
+      data = { error: { message: I18n.t(:archiver_failure, message: error[:error_message]), code: LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE') }}
+      Media.notify_webhook_and_update_cache(archiver, url, data, key_id)
+      true
     end
 
     def notify_webhook_and_update_cache(archiver, url, data, key_id)
@@ -89,23 +86,9 @@ module MediaArchiver
       enabled
     end
 
-    def handle_archiving_exceptions(archiver, delay_time, params)
-      begin
-        ApiKey.current = ApiKey.find_by(id: params.dig(:key_id))
-        yield
-      rescue StandardError => error
-        error_type = 'ARCHIVER_ERROR'
-        params.merge!({code: LapisConstants::ErrorCodes::const_get(error_type), message: "#{error.class} #{error.message}"})
-        retry_archiving_after_failure(error_type, archiver, delay_time, params)
-        data = { error: { message: params[:message], code: LapisConstants::ErrorCodes::const_get(error_type) }}
-        Media.notify_webhook_and_update_cache(archiver, params[:url], data, params[:key_id])
-        return
-      end
-    end
-
-    def retry_archiving_after_failure(error_type, archiver, delay_time, params)
-      Rails.logger.warn level: 'WARN', message: "[#{error_type}] #{params[:message]}", url: params[:url], archiver: archiver, error_code: params[:code], error_message: params[:message], attempts: params[:attempts]
-      Media.delay_for(delay_time).send("send_to_#{archiver}", params[:url], params[:key_id], params[:attempts] + 1, {code: params[:code], message: params[:message]}, params[:supported])
+    def retry_archiving_after_failure(archiver, params)
+      Rails.logger.warn level: 'WARN', message: "#{params[:message]}", url: params[:url], archiver: archiver, error_code: params[:code], error_message: params[:message]
+      raise Pender::RetryLater, "Failed to archive to #{archiver}: #{params[:message]}"
     end
   end
 

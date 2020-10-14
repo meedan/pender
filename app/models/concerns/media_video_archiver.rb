@@ -13,26 +13,24 @@ module MediaVideoArchiver
 
   module ClassMethods
     def archive_video_in_background(url, key_id)
-      self.delay(queue: 'video_archiving').send_to_video_archiver(url, key_id)
+      ArchiverWorker.perform_async(url, :video_archiver, key_id)
     end
 
-    def send_to_video_archiver(url, key_id, attempts = 1, response = nil, supported = nil)
-      handle_archiving_exceptions('video_archiver', 1.hour, { url: url, key_id: key_id, attempts: attempts, supported: supported }) do
-        supported = supported_video?(url, key_id) if supported.nil?
-        return if supported.is_a?(FalseClass) || notify_video_already_archived(url, key_id)
-        id = Media.get_id(url)
-        local_folder = File.join(Rails.root, 'tmp', 'videos', id)
-        Media.give_up('video_archiver', url, key_id, attempts, response) and return
-        uri = URI.encode(url)
-        proxy = "--proxy=#{Media.yt_download_proxy(uri)}"
-        output = "-o#{local_folder}/#{id}.%(ext)s"
-        system('youtube-dl', uri, proxy, output, '--restrict-filenames', '--no-warnings', '-q', '--write-all-thumbnails', '--write-info-json', '--all-subs', '-fogg/mp4/webm')
+    def send_to_video_archiver(url, key_id, supported = nil)
+      ApiKey.current = ApiKey.find_by(id: key_id)
+      supported = supported_video?(url, key_id) if supported.nil?
+      return if supported.is_a?(FalseClass) || notify_video_already_archived(url, key_id)
+      id = Media.get_id(url)
+      local_folder = File.join(Rails.root, 'tmp', 'videos', id)
+      uri = URI.encode(url)
+      proxy = "--proxy=#{Media.yt_download_proxy(uri)}"
+      output = "-o#{local_folder}/#{id}.%(ext)s"
+      system('youtube-dl', uri, proxy, output, '--restrict-filenames', '--no-warnings', '-q', '--write-all-thumbnails', '--write-info-json', '--all-subs', '-fogg/mp4/webm')
 
-        if $?.success?
-          Media.store_video_folder(url, local_folder, self.archiving_folder, key_id)
-        else
-          retry_archiving_after_failure('ARCHIVER_FAILURE', 'video_archiver', 5.minutes, { url: url, key_id: key_id, attempts: attempts, code: $?.exitstatus, message: I18n.t(:archiver_video_not_downloaded), supported: supported })
-        end
+      if $?.success?
+        Media.store_video_folder(url, local_folder, self.archiving_folder, key_id)
+      else
+        retry_archiving_after_failure('video_archiver', { url: url, key_id: key_id, code: $?.exitstatus, message: I18n.t(:archiver_video_not_downloaded), supported: supported })
       end
     end
 
