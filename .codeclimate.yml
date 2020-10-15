@@ -39,7 +39,6 @@ plugins:
   bundler-audit:
     enabled: true
 exclude_patterns:
-- "app/controllers/concerns/*_doc.rb"
 - "public/api"
 - "lib/tasks"
 - "pender-client-php"

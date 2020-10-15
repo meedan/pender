@@ -7,7 +7,6 @@ require 'semaphore'
 module Api
   module V1
     class MediasController < Api::V1::BaseApiController
-      include MediasDoc
       include MediasHelper
 
       skip_before_filter :authenticate_from_token!, if: proc { request.format.html? || request.format.js? || request.format.oembed? }
