@@ -15,5 +15,6 @@ namespace :test do
       coverage_dir 'coverage'
     end
     Rake::Task['test'].execute
+    Rake::Task['spec'].execute
   end
 end

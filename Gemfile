@@ -29,6 +29,8 @@ gem 'protected_attributes'
 gem 'responders'
 gem 'yt', '~> 0.25.5'
 gem 'swagger-docs', '0.1.9'
+gem 'rswag-api'
+gem 'rswag-ui'
 gem 'sass-rails'
 gem 'twitter'
 gem 'ids_please', git: 'https://github.com/meedan/ids_please', branch: 'master', ref: '31b9e0'
@@ -56,3 +58,8 @@ gem 'aws-sdk-s3'
 gem 'honeycomb-beeline'
 gem 'lograge'
 gem 'request_store'
+
+group :development, :test do
+  gem 'rspec-rails'
+  gem 'rswag-specs'
+end
