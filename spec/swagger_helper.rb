@@ -40,3 +40,11 @@ RSpec.configure do |config|
   # Defaults to json. Accepts ':json' and ':yaml'.
   config.swagger_format = :yaml
 end
+
+RSpec.shared_context 'generate examples' do
+  after do |example|
+    example.metadata[:response][:examples] = {
+      'application/json' => JSON.parse(response.body, symbolize_names: true)
+    }
+  end
+end
