@@ -1,4 +1,14 @@
 GIT
+  remote: https://github.com/jetpackworkflow/rswag.git
+  revision: f614f38f0cc46403f8e9c7b38f156805bfa8a692
+  branch: allow_oas3_param_schema_array
+  specs:
+    rswag-specs (0.0.0)
+      activesupport (>= 3.1, < 7.0)
+      json-schema (~> 2.2)
+      railties (>= 3.1, < 7.0)
+
+GIT
   remote: https://github.com/meedan/ids_please
   revision: 31b9e03fe7860d57697e9b6deec321bc7d7482f4
   ref: 31b9e0
@@ -228,10 +238,6 @@ GEM
     rspec-support (3.9.3)
     rswag-api (2.3.1)
       railties (>= 3.1, < 7.0)
-    rswag-specs (2.3.1)
-      activesupport (>= 3.1, < 7.0)
-      json-schema (~> 2.2)
-      railties (>= 3.1, < 7.0)
     rswag-ui (2.3.1)
       actionpack (>= 3.1, < 7.0)
       railties (>= 3.1, < 7.0)
@@ -357,7 +363,7 @@ DEPENDENCIES
   retryable
   rspec-rails
   rswag-api
-  rswag-specs
+  rswag-specs!
   rswag-ui
   ruby-prof (= 0.15.9)
   sass-rails

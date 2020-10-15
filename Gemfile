@@ -60,5 +60,7 @@ gem 'request_store'
 
 group :development, :test do
   gem 'rspec-rails'
-  gem 'rswag-specs'
+
+  # workaround for https://github.com/rswag/rswag/issues/317, remove GIT repository after https://github.com/rswag/rswag/pull/319 is merged
+  gem 'rswag-specs', git: 'https://github.com/jetpackworkflow/rswag.git', branch: 'allow_oas3_param_schema_array'
 end
