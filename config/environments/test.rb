@@ -56,8 +56,3 @@ Rails.application.configure do
   config.lograge.formatter = Lograge::Formatters::Json.new
   config.log_level = :warn
 end
-
-# Enable Rswag auto generation examples from responses
-RSpec.configure do |config|
-  config.swagger_dry_run = false
-end
