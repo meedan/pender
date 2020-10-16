@@ -60,12 +60,12 @@ module MediaArchiver
       ARCHIVERS[name] = { patterns: patterns, modifier: modifier, enabled: enabled }
     end
 
-    def give_up(archiver, url, key_id, error = {})
-      PenderAirbrake.notify(StandardError.new(error[:error_message]), { url: url, archiver: archiver }.merge(error))
-      Rails.logger.warn level: 'WARN', message: "[#{error[:error_class]}] #{error[:error_message]}", url: url, archiver: archiver
-      data = { error: { message: I18n.t(:archiver_failure, message: error[:error_message]), code: LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE') }}
+    def give_up(info = {})
+      url, archiver, key_id = info[:args][0], info[:args][1], info[:args][2]
+      PenderAirbrake.notify(StandardError.new(info[:error_message]), info.merge({ url: url, archiver: archiver, key_id: key_id }))
+      Rails.logger.warn level: 'WARN', message: "[#{info[:error_class]}] #{info[:error_message]}", url: url, archiver: archiver
+      data = { error: { message: I18n.t(:archiver_failure, message: info[:error_message]), code: LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE') }}
       Media.notify_webhook_and_update_cache(archiver, url, data, key_id)
-      true
     end
 
     def notify_webhook_and_update_cache(archiver, url, data, key_id)
@@ -86,9 +86,24 @@ module MediaArchiver
       enabled
     end
 
+    def handle_archiving_exceptions(archiver, params)
+      begin
+        ApiKey.current = ApiKey.find_by(id: params.dig(:key_id))
+        yield
+      rescue Pender::RetryLater => error
+        retry_archiving_after_failure(archiver, { message: error.message })
+      rescue StandardError => error
+        error_type = 'ARCHIVER_ERROR'
+        params.merge!({code: LapisConstants::ErrorCodes::const_get(error_type), message: "#{error.class}: #{error.message}"})
+        data = { error: { message: params[:message], code: LapisConstants::ErrorCodes::const_get(error_type) }}
+        Media.notify_webhook_and_update_cache(archiver, params[:url], data, params[:key_id])
+        retry_archiving_after_failure(archiver, params)
+      end
+    end
+
     def retry_archiving_after_failure(archiver, params)
       Rails.logger.warn level: 'WARN', message: "#{params[:message]}", url: params[:url], archiver: archiver, error_code: params[:code], error_message: params[:message]
-      raise Pender::RetryLater, "Failed to archive to #{archiver}: #{params[:message]}"
+      raise Pender::RetryLater, "[#{archiver}]: #{params[:message]}"
     end
   end
 

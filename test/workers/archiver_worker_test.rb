@@ -9,7 +9,7 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
     Media.send_to_video_archiver(url, nil)
-    ArchiverWorker.retries_exhausted_callback({ 'args' => ['video_archiver', url, nil], 'error_message' => 'Test Archiver' }, StandardError.new)
+    ArchiverWorker.retries_exhausted_callback({ 'args' => [url, 'video_archiver', nil], 'error_message' => 'Test Archiver' }, StandardError.new)
     data = m.as_json
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), data.dig('archives', 'video_archiver', 'error', 'code')
     assert_equal 'Test Archiver', data.dig('archives', 'video_archiver', 'error', 'message')
@@ -31,14 +31,14 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
       assert_nil data.dig('archives', 'archive_org')
     end
 
-    ArchiverWorker.retries_exhausted_callback({ 'args' => ['archive_org', url, nil], 'error_message' => 'Test Archiver' }, StandardError.new)
+    ArchiverWorker.retries_exhausted_callback({ 'args' => [url, 'archive_org', nil], 'error_message' => 'Test Archiver' }, StandardError.new)
     data = m.as_json
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal 'Test Archiver', data.dig('archives', 'archive_org', 'error', 'message')
     WebMock.disable!
   end
 
-  test "should update cache when Archive.org raises the max retries" do
+  test "should update cache when Archive.org raises since first attempt" do
     Media.any_instance.unstub(:archive_to_archive_org)
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
@@ -50,15 +50,14 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     url = 'https://twitter.com/marcouza/status/875424957613920256'
 
     m = create_media url: url, key: a
-    assert_raises Net::ReadTimeout do
+    assert_raises Pender::RetryLater do
       data = m.as_json(archivers: 'archive_org')
       assert_nil data.dig('archives', 'archive_org')
     end
 
-    ArchiverWorker.retries_exhausted_callback({ 'args' => ['archive_org', url, nil], 'error_message' => 'Test Archiver' }, StandardError.new)
     data = m.as_json
-    assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), data.dig('archives', 'archive_org', 'error', 'code')
-    assert_equal 'Test Archiver', data.dig('archives', 'archive_org', 'error', 'message')
+    assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), data.dig('archives', 'archive_org', 'error', 'code')
+    assert_equal 'Net::ReadTimeout: Exception from WebMock', data.dig('archives', 'archive_org', 'error', 'message')
     WebMock.disable!
   end
 

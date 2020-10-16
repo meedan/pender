@@ -195,7 +195,6 @@ class TwitterTest < ActiveSupport::TestCase
       assert_not_nil data['description']
       assert_not_nil data['picture']
       assert_not_nil data['published_at']
-      assert_nil data['error']
     end
   end
 

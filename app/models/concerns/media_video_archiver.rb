@@ -17,20 +17,21 @@ module MediaVideoArchiver
     end
 
     def send_to_video_archiver(url, key_id, supported = nil)
-      ApiKey.current = ApiKey.find_by(id: key_id)
-      supported = supported_video?(url, key_id) if supported.nil?
-      return if supported.is_a?(FalseClass) || notify_video_already_archived(url, key_id)
-      id = Media.get_id(url)
-      local_folder = File.join(Rails.root, 'tmp', 'videos', id)
-      uri = URI.encode(url)
-      proxy = "--proxy=#{Media.yt_download_proxy(uri)}"
-      output = "-o#{local_folder}/#{id}.%(ext)s"
-      system('youtube-dl', uri, proxy, output, '--restrict-filenames', '--no-warnings', '-q', '--write-all-thumbnails', '--write-info-json', '--all-subs', '-fogg/mp4/webm')
+      handle_archiving_exceptions('video_archiver', { url: url, key_id: key_id }) do
+        supported = supported_video?(url, key_id) if supported.nil?
+        return if supported.is_a?(FalseClass) || notify_video_already_archived(url, key_id)
+        id = Media.get_id(url)
+        local_folder = File.join(Rails.root, 'tmp', 'videos', id)
+        uri = URI.encode(url)
+        proxy = "--proxy=#{Media.yt_download_proxy(uri)}"
+        output = "-o#{local_folder}/#{id}.%(ext)s"
+        system('youtube-dl', uri, proxy, output, '--restrict-filenames', '--no-warnings', '-q', '--write-all-thumbnails', '--write-info-json', '--all-subs', '-fogg/mp4/webm')
 
-      if $?.success?
-        Media.store_video_folder(url, local_folder, self.archiving_folder, key_id)
-      else
-        retry_archiving_after_failure('video_archiver', { url: url, key_id: key_id, code: $?.exitstatus, message: I18n.t(:archiver_video_not_downloaded), supported: supported })
+        if $?.success?
+          Media.store_video_folder(url, local_folder, self.archiving_folder, key_id)
+        else
+          raise Pender::RetryLater, "(#{$?.exitstatus}) #{I18n.t(:archiver_video_not_downloaded)}"
+        end
       end
     end
 
