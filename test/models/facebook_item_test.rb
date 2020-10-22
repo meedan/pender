@@ -270,7 +270,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'facebook', data['provider']
-    assert_match '136985363145802_666508790193454', data['uuid']
+    assert_match '666508790193454', data['uuid']
     assert_match /Classic/, data['title']
     assert_match /إليزابيث تايلو/, data['description']
     assert_not_nil data['published_at']
@@ -446,7 +446,7 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should create Facebook post from page photo URL" do
     m = create_media url: 'https://www.facebook.com/teste637621352/photos/a.754851877912740.1073741826.749262715138323/896869113711015/?type=3'
     data = m.as_json
-    assert_match '749262715138323_896869113711015', data['uuid']
+    assert_match /896869113711015/, data['uuid']
     assert_match 'This post should be fetched.', data['text']
     assert_match '749262715138323', data['user_uuid']
     assert_match 'Teste', data['author_name']
