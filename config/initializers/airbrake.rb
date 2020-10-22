@@ -6,4 +6,10 @@ unless CONFIG['airbrake']['host'].blank?
     config.ignore_environments = %w(development test)
     config.environment = CONFIG['airbrake']['environment']
   end
+
+  Airbrake.add_filter do |notice|
+    if notice[:errors].any? { |error| error[:type] == 'Pender::RetryLater' } && notice[:params][:job] && notice[:params][:job].dig('retry_count').to_i < SIDEKIQ_CONFIG[:max_retries]
+      notice.ignore!
+    end
+  end
 end

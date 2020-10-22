@@ -11,15 +11,14 @@ module MediaPermaCcArchiver
 
   module ClassMethods
     def send_to_perma_cc_in_background(url, key_id)
-      self.delay_for(15.seconds).send_to_perma_cc(url, key_id)
+      ArchiverWorker.perform_async(url, :perma_cc, key_id)
     end
 
-    def send_to_perma_cc(url, key_id, attempts = 1, response = nil, _supported = nil)
-      perma_cc_key = PenderConfig.get('perma_cc_key')
-      return if skip_perma_cc_archiver(perma_cc_key, url, key_id)
-      Media.give_up('perma_cc', url, key_id, attempts, response) and return
+    def send_to_perma_cc(url, key_id, _supported = nil)
+      handle_archiving_exceptions('perma_cc', { url: url, key_id: key_id }) do
+        perma_cc_key = PenderConfig.get('perma_cc_key')
+        return if skip_perma_cc_archiver(perma_cc_key, url, key_id)
 
-      handle_archiving_exceptions('perma_cc', 24.hours, { url: url, key_id: key_id, attempts: attempts }) do
         encoded_uri = URI.encode(URI.decode(url))
         uri = URI.parse("https://api.perma.cc/v1/archives/?api_key=#{perma_cc_key}")
         headers = { 'Content-Type': 'application/json' }
@@ -35,7 +34,7 @@ module MediaPermaCcArchiver
           data = { location: 'http://perma.cc/' + body['guid'] }
           Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
         else
-          retry_archiving_after_failure('ARCHIVER_FAILURE', 'perma_cc', 3.minutes, { url: url, key_id: key_id, attempts: attempts, code: response.code, message: response.message })
+          raise Pender::RetryLater, "(#{response.code}) #{response.message}"
         end
       end
     end

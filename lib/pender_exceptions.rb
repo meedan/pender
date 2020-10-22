@@ -11,4 +11,7 @@ module Pender
   
   class UnsafeUrl < Exception
   end
+
+  class RetryLater < StandardError
+  end
 end

@@ -1022,21 +1022,22 @@ class MediaTest < ActiveSupport::TestCase
     invalid_app_secret: { body: "{\"error\":{\"message\":\"Error validating client secret.\",\"type\":\"OAuthException\",\"code\":1}}", code: "400", message: "Bad Request"},
     api_limit_reached: { body: "{\"error\":{\"message\":\"(#4) Application request limit reached\",\"type\":\"OAuthException\",\"is_transient\":true,\"code\":4}}", code: "403", message: "Forbidden"}
   }.each do |error, response_info|
-    test "should return nil when try to get fb metrics and #{error}" do
+    test "should raise retry error when fails to get fb metrics and #{error}" do
       url = 'https://www.example.com/'
       m = create_media url: url
-      Sidekiq::Testing.fake! do
+      Media.unstub(:request_metrics_from_facebook)
+      Media.any_instance.stubs(:unsafe?).returns(false)
+      WebMock.enable!
+      WebMock.disable_net_connect!(allow: 'graph.facebook.com')
+      WebMock.stub_request(:any, /graph.facebook.com\/oauth\/access_token/).to_return(body: {"access_token":"token"}.to_json)
+      WebMock.stub_request(:any, "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=token").to_return(body: response_info[:body], status: response_info[:code].to_i)
+      PenderAirbrake.stubs(:notify)
+      assert_raises Pender::RetryLater do
         data = m.as_json
-        Media.unstub(:request_metrics_from_facebook)
-        WebMock.enable!
-        WebMock.disable_net_connect!(allow: 'graph.facebook.com')
-        WebMock.stub_request(:any, /graph.facebook.com\/oauth\/access_token/).to_return(body: {"access_token":"token"}.to_json)
-        WebMock.stub_request(:any, "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=token").to_return(body: response_info[:body], status: response_info[:code].to_i)
-        PenderAirbrake.stubs(:notify)
-        assert_nil Media.request_metrics_from_facebook(url)
-        WebMock.disable!
-        PenderAirbrake.unstub(:notify)
       end
+      WebMock.disable!
+      PenderAirbrake.unstub(:notify)
+      Media.any_instance.unstub(:unsafe?)
     end
   end
 
@@ -1047,7 +1048,7 @@ class MediaTest < ActiveSupport::TestCase
       100 => 'Unsupported get request. Facebook object ID does not support this operation',
       803 => 'The Facebook object ID is not correct or invalid'
     }.each do |code, message|
-      assert Media.fb_metrics_permanent_error?(url, { 'code' => code, 'message' => message}), "The error code `#{code}` should be listed as permanent error"
+      assert Media.fb_metrics_error(:permanent, url, { 'code' => code, 'message' => message}), "The error code `#{code}` should be listed as permanent error"
     end
   end
 
@@ -1069,7 +1070,9 @@ class MediaTest < ActiveSupport::TestCase
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
     api_key.application_settings = { config: { facebook: { app_id: 'fb-app-id', app_secret: 'fb-app-secret' }, storage: { endpoint: CONFIG['storage']['endpoint'], access_key: CONFIG['storage']['access_key'], secret_key: CONFIG['storage']['secret_key'], bucket: 'my-bucket', bucket_region: CONFIG['storage']['bucket_region'], video_bucket: 'video-bucket'}}}; api_key.save
-    Media.get_metrics_from_facebook(url, api_key.id, 10)
+    assert_raises Pender::RetryLater do
+      Media.get_metrics_from_facebook(url, api_key.id, 10)
+    end
     assert_equal api_key, ApiKey.current
     assert_equal api_key.settings[:config][:facebook], PenderConfig.current[:facebook]
     assert_equal api_key.settings[:config][:storage], PenderConfig.current[:storage]
