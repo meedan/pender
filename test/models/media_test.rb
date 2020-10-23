@@ -1023,6 +1023,7 @@ class MediaTest < ActiveSupport::TestCase
     api_limit_reached: { body: "{\"error\":{\"message\":\"(#4) Application request limit reached\",\"type\":\"OAuthException\",\"is_transient\":true,\"code\":4}}", code: "403", message: "Forbidden"}
   }.each do |error, response_info|
     test "should raise retry error when fails to get fb metrics and #{error}" do
+      Sidekiq::Testing.fake!
       url = 'https://www.example.com/'
       m = create_media url: url
       Media.unstub(:request_metrics_from_facebook)
@@ -1032,9 +1033,11 @@ class MediaTest < ActiveSupport::TestCase
       WebMock.stub_request(:any, /graph.facebook.com\/oauth\/access_token/).to_return(body: {"access_token":"token"}.to_json)
       WebMock.stub_request(:any, "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=token").to_return(body: response_info[:body], status: response_info[:code].to_i)
       PenderAirbrake.stubs(:notify)
+      assert_equal 0, MetricsWorker.jobs.size
       assert_raises Pender::RetryLater do
         data = m.as_json
       end
+      assert_equal 0, MetricsWorker.jobs.size
       WebMock.disable!
       PenderAirbrake.unstub(:notify)
       Media.any_instance.unstub(:unsafe?)
