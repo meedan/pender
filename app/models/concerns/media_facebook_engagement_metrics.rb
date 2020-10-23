@@ -26,9 +26,9 @@ module MediaFacebookEngagementMetrics
 
     def get_metrics_from_facebook(url, key_id, count)
       ApiKey.current = ApiKey.find_by(id: key_id)
-      MetricsWorker.perform_async(url, key_id, count + 1) if count < 10
       begin
         value = self.request_metrics_from_facebook(url)
+        MetricsWorker.perform_in(24.hours, url, key_id, count + 1) if count < 10
       rescue Pender::RetryLater
         raise Pender::RetryLater, 'Metrics request failed'
       rescue StandardError => e
