@@ -94,11 +94,13 @@ class FacebookProfileTest < ActiveSupport::TestCase
 
   test "should not get metrics from Facebook page" do
     Media.unstub(:request_metrics_from_facebook)
+    Media.any_instance.stubs(:get_oembed_data)
     PenderAirbrake.stubs(:notify).never
     url = 'https://www.facebook.com/ironmaiden/'
     m = Media.new url: url
     data = m.as_json
     assert_nil data['metrics']['facebook']
     PenderAirbrake.unstub(:notify)
+    Media.any_instance.unstub(:get_oembed_data)
   end
 end

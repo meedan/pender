@@ -202,5 +202,25 @@ module MediasHelper
       subkeys.each { |config| return nil if proxy.dig(config).blank? }
       proxy
     end
+
+    def self.crowdtangle_request(resource, id)
+      response = nil
+      uri = URI.parse("https://api.crowdtangle.com/post/#{id}")
+
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      headers = { 'X-API-Token' => PenderConfig.get("crowdtangle_#{resource}_token") }
+      request = Net::HTTP::Get.new(uri.request_uri, headers)
+
+      response = http.request(request)
+      return unless !response.nil? && response.code == '200' && !response.body.blank?
+      begin
+        JSON.parse(response.body)
+      rescue JSON::ParserError => error
+        PenderAirbrake.notify(StandardError.new('Could not parse `crowdtangle` data as JSON'), crowdtangle_url: uri, error_message: error.message, response_body: response.body )
+        Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse `crowdtangle` data as JSON', crowdtangle_url: uri, error_class: error.class, response_code: response.code, response_message: response.message
+        false
+      end
+    end
   end
 end

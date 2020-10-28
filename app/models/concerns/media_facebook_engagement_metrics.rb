@@ -8,7 +8,12 @@ module MediaFacebookEngagementMetrics
   end
 
   def get_metrics_from_facebook
-    self.class.get_metrics_from_facebook(self.original_url, ApiKey.current&.id, 0)
+    facebook_id = self.data['uuid'] if is_a_facebook_post?
+    self.class.get_metrics_from_facebook(self.original_url, ApiKey.current&.id, 0, facebook_id)
+  end
+
+  def is_a_facebook_post?
+    self.data && self.data['provider'] == 'facebook' && self.data['type'] == 'item'
   end
 
   module ClassMethods
@@ -24,11 +29,11 @@ module MediaFacebookEngagementMetrics
       JSON.parse(response.body)['engagement']
     end
 
-    def get_metrics_from_facebook(url, key_id, count)
+    def get_metrics_from_facebook(url, key_id, count = 0, facebook_id = nil)
       ApiKey.current = ApiKey.find_by(id: key_id)
       begin
-        value = self.request_metrics_from_facebook(url)
-        MetricsWorker.perform_in(24.hours, url, key_id, count + 1) if count < 10
+        value = facebook_id ? self.crowdtangle_metrics(facebook_id) : self.request_metrics_from_facebook(url)
+        MetricsWorker.perform_in(24.hours, url, key_id, count + 1, facebook_id) if count < 10
       rescue Pender::RetryLater
         raise Pender::RetryLater, 'Metrics request failed'
       rescue StandardError => e
@@ -65,6 +70,22 @@ module MediaFacebookEngagementMetrics
       return unless error
       Rails.logger.warn level: 'WARN', message: "[Parser] Facebook metrics error: #{error}", url: url, key_id: ApiKey.current&.id, error: response_error
       true
+    end
+
+    def crowdtangle_metrics(id)
+      crowdtangle_data = Media.crowdtangle_request('facebook', id)
+      metrics = { comment_count: 0, reaction_count: 0, share_count: 0, comment_plugin_count: 0 }
+      return metrics unless crowdtangle_data && crowdtangle_data['result'] && crowdtangle_data['result']['posts']
+      post_info = crowdtangle_data['result']['posts'].first
+      stats = post_info['statistics']['actual']
+      reaction_count = 0
+      ["likeCount", "loveCount", "wowCount", "hahaCount", "sadCount", "angryCount", "thankfulCount", "careCount"].each do |r|
+        reaction_count += stats[r]
+      end
+      metrics[:comment_count] = stats['commentCount']
+      metrics[:reaction_count] = reaction_count
+      metrics[:share_count] = stats['shareCount']
+      metrics
     end
   end
 end
