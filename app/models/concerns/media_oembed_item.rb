@@ -31,13 +31,13 @@ module MediaOembedItem
   end
 
   def get_oembed_response(oembed_url, response)
-    return unless !response.nil? && response.code == '200' && !response.body.blank?
+    return unless !response.nil? && !response.body.blank?
     begin
       self.data[:raw][:oembed] = JSON.parse(response.body)
       self.verify_oembed_html
       return true
     rescue JSON::ParserError => error
-      self.data[:raw][:oembed] = { error: { message: error.message, code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') } }
+      self.data[:raw][:oembed] = { error: { message: response.body, code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') } }
       PenderAirbrake.notify(StandardError.new('Could not parse `oembed` data as JSON'), url: self.url, oembed_url: oembed_url, error_message: error.message, response_body: response.body )
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse `oembed` data as JSON', oembed_url: oembed_url, error_class: error.class, response_code: response.code, response_message: response.message
       return false

@@ -79,7 +79,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /SCMP #FacebookLive amid chaotic scenes in #HongKong Legco/, data['description']
     assert_not_nil data['published_at']
     assert_match 'South China Morning Post', data['author_name']
-    assert_match 'http://facebook.com/355665009819', data['author_url']
+    assert_match 'facebook.com/355665009819', data['author_url']
     assert_match /#{id}\/author_picture.jpg/, data['author_picture']
     assert !data['picture'].blank?
   end
@@ -87,7 +87,7 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should create Facebook post from mobile URL" do
     m = create_media url: 'https://m.facebook.com/KIKOLOUREIROofficial/photos/a.10150618138397252/10152555300292252/?type=3&theater'
     data = m.as_json
-    assert_match /Bolívia/, data['text']
+    assert_match /Bolívia/, data['description']
     assert_match 'Kiko Loureiro', data['author_name']
     assert_equal 1, data['media_count']
     assert_equal '20/11/2014', Time.parse(data['published_at']).strftime("%d/%m/%Y")
@@ -112,7 +112,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /Live now: This is the National for Monday, Oct. 31, 2016./, data['description']
     assert_not_nil data['published_at']
     assert_match 'cbcnews', data['username']
-    assert_match 'http://facebook.com/5823419603', data['author_url']
+    assert_match /facebook.com\/5823419603/, data['author_url']
     assert_match /#{id}\/author_picture.jpg/, data['author_picture']
     assert_match /#{id}\/picture.jpg/, data['picture']
   end
@@ -200,7 +200,7 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should parse Facebook video url from a profile" do
     m = create_media url: 'https://www.facebook.com/edwinscott143/videos/vb.737361619/10154242961741620/?type=2&theater'
     data = m.as_json
-    assert_match /Eddie Scott on Facebook/, data['title']
+    assert_match /Eddie Scott/, data['title']
     assert_equal 'item', data['type']
     assert_match /^http/, data['picture']
     assert_match /a996f053490ed4305f09da04d6c4c286\/picture.jpg/, data['picture']
@@ -218,7 +218,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match 'scmp', data['username']
     assert_match /#{id}\/author_picture.jpg/, data['author_picture']
     assert_match /#{id}\/picture.jpg/, data['picture']
-    assert_match 'http://facebook.com/355665009819', data['author_url']
+    assert_match /facebook.com\/355665009819/, data['author_url']
     assert_not_nil Time.parse(data['published_at'])
     assert_match /South China Morning Post/, data['author_name']
   end
@@ -276,7 +276,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
     assert_match 'Classic.mou', data['username']
     assert_match 'Classic', data['author_name']
-    assert_match 'http://facebook.com/136985363145802', data['author_url']
+    assert_match /facebook.com\/136985363145802/, data['author_url']
     assert_match /#{id}\/author_picture.jpg/, data['author_picture']
     assert_match /#{id}\/picture.jpg/, data['picture']
     assert_match 'https://www.facebook.com/Classic.mou/photos/a.136991166478555/666508790193454/?type=3', m.url
@@ -336,6 +336,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     fb_token = CONFIG['facebook_auth_token']
     Airbrake.stubs(:configured?).returns(true)
     Airbrake.stubs(:notify).once
+    Media.any_instance.stubs(:get_oembed_data)
     CONFIG['facebook_auth_token'] = 'EAACMBapoawsBAP8ugWtoTpZBpI68HdM68qgVdLNc8R0F8HMBvTU1mOcZA4R91BsHZAZAvSfTktgBrdjqhYJq2Qet2RMsNZAu12J14NqsP1oyIt74vXlFOBkR7IyjRLLVDysoUploWZC1N76FMPf5Dzvz9Sl0EymSkZD'
     m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
     data = m.as_json
@@ -345,6 +346,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /Nostalgia/, data['title']
     Airbrake.unstub(:configured?)
     Airbrake.unstub(:notify)
+    Media.any_instance.unstub(:get_oembed_data)
   end
 
   test "should store data of post returned by oembed" do
@@ -352,30 +354,21 @@ class FacebookItemTest < ActiveSupport::TestCase
     oembed = m.as_json['raw']['oembed']
     assert oembed.is_a? Hash
     assert !oembed.empty?
-
-    assert_nil oembed['title']
-    assert_match 'Teste', oembed['author_name']
-    assert_match 'https://www.facebook.com/teste637621352/', oembed['author_url']
-    assert_equal 'Facebook', oembed['provider_name']
-    assert_equal 'https://www.facebook.com', oembed['provider_url']
-    assert_equal 552, oembed['width']
-    assert oembed['height'].nil?
   end
 
   test "should store oembed data of a facebook post" do
     m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
     data = m.as_json
 
-    assert_match 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501/942167619246718/?type=3', m.url
     assert data['raw']['oembed'].is_a? Hash
-    assert_equal "https://www.facebook.com", data['raw']['oembed']['provider_url']
-    assert_equal "Facebook", data['raw']['oembed']['provider_name']
+    assert_match /facebook.com/, data['oembed']['provider_url']
+    assert_equal "facebook", data['oembed']['provider_name'].downcase
   end
 
   test "should store oembed data of a facebook page" do
     m = create_media url: 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
     data = m.as_json
-    assert_nil data['raw']['oembed']
+    assert data['raw']['oembed'].is_a? Hash
     assert_match 'Meedan', data['oembed']['author_name']
     assert_match 'Meedan', data['oembed']['title']
   end
@@ -405,7 +398,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
     assert_match 'Bimbo Memories', data['author_name']
     assert_match 'Bimbo.Memories', data['username']
-    assert_match 'http://facebook.com/235404669918505', data['author_url']
+    assert_match /facebook.com\/235404669918505/, data['author_url']
     assert_match /#{id}\/author_picture.jpg/, data['author_picture']
     assert_match /#{id}\/picture.jpg/, data['picture']
   end
@@ -609,17 +602,11 @@ class FacebookItemTest < ActiveSupport::TestCase
     url = 'https://www.facebook.com/teste637621352/posts/1028416870556238'
     m = create_media url: url
     data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
-    assert_nil data['title']
+    assert_match /Teste/, data['title']
     assert_match 'Teste', data['author_name']
-    assert_match 'https://www.facebook.com/teste637621352', data['author_url']
-    assert_equal 'Facebook', data['provider_name']
-    assert_equal 'https://www.facebook.com', data['provider_url']
-    assert_equal 300, data['width']
-    assert_equal 150, data['height']
-
-    json = Pender::Store.current.read(Media.get_id(url), :json)
-    assert_equal 552, json[:raw][:oembed][:width]
-    assert_nil json[:raw][:oembed][:height]
+    assert_match /facebook.com\/\d/, data['author_url']
+    assert_equal 'facebook', data['provider_name']
+    assert_match /https?:\/\/www.facebook.com/, data['provider_url']
   end
 
   test "should not use Facebook embed if is a link to redirect" do

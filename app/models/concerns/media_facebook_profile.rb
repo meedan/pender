@@ -151,6 +151,7 @@ module MediaFacebookProfile
   end
 
   def get_facebook_username
+    return self.data['username'] unless self.data['username'].blank?
     patterns = [
       /^https?:\/\/([^\.]+\.)?facebook\.com\/people\/([^\/\?]+)/,
       /^https:\/\/(www\.)?facebook\.com\/([0-9]+)$/,
