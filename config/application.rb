@@ -39,6 +39,8 @@ end
 # Workaround for https://github.com/rswag/rswag/issues/359
 # Move to config/environments/test.rb after issue is fixed.
 # Enable Rswag auto generation examples from responses
-RSpec.configure do |config|
-  config.swagger_dry_run = false
+if Rails.env.test?
+  RSpec.configure do |config|
+    config.swagger_dry_run = false
+  end
 end
