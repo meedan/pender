@@ -1,0 +1,668 @@
+---
+openapi: 3.0.1
+info:
+  title: Pender
+  version: v1
+  description: A parsing and rendering service
+components:
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: X-Pender-Token
+      in: header
+paths:
+  "/api/about":
+    get:
+      summary: Information about this application
+      tags:
+      - base_api
+      description: Use this method to get the archivers enabled on this application
+      security:
+      - api_key: {}
+      responses:
+        '200':
+          description: Information about the application
+          content:
+            application/json:
+              example:
+                type: about
+                data:
+                  name: Keep
+                  version: v0.76.0
+                  archivers:
+                  - key: archive_is
+                    label: Archive.is
+                  - key: archive_org
+                    label: Archive.org
+                  - key: perma_cc
+                    label: Perma.cc
+                  - key: video
+                    label: Video
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      version:
+                        type: string
+                      archivers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            key:
+                              type: string
+                            label:
+                              type: string
+                          required:
+                          - key
+                          - label
+                    required:
+                    - name
+                    - version
+                    - archivers
+                required:
+                - type
+                - data
+        '401':
+          description: Access denied
+          content:
+            application/json:
+              example:
+                type: error
+                data:
+                  message: Unauthorized
+                  code: 1
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      code:
+                        type: integer
+                    required:
+                    - message
+                    - code
+                required:
+                - type
+                - data
+  "/api/medias":
+    get:
+      summary: Get the metadata for a given URL
+      tags:
+      - medias
+      description: Get parseable data for a given URL, that can be a post or a profile,
+        from different providers
+      parameters:
+      - name: url
+        in: query
+        required: true
+        description: URL to be parsed/rendered
+        schema:
+          type: string
+      - name: refresh
+        in: query
+        required: false
+        description: Force a refresh from the URL instead of the cache
+        schema:
+          type: integer
+      - name: archivers
+        in: query
+        required: false
+        description: List of archivers to target. Can be empty, `none` or a list of
+          archives separated by commas
+        schema:
+          type: string
+      security:
+      - api_key: {}
+      responses:
+        '200':
+          description: Parsed data
+          content:
+            application/json:
+              example:
+                type: media
+                data:
+                  published_at: ''
+                  username: ''
+                  title: ''
+                  description: ''
+                  picture: ''
+                  author_url: ''
+                  author_picture: ''
+                  author_name: ''
+                  screenshot: ''
+                  external_id: ''
+                  html: ''
+                  metrics: {}
+                  archives: {}
+                  raw:
+                    metatags:
+                    - http-equiv: X-UA-Compatible
+                      content: IE=edge
+                    - http-equiv: origin-trial
+                      data-feature: Web Components V0
+                      data-expires: '2020-10-23'
+                      content: AhbmRDASY7NuOZD9cFMgQihZ+mQpCwa8WTGdTx82vSar9ddBQbziBfZXZg+ScofvEZDdHQNCEwz4yM7HjBS9RgkAAABneyJvcmlnaW4iOiJodHRwczovL3lvdXR1YmUuY29tOjQ0MyIsImZlYXR1cmUiOiJXZWJDb21wb25lbnRzVjAiLCJleHBpcnkiOjE2MDM0ODY4NTYsImlzU3ViZG9tYWluIjp0cnVlfQ==
+                    - http-equiv: origin-trial
+                      data-feature: Web Components V0
+                      data-expires: '2020-10-27'
+                      content: Av2+1qfUp3MwEfAFcCccykS1qFmvLiCrMZ//pHQKnRZWG9dldVo8HYuJmGj2wZ7nDg+xE4RQMQ+Ku1zKM3PvYAIAAABmeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZS5jb206NDQzIiwiZmVhdHVyZSI6IldlYkNvbXBvbmVudHNWMCIsImV4cGlyeSI6MTYwMzgzNjc3MiwiaXNTdWJkb21haW4iOnRydWV9
+                    - http-equiv: origin-trial
+                      data-feature: Web Components V0
+                      data-expires: '2021-01-08'
+                      content: AixUK+8UEShlt6+JX1wy9eg+XL+eV5PYSEDPH3C90JNVbIkE1Rg1FyVUfu2bZ/y6Pm1xbPLzuwHYHjv4uKPNnA4AAABqeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXByb2QuY29tOjQ0MyIsImZlYXR1cmUiOiJXZWJDb21wb25lbnRzVjAiLCJleHBpcnkiOjE2MTAwNjQ0MjMsImlzU3ViZG9tYWluIjp0cnVlfQ==
+                    - http-equiv: origin-trial
+                      data-feature: Web Components V0
+                      data-expires: '2021-03-09'
+                      content: AhHpq2nUT6fqP0Kmkq49EWIcl2P1LK1ceU05BoiVnWi8ZIWDdmX/kMwL+ZtuC3oIf0tns8XnO5fm946JEzPVEwgAAABqeyJvcmlnaW4iOiJodHRwczovL2MuZ29vZ2xlcnMuY29tOjQ0MyIsImZlYXR1cmUiOiJXZWJDb21wb25lbnRzVjAiLCJleHBpcnkiOjE2MTIyMjM5OTksImlzU3ViZG9tYWluIjp0cnVlfQ==
+                    - name: theme-color
+                      content: rgba(255, 255, 255, 0.98)
+                    - name: title
+                      content: MeedanTube
+                    - name: description
+                      content: Enjoy the videos and music you love, upload original
+                        content, and share it all with friends, family, and the world
+                        on YouTube.
+                    - name: keywords
+                      content: Meedan Arabic English language translation social media
+                        news currentaffairs nonprofit dialogue
+                    - property: og:site_name
+                      content: YouTube
+                    - property: og:url
+                      content: https://www.youtube.com/channel/UCL6xkW90kBI76OuApogUbFQ
+                    - property: og:title
+                      content: MeedanTube
+                    - property: og:image
+                      content: https://yt3.ggpht.com/a/AATXAJzLW496voft4Qc6JoR1mBy5N1X1v56uEGaY_msX8A=s900-c-k-c0x00ffffff-no-rj
+                    - property: og:image:width
+                      content: '900'
+                    - property: og:image:height
+                      content: '900'
+                    - property: og:description
+                    - property: al:ios:app_store_id
+                      content: '544007664'
+                    - property: al:ios:app_name
+                      content: YouTube
+                    - property: al:ios:url
+                      content: vnd.youtube://www.youtube.com/channel/UCL6xkW90kBI76OuApogUbFQ
+                    - property: al:android:url
+                      content: https://www.youtube.com/channel/UCL6xkW90kBI76OuApogUbFQ?feature=applinks
+                    - property: al:android:app_name
+                      content: YouTube
+                    - property: al:android:package
+                      content: com.google.android.youtube
+                    - property: al:web:url
+                      content: https://www.youtube.com/channel/UCL6xkW90kBI76OuApogUbFQ?feature=applinks
+                    - property: og:type
+                      content: profile
+                    - property: og:video:tag
+                      content: Meedan
+                    - property: og:video:tag
+                      content: Arabic
+                    - property: og:video:tag
+                      content: English
+                    - property: og:video:tag
+                      content: language
+                    - property: og:video:tag
+                      content: translation
+                    - property: og:video:tag
+                      content: social
+                    - property: og:video:tag
+                      content: media
+                    - property: og:video:tag
+                      content: news
+                    - property: og:video:tag
+                      content: currentaffairs
+                    - property: og:video:tag
+                      content: nonprofit
+                    - property: og:video:tag
+                      content: dialogue
+                    - property: fb:app_id
+                      content: '87741124305'
+                    - name: twitter:card
+                      content: summary
+                    - name: twitter:site
+                      content: "@youtube"
+                    - name: twitter:url
+                      content: https://www.youtube.com/channel/UCL6xkW90kBI76OuApogUbFQ
+                    - name: twitter:title
+                      content: MeedanTube
+                    - name: twitter:description
+                    - name: twitter:image
+                      content: https://yt3.ggpht.com/a/AATXAJzLW496voft4Qc6JoR1mBy5N1X1v56uEGaY_msX8A=s900-c-k-c0x00ffffff-no-rj
+                    - name: twitter:app:name:iphone
+                      content: YouTube
+                    - name: twitter:app:id:iphone
+                      content: '544007664'
+                    - name: twitter:app:name:ipad
+                      content: YouTube
+                    - name: twitter:app:id:ipad
+                      content: '544007664'
+                    - name: twitter:app:url:iphone
+                      content: vnd.youtube://www.youtube.com/channel/UCL6xkW90kBI76OuApogUbFQ
+                    - name: twitter:app:url:ipad
+                      content: vnd.youtube://www.youtube.com/channel/UCL6xkW90kBI76OuApogUbFQ
+                    - name: twitter:app:name:googleplay
+                      content: YouTube
+                    - name: twitter:app:id:googleplay
+                      content: com.google.android.youtube
+                    - name: twitter:app:url:googleplay
+                      content: https://www.youtube.com/channel/UCL6xkW90kBI76OuApogUbFQ
+                    - itemprop: name
+                      content: MeedanTube
+                    - itemprop: description
+                    - itemprop: paid
+                      content: 'False'
+                    - itemprop: channelId
+                      content: UCL6xkW90kBI76OuApogUbFQ
+                    - itemprop: width
+                      content: '900'
+                    - itemprop: height
+                      content: '900'
+                    - itemprop: isFamilyFriendly
+                      content: 'True'
+                    - itemprop: regionsAllowed
+                      content: AD,AE,AF,AG,AI,AL,AM,AO,AQ,AR,AS,AT,AU,AW,AX,AZ,BA,BB,BD,BE,BF,BG,BH,BI,BJ,BL,BM,BN,BO,BQ,BR,BS,BT,BV,BW,BY,BZ,CA,CC,CD,CF,CG,CH,CI,CK,CL,CM,CN,CO,CR,CU,CV,CW,CX,CY,CZ,DE,DJ,DK,DM,DO,DZ,EC,EE,EG,EH,ER,ES,ET,FI,FJ,FK,FM,FO,FR,GA,GB,GD,GE,GF,GG,GH,GI,GL,GM,GN,GP,GQ,GR,GS,GT,GU,GW,GY,HK,HM,HN,HR,HT,HU,ID,IE,IL,IM,IN,IO,IQ,IR,IS,IT,JE,JM,JO,JP,KE,KG,KH,KI,KM,KN,KP,KR,KW,KY,KZ,LA,LB,LC,LI,LK,LR,LS,LT,LU,LV,LY,MA,MC,MD,ME,MF,MG,MH,MK,ML,MM,MN,MO,MP,MQ,MR,MS,MT,MU,MV,MW,MX,MY,MZ,NA,NC,NE,NF,NG,NI,NL,NO,NP,NR,NU,NZ,OM,PA,PE,PF,PG,PH,PK,PL,PM,PN,PR,PS,PT,PW,PY,QA,RE,RO,RS,RU,RW,SA,SB,SC,SD,SE,SG,SH,SI,SJ,SK,SL,SM,SN,SO,SR,SS,ST,SV,SX,SY,SZ,TC,TD,TF,TG,TH,TJ,TK,TL,TM,TN,TO,TR,TT,TV,TW,TZ,UA,UG,UM,US,UY,UZ,VA,VC,VE,VG,VI,VN,VU,WF,WS,YE,YT,ZA,ZM,ZW
+                  url: https://www.youtube.com/channel/UCL6xkW90kBI76OuApogUbFQ
+                  provider: page
+                  type: item
+                  parsed_at: '2020-10-16 10:56:51 +0800'
+                  favicon: https://www.google.com/s2/favicons?domain_url=www.youtube.com/channel/UCL6xkW90kBI76OuApogUbFQ
+                  schema:
+                    BreadcrumbList:
+                    - "@context": http://schema.org
+                      "@type": BreadcrumbList
+                      itemListElement:
+                      - "@type": ListItem
+                        position: 1
+                        item:
+                          "@id": http://www.youtube.com/user/MeedanTube
+                          name: MeedanTube
+                  error:
+                    message: |+
+                      Yt::Errors::Forbidden: A request to YouTube API was considered forbidden by the server:
+                      {"error"=>{"code"=>403, "message"=>"The request is missing a valid API key.", "errors"=>[{"message"=>"The request is missing a valid API key.", "domain"=>"global", "reason"=>"forbidden"}], "status"=>"PERMISSION_DENIED"}}
+
+                      You can retry the same request manually by running:
+                      curl -X GET -H "content-length: 0" -H "user-agent: Yt::Request (gzip)" -H "host: www.googleapis.com" "https://www.googleapis.com/youtube/v3/channels?id=UCL6xkW90kBI76OuApogUbFQ&part=snippet"
+
+
+                    code: 5
+                  embed_tag: <script src="http://www.example.com/api/medias.js?url=https://www.youtube.com/user/MeedanTube"
+                    type="text/javascript"></script>
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      parsed_at:
+                        type: string
+                      error:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                          code:
+                            type: integer
+                        required:
+                        - message
+                        - code
+                      provider:
+                        type: string
+                      type:
+                        type: string
+                      embed_tag:
+                        type: string
+                      title:
+                        type: string
+                    required:
+                    - provider
+                    - type
+                    - embed_tag
+                required:
+                - type
+                - data
+            text/html:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      parsed_at:
+                        type: string
+                      error:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                          code:
+                            type: integer
+                        required:
+                        - message
+                        - code
+                      provider:
+                        type: string
+                      type:
+                        type: string
+                      embed_tag:
+                        type: string
+                      title:
+                        type: string
+                    required:
+                    - provider
+                    - type
+                    - embed_tag
+                required:
+                - type
+                - data
+        '400':
+          description: URL not provided
+          content:
+            application/json:
+              example:
+                type: error
+                data:
+                  message: Parameters missing
+                  code: 2
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      code:
+                        type: integer
+                    required:
+                    - message
+                    - code
+                required:
+                - type
+                - data
+            text/html:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      code:
+                        type: integer
+                    required:
+                    - message
+                    - code
+                required:
+                - type
+                - data
+        '401':
+          description: Access denied
+          content:
+            application/json:
+              example:
+                type: error
+                data:
+                  message: Unauthorized
+                  code: 1
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      code:
+                        type: integer
+                    required:
+                    - message
+                    - code
+                required:
+                - type
+                - data
+            text/html:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      code:
+                        type: integer
+                    required:
+                    - message
+                    - code
+                required:
+                - type
+                - data
+        '408':
+          description: Timeout
+          content: {}
+        '429':
+          description: API limit reached
+          content:
+            application/json:
+              example:
+                type: error
+                data:
+                  message: 123
+                  code: 11
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: integer
+                      code:
+                        type: integer
+                    required:
+                    - message
+                    - code
+                required:
+                - type
+                - data
+            text/html:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: integer
+                      code:
+                        type: integer
+                    required:
+                    - message
+                    - code
+                required:
+                - type
+                - data
+        '409':
+          description: URL already being processed
+          content: {}
+    delete:
+      summary: Delete cache for given URL(s)
+      tags:
+      - medias
+      description: Delete cache for the URL(s) passed as parameter, you can use the
+        HTTP verbs DELETE or PURGE
+      parameters:
+      - name: url
+        in: query
+        required: true
+        description: URL(s) whose cache should be delete... can be an array of URLs,
+          a single URL or a list of URLs separated by a space
+        schema:
+          type: string
+      security:
+      - api_key: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              example:
+                type: success
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                required:
+                - type
+        '401':
+          description: Access denied
+          content:
+            application/json:
+              example:
+                type: error
+                data:
+                  message: Unauthorized
+                  code: 1
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      code:
+                        type: integer
+                    required:
+                    - message
+                    - code
+                required:
+                - type
+                - data
+    post:
+      summary: Get the metadata of a list of URLs and archive it
+      tags:
+      - medias
+      description: Create background jobs to parse each URL and notify the caller
+        with the result
+      parameters:
+      - name: url
+        in: query
+        required: true
+        description: URL(s) to be parsed. Can be an array of URLs, a single URL or
+          a list of URLs separated by commas
+        schema:
+          type: array
+          items:
+            type: string
+      - name: refresh
+        in: query
+        required: false
+        description: Force a refresh from the URL instead of the cache. Will be applied
+          to all URLs
+        schema:
+          type: integer
+      - name: archivers
+        in: query
+        required: false
+        description: List of archivers to target. Can be empty, `none` or a list of
+          archives separated by commas. Will be applied to all URLs
+        schema:
+          type: string
+      security:
+      - api_key: {}
+      responses:
+        '200':
+          description: Enqueued URLs
+          content:
+            application/json:
+              example:
+                type: success
+                data:
+                  enqueued:
+                  - https://www.youtube.com/user/MeedanTube
+                  - https://twitter.com/meedan
+                  failed: []
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      enqueued:
+                        type: array
+                        items:
+                          type: string
+                      failed:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                    - enqueued
+                    - failed
+                required:
+                - type
+                - data
+        '401':
+          description: Access denied
+          content:
+            application/json:
+              example:
+                type: error
+                data:
+                  message: Unauthorized
+                  code: 1
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      code:
+                        type: integer
+                    required:
+                    - message
+                    - code
+                required:
+                - type
+                - data
