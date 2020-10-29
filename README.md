@@ -305,7 +305,6 @@ There are rake tasks for a few tasks (besides Rails' default ones). Run them thi
 * `lapis:docs`: Generate the documentation for this API, including models and controllers diagrams, Swagger, API endpoints, licenses, etc.
 * `lapis:docker:run`: Run the application in Docker
 * `lapis:docker:shell`: Enter the Docker container
-* `swagger:docs:markdown`: Generate the documentation in markdown format
 
 ### How to add a new parser
 

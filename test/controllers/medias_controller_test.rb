@@ -7,23 +7,6 @@ class MediasControllerTest < ActionController::TestCase
     @controller = Api::V1::MediasController.new
   end
 
-  test "should return error if url is not provided" do
-    authenticate_with_token
-    get :index, format: :json
-    assert_response 400
-  end
-
-  test "should return error if not authenticated" do
-    get :index, url: 'http://meedan.com', format: :json
-    assert_response 401
-  end
-
-  test "should parse media" do
-    authenticate_with_token
-    get :index, url: 'http://twitter.com/meedan', format: :json
-    assert_response :success
-  end
-
   test "should be able to fetch HTML without token" do
     get :index, url: 'http://twitter.com/meedan', format: :html
     assert_response :success
@@ -256,38 +239,11 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal 'Timeout', JSON.parse(@response.body)['data']['error']['message']
   end
 
-  test "should return API limit reached error" do
-    Twitter::REST::Client.any_instance.stubs(:user).raises(Twitter::Error::TooManyRequests)
-    Twitter::Error::TooManyRequests.any_instance.stubs(:rate_limit).returns(OpenStruct.new(reset_in: 123))
-
-    authenticate_with_token
-    get :index, url: 'https://twitter.com/anxiaostudio', format: :json
-    assert_response 429
-    assert_equal 123, JSON.parse(@response.body)['data']['message']
-
-    Twitter::REST::Client.any_instance.unstub(:user)
-    Twitter::Error::TooManyRequests.any_instance.unstub(:rate_limit)
-  end
-
   test "should render custom HTML if provided by parser" do
     get :index, url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html
     assert_response :success
     assert_match /twitter-tweet/, response.body
     assert_no_match /pender-title/, response.body
-  end
-
-  test "should show error message if is not a url" do
-    authenticate_with_token
-    get :index, url: 'not-valid', format: :json
-    assert_response 400
-    assert_equal 'The URL is not valid', JSON.parse(@response.body)['data']['message']
-  end
-
-  test "should show error message if url not found" do
-    authenticate_with_token
-    get :index, url: 'http://not-valid', format: :json
-    assert_response 400
-    assert_match /The URL is not valid/, JSON.parse(@response.body)['data']['message']
   end
 
   test "should respect timeout" do
@@ -375,11 +331,6 @@ class MediasControllerTest < ActionController::TestCase
         assert !Pender::Store.current.read(id, type), "#{id}.#{type} is missing"
       end
     end
-  end
-
-  test "should not clear cache if not authenticated" do
-    delete :delete, url: 'http://test.com', format: 'json'
-    assert_response 401
   end
 
   test "should return custom oEmbed format for scmp url" do
