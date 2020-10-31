@@ -6,6 +6,9 @@ ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 
+ARG BUNDLER_WORKERS 20
+ARG BUNDLER_RETRIES 5
+
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
         curl \
@@ -18,13 +21,13 @@ RUN apt-get update -qq && \
         python
 
 WORKDIR /app
-COPY Gemfile Gemfile.lock ./
-RUN gem install bundler -v "< 2.0" && bundle install --jobs 20 --retry 5
 COPY . ./
 
-# install youtube-dl
-RUN curl -L https://youtube-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl \
-  && chmod a+rx /usr/local/bin/youtube-dl
+RUN gem install bundler -v "< 2.0" && \
+    bundle install --jobs $BUNDLER_WORKERS --retry $BUNDLER_RETRIES
+RUN curl -L https://youtube-dl.org/downloads/latest/youtube-dl \
+         -o /usr/local/bin/youtube-dl && \
+    chmod a+rx /usr/local/bin/youtube-dl
 
 RUN chmod +x /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-background.sh
