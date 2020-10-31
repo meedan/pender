@@ -1,4 +1,7 @@
 #!/bin/bash
+
+export RAILS_ENV=development
+
 bundle exec rake db:create
 bundle exec rake db:migrate
 export SECRET_KEY_BASE=$(bundle exec rake secret)
