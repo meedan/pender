@@ -15,3 +15,5 @@ cp config/puma.rb $puma
 echo "pidfile '${PIDS}/server-$RAILS_ENV.pid'" >> $puma
 echo "port $SERVER_PORT" >> $puma
 bundle exec puma -C $puma
+
+exec make "$@"
