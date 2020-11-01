@@ -6,8 +6,9 @@ ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 
-ARG BUNDLER_WORKERS 20
-ARG BUNDLER_RETRIES 5
+ARG BUNDLER_WORKERS=20
+ARG BUNDLER_RETRIES=5
+WORKDIR /app
 
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
@@ -19,16 +20,14 @@ RUN apt-get update -qq && \
         libsqlite3-dev \
         libpq-dev \
         python
-
-WORKDIR /app
-COPY . ./
+RUN curl -L https://yt-dl.org/downloads/latest/youtube-dl \
+         -o /usr/local/bin/youtube-dl
+COPY Gemfile Gemfile.lock ./
 RUN gem install bundler -v "< 2.0" && \
     bundle install --jobs $BUNDLER_WORKERS --retry $BUNDLER_RETRIES
-RUN curl -L https://yt-dl.org/downloads/latest/youtube-dl \
-         -o /usr/local/bin/youtube-dl && \
-    chmod a+rx /usr/local/bin/youtube-dl
 
-RUN chmod +x /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-background.sh
+COPY . ./
+
 EXPOSE 3200
-CMD ["/app/docker-entrypoint.sh"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["test"]
