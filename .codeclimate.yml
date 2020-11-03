@@ -39,12 +39,12 @@ plugins:
   bundler-audit:
     enabled: true
 exclude_patterns:
-- "app/controllers/concerns/*_doc.rb"
 - "public/api"
 - "lib/tasks"
 - "pender-client-php"
 - "public/coverage"
 - "test"
+- "spec"
 - "public/javascripts/jquery-2.1.3.min.js"
 - "public/javascripts/md5.js"
 - "config/environments/*"

@@ -11,7 +11,6 @@ SimpleCov.start 'rails' do
   command_name "Tests #{rand(100000)}"
   add_filter do |file|
     (!file.filename.match(/\/app\/controllers\/[^\/]+\.rb$/).nil? && file.filename.match(/application_controller\.rb$/).nil?) ||
-    !file.filename.match(/\/app\/controllers\/concerns\/[^\/]+_doc\.rb$/).nil? ||
     !file.filename.match(/\/lib\/sample_data\.rb$/).nil? ||
     !file.filename.match(/\/lib\/middleware_sidekiq_server_retry\.rb$/).nil?
   end
