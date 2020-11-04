@@ -31,4 +31,3 @@ COPY . ./
 
 EXPOSE 3200
 ENTRYPOINT ["./docker-entrypoint.sh"]
-CMD ["test"]
