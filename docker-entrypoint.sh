@@ -6,7 +6,11 @@ configurator() {
     if [ ! -d "configurator" ]; then
         git clone https://github.com/meedan/configurator ./configurator
     fi
-    d=configurator/check/${DEPLOY_ENV}/${APP}/
+    CONFIGURATOR_ENV=${DEPLOY_ENV}
+    if [[ $DEPLOY_ENV == "test" ]]; then  # override this One Weird Trick
+        CONFIGURATOR_ENV="local"
+    fi
+    d=configurator/check/${CONFIGURATOR_ENV}/${APP}/
     for f in $(find $d -type f); do
         cp "$f" "${f/$d/}"
     done
@@ -74,19 +78,8 @@ else
             echo "GITHUB_TOKEN environment variable must be set. Exiting."
             exit 1
         fi
-        # TODO: add from production start script
 
-        mkdir -p ${PWD}/tmp/pids
-        puma="${PWD}/tmp/puma-${DEPLOY_ENV}.rb"
-        cp config/puma.rb ${puma}
-        cat << EOF >> ${puma}
-pidfile '${PWD}/tmp/pids/server-${DEPLOY_ENV}.pid'
-environment '${DEPLOY_ENV}'
-port ${SERVER_PORT}
-workers 3
-EOF
-
-        bundle exec puma -C ${puma} -t 8:32
+        bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid --environment ${DEPLOY_ENV} --workers 3 -t 8:32 &
     fi
 fi
 
