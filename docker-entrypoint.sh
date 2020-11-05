@@ -24,7 +24,11 @@ set_config() {
 
 # check if user has private repo access
 PRIVATE_REPO_ACCESS="false"
-GIT_TERMINAL_PROMPT=0 git clone -q https://github.com/meedan/configurator.git
+if [[ -z ${GITHUB_TOKEN} ]]; then
+    GIT_TERMINAL_PROMPT=0 git clone -q https://github.com/meedan/configurator.git
+else
+    GIT_TERMINAL_PROMPT=0 git clone -q https://${GITHUB_TOKEN}:x-oauth-basic@github.com/meedan/configurator.git
+fi
 if [[ $? -eq 0 ]]; then
     PRIVATE_REPO_ACCESS="true"
 fi
@@ -51,19 +55,16 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
     fi
 
     # TODO: containerize these test tasks
+    echo "running rake tasks"
     bundle exec rake db:create
     bundle exec rake db:migrate
     export SECRET_KEY_BASE=$(bundle exec rake secret)
     bundle exec rake lapis:api_keys:create_default
 
-    PIDS=${PWD}/tmp/pids
-    mkdir -p ${PIDS}
-    rm -f ${PIDS}/server-$RAILS_ENV.pid
-    puma="${PIDS}/puma-$RAILS_ENV.rb"
-    cp config/puma.rb $puma
-    echo "pidfile '${PIDS}/server-$RAILS_ENV.pid'" >> $puma
-    echo "port $SERVER_PORT" >> $puma
-    bundle exec puma -C $puma
+    echo "rake tasks complete running puma"
+    bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid &
+    test/setup-parallel
+    bundle exec rake "parallel:test[3]"
 
 # run deployment environment setup (including local runs)
 else
