@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 
 # TODO: replace with AWS SSM script when ready
 configurator() {
@@ -15,8 +13,8 @@ configurator() {
 }
 
 set_config() {
-    INTERNAL=$1
-    if [[ "${INTERNAL}" == "true" ]]; then
+    PRIVATE_REPO_ACCESS=$1
+    if [[ "${PRIVATE_REPO_ACCESS}" == "true" ]]; then
         configurator
     else
         find config/ -iname \*.example | rename -v "s/.example//g"
@@ -24,18 +22,21 @@ set_config() {
 }
 
 
-# check if user has configurator access
+# check if user has private repo access
 PRIVATE_REPO_ACCESS="false"
-git clone -q https://github.com/meedan/configurator.git
+GIT_TERMINAL_PROMPT=0 git clone -q https://github.com/meedan/configurator.git
 if [[ $? -eq 0 ]]; then
     PRIVATE_REPO_ACCESS="true"
 fi
+echo "Private Repo Access? ${PRIVATE_REPO_ACCESS}"
 
+set -e
 # check that required environment variables are set
 if [[ -z ${DEPLOY_ENV+x} || -z ${APP+x} ]]; then
     echo "DEPLOY_ENV and APP environment variables must be set. Exiting."
     exit 1
 fi
+echo "Running application [${APP}] in [${DEPLOY_ENV}] environment"
 
 # run test environment setup
 if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
@@ -44,7 +45,7 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
             echo "GITHUB_TOKEN environment variable must be set. Exiting."
             exit 1
         fi
-        configurator()  # always set config with configurator for travis
+        configurator  # always set config with configurator for travis
     elif [[ "${DEPLOY_ENV}" == "test" ]]; then
         set_config "${PRIVATE_REPO_ACCESS}"
     fi
@@ -66,14 +67,26 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
 
 # run deployment environment setup (including local runs)
 else
+    set_config "${PRIVATE_REPO_ACCESS}"
     if [[ "${DEPLOY_ENV}" != "local"  ]]; then
         if [[ -z "${GITHUB_TOKEN}" ]]; then
             echo "GITHUB_TOKEN environment variable must be set. Exiting."
             exit 1
         fi
         # TODO: add from production start script
+
+        mkdir -p ${PWD}/tmp/pids
+        puma="${PWD}/tmp/puma-${DEPLOY_ENV}.rb"
+        cp config/puma.rb ${puma}
+        cat << EOF >> ${puma}
+pidfile '${PWD}/tmp/pids/server-${DEPLOY_ENV}.pid'
+environment '${DEPLOY_ENV}'
+port ${SERVER_PORT}
+workers 3
+EOF
+
+        bundle exec puma -C ${puma} -t 8:32
     fi
-    set_config "${PRIVATE_REPO_ACCESS}"
 fi
 
 exec "$@"

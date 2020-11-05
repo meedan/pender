@@ -19,7 +19,8 @@ RUN apt-get update -qq && \
         inotify-tools \
         libsqlite3-dev \
         libpq-dev \
-        python
+        python \
+        rename
 RUN curl -L https://yt-dl.org/downloads/latest/youtube-dl \
          -o /usr/local/bin/youtube-dl
 COPY Gemfile Gemfile.lock ./
