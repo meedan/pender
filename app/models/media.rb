@@ -271,12 +271,7 @@ class Media
       options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
       uri = Media.parse_url(decoded_uri(self.url))
       if self.url.match(/facebook\.com\/groups/)
-        options.merge!({
-          'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
-          'Accept' =>  'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-          'Accept-Language' => 'en-US',
-          'Cookie' => Media.set_cookies(uri)
-        })
+        options.merge!(self.facebook_headers(uri))
       end
       html = ''
       OpenURI.open_uri(uri, options) do |f|

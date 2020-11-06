@@ -29,6 +29,7 @@ module MediaFacebookItem
 
   def parse_facebook_uuid
     self.url = self.url.gsub(/:\/\/m\.facebook\./, '://www.facebook.')
+    self.doc ||= self.get_html(self.facebook_headers)
     self.get_facebook_post_id_from_url
     self.get_facebook_user_id_from_url
     if self.url.match(EVENT_URL).nil?
@@ -295,18 +296,29 @@ module MediaFacebookItem
   end
 
   def get_crowdtangle_facebook_data(id)
-    crowdtangle_data = Media.crowdtangle_request('facebook', id)
+    crowdtangle_data = Media.crowdtangle_request('facebook', id).with_indifferent_access
     return unless crowdtangle_data && crowdtangle_data['result']
     self.data['raw']['crowdtangle'] = crowdtangle_data['result']
     post_info = crowdtangle_data['result']['posts'].first
-    self.data[:author_name] = post_info['account']['name']
-    self.data[:username] = post_info['account']['handle']
-    self.data[:author_picture] = post_info['account']['profileImage']
-    self.data[:author_url] = post_info['account']['url']
-    self.data[:description] = self.data[:text] = post_info['message']
-    self.data[:external_id] = post_info['platformId']
-    self.data[:object_id] = post_info['platformId']
-    self.data[:picture] = post_info['media'].first['full'] if post_info['media']
-    self.data[:published_at] = post_info['date']
+    self.data[:author_name] = post_info.dig('account', 'name')
+    self.data[:username] = post_info.dig('account', 'handle')
+    self.data[:author_picture] = post_info.dig('account', 'profileImage')
+    self.data[:author_url] = post_info.dig('account', 'url')
+    self.data[:description] = self.data[:text] = post_info.dig('message')
+    self.data[:external_id] = post_info.dig('platformId')
+    self.data[:object_id] = post_info.dig('platformId')
+    self.data[:picture] = post_info['media'].first['full'] if post_info.dig('media')
+    self.data[:published_at] = post_info.dig('date')
   end
+
+  def facebook_headers(uri = nil)
+    uri ||= Media.parse_url(decoded_uri(self.url))
+    ({
+      'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
+      'Accept' =>  'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+      'Accept-Language' => 'en-US',
+      'Cookie' => Media.set_cookies(uri)
+    })
+  end
+
 end
