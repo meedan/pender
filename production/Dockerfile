@@ -13,7 +13,10 @@ ENV DEPLOYUSER=pender \
     MAX_POOL_SIZE=4 \
 	SERVER_PORT=8000 \
 	RAILS_SERVE_STATIC_FILES=1 \
-    TERM=xterm
+    TERM=xterm \
+    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    LANGUAGE=C.UTF-8
 
 # runtime binaries
 COPY production/bin /opt/bin/

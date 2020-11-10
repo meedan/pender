@@ -4,6 +4,11 @@ MAINTAINER Meedan <sysops@meedan.com>
 # the Rails stage can be overridden from the caller
 ENV RAILS_ENV development
 
+# Set a UTF-8 capabable locale
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
+ENV LANGUAGE C.UTF-8
+
 # install dependencies
 RUN apt-get update -qq && apt-get install -y curl build-essential git graphicsmagick inotify-tools libsqlite3-dev libpq-dev python --no-install-recommends
 
