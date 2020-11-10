@@ -124,25 +124,29 @@ module MediasHelper
 
   def cleanup_data_encoding(data)
     data.each do |field, value|
-      data[field] = cleanup_text(value)
+      data[field] = cleanup_text(value, field)
     end
   end
 
-  def cleanup_text(content)
+  def cleanup_text(content, field = nil)
     if content.is_a?(String)
       content = content.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "�")
+      begin
+        content = URI.encode(content) if field == 'raw' && is_url?(content)
+      rescue
+      end
     elsif content.respond_to?(:each_with_index)
-      content = cleanup_collection(content)
+      content = cleanup_collection(content, field)
     end
     content
   end
 
-  def cleanup_collection(content)
+  def cleanup_collection(content, field = nil)
     content.each_with_index do |(k, v), i|
       next if content.is_a?(Hash) && !v
       value = v || k
       index = content.is_a?(Hash) ? k : i
-      content[index] = cleanup_text(value)
+      content[index] = cleanup_text(value, field)
     end
     content
   end
@@ -213,13 +217,13 @@ module MediasHelper
       request = Net::HTTP::Get.new(uri.request_uri, headers)
 
       response = http.request(request)
-      return unless !response.nil? && response.code == '200' && !response.body.blank?
+      return {} unless !response.nil? && response.code == '200' && !response.body.blank?
       begin
         JSON.parse(response.body)
       rescue JSON::ParserError => error
         PenderAirbrake.notify(StandardError.new('Could not parse `crowdtangle` data as JSON'), crowdtangle_url: uri, error_message: error.message, response_body: response.body )
         Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse `crowdtangle` data as JSON', crowdtangle_url: uri, error_class: error.class, response_code: response.code, response_message: response.message
-        false
+        {}
       end
     end
   end
