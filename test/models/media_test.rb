@@ -1102,4 +1102,14 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal url, m.url
     Media.any_instance.unstub(:doc)
   end
+
+  test "should return url on title when title is blank" do
+    Media.any_instance.stubs(:doc).returns(nil)
+    url = 'http://example.com/empty-page'
+    m = Media.new url: url
+    data = m.as_json
+    assert_equal url, data['title']
+    Media.any_instance.unstub(:doc)
+  end
+
 end
