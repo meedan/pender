@@ -133,7 +133,8 @@ module MediasHelper
       content = content.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "�")
       begin
         content = URI.encode(content) if field == 'raw' && is_url?(content)
-      rescue
+      rescue StandardError => error
+        Rails.logger.warn level: 'INFO', message: '[Parser] Could not encode URL', url: self.url, content: content, error_class: error.class, error_message: error.message
       end
     elsif content.respond_to?(:each_with_index)
       content = cleanup_collection(content, field)
@@ -181,6 +182,26 @@ module MediasHelper
     end
   end
 
+  def set_data_field(field, *values)
+    return self.data[field] unless self.data[field].blank?
+    values.each do |value|
+      unless value.blank?
+        self.data[field] = value
+        break
+      end
+    end
+  end
+
+  def facebook_headers(uri = nil)
+    uri ||= Media.parse_url(decoded_uri(self.url))
+    ({
+      'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
+      'Accept' =>  'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+      'Accept-Language' => 'en-US',
+      'Cookie' => Media.set_cookies(uri)
+    })
+  end
+
   Media.class_eval do
     def self.decoded_uri(url)
       begin
@@ -208,7 +229,6 @@ module MediasHelper
     end
 
     def self.crowdtangle_request(resource, id)
-      response = nil
       uri = URI.parse("https://api.crowdtangle.com/post/#{id}")
 
       http = Net::HTTP.new(uri.host, uri.port)
@@ -222,7 +242,7 @@ module MediasHelper
         JSON.parse(response.body)
       rescue JSON::ParserError => error
         PenderAirbrake.notify(StandardError.new('Could not parse `crowdtangle` data as JSON'), crowdtangle_url: uri, error_message: error.message, response_body: response.body )
-        Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse `crowdtangle` data as JSON', crowdtangle_url: uri, error_class: error.class, response_code: response.code, response_message: response.message
+        Rails.logger.warn level: 'WARN', message: '[Parser] Could not get `crowdtangle` data', crowdtangle_url: uri, error_class: error.class, response_code: response.code, response_message: response.message
         {}
       end
     end

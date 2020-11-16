@@ -190,7 +190,7 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_match 'War Goes Viral', data['title']
     assert_match 'How social media is being weaponized across the world', data['description']
-    assert_equal '', data['published_at']
+    assert !data['published_at'].blank?
     assert_match 'Emerson T. Brooking and P. W. Singer', data['username']
     assert_match 'https://www.theatlantic.com', data['author_url']
     assert_match /\/#{id}\/picture/, data['picture']
@@ -356,8 +356,14 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should not redirect to HTTPS if not available" do
-    m = create_media url: 'http://www.angra.net'
-    assert_equal 'http://angra.net/website', m.url
+    url = 'http://www.angra.net'
+    https_url = 'https://www.angra.net/'
+    response = 'mock'; response.stubs(:code).returns(200)
+    Media.stubs(:request_url).with(url, 'Head').returns(response)
+    Media.stubs(:request_url).with(https_url, 'Head').raises(OpenSSL::SSL::SSLError)
+    m = create_media url: url
+    assert_equal 'http://www.angra.net/', m.url
+    Media.unstub(:request_url)
   end
 
   test "should parse dropbox video url" do

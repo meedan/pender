@@ -271,9 +271,6 @@ class Media
       proxy = self.get_proxy
       options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
       uri = Media.parse_url(decoded_uri(self.url))
-      if self.url.match(/facebook\.com\/groups/)
-        options.merge!(self.facebook_headers(uri))
-      end
       html = ''
       OpenURI.open_uri(uri, options) do |f|
         f.binmode
