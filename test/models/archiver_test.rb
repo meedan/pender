@@ -615,19 +615,18 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should generate the public archiving folder for videos" do
-    storage = CONFIG[:storage].merge(bucket: 'default-bucket', video_asset_path: nil, video_bucket: nil)
-    a = create_api_key application_settings: { config: { storage: storage }}
+    a = create_api_key application_settings: { config: { storage_bucket: 'default-bucket', storage_video_asset_path: nil, storage_video_bucket: nil }}
     ApiKey.current = a
 
-    assert_match /#{storage[:endpoint]}\/default-bucket\d*\/video/, Media.archiving_folder
+    assert_match /#{PenderConfig.get('storage_endpoint')}\/default-bucket\d*\/video/, Media.archiving_folder
 
-    a.application_settings[:config][:storage][:video_bucket] = 'bucket-for-videos'; a.save
+    a.application_settings[:config][:storage_video_bucket] = 'bucket-for-videos'; a.save
     ApiKey.current = a
     Pender::Store.current = nil
     PenderConfig.current = nil
-    assert_match /#{storage[:endpoint]}\/bucket-for-videos\d*\/video/, Media.archiving_folder
+    assert_match /#{PenderConfig.get('storage_endpoint')}\/bucket-for-videos\d*\/video/, Media.archiving_folder
 
-    a.application_settings[:config][:storage][:video_asset_path] = 'http://public-storage/my-videos'; a.save
+    a.application_settings[:config][:storage_video_asset_path] = 'http://public-storage/my-videos'; a.save
     ApiKey.current = a
     Pender::Store.current = nil
     PenderConfig.current = nil
@@ -694,7 +693,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     assert_nil Media.yt_download_proxy(m.url)
 
-    api_key.application_settings = { config: { ytdl_proxy: { host: 'my-proxy.mine', port: '1111', user_prefix: 'my-user-prefix', pass: '12345' }}}; api_key.save
+    api_key.application_settings = { config: { ytdl_proxy_host: 'my-proxy.mine', ytdl_proxy_port: '1111', ytdl_proxy_user_prefix: 'my-user-prefix', ytdl_proxy_pass: '12345' }}; api_key.save
     PenderConfig.current = nil
     m = Media.new url: url, key: api_key
     assert_equal 'http://my-user-prefix:12345@my-proxy.mine:1111', Media.yt_download_proxy(m.url)
@@ -708,22 +707,30 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.send_to_video_archiver(url, nil)
     assert_nil ApiKey.current
     assert_equal CONFIG, PenderConfig.current
-    assert_equal CONFIG[:storage], Pender::Store.current.instance_variable_get(:@storage)
+    %w(endpoint access_key secret_key bucket bucket_region video_bucket).each do |key|
+      assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
+    end
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
     api_key = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     Media.send_to_video_archiver(url, api_key.id)
     assert_equal api_key, ApiKey.current
     assert_equal CONFIG, PenderConfig.current
-    assert_equal CONFIG[:storage], Pender::Store.current.instance_variable_get(:@storage)
+    %w(endpoint access_key secret_key bucket bucket_region video_bucket).each do |key|
+      assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
+    end
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
-    api_key.application_settings = { config: { ytdl_proxy: { host: 'my-proxy.mine', port: '1111', user_prefix: 'my-user-prefix', pass: '12345' }, storage: { endpoint: CONFIG['storage']['endpoint'], access_key: CONFIG['storage']['access_key'], secret_key: CONFIG['storage']['secret_key'], bucket: 'my-bucket', bucket_region: CONFIG['storage']['bucket_region'], video_bucket: 'video-bucket'}}}; api_key.save
+    api_key.application_settings = { config: { ytdl_proxy_host: 'my-proxy.mine', ytdl_proxy_port: '1111', ytdl_proxy_user_prefix: 'my-user-prefix', ytdl_proxy_pass: '12345', storage_endpoint: CONFIG['storage_endpoint'], storage_access_key: CONFIG['storage_access_key'], storage_secret_key: CONFIG['storage_secret_key'], storage_bucket: 'my-bucket', storage_bucket_region: CONFIG['storage_bucket_region'], storage_video_bucket: 'video-bucket'}}; api_key.save
     Media.send_to_video_archiver(url, api_key.id, 20)
     assert_equal api_key, ApiKey.current
-    assert_equal api_key.settings[:config][:ytdl_proxy], PenderConfig.current[:ytdl_proxy]
-    assert_equal api_key.settings[:config][:storage], PenderConfig.current[:storage]
-    assert_equal api_key.settings[:config][:storage], Pender::Store.current.instance_variable_get(:@storage)
+    %w(host port user_prefix pass).each do |key|
+      assert_equal api_key.settings[:config]["ytdl_proxy_#{key}"], PenderConfig.current["ytdl_proxy_#{key}"]
+    end
+    %w(endpoint access_key secret_key bucket bucket_region video_bucket).each do |key|
+      assert_equal api_key.settings[:config]["storage_#{key}"], PenderConfig.current["storage_#{key}"]
+      assert_equal api_key.settings[:config]["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
+    end
 
     Media.unstub(:system)
   end

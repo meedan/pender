@@ -1,9 +1,11 @@
 class Semaphore
   def initialize(key)
-    redis_config = PenderConfig.get('redis', {})
-    unless redis_config.empty?
+    host = PenderConfig.get('redis_host')
+    port = PenderConfig.get('redis_port')
+    db = PenderConfig.get('redis_database')
+    if host && port && db
       @key = "semaphore:#{key}"
-      @redis = Redis.new({ host: redis_config['host'], port: redis_config['port'], db: redis_config['database'] })
+      @redis = Redis.new({ host: host, port: port, db: db })
     end
   end
 

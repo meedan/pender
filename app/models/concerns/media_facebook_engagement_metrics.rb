@@ -18,8 +18,7 @@ module MediaFacebookEngagementMetrics
 
   module ClassMethods
     def request_metrics_from_facebook(url)
-      facebook = PenderConfig.get('facebook', {})
-      api = "https://graph.facebook.com/oauth/access_token?client_id=#{facebook.dig('app_id')}&client_secret=#{facebook.dig('app_secret')}&grant_type=client_credentials"
+      api = "https://graph.facebook.com/oauth/access_token?client_id=#{PenderConfig.get('facebook_app_id')}&client_secret=#{PenderConfig.get('facebook_app_secret')}&grant_type=client_credentials"
       response = Net::HTTP.get_response(URI(api))
       return unless verify_facebook_metrics_response(url, response)
       token = JSON.parse(response.body)['access_token']

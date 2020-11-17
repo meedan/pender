@@ -435,13 +435,10 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_match '10155150801660195_10155150801660195', data['uuid']
     assert_match '10155150801660195', data['user_uuid']
-    assert_match 'David Marcus', data['author_name']
-    assert_equal 1, data['media_count']
+    assert !data['author_name'].blank?
     assert_match '10155150801660195', data['object_id']
-    assert_match /David Marcus/, data['title']
-    assert_not_nil data['author_picture']
-    assert_match /#{id}\/picture.jpg/, data['picture']
-    assert_match /always working on ways to make Messenger more useful/, data['text']
+    assert !data['title'].blank?
+    assert data['error'].nil?
   end
 
   tests = YAML.load_file(File.join(Rails.root, 'test', 'data', 'fbposts.yml'))

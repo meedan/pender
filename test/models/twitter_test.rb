@@ -287,20 +287,21 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should not parse a twitter post when passing the twitter api key or subkey missing" do
-    key = create_api_key application_settings: { config: { twitter: {consumer_key: 'consumer_key', consumer_secret: '' }} }
+    key = create_api_key application_settings: { config: { twitter_consumer_key: 'consumer_key', twitter_consumer_secret: '' } }
     m = create_media url: 'https://twitter.com/cal_fire/status/919029734847025152', key: key
-    assert_equal 'consumer_key', PenderConfig.get(:twitter)[:consumer_key]
+    assert_equal 'consumer_key', PenderConfig.get(:twitter_consumer_key)
+    assert_equal '', PenderConfig.get(:twitter_consumer_secret)
     data = m.as_json
     assert_equal m.url, data['title']
-    assert_match "Twitter::Error::BadRequest: 215 Bad Authentication data", data['error']['message']
+    assert_match "Twitter::Error::Unauthorized", data['error']['message']
     PenderConfig.current = nil
 
-    key = create_api_key application_settings: { config: { twitter:'' } }
+    key = create_api_key application_settings: { config: { twitter_consumer_key: '' } }
     m = create_media url: 'https://twitter.com/cal_fire/status/919029734847025152' , key: key
-    assert_equal "", PenderConfig.get(:twitter)
+    assert_equal '', PenderConfig.get(:twitter_consumer_key)
     data = m.as_json
     assert_equal m.url, data['title']
-    assert_match "Twitter::Error::BadRequest: 215 Bad Authentication data", data['error']['message']
+    assert_match "Twitter::Error::Unauthorized", data['error']['message']
   end
   
 end
