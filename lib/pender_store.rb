@@ -16,7 +16,11 @@ module Pender
     end
 
     def initialize
-      @storage = PenderConfig.get('storage', {})
+      @storage = {}
+      %w(endpoint access_key secret_key bucket bucket_region video_bucket video_asset_path medias_asset_path).each do |key|
+        @storage[key] = PenderConfig.get("storage_#{key}")
+      end
+
       config = {
         endpoint: @storage.dig('endpoint'),
         access_key_id: @storage.dig('access_key'),

@@ -205,7 +205,7 @@ class YoutubeTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ', key: key
     assert_equal '', PenderConfig.get(:google_api_key)
     data = m.as_json
-    assert_equal "", data['title']
+    assert_equal m.url, data['title']
     assert_match "The request is missing a valid API key.", data['error']['message']
   end
 end

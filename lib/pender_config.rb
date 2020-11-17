@@ -17,9 +17,18 @@ class PenderConfig
     api_key && api_key.settings[:config] ? CONFIG.merge(api_key.settings[:config]) : CONFIG
   end
 
-  def self.get(config_key, default = nil)
+  def self.get(config_key, default = nil, type = nil)
     config = PenderConfig.current
     return default if !config.has_key?(config_key)
-    config[config_key] || default
+    value = config[config_key] || default
+    type == :json ? get_json_config(value, default) : value
+  end
+
+  def self.get_json_config(value, default)
+    begin
+      JSON.parse(value)
+    rescue JSON::ParserError
+      default
+    end
   end
 end

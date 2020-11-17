@@ -57,7 +57,7 @@ class MediaTest < ActiveSupport::TestCase
     header_options_without_cf = Media.send(:html_options, url)
     assert_nil header_options_without_cf['CF-Access-Client-Id']
     assert_nil header_options_without_cf['CF-Access-Client-Secret']
-    stub_configs({'hosts' => {"example.com"=>{"cf_credentials"=>"1234:5678"}}})
+    stub_configs({'hosts' => {"example.com"=>{"cf_credentials"=>"1234:5678"}}.to_json})
     header_options_with_cf = Media.send(:html_options, url)
     assert_equal '1234', header_options_with_cf['CF-Access-Client-Id']
     assert_equal '5678', header_options_with_cf['CF-Access-Client-Secret']
@@ -190,7 +190,7 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_match 'War Goes Viral', data['title']
     assert_match 'How social media is being weaponized across the world', data['description']
-    assert_equal '', data['published_at']
+    assert !data['published_at'].blank?
     assert_match 'Emerson T. Brooking and P. W. Singer', data['username']
     assert_match 'https://www.theatlantic.com', data['author_url']
     assert_match /\/#{id}\/picture/, data['picture']
@@ -356,8 +356,14 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should not redirect to HTTPS if not available" do
-    m = create_media url: 'http://www.angra.net'
-    assert_equal 'http://angra.net/website', m.url
+    url = 'http://www.angra.net'
+    https_url = 'https://www.angra.net/'
+    response = 'mock'; response.stubs(:code).returns(200)
+    Media.stubs(:request_url).with(url, 'Head').returns(response)
+    Media.stubs(:request_url).with(https_url, 'Head').raises(OpenSSL::SSL::SSLError)
+    m = create_media url: url
+    assert_equal 'http://www.angra.net/', m.url
+    Media.unstub(:request_url)
   end
 
   test "should parse dropbox video url" do
@@ -732,12 +738,12 @@ class MediaTest < ActiveSupport::TestCase
     config = CONFIG['hosts']
 
     ['gb', 'us'].each do |country|
-      CONFIG['hosts'] = { 'time.com' => { 'country' => country } }
+      CONFIG['hosts'] = { 'time.com' => { 'country' => country } }.to_json
       m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
       host, user, pass = m.send(:get_proxy)
-      assert_match CONFIG['proxy']['host'], host
-      assert_match "#{CONFIG['proxy']['user_prefix']}#{CONFIG['proxy']['country_prefix']}#{country}", user
-      assert_equal CONFIG['proxy']['pass'], pass
+      assert_match CONFIG['proxy_host'], host
+      assert_match "#{CONFIG['proxy_user_prefix']}#{CONFIG['proxy_country_prefix']}#{country}", user
+      assert_equal CONFIG['proxy_pass'], pass
 
       data = m.as_json
       assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title']
@@ -750,7 +756,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)
     Media.any_instance.stubs(:parse)
-    a = create_api_key application_settings: { config: { hosts: { 'example.com': { country: 'gb'}}, proxy: { host: 'my-host', port: '11111', user_prefix: 'my-user-prefix', country_prefix: '-cc-', session_prefix: '-sid-', pass: 'mypass' }}}
+    a = create_api_key application_settings: { config: { hosts: { 'example.com': { country: 'gb'}}.to_json, proxy_host: 'my-host', proxy_port: '11111', proxy_user_prefix: 'my-user-prefix', proxy_country_prefix: '-cc-', proxy_session_prefix: '-sid-', proxy_pass: 'mypass' }}
 
     m = create_media url: 'http://example.com', key: a
     host, user, pass = m.send(:get_proxy)
@@ -769,7 +775,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)
     Media.any_instance.stubs(:parse)
-    a = create_api_key application_settings: { config: { hosts: { 'example.com': { country: 'gb'}}, proxy: { host: 'my-host', port: '11111', user_prefix: '', country_prefix: '', session_prefix: '', pass: '' }}}
+    a = create_api_key application_settings: { config: { hosts: { 'example.com': { country: 'gb'}}.to_json, proxy_host: 'my-host', proxy_port: '11111', proxy_user_prefix: '', proxy_country_prefix: '', proxy_session_prefix: '', proxy_pass: '' }}
 
     m = create_media url: 'http://example.com', key: a
     assert_nil m.send(:get_proxy)
@@ -993,9 +999,9 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should get metrics from Facebook" do
     Media.unstub(:request_metrics_from_facebook)
-    app_id = CONFIG['facebook']['test_app_id'] || CONFIG['facebook']['app_id']
-    app_secret = CONFIG['facebook']['test_app_secret'] || CONFIG['facebook']['app_secret']
-    stub_configs({'facebook' => {"app_id" => app_id, 'app_secret' => app_secret }})
+    app_id = CONFIG['facebook_test_app_id'] || CONFIG['facebook_app_id']
+    app_secret = CONFIG['facebook_test_app_secret'] || CONFIG['facebook_app_secret']
+    stub_configs({'facebook_app_id' => app_id, 'facebook_app_secret' => app_secret })
     url = 'https://www.google.com/'
     m = create_media url: url
     m.as_json
@@ -1067,31 +1073,41 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
-  test "should use api key config to get metrics from facebook if present" do
+  test "should use api key config to get metrics and storage config if present" do
     Media.unstub(:request_metrics_from_facebook)
     url = 'https://www.google.com/'
 
     Media.get_metrics_from_facebook(url, nil, 10)
     assert_nil ApiKey.current
-    assert_equal CONFIG['facebook'], PenderConfig.get('facebook')
-    assert_equal CONFIG[:storage], Pender::Store.current.instance_variable_get(:@storage)
+    assert_equal CONFIG['facebook_app_id'], PenderConfig.get('facebook_app_id')
+    assert_equal CONFIG['facebook_app_secret'], PenderConfig.get('facebook_app_secret')
+    %w(endpoint access_key secret_key bucket bucket_region medias_asset_path).each do |key|
+      assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
+    end
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
     api_key = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     Media.get_metrics_from_facebook(url, api_key.id, 10)
     assert_equal api_key, ApiKey.current
-    assert_equal CONFIG['facebook'], PenderConfig.get('facebook')
-    assert_equal CONFIG[:storage], Pender::Store.current.instance_variable_get(:@storage)
+    assert_equal CONFIG['facebook_app_id'], PenderConfig.get('facebook_app_id')
+    assert_equal CONFIG['facebook_app_secret'], PenderConfig.get('facebook_app_secret')
+    %w(endpoint access_key secret_key bucket bucket_region medias_asset_path).each do |key|
+      assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
+    end
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
-    api_key.application_settings = { config: { facebook: { app_id: 'fb-app-id', app_secret: 'fb-app-secret' }, storage: { endpoint: CONFIG['storage']['endpoint'], access_key: CONFIG['storage']['access_key'], secret_key: CONFIG['storage']['secret_key'], bucket: 'my-bucket', bucket_region: CONFIG['storage']['bucket_region'], video_bucket: 'video-bucket'}}}; api_key.save
+    key_config = { facebook_app_id: 'fb-app-id', facebook_app_secret: 'fb-app-secret', storage_endpoint: CONFIG['storage_endpoint'], storage_access_key: CONFIG['storage_access_key'], storage_secret_key: CONFIG['storage_secret_key'], storage_bucket: 'my-bucket', storage_bucket_region: CONFIG['storage_bucket_region'], storage_video_bucket: 'video-bucket', storage_video_asset_path: 'http://video.path', storage_medias_asset_path: 'http://medias.path'}
+    api_key.application_settings = { config: key_config }; api_key.save
     assert_raises Pender::RetryLater do
       Media.get_metrics_from_facebook(url, api_key.id, 10)
     end
     assert_equal api_key, ApiKey.current
-    assert_equal api_key.settings[:config][:facebook], PenderConfig.current[:facebook]
-    assert_equal api_key.settings[:config][:storage], PenderConfig.current[:storage]
-    assert_equal api_key.settings[:config][:storage], Pender::Store.current.instance_variable_get(:@storage)
+    assert_equal api_key.settings[:config][:facebook_app_id], PenderConfig.current[:facebook_app_id]
+    assert_equal api_key.settings[:config][:facebook_app_secret], PenderConfig.current[:facebook_app_secret]
+    %w(endpoint access_key secret_key bucket bucket_region video_bucket video_asset_path medias_asset_path).each do |key|
+      assert_equal api_key.settings[:config]["storage_#{key}"], PenderConfig.current["storage_#{key}"], "Expected #{key}"
+      assert_equal api_key.settings[:config]["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
+    end
   end
 
   test "should not change media url if url parsed on metatags is not valid" do

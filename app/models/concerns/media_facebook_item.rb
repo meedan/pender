@@ -7,8 +7,8 @@ module MediaFacebookItem
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/posts\/(?<id>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/photos\/.*a\.([0-9]+)\.([0-9]+)\.([0-9]+)\/([0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/photos\/pcb\.([0-9]+)\/(?<id>[0-9]+).*/,
-    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo.php\?fbid=(?<id>[0-9]+)&set=a\.([0-9]+)\.([0-9]+)\.([0-9]+).*/,
-    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo.php\?fbid=(?<id>[0-9]+)&set=p\.([0-9]+).*/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo(.php)?\/?\?fbid=(?<id>[0-9]+)&set=a\.([0-9]+)(\.([0-9]+)\.([0-9]+))?.*/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo(.php)?\?fbid=(?<id>[0-9]+)&set=p\.([0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/(?<id>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/vb\.([0-9]+)\/(?<id>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/permalink.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
@@ -25,13 +25,13 @@ module MediaFacebookItem
     Media.declare('facebook_item', URLS)
   end
 
-  attr_accessor :shared_content
+  attr_accessor :shared_content, :metadata
 
   def parse_facebook_uuid
     self.url = self.url.gsub(/:\/\/m\.facebook\./, '://www.facebook.')
     self.doc ||= self.get_html(self.facebook_headers)
     self.get_facebook_post_id_from_url
-    self.get_facebook_user_id_from_url
+    self.get_facebook_user_id
     if self.url.match(EVENT_URL).nil?
       self.data['uuid'] = [self.data['user_uuid'].to_s, self.data['object_id'].to_s].reject(&:empty?).join('_')
     else
@@ -40,21 +40,19 @@ module MediaFacebookItem
     end
   end
 
-  def get_facebook_user_id_from_url
+  def get_facebook_user_id
     return unless self.url.match(EVENT_URL).nil?
     user_id = IdsPlease::Grabbers::Facebook.new(self.url, Media.request_url(self.url).body.to_s).grab_link.network_id
-    if user_id.blank?
-      uri = Media.parse_url(self.url)
-      params = parse_uri(uri)
-      user_id = params['set'].first.split('.').last unless params['set'].blank?
-      user_id ||= params['id'].first.match(/([0-9]+).*/)[1] unless params['id'].blank?
-      unless user_id
-        group_id = self.doc.to_s.match(/"groupID":"(\d+)"/)
-        user_id ||= group_id[1] if group_id
-      end
-    end
-    self.data['user_uuid'] = user_id || ''
-    get_facebook_picture(user_id)
+    self.set_data_field('user_uuid', user_id, get_facebook_user_id_from_url)
+    get_facebook_picture(self.data['user_uuid'])
+  end
+
+  def get_facebook_user_id_from_url
+    uri = Media.parse_url(self.url)
+    params = parse_uri(uri)
+    user_id = params['set'].first.split('.').last unless params['set'].blank?
+    user_id ||= params['id'].first.match(/([0-9]+).*/)[1] unless params['id'].blank?
+    user_id || self.doc.to_s.match(/"groupID":"(\d+)"/) && self.doc.to_s.match(/"groupID":"(\d+)"/)[1]
   end
 
   def get_facebook_post_id_from_url
@@ -62,7 +60,7 @@ module MediaFacebookItem
     parts = uri.path.split('/')
     id = parts.last
     id = parts[parts.size - 2] if id == 'posts'
-    mapping = { 'photo.php' => 'fbid', 'permalink.php' => 'story_fbid', 'story.php' => 'story_fbid', 'set' => 'set', 'photos' => 'album_id' }
+    mapping = { 'photo.php' => 'fbid', 'photo' => 'fbid', 'permalink.php' => 'story_fbid', 'story.php' => 'story_fbid', 'set' => 'set', 'photos' => 'album_id' }
     id = self.get_facebook_post_id_from_uri_params(id, uri, mapping[id]) if mapping.keys.include?(id)
     id = '' if ['watch', 'livemap', 'map'].include?(id)
     self.data['object_id'] = id.sub(/:0$/, '') if id
@@ -84,59 +82,52 @@ module MediaFacebookItem
     CGI.parse(uri.query.to_s)
   end
 
-  def get_facebook_picture(id)
+  def get_facebook_picture(id = '')
     return if id.blank?
     self.data['author_picture'] = 'https://graph.facebook.com/' + id + '/picture'
   end
 
   def parse_from_facebook_html
     return if self.doc.nil?
-    self.get_facebook_info_from_metadata
-    self.get_facebook_author_name_from_html
-    self.get_facebook_text_from_html
-    self.get_facebook_owner_name_from_html
-    self.get_facebook_user_info_from_html
-    self.get_facebook_published_time_from_html
-    self.get_facebook_media_count_from_html
-    self.get_facebook_url_from_html
+    ['photos_from_html', 'info_from_metadata', 'author_name_from_html', 'text_from_html', 'owner_name_from_html', 'user_info_from_html', 'published_time_from_html', 'media_count_from_html', 'url_from_html'].each { |info| self.send("get_facebook_#{info}") }
   end
 
   def get_facebook_metadata
     get_metatags(self)
     og_metadata = self.get_opengraph_metadata || {}
     tt_metadata = self.get_twitter_metadata || {}
-    self.data['metadata'] = og_metadata.merge(tt_metadata)
+    self.metadata = og_metadata.merge(tt_metadata)
   end
 
   def get_facebook_info_from_metadata
     metadata = get_facebook_metadata
-    self.data['text'] = metadata['description'].nil? ? self.get_facebook_description_from_html : metadata['description']
-    self.data['photos'] = metadata['picture'].nil? ? self.get_facebook_photos_from_html : [metadata['picture']]
+    self.set_data_field('text', self.get_facebook_description_from_html, metadata['description'])
+    self.data['photos'] << metadata['picture'] unless metadata['picture'].blank?
   end
 
   def get_facebook_description_from_html
-    self.doc.css('span[data-testid="event-permalink-details"]').text unless self.url.match(EVENT_URL).nil?
+    if self.url.match(EVENT_URL).nil?
+      text = self.doc.to_s.match(/message":{"text":([^}]+)[^"]+"/)
+      text[1] if text
+    else
+      self.doc.css('span[data-testid="event-permalink-details"]').text
+    end
   end
 
   def get_facebook_author_name_from_html
-    return unless self.data['author_name'].blank?
     author_link = self.doc.at_css('.fbPhotoAlbumActionList a') || self.doc.at_css('.uiHeaderTitle a[href^="https://"]') || self.doc.css('div.userContentWrapper').at_css('h5 > span.fwn.fcg > span.fwb.fcg > a') || self.doc.at_css('.userContentWrapper .profileLink')
-    self.data['author_name'] = author_link.blank? ? self.get_facebook_title_from_html : author_link.text
-    metadata = self.data['metadata']
-    if self.data['author_name'].blank? && metadata['author_name'].nil? && !metadata['title'].nil?
-      self.data['author_name'] = metadata['title']
-    end
+    self.set_data_field('author_name', author_link && author_link.text, self.get_facebook_title_from_html, self.metadata['author_name'], self.metadata['title'], self.data['username'])
   end
 
   def get_facebook_title_from_html
     title = self.doc.at_css('#pageTitle') || self.doc.at_css('title')
-    title ? title.text : ''
+    (title && title.text != 'Facebook') ? title.text : ''
   end
 
   def get_facebook_photos_from_html
-    photos = []
-    ['.scaledImageFitHeight', '.scaledImageFitWidth'].each { |k| photos.concat(self.doc.css(k).collect{ |i| i['src'] }) }
-    photos
+    self.data['photos'] = []
+    ['.scaledImageFitHeight', '.scaledImageFitWidth'].each { |k| self.data['photos'].concat(self.doc.css(k).collect{ |i| i['src'] }) }
+    ['div[data-pagelet="MediaViewerPhoto"] img'].each { |p| self.data['photos'].concat(self.doc.css(p).collect { |i| i['src'] })}
   end
 
   def get_facebook_content_from_html
@@ -162,14 +153,14 @@ module MediaFacebookItem
 
   def get_facebook_user_info_from_html
     user_uuid = self.doc.to_s.match(/"entity_id":"([^"]+)"/)
-    self.data['user_uuid'] = user_uuid[1] if self.data['user_uuid'].blank? && !user_uuid.nil?
+    self.set_data_field('user_uuid', user_uuid && user_uuid[1])
     self.get_facebook_picture(self.data['user_uuid']) if !self.data['user_uuid'].blank? && self.data['picture'].blank?
   end
 
   def get_facebook_owner_name_from_html
     self.get_facebook_event_info_from_html
     user_name = self.doc.to_s.match(/"?ownerName"?:"([^"]+)"/)
-    self.data['author_name'] ||= (user_name.nil? ? 'Not Identified' : user_name[1])
+    self.set_data_field('author_name', user_name && user_name[1], 'Not Identified')
   end
 
   def get_facebook_event_info_from_html
@@ -206,7 +197,7 @@ module MediaFacebookItem
       self.data['media_count'] = 1
     else
       self.data['media_count'] = media.empty? ? 0 : media.size
-      self.data['media_count'] = (self.data['photos'] - [self.data['metadata']['picture']]).size if self.data['media_count'] == 0
+      self.data['media_count'] = (self.data['photos'] - [self.metadata['picture'].to_s]).size if self.data['media_count'] == 0
     end
   end
 
@@ -218,7 +209,7 @@ module MediaFacebookItem
   def html_for_facebook_post(username)
     return '' unless render_facebook_embed?(username) && !self.doc.nil?
     '<script>
-    window.fbAsyncInit = function() { FB.init({ xfbml: true, version: "v2.6" }); FB.Canvas.setAutoGrow(); }; 
+    window.fbAsyncInit = function() { FB.init({ xfbml: true, version: "v2.6" }); FB.Canvas.setAutoGrow(); };
     (function(d, s, id) {
       var js, fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) return;
@@ -235,24 +226,20 @@ module MediaFacebookItem
     handle_exceptions(self, StandardError) do
       self.parse_facebook_uuid
       self.get_crowdtangle_facebook_data(self.data['uuid'])
+      self.set_data_field('username', self.get_facebook_username || self.data['author_name'])
       self.parse_from_facebook_html unless [:author_name, :username, :author_picture, :author_url, :description, :text, :external_id, :object_id, :picture, :published_at].map { |key| data[key].blank? }.all?
       self.data['text'].strip! if self.data['text']
-      self.data['author_name'] = set_facebook_field('author_name', 'Not Identified')
-      self.data['title'] = (self.data['title'].blank? ? self.data['author_name'] : self.data['title']) + ' on Facebook'
-      self.data['author_url'] = set_facebook_field('author_url', 'http://facebook.com/' + self.data['user_uuid'].to_s)
+      self.set_data_field('author_name', 'Not Identified')
+      self.set_data_field('title', self.data['author_name'])
+      self.data['title'] += ' on Facebook'
+      self.set_data_field('author_url', 'http://facebook.com/' + (self.data['user_uuid'] || self.data['username']).to_s)
       self.get_original_post
-      self.data['username'] = set_facebook_field('username', self.get_facebook_username || self.data['author_name'])
       replace_facebook_url(self.data[:username])
-      self.data['external_id'] = set_facebook_field('external_id', self.data['object_id'])
-      self.data['description'] = set_facebook_field('description', get_facebook_description)
-      self.data['picture'] = set_facebook_field('picture', self.set_facebook_picture)
+      self.set_data_field('external_id', self.data['object_id'])
+      self.set_data_field('description', get_facebook_description)
+      self.set_data_field('picture', self.data['photos'] && self.data['photos'].first)
       self.data[:html] = self.html_for_facebook_post(self.data[:username])
     end
-  end
-
-  def set_facebook_field(field, value)
-    return self.data[field] unless self.data[field].blank?
-    self.data[field] = value
   end
 
   def get_original_post
@@ -272,11 +259,6 @@ module MediaFacebookItem
     return if sharing_info.blank?
     shared_url = sharing_info.attr('href')
     absolute_url(shared_url)
-  end
-
-  def set_facebook_picture
-    return self.data['picture'] unless self.data['picture'].blank?
-    self.data['photos'].nil? ? '' : self.data['photos'].first
   end
 
   def facebook_oembed_url
@@ -300,6 +282,7 @@ module MediaFacebookItem
     return unless crowdtangle_data && crowdtangle_data['result']
     self.data['raw']['crowdtangle'] = crowdtangle_data['result']
     post_info = crowdtangle_data['result']['posts'].first
+    self.url = post_info.dig('postUrl') if post_info.dig('postUrl') && post_info.dig('postUrl') != self.url
     self.data[:author_name] = post_info.dig('account', 'name')
     self.data[:username] = post_info.dig('account', 'handle')
     self.data[:author_picture] = post_info.dig('account', 'profileImage')
@@ -309,16 +292,6 @@ module MediaFacebookItem
     self.data[:object_id] = post_info.dig('platformId')
     self.data[:picture] = post_info['media'].first['full'] if post_info.dig('media')
     self.data[:published_at] = post_info.dig('date')
-  end
-
-  def facebook_headers(uri = nil)
-    uri ||= Media.parse_url(decoded_uri(self.url))
-    ({
-      'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
-      'Accept' =>  'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-      'Accept-Language' => 'en-US',
-      'Cookie' => Media.set_cookies(uri)
-    })
   end
 
 end

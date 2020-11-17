@@ -6,7 +6,7 @@ module MediaFacebookProfile
       [
         /^https?:\/\/([^\.]+\.)?facebook\.com\/(pages|people)\/([^\/]+)\/([^\/\?]+)((?!\/photos\/?).)*$/,
         /^https?:\/\/(www\.)?facebook\.com\/profile\.php\?id=([0-9]+).*$/,
-        /^https?:\/\/([^\.]+\.)?facebook\.com\/(?!(permalink\.php|story\.php|photo\.php|livemap|watch))([^\/\?]+)\/?(\?.*)*$/
+        /^https?:\/\/([^\.]+\.)?facebook\.com\/(?!(permalink\.php|story\.php|photo(\.php)?|livemap|watch))([^\/\?]+)\/?(\?.*)*$/
       ]
     )
   end
@@ -158,9 +158,10 @@ module MediaFacebookProfile
       /^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+)/
     ]
     username = compare_patterns(decoded_uri(self.url), patterns)
-    return if ['events', 'livemap', 'watch', 'live', 'story.php'].include? username
+    return if ['events', 'livemap', 'watch', 'live', 'story.php', 'category', 'photo', 'photo.php'].include? username
     if username === 'pages'
-      username = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/pages\/([^\/]+)\/([^\/\?]+).*/)[2]
+      page = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/pages\/([^\/]+)\/([^\/\?]+).*/)[2]
+      username = page == 'category' ? '' : page
     elsif username.to_i > 0 || username === 'profile.php'
       username = self.data['username']
     end

@@ -243,7 +243,7 @@ class Media
     proxy = Media.valid_proxy
     if proxy
       return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['session_prefix'] + Random.rand(100000).to_s, proxy['pass']] if uri.host.match(/facebook\.com/)
-      country = PenderConfig.get('hosts', {}).dig(uri.host, 'country')
+      country = PenderConfig.get('hosts', {}, :json).dig(uri.host, 'country')
       return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['country_prefix'] + country, proxy['pass']] unless country.nil?
     end
   end
@@ -271,9 +271,6 @@ class Media
       proxy = self.get_proxy
       options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
       uri = Media.parse_url(decoded_uri(self.url))
-      if self.url.match(/facebook\.com\/groups/)
-        options.merge!(self.facebook_headers(uri))
-      end
       html = ''
       OpenURI.open_uri(uri, options) do |f|
         f.binmode
@@ -300,7 +297,7 @@ class Media
   end
 
   def self.get_cf_credentials(uri)
-    hosts = PenderConfig.get('hosts', {})
+    hosts = PenderConfig.get('hosts', {}, :json)
     config = hosts[uri.host]
     if config && config.has_key?('cf_credentials')
       id, secret = config['cf_credentials'].split(':')

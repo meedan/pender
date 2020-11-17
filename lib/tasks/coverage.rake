@@ -6,9 +6,11 @@ namespace :test do
       SimpleCov::Formatter::HTMLFormatter,
       SimpleCov::Formatter::Console,
     ])
+
+    SimpleCov.use_merging true
+
     SimpleCov.start 'rails' do
       add_filter do |file|
-        !file.filename.match(/\/app\/workers\/.*screenshot_worker\.rb$/).nil? ||
         !file.filename.match(/\/lib\/pender_redis\.rb$/).nil?
       end
       coverage_dir 'coverage'

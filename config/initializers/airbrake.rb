@@ -1,10 +1,10 @@
-unless CONFIG['airbrake']['host'].blank?
+unless PenderConfig.get('airbrake_host').blank?
   Airbrake.configure do |config|
-    config.project_key = CONFIG['airbrake']['project_key']
+    config.project_key = PenderConfig.get('airbrake_project_key')
     config.project_id = 1
-    config.host = "https://#{CONFIG['airbrake']['host']}:#{CONFIG['airbrake']['port']}"
+    config.host = "https://#{PenderConfig.get('airbrake_host')}:#{PenderConfig.get('airbrake_port')}"
     config.ignore_environments = %w(development test)
-    config.environment = CONFIG['airbrake']['environment']
+    config.environment = PenderConfig.get('airbrake_environment')
   end
 
   Airbrake.add_filter do |notice|

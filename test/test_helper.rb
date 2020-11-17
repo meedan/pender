@@ -1,17 +1,5 @@
 require 'simplecov'
 
-SimpleCov.start 'rails' do
-  nocov_token 'nocov'
-  merge_timeout 3600
-  command_name "Tests #{rand(100000)}"
-  add_filter do |file|
-    !file.filename.match(/\/app\/workers\/.*screenshot_worker\.rb$/).nil? ||
-    !file.filename.match(/\/lib\/pender_redis\.rb$/).nil?
-  end
-  coverage_dir 'coverage'
-end
-
-
 ENV['RAILS_ENV'] ||= 'test'
 require File.expand_path('../../config/environment', __FILE__)
 require 'rails/test_help'

@@ -13,12 +13,11 @@ module MediaTwitterProfile
   end
 
   def twitter_client
-    twitter = PenderConfig.get('twitter', {})
     Twitter::REST::Client.new do |config|
-      config.consumer_key        = twitter.dig('consumer_key')
-      config.consumer_secret     = twitter.dig('consumer_secret')
-      config.access_token        = twitter.dig('access_token')
-      config.access_token_secret = twitter.dig('access_token_secret')
+      config.consumer_key        = PenderConfig.get('twitter_consumer_key')
+      config.consumer_secret     = PenderConfig.get('twitter_consumer_secret')
+      config.access_token        = PenderConfig.get('twitter_access_token')
+      config.access_token_secret = PenderConfig.get('twitter_access_token_secret')
     end
   end
 
