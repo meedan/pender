@@ -736,6 +736,7 @@ class MediasControllerTest < ActionController::TestCase
     assert !s.locked?
     s.unlock
 
+    PenderConfig.current = nil
     stub_configs({ 'timeout' => 30 })
     s.lock
     sleep 5

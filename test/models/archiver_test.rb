@@ -706,8 +706,8 @@ class ArchiverTest < ActiveSupport::TestCase
 
     Media.send_to_video_archiver(url, nil)
     assert_nil ApiKey.current
-    assert_equal CONFIG, PenderConfig.current
     %w(endpoint access_key secret_key bucket bucket_region video_bucket).each do |key|
+      assert_equal CONFIG["storage_#{key}"], PenderConfig.current("storage_#{key}")
       assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
 
@@ -715,8 +715,8 @@ class ArchiverTest < ActiveSupport::TestCase
     api_key = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     Media.send_to_video_archiver(url, api_key.id)
     assert_equal api_key, ApiKey.current
-    assert_equal CONFIG, PenderConfig.current
     %w(endpoint access_key secret_key bucket bucket_region video_bucket).each do |key|
+      assert_equal CONFIG["storage_#{key}"], PenderConfig.current("storage_#{key}")
       assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
 
@@ -725,10 +725,10 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.send_to_video_archiver(url, api_key.id, 20)
     assert_equal api_key, ApiKey.current
     %w(host port user_prefix pass).each do |key|
-      assert_equal api_key.settings[:config]["ytdl_proxy_#{key}"], PenderConfig.current["ytdl_proxy_#{key}"]
+      assert_equal api_key.settings[:config]["ytdl_proxy_#{key}"], PenderConfig.current("ytdl_proxy_#{key}")
     end
     %w(endpoint access_key secret_key bucket bucket_region video_bucket).each do |key|
-      assert_equal api_key.settings[:config]["storage_#{key}"], PenderConfig.current["storage_#{key}"]
+      assert_equal api_key.settings[:config]["storage_#{key}"], PenderConfig.current("storage_#{key}")
       assert_equal api_key.settings[:config]["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
 

@@ -57,6 +57,7 @@ class MediaTest < ActiveSupport::TestCase
     header_options_without_cf = Media.send(:html_options, url)
     assert_nil header_options_without_cf['CF-Access-Client-Id']
     assert_nil header_options_without_cf['CF-Access-Client-Secret']
+    PenderConfig.current = nil
     stub_configs({'hosts' => {"example.com"=>{"cf_credentials"=>"1234:5678"}}.to_json})
     header_options_with_cf = Media.send(:html_options, url)
     assert_equal '1234', header_options_with_cf['CF-Access-Client-Id']
@@ -747,6 +748,7 @@ class MediaTest < ActiveSupport::TestCase
 
       data = m.as_json
       assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title']
+      PenderConfig.current = nil
     end
     CONFIG['hosts'] = config
   end
@@ -1102,10 +1104,10 @@ class MediaTest < ActiveSupport::TestCase
       Media.get_metrics_from_facebook(url, api_key.id, 10)
     end
     assert_equal api_key, ApiKey.current
-    assert_equal api_key.settings[:config][:facebook_app_id], PenderConfig.current[:facebook_app_id]
-    assert_equal api_key.settings[:config][:facebook_app_secret], PenderConfig.current[:facebook_app_secret]
+    assert_equal api_key.settings[:config][:facebook_app_id], PenderConfig.current(:facebook_app_id)
+    assert_equal api_key.settings[:config][:facebook_app_secret], PenderConfig.current(:facebook_app_secret)
     %w(endpoint access_key secret_key bucket bucket_region video_bucket video_asset_path medias_asset_path).each do |key|
-      assert_equal api_key.settings[:config]["storage_#{key}"], PenderConfig.current["storage_#{key}"], "Expected #{key}"
+      assert_equal api_key.settings[:config]["storage_#{key}"], PenderConfig.current("storage_#{key}"), "Expected #{key}"
       assert_equal api_key.settings[:config]["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
   end

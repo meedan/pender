@@ -1,7 +1,8 @@
 class PenderConfig
 
-  def self.current
-    RequestStore.store[:config] ||= PenderConfig.load
+  def self.current(config_key = nil)
+    RequestStore.store[:config] ||= {}.with_indifferent_access
+    RequestStore.store[:config][config_key] ||= PenderConfig.load(config_key) if config_key
   end
 
   def self.current=(config)
@@ -9,18 +10,23 @@ class PenderConfig
   end
 
   def self.reload
-    PenderConfig.current = PenderConfig.load
+    RequestStore.store[:config] = {}.with_indifferent_access
   end
 
-  def self.load
+  def self.load(config_key)
     api_key = ApiKey.current
-    api_key && api_key.settings[:config] ? CONFIG.merge(api_key.settings[:config]) : CONFIG
+    if api_key && api_key.settings.dig(:config, config_key)
+      api_key.settings[:config][config_key]
+    else
+      value = ENV[config_key.to_s]
+      value.nil? && CONFIG.has_key?(config_key) ? CONFIG[config_key] : value
+    end
   end
 
   def self.get(config_key, default = nil, type = nil)
-    config = PenderConfig.current
-    return default if !config.has_key?(config_key)
-    value = config[config_key] || default
+    config_value = PenderConfig.current(config_key)
+    return default unless config_value
+    value = config_value || default
     type == :json ? get_json_config(value, default) : value
   end
 

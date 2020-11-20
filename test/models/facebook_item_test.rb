@@ -202,7 +202,7 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should parse Facebook gif photo url" do
     m = create_media url: 'https://www.facebook.com/quoted.pictures/posts/1095740107184121'
     data = m.as_json
-    assert_match /New Quoted Pictures Everyday/, data['title']
+    assert_match /quoted/, data['title'].downcase
     assert_not_nil data['description']
     assert data['photos'].any? { |p| p =~ /giphy.gif/ }, "photos should include gif image"
   end
