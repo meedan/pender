@@ -1,4 +1,4 @@
-version: "2.2"
+version: "3.8"
 volumes:
   redis:
   minio:
@@ -27,6 +27,16 @@ services:
       - "9555:9555"
     volumes:
       - ".:/app"
+    build:
+      context: .
+      args:
+        BUNDLER_RETRIES: 5
+        BUNDLER_WORKERS: 20
+    environment:
+      SERVER_PORT: $SERVER_PORT
+      RAILS_ENV: $RAILS_ENV
+      DEPLOY_ENV: $DEPLOY_ENV
+      APP: $APP
     depends_on:
       - redis
       - minio
