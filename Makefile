@@ -23,13 +23,17 @@ run:    run.local
 
 
 # Note: requires databases
+# TODO: setup dockerize
 test.unit: build.test
 	docker-compose --env-file ./.env.test up -d && \
+	wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200 && \
 	docker-compose exec pender bundle exec rake test:units
 
 test.integration: build.test
 	docker-compose --env-file ./.env.test up -d && \
+	wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200 && \
 	docker-compose exec pender test/setup-parallel && \
-	docker-compose exec pender bundle exec rake "parallel:test[3]"
+	docker-compose exec pender bundle exec rake "parallel:test[3]" && \
+	docker-compose exec pender bundle exec rake parallel:spec
 
 test:	test.integration
