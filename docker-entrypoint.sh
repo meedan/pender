@@ -78,8 +78,6 @@ else
             exit 1
         fi
 
-        bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid --environment ${DEPLOY_ENV} --workers 3 -t 8:32 &
-    fi
 fi
 
 echo "$@"
