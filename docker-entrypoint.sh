@@ -1,10 +1,11 @@
 #!/bin/bash
-
+env
 
 # TODO: replace with AWS SSM script when ready
 configurator() {
     if [ ! -d "configurator" ]; then
-        git clone https://github.com/meedan/configurator ./configurator
+        echo "attempt to clone configurator"
+        git clone https://${GITHUB_TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
     fi
     CONFIGURATOR_ENV=${DEPLOY_ENV}
     if [[ $DEPLOY_ENV == "test" ]]; then  # override this One Weird Trick
@@ -64,15 +65,13 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
     bundle exec rake db:migrate
     export SECRET_KEY_BASE=$(bundle exec rake secret)
     bundle exec rake lapis:api_keys:create_default
-
     echo "rake tasks complete running puma"
-    bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid &
-    test/setup-parallel
-    bundle exec rake "parallel:test[3]"
+    bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid
 
 # run deployment environment setup (including local runs)
 else
     set_config "${PRIVATE_REPO_ACCESS}"
+    echo "running in deployment env"
     if [[ "${DEPLOY_ENV}" != "local"  ]]; then
         if [[ -z "${GITHUB_TOKEN}" ]]; then
             echo "GITHUB_TOKEN environment variable must be set. Exiting."
@@ -83,4 +82,5 @@ else
     fi
 fi
 
+echo "$@"
 exec "$@"
