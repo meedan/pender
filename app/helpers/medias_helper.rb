@@ -13,7 +13,7 @@ module MediasHelper
   end
 
   def timeout_value
-    PenderConfig.get('timeout') || 20
+    PenderConfig.get('timeout', 20).to_i
   end
 
   def handle_exceptions(media, exception)
