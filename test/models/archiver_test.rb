@@ -57,20 +57,17 @@ class ArchiverTest < ActiveSupport::TestCase
   test "should archive to Archive.org" do
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    urls = ['https://twitter.com/marcouza/status/863907872421412864', 'https://twitter.com/ozm/status/1217826699183841280']
+    url = 'https://twitter.com/marcouza/status/863907872421412864'
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
     WebMock.disable_net_connect!(allow: allowed_sites)
 
-    WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
-    m = create_media url: urls[0], key: a
-    data = m.as_json(archivers: 'archive_org')
-    assert_equal 'https://web.archive.org/web/123456/test', data['archives']['archive_org']['location']
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
 
-    WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'location' => 'https://web.archive.org/web/123456/test' })
-    m = create_media url: urls[1], key: a
+    m = create_media url: url, key: a
     data = m.as_json(archivers: 'archive_org')
-    assert_equal 'https://web.archive.org/web/123456/test', data['archives']['archive_org']['location']
+    assert_equal "https://web.archive.org/web/timestamp/#{url}", data['archives']['archive_org']['location']
 
     WebMock.disable!
   end
@@ -84,7 +81,8 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable_net_connect!(allow: allowed_sites)
 
     assert_nothing_raised do
-      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
+      WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
+      WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
       m = create_media url: url, key: a
       data = m.as_json
     end
@@ -106,24 +104,60 @@ class ArchiverTest < ActiveSupport::TestCase
     Airbrake.stubs(:notify)
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    urls = {
-      'https://www.facebook.com/permalink.php?story_fbid=1649526595359937&id=100009078379548' => {code: '404', message: 'Not Found'},
-      'http://localhost:3333/unreachable-url' => {code: '403', message: 'Forbidden'},
-      'http://www.dutertenewsupdate.info/2018/01/duterte-turned-philippines-into.html' => {code: '502', message: 'Bad Gateway'}
-    }
+    url = 'https://www.facebook.com/permalink.php?story_fbid=1649526595359937&id=100009078379548'
 
     assert_raises Pender::RetryLater do
-      urls.each_pair do |url, data|
-        m = Media.new url: url
-        m.as_json(archivers: 'none')
-        assert_nil m.data.dig('archives', 'archive_org')
-        WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', status: [data[:code], data[:message]], headers: {})
+      m = Media.new url: url
+      m.as_json(archivers: 'none')
+      assert_nil m.data.dig('archives', 'archive_org')
+      WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
+      WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'error', status_ext: 'error:not-found', message: 'The server cannot find the requested resource'}.to_json)
 
-        Media.send_to_archive_org(url.to_s, a.id, 20)
-        media_data = Pender::Store.current.read(Media.get_id(url), :json)
-        assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_org', 'error', 'code')
-        assert_equal "#{data[:code]} #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
-      end
+      Media.send_to_archive_org(url.to_s, a.id)
+      media_data = Pender::Store.current.read(Media.get_id(url), :json)
+      assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_org', 'error', 'code')
+      assert_equal "#{data[:code]} #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
+    end
+
+    WebMock.disable!
+    Airbrake.unstub(:configured?)
+    Airbrake.unstub(:notify)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
+    Media.any_instance.unstub(:archive)
+  end
+
+  test "should update media with error when Archive.org can't archive the url" do
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    Media.any_instance.stubs(:archive)
+
+    Airbrake.stubs(:configured?).returns(true)
+    Airbrake.stubs(:notify)
+
+    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    urls = {
+      'http://localhost:3333/unreachable-url' => {status_ext: 'error:invalid-url-syntax', message: 'URL syntax is not valid'},
+      'http://www.dutertenewsupdate.info/2018/01/duterte-turned-philippines-into.html' => {status_ext: 'error:invalid-host-resolution', message: 'Cannot resolve host'},
+    }
+
+    urls.each_pair do |url, data|
+      m = Media.new url: url
+      m.as_json(archivers: 'none')
+      assert_nil m.data.dig('archives', 'archive_org')
+      WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {status: 'error', status_ext: data[:status_ext], message: data[:message]}.to_json)
+
+      Media.send_to_archive_org(url.to_s, a.id)
+      media_data = Pender::Store.current.read(Media.get_id(url), :json)
+      assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
+      assert_equal "(#{data[:status_ext]}) #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
     end
 
     WebMock.disable!
@@ -233,9 +267,10 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, Pender::Store.current.read(id, :json)[:archives])
 
     WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
-    WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/archiving' })
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
     m.as_json(force: true, archivers: 'archive_is, archive_org')
-    assert_equal({'archive_is' => {'location' => 'archive_is/second_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.current.read(id, :json)[:archives])
+    assert_equal({'archive_is' => {'location' => 'archive_is/second_archiving'}, 'archive_org' => {'location' => "https://web.archive.org/web/timestamp/#{url}" }}, Pender::Store.current.read(id, :json)[:archives])
     WebMock.disable!
   end
 
@@ -283,9 +318,11 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal({'archive_is' => {"location" => 'archive_is/first_archiving'}}, Pender::Store.current.read(id, :json)[:archives])
 
     WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
-    WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/archiving' })
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
+
     m.as_json(archivers: 'archive_is, archive_org')
-    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.current.read(id, :json)[:archives])
+    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => "https://web.archive.org/web/timestamp/#{url}" }}, Pender::Store.current.read(id, :json)[:archives])
     WebMock.disable!
   end
 
@@ -297,24 +334,27 @@ class ArchiverTest < ActiveSupport::TestCase
     allowed_sites = lambda{ |uri| !['archive.today', 'web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
     WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/first_archiving' })
-    WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/archiving' })
 
     url = 'https://twitter.com/meedan/status/1095034925420560387'
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
+
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json(archivers: 'archive_is, archive_org')
-    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => 'https://web.archive.org/archiving' }}, Pender::Store.current.read(id, :json)[:archives])
+    assert_equal({'archive_is' => {'location' => 'archive_is/first_archiving'}, 'archive_org' => {'location' => "https://web.archive.org/web/timestamp/#{url}" }}, Pender::Store.current.read(id, :json)[:archives])
 
     WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'archive_is/second_archiving' })
-    WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/second_archiving' })
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp2'}.to_json)
 
     m.as_json
     assert_equal({'location' => 'archive_is/first_archiving'}, Pender::Store.current.read(id, :json)[:archives][:archive_is])
-    assert_equal({'location' => 'https://web.archive.org/archiving' }, Pender::Store.current.read(id, :json)[:archives][:archive_org])
+    assert_equal({'location' => "https://web.archive.org/web/timestamp/#{url}" }, Pender::Store.current.read(id, :json)[:archives][:archive_org])
 
     m.as_json(archivers: 'none')
     assert_equal({'location' => 'archive_is/first_archiving'}, Pender::Store.current.read(id, :json)[:archives][:archive_is])
-    assert_equal({'location' => 'https://web.archive.org/archiving' }, Pender::Store.current.read(id, :json)[:archives][:archive_org])
+    assert_equal({'location' => "https://web.archive.org/web/timestamp/#{url}" }, Pender::Store.current.read(id, :json)[:archives][:archive_org])
 
     WebMock.disable!
   end
@@ -706,8 +746,8 @@ class ArchiverTest < ActiveSupport::TestCase
 
     Media.send_to_video_archiver(url, nil)
     assert_nil ApiKey.current
-    assert_equal CONFIG, PenderConfig.current
     %w(endpoint access_key secret_key bucket bucket_region video_bucket).each do |key|
+      assert_equal CONFIG["storage_#{key}"], PenderConfig.current("storage_#{key}")
       assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
 
@@ -715,8 +755,8 @@ class ArchiverTest < ActiveSupport::TestCase
     api_key = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     Media.send_to_video_archiver(url, api_key.id)
     assert_equal api_key, ApiKey.current
-    assert_equal CONFIG, PenderConfig.current
     %w(endpoint access_key secret_key bucket bucket_region video_bucket).each do |key|
+      assert_equal CONFIG["storage_#{key}"], PenderConfig.current("storage_#{key}")
       assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
 
@@ -725,10 +765,10 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.send_to_video_archiver(url, api_key.id, 20)
     assert_equal api_key, ApiKey.current
     %w(host port user_prefix pass).each do |key|
-      assert_equal api_key.settings[:config]["ytdl_proxy_#{key}"], PenderConfig.current["ytdl_proxy_#{key}"]
+      assert_equal api_key.settings[:config]["ytdl_proxy_#{key}"], PenderConfig.current("ytdl_proxy_#{key}")
     end
     %w(endpoint access_key secret_key bucket bucket_region video_bucket).each do |key|
-      assert_equal api_key.settings[:config]["storage_#{key}"], PenderConfig.current["storage_#{key}"]
+      assert_equal api_key.settings[:config]["storage_#{key}"], PenderConfig.current("storage_#{key}")
       assert_equal api_key.settings[:config]["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
 

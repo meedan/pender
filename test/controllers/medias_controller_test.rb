@@ -538,11 +538,13 @@ class MediasControllerTest < ActionController::TestCase
       allowed_sites = lambda{ |uri| !['archive.today', 'web.archive.org'].include?(uri.host) }
       WebMock.disable_net_connect!(allow: allowed_sites)
       WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
-      WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
-      archived = {"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/123456/test"}}
+      WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
+      WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
+
+      url = 'https://twitter.com/meedan/status/1095035552221540354'
+      archived = {"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/timestamp/#{url}"}}
 
       authenticate_with_token(a)
-      url = 'https://twitter.com/meedan/status/1095035552221540354'
       get :index, url: url, archivers: archivers.join(','), format: :json
       id = Media.get_id(url)
       data = Pender::Store.current.read(id, :json)
@@ -736,6 +738,7 @@ class MediasControllerTest < ActionController::TestCase
     assert !s.locked?
     s.unlock
 
+    PenderConfig.current = nil
     stub_configs({ 'timeout' => 30 })
     s.lock
     sleep 5

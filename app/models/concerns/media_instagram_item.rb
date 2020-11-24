@@ -14,7 +14,7 @@ module MediaInstagramItem
       self.get_instagram_data(id.to_s)
       self.data.merge!(external_id: id)
       data = self.data
-      raise data.dig('raw', 'graphql', 'error', 'message') if data.dig('raw', 'graphql', 'error') && data.dig('raw', 'crowdtangle', 'error')
+      return if data.dig('raw', 'graphql', 'error') && data.dig('raw', 'crowdtangle', 'error')
       self.data.merge!({
         external_id: id,
         username: '@' + get_instagram_username_from_data,
@@ -48,7 +48,6 @@ module MediaInstagramItem
     begin
       self.data['raw']['graphql'] = self.get_instagram_graphql_data("https://www.instagram.com/p/#{id}/?__a=1")
     rescue StandardError => error
-      PenderAirbrake.notify(error.message)
       Rails.logger.warn level: 'WARN', message: '[Parser] Cannot get data from Instagram URL', error_class: error.class, error_message: error.message
       self.data['raw']['graphql'] = { error: { message: error.message, code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }}
     end
@@ -66,7 +65,7 @@ module MediaInstagramItem
     return JSON.parse(response.body)['graphql'] if response.code == '200'
     location = response.header['location']
     raise StandardError.new('Login required') if Media.is_a_login_page(location)
-    self.get_instagram_json_data(location)
+    self.get_instagram_graphql_data(location)
   end
 
   def get_crowdtangle_instagram_data

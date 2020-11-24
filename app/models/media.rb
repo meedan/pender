@@ -250,7 +250,7 @@ class Media
 
   def self.request_uri(uri, verb = 'Get')
     http = Net::HTTP.new(uri.host, uri.port)
-    http.read_timeout = PenderConfig.get('timeout', 30)
+    http.read_timeout = PenderConfig.get('timeout', 30).to_i
     http.use_ssl = uri.scheme == 'https'
     headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }.merge(Media.get_cf_credentials(uri))
     request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
