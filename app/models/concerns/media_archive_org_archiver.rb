@@ -45,7 +45,7 @@ module MediaArchiveOrgArchiver
         data = { location: location }
         Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
       else
-        raise Pender::RetryLater, "(#{response.code}) #{response.message}"
+        raise Pender::RetryLater, "(#{body['status_ext']}) #{body['message']}"
       end
     end
 
