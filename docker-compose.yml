@@ -37,6 +37,8 @@ services:
       RAILS_ENV: $RAILS_ENV
       DEPLOY_ENV: $DEPLOY_ENV
       APP: $APP
+      TEST_TYPE: $TEST_TYPE
+      GITHUB_TOKEN: $GITHUB_TOKEN
     depends_on:
       - redis
       - minio
