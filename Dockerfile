@@ -8,6 +8,7 @@ ENV LANGUAGE C.UTF-8
 
 ARG BUNDLER_WORKERS
 ARG BUNDLER_RETRIES
+ARG SERVER_PORT
 
 WORKDIR /app
 
@@ -25,11 +26,19 @@ RUN apt-get update -qq && \
 
 RUN curl -L https://youtube-dl.org/downloads/latest/youtube-dl \
          -o /usr/local/bin/youtube-dl
-COPY Gemfile Gemfile.lock ./
-RUN gem install bundler -v "< 2.0" && \
-    bundle install --jobs $BUNDLER_WORKERS --retry $BUNDLER_RETRIES
 
-COPY . ./
+RUN groupadd -r pender
+RUN useradd -ms /bin/bash -g pender pender
+COPY --chown=pender:pender Gemfile Gemfile.lock ./
+RUN if [ "${DEPLOY_ENV}" = "prod" ]; then \
+        bundle install --deployment --without development test; \
+    else \
+        gem install bundler -v "< 2.0" && \
+        bundle install --jobs $BUNDLER_WORKERS --retry $BUNDLER_RETRIES; \
+    fi
 
-EXPOSE 3200
+COPY --chown=pender:pender . ./
+
+USER pender
+EXPOSE ${SERVER_PORT}
 ENTRYPOINT ["./docker-entrypoint.sh"]
