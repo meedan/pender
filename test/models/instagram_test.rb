@@ -112,7 +112,7 @@ class InstagramTest < ActiveSupport::TestCase
     assert_equal '', data['username']
     assert_equal '', data['author_name']
     assert_match /Not Found/, data['raw']['graphql']['error']['message']
-    Media.any_instance.unstub(:get_instagram_json_data)
+    Media.any_instance.unstub(:get_instagram_graphql_data)
   end
 
   # TODO Must be fixed on #8794
@@ -135,4 +135,19 @@ class InstagramTest < ActiveSupport::TestCase
   #  assert_match /author_picture.jpg/,data['author_picture']
   #  Media.any_instance.unstub(:get_instagram_json_data)
   #end
+
+  test "should not raise error notification when redirected to login page" do
+    Media.stubs(:is_a_login_page).returns(true)
+    PenderAirbrake.stubs(:notify).never
+    m = create_media url: 'https://www.instagram.com/p/CFld5x6B6Bw/'
+    data = m.as_json
+    assert_equal 'CFld5x6B6Bw', data['external_id']
+    assert_equal 'item', data['type']
+    assert_equal '', data['username']
+    assert_equal '', data['author_name']
+    assert_equal '', data['html']
+    assert_match /Login required/, data['raw']['graphql']['error']['message']
+    Media.unstub(:is_a_login_page)
+    PenderAirbrake.unstub(:notify)
+  end
 end 
