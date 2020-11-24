@@ -4,7 +4,6 @@ env
 # TODO: replace with AWS SSM script when ready
 configurator() {
     if [ ! -d "configurator" ]; then
-        echo "attempt to clone configurator"
         git clone https://${GITHUB_TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
     fi
     CONFIGURATOR_ENV=${DEPLOY_ENV}
@@ -66,7 +65,15 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
     export SECRET_KEY_BASE=$(bundle exec rake secret)
     bundle exec rake lapis:api_keys:create_default
     echo "rake tasks complete running puma"
-    bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid
+
+    if [[ "${TEST_TYPE}" == "unit" ]]; then
+        bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid &
+        bundle exec rake test:units
+    elif [[ "${TEST_TYPE}" == "integration" ]]; then
+        bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid --environment ${DEPLOY_ENV} --workers 3 -t 8:32 &
+	test/setup-parallel
+	bundle exec rake "parallel:test[3]"
+    fi
 
 # run deployment environment setup (including local runs)
 else
@@ -77,7 +84,7 @@ else
             echo "GITHUB_TOKEN environment variable must be set. Exiting."
             exit 1
         fi
-
+    fi
 fi
 
 echo "$@"
