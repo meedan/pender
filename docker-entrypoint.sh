@@ -1,5 +1,4 @@
 #!/bin/bash
-env
 
 # TODO: replace with AWS SSM script when ready
 configurator() {
@@ -58,7 +57,6 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
         set_config "${PRIVATE_REPO_ACCESS}"
     fi
 
-    # TODO: containerize these test tasks
     echo "running rake tasks"
     bundle exec rake db:create
     bundle exec rake db:migrate
@@ -79,11 +77,20 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
 else
     set_config "${PRIVATE_REPO_ACCESS}"
     echo "running in deployment env"
-    if [[ "${DEPLOY_ENV}" != "local"  ]]; then
-        if [[ -z "${GITHUB_TOKEN}" ]]; then
-            echo "GITHUB_TOKEN environment variable must be set. Exiting."
-            exit 1
+    if [[ "${APP}" == "pender" ]]; then
+        if [[ "${DEPLOY_ENV}" != "local" ]]; then
+            if [[ -z "${GITHUB_TOKEN}" ]]; then
+                echo "GITHUB_TOKEN environment variable must be set. Exiting."
+                exit 1
+            fi
+            if [[ "${DEPLOY_ENV}" == "prod" ]]; then
+                bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid --environment ${DEPLOY_ENV} --workers 3 -t 8:32
+            fi
+        else
+            bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid
         fi
+    elif [[ "${APP}" == "pender_background" ]]; then
+        bundle exec sidekiq
     fi
 fi
 

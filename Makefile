@@ -1,15 +1,10 @@
 SHELL := /bin/sh
 
 build.local:
-	BUNDLER_WORKERS=2 BUNDLER_RETRIES=5 docker-compose build
+	docker-compose --log-level ERROR build pender
 
-build.test:
-	BUNDLER_WORKERS=5 BUNDLER_RETRIES=10 docker-compose build
-
-build.prod:
-	docker build -t pender -f production/Dockerfile
-
-build:  build.local
+build.test: build.local
+build: build.local
 
 
 # Note: requires databases
@@ -23,11 +18,11 @@ test.integration: build.test
 test:	test.integration
 
 
-run.local: build.local
-	docker run -it -p=3200:3200 -e RAILS_ENV=development -e DEPLOY_ENV=local -e APP=pender pender
+run.local: build
+	docker-compose --env-file ./.env.local up --abort-on-container-exit pender
 
 # TODO: add ecr, gh token, etc.
-run.prod: build.prod
-	docker run -it --rm -p=3200:3200 -e RAILS_ENV=production -e DEPLOY_ENV=$DEPLOY_ENV -e APP=pender pender
+run.prod: build
+	DEPLOY_ENV=${DEPLOY_ENV} docker-compose --env-file ./.env.prod up --abort-on-container-exit
 
-run:    run.local
+run: run.local
