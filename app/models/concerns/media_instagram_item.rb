@@ -48,7 +48,6 @@ module MediaInstagramItem
     begin
       self.data['raw']['graphql'] = self.get_instagram_graphql_data("https://www.instagram.com/p/#{id}/?__a=1")
     rescue StandardError => error
-      PenderAirbrake.notify(error.message)
       Rails.logger.warn level: 'WARN', message: '[Parser] Cannot get data from Instagram URL', error_class: error.class, error_message: error.message
       self.data['raw']['graphql'] = { error: { message: error.message, code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }}
     end
