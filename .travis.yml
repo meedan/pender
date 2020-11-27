@@ -11,7 +11,7 @@ before_install:
 before_script:
 - docker-compose exec pender test/setup-parallel
 script:
-- docker-compose exec pender bundle exec rake "parallel:test[3]"
+- DEPLOY_ENV=travis GITHUB_TOKEN=$TOKEN make test.integration
 - docker-compose exec pender bundle exec rake parallel:spec
 after_script:
 - docker-compose exec pender cat tmp/performance.csv
