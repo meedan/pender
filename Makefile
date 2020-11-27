@@ -1,9 +1,11 @@
 SHELL := /bin/sh
 
 build.local:
-	docker-compose --log-level ERROR build pender
+	docker-compose --log-level ERROR --env-file ./.env.local build pender
 
-build.test: build.local
+build.test:
+	docker-compose --log-level ERROR --env-file ./.env.test build pender
+
 build: build.local
 
 
@@ -26,3 +28,8 @@ run.prod: build
 	DEPLOY_ENV=${DEPLOY_ENV} docker-compose --env-file ./.env.prod up --abort-on-container-exit
 
 run: run.local
+
+
+clean:
+	docker-compose --log-level ERROR --env-file ./.env.local down && \
+	rm -f db/test*.sqlite3* schema.rb config/cookies.txt config/database.yml sidekiq.yml config.yml
