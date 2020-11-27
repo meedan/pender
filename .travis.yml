@@ -1,15 +1,8 @@
 language: minimal
 before_install:
-- git clone https://${TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
-- d=configurator/check/travis/pender/; for f in $(find $d -type f); do cp "$f" "${f/$d/}";
-  done
-- docker-compose build
-- docker-compose -f docker-compose.yml -f docker-test.yml up -d
-- wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
-before_script:
-- docker-compose exec pender test/setup-parallel
+- make build.test
 script:
-- docker-compose exec pender bundle exec rake "parallel:test[3]"
+- DEPLOY_ENV=travis GITHUB_TOKEN=$TOKEN make test.integration
 - docker-compose exec pender bundle exec rake parallel:spec
 after_script:
 - docker-compose exec pender cat tmp/performance.csv
