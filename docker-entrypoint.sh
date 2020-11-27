@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Expects following environment variables to be populated:
+#   DEPLOY_ENV
+#   APP
+#   GITHUB_TOKEN
+#   SERVER_PORT
+
 # TODO: replace with AWS SSM script when ready
 configurator() {
     if [ ! -d "configurator" ]; then
@@ -28,9 +34,9 @@ set_config() {
 # check if user has private repo access
 PRIVATE_REPO_ACCESS="false"
 if [[ -z ${GITHUB_TOKEN} ]]; then
-    GIT_TERMINAL_PROMPT=0 git clone -q https://github.com/meedan/configurator.git
+    GIT_TERMINAL_PROMPT=0 git ls-remote --exit-code https://github.com/meedan/configurator.git
 else
-    GIT_TERMINAL_PROMPT=0 git clone -q https://${GITHUB_TOKEN}:x-oauth-basic@github.com/meedan/configurator.git
+    GIT_TERMINAL_PROMPT=0 git ls-remote --exit-code https://${GITHUB_TOKEN}:x-oauth-basic@github.com/meedan/configurator.git
 fi
 if [[ $? -eq 0 ]]; then
     PRIVATE_REPO_ACCESS="true"
