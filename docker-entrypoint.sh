@@ -22,7 +22,6 @@ configurator() {
 }
 
 set_config() {
-    PRIVATE_REPO_ACCESS=$1
     if [[ "${PRIVATE_REPO_ACCESS}" == "true" ]]; then
         configurator
     else
@@ -60,7 +59,7 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
         fi
         configurator  # always set config with configurator for travis
     elif [[ "${DEPLOY_ENV}" == "test" ]]; then
-        set_config "${PRIVATE_REPO_ACCESS}"
+        set_config
     fi
 
     echo "running rake tasks"
@@ -81,7 +80,7 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
 
 # run deployment environment setup (including local runs)
 else
-    set_config "${PRIVATE_REPO_ACCESS}"
+    set_config
     echo "running in deployment env"
     if [[ "${APP}" == "pender" ]]; then
         if [[ "${DEPLOY_ENV}" != "local" ]]; then
