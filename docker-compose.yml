@@ -23,7 +23,7 @@ services:
     build: .
     shm_size: 1G
     ports:
-      - "${SERVER_PORT}:${SERVER_PORT}"
+      - ${SERVER_PORT}:${SERVER_PORT}
       - "9555:9555"
     volumes:
       - ".:/app"
