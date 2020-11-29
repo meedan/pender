@@ -1,6 +1,4 @@
 language: minimal
-before_install:
-- make build.test
 script:
 - DEPLOY_ENV=travis GITHUB_TOKEN=$TOKEN make test.integration
 - docker-compose exec pender bundle exec rake parallel:spec
