@@ -53,6 +53,10 @@ jobs:
         tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
+        build-args: |
+          BUNDLER_RETRIES=5
+          BUNDLER_WORKERS=20
+          SERVER_PORT=3200
 
     - name: Docker Build and Load
       id: docker-build-load
