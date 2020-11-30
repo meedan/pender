@@ -51,6 +51,7 @@ jobs:
       with:
         push: true
         tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+        builder: ${{ steps.buildx.outputs.name }}
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
         build-args: |
@@ -66,6 +67,7 @@ jobs:
         file: ./Dockerfile
         load: true
         tags: ${{ github.event.repository.name }}:latest
+        builder: ${{ steps.buildx.outputs.name }}
         cache-from: type=local,src=/tmp/.buildx-cache
 
     - name: Run Integration Tests
