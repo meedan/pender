@@ -53,15 +53,19 @@ jobs:
         tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
         builder: ${{ steps.buildx.outputs.name }}
         cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
         build-args: |
           BUNDLER_RETRIES=5
           BUNDLER_WORKERS=20
           SERVER_PORT=3200
 
     - name: Debug Buildx
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ github.event.repository.name }}
+        IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker images ps
+        docker image inspect ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
 
     - name: Docker Build and Push To ECR
       id: docker-build-ecr
@@ -75,7 +79,7 @@ jobs:
         tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
         builder: ${{ steps.buildx.outputs.name }}
         cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
 
     - name: Run Integration Tests
       id: run-int-tests
