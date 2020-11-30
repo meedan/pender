@@ -29,6 +29,7 @@ RUN curl -L https://youtube-dl.org/downloads/latest/youtube-dl \
 
 RUN groupadd -r pender
 RUN useradd -ms /bin/bash -g pender pender
+RUN chown pender:pender .
 COPY --chown=pender:pender Gemfile Gemfile.lock ./
 RUN if [ "${DEPLOY_ENV}" = "prod" ]; then \
         bundle install --deployment --without development test; \

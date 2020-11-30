@@ -25,8 +25,6 @@ services:
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
       - "9555:9555"
-    volumes:
-      - ".:/app"
     build:
       context: .
       args:
