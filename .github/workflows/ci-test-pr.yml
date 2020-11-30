@@ -1,0 +1,73 @@
+name: Build and Run Integration Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - dmou/standardize-app-startup
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+
+    outputs:
+      image: ${{ steps.build-image.outputs.image }}
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+        aws-region: eu-west-1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      id: cache
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Docker Build and Push to ECR
+      id: docker-build-ecr
+      uses: docker/build-push-action@v2
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ github.event.repository.name }}
+        IMAGE_TAG: ${{ github.sha }}
+        GITHUB_TOKEN: ${{ secrets.CONFIGURATOR_TOKEN }}
+      with:
+        push: true
+        tags: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest =/tmp/.buildx-cache
+
+    - name: Docker Build and Load
+      id: docker-build-load
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./Dockerfile
+        load: true
+        tags: ${{ github.event.repository.name }}:latest
+
+    - name: Run Integration Tests
+      id: run-int-tests
+      env:
+        CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+        GIT_SHA: ${{ github.sha }}
+        BUILD_NUMBER: ${{ github.run_number }}
+      run: |
+        curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter && chmod +x ./cc-test-reporter
+        ./cc-test-reporter before-build
+        mkdir $GITHUB_WORKSPACE/coverage
+        DEPLOY_ENV=travis GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.integration
+        ./cc-test-reporter after-build --exit-code 0 -t simplecov -p /app

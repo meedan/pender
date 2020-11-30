@@ -45,13 +45,26 @@ Besides the specific parsers Pender can parse any link with an oEmbed endpoint o
 To run Pender, follow these steps:
 
 ```
-$ git clone https://github.com/meedan/pender.git
-$ cd pender
-$ find -name '*.example' | while read f; do cp "$f" "${f%%.example}"; done
-$ docker-compose build
-$ docker-compose up --abort-on-container-exit
+make run
 ```
 Open http://localhost:3200/api-docs/index.html to access Pender API directly.
+
+### Testing
+
+```
+make test.unit
+```
+
+OR
+
+```
+make test.integration
+```
+
+If unit tests are run without an exported `GITHUB_TOKEN` environment variable,
+the startup script will assume no elevated credentials exist for the user and
+use the `.example` files from `config/`. Integration tests will only run if
+this variable is present.
 
 ## API
 
