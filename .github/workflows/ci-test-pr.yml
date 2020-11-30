@@ -68,7 +68,7 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
       with:
         push: true
-        tags: ${{ github.event.repository.name }}:latest, env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+        tags: ${{ github.event.repository.name }}:latest, ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
         builder: ${{ steps.buildx.outputs.name }}
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
