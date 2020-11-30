@@ -66,6 +66,7 @@ jobs:
         file: ./Dockerfile
         load: true
         tags: ${{ github.event.repository.name }}:latest
+        cache-from: type=local,src=/tmp/.buildx-cache
 
     - name: Run Integration Tests
       id: run-int-tests
