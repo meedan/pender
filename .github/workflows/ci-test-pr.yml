@@ -59,6 +59,10 @@ jobs:
           BUNDLER_WORKERS=20
           SERVER_PORT=3200
 
+    - name: Debug Buildx
+      run: |
+        docker images ps
+
     - name: Docker Build and Push To ECR
       id: docker-build-ecr
       uses: docker/build-push-action@v2
@@ -68,7 +72,7 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
       with:
         push: true
-        tags: ${{ github.event.repository.name }}:latest, ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+        tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
         builder: ${{ steps.buildx.outputs.name }}
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
@@ -76,6 +80,9 @@ jobs:
     - name: Run Integration Tests
       id: run-int-tests
       env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ github.event.repository.name }}
+        IMAGE_TAG: ${{ github.sha }}
         CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
         GIT_SHA: ${{ github.sha }}
         BUILD_NUMBER: ${{ github.run_number }}
@@ -83,5 +90,8 @@ jobs:
         curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter && chmod +x ./cc-test-reporter
         ./cc-test-reporter before-build
         mkdir $GITHUB_WORKSPACE/coverage
+        docker images ps  # debug
+        # rearrange tags so that docker buildx containers match what docker-compose.yml expects
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG pender:latest
         DEPLOY_ENV=travis GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.integration
         ./cc-test-reporter after-build --exit-code 0 -t simplecov -p /app
