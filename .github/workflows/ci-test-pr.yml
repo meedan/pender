@@ -50,6 +50,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.CONFIGURATOR_TOKEN }}
       with:
         push: true
+        load: true
         tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
         builder: ${{ steps.buildx.outputs.name }}
         cache-from: type=local,src=/tmp/.buildx-cache
@@ -63,12 +64,11 @@ jobs:
       id: docker-build-load
       uses: docker/build-push-action@v2
       with:
-        context: .
-        file: ./Dockerfile
         load: true
         tags: ${{ github.event.repository.name }}:latest
         builder: ${{ steps.buildx.outputs.name }}
         cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
 
     - name: Run Integration Tests
       id: run-int-tests
