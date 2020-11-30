@@ -38,10 +38,25 @@ A parsing, archiving and rendering service.
 ### Running
 
 ```
-find -name '*.example' | while read f; do cp "$f" "${f%%.example}"; done
-docker-compose build
-docker-compose up --abort-on-container-exit
+make build
 ```
+
+### Testing
+
+```
+make test.unit
+```
+
+OR
+
+```
+make test.integration
+```
+
+If unit tests are run without an exported `GITHUB_TOKEN` environment variable,
+the startup script will assume no elevated credentials exist for the user and
+use the `.example` files from `config/`. Integration tests will only run if
+this variable is present.
 
 ### API
 
