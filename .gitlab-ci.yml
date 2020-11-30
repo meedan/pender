@@ -3,9 +3,9 @@ stages:
   - deploy
 
 build_qa:
-  image: docker:latest
+  image: docker:rc
   services:
-    - docker:dind
+    - docker:rc-dind
   tags:
     - meedan
     - meedan-labs
@@ -18,8 +18,6 @@ build_qa:
     - pip install docutils==0.14
     - pip install awscli==1.16.201
     - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
-    - aws ssm get-parameters-by-path --region $AWS_DEFAULT_REGION --path /QA/pender/ --recursive --with-decryption --output text --query "Parameters[].[Name,Value]" | sed -E 's#/QA/pender/([^[:space:]]*)[[:space:]]*#\1=#' > env.qa.local
-    - docker build -f production/Dockerfile --env-file=env.qa.local -t "$ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA"  .
     - docker build -f production/Dockerfile -t "$ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA"  .
     - docker push "$ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA"
   only:
@@ -45,9 +43,9 @@ deploy_qa:
     - develop
 
 build_live:
-  image: docker:latest
+  image: docker:rc
   services:
-    - docker:dind
+    - docker:rc-dind
   tags:
     - meedan
     - meedan-labs
@@ -60,8 +58,7 @@ build_live:
     - pip install docutils==0.14
     - pip install awscli==1.16.201
     - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
-    - aws ssm get-parameters-by-path --region $AWS_DEFAULT_REGION --path /Live/pender/ --recursive --with-decryption --output text --query "Parameters[].[Name,Value]" | sed -E 's#/Live/pender/([^[:space:]]*)[[:space:]]*#\1=#' > env.production.local
-    - docker build -f production/Dockerfile --env-file=env.production.local -t "$ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA"  .
+    - docker build -f production/Dockerfile -t "$ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA"  .
     - docker push "$ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA"
   only:
     - master
