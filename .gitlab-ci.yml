@@ -23,7 +23,6 @@ build_qa:
     - docker push "$ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA"
   only:
     - develop
-    - fix-gitlab-ci-deploy
 
 deploy_qa:
   image: python:3-alpine
@@ -48,7 +47,6 @@ deploy_qa:
     - echo "new Image was deployed $ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA"
   only:
     - develop
-    - fix-gitlab-ci-deploy
 
 build_live:
   image: docker:rc
@@ -88,8 +86,11 @@ deploy_live:
     - pip install docutils==0.16
     - pip install awscli==1.18.188
     - pip install ecs-deploy==1.11.0
-    - ecs deploy ecs-live  live-pender --image live-pender-c $ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA  --timeout 3600
-    - ecs deploy ecs-live  live-pender-background --image live-pender-background $ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA  --timeout 3600
+    - aws ssm get-parameters-by-path --region $AWS_DEFAULT_REGION --path /Live/pender/ --recursive --with-decryption --output text --query "Parameters[].[Name]" | sed -E 's#/Live/pender/##' > env.live.names
+    - rm -f live-pender-c.env.args; for NAME in `cat env.live.names`; do echo -n "-s live-pender-c $NAME /Live/pender/$NAME " >> live-pender-c.env.args; done
+    - ecs deploy ecs-live  live-pender --image live-pender-c $ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA  --timeout 3600 `cat live-pender-c.env.args`
+    - rm -f live-pender-background.env.args; for NAME in `cat env.live.names`; do echo -n "-s live-pender-background $NAME /Live/pender/$NAME " >> live-pender-background.env.args; done
+    - ecs deploy ecs-live  live-pender-background --image live-pender-background $ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA  --timeout 3600 `cat live-pender-background.env.args`
     - echo "new Image was deployed $ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA"
   only:
     - master
