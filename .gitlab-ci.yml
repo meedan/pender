@@ -36,6 +36,7 @@ deploy_qa:
     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
   script:
     - apk add --no-cache curl jq python3 py3-pip git
+    - pip install awscli==1.16.201
     - pip install ecs-deploy==1.11.0
     - aws ssm get-parameters-by-path --region $AWS_DEFAULT_REGION --path /QA/pender/ --recursive --with-decryption --output text --query "Parameters[].[Name]" | sed -E 's#/QA/pender/##' > env.qa.names
     - for NAME in `cat env.qa.names`; do echo -n "-s $NAME /QA/pender/$NAME " >> env.args; done
