@@ -42,7 +42,7 @@ deploy_qa:
     - pip install ecs-deploy==1.11.0
     - aws ssm get-parameters-by-path --region $AWS_DEFAULT_REGION --path /QA/pender/ --recursive --with-decryption --output text --query "Parameters[].[Name]" | sed -E 's#/QA/pender/##' > env.qa.names
     - rm -f qa-pender-c.env.args; for NAME in `cat env.qa.names`; do echo -n "-s qa-pender-c $NAME /QA/pender/$NAME " >> qa-pender-c.env.args; done
-    - ecs deploy ecs-qa  qa-pender --image qa-pender-c $ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA  --timeout 3600 `cat qa-pender-cenv.args`
+    - ecs deploy ecs-qa  qa-pender --image qa-pender-c $ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA  --timeout 3600 `cat qa-pender-c.env.args`
     - rm -f qa-pender-background.env.args; for NAME in `cat env.qa.names`; do echo -n "-s qa-pender-background $NAME /QA/pender/$NAME " >> qa-pender-background.env.args; done
     - ecs deploy ecs-qa  qa-pender-background --image qa-pender-background $ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA  --timeout 3600 `cat qa-pender-background.env.args`
     - echo "new Image was deployed $ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA"
