@@ -3,9 +3,9 @@ stages:
   - deploy
 
 build_qa:
-  image: docker:rc
+  image: docker:latest
   services:
-    - docker:rc-dind
+    - docker:dind
   tags:
     - meedan
     - meedan-labs
@@ -49,9 +49,9 @@ deploy_qa:
     - develop
 
 build_live:
-  image: docker:rc
+  image: docker:latest
   services:
-    - docker:rc-dind
+    - docker:dind
   tags:
     - meedan
     - meedan-labs
