@@ -21,7 +21,7 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
     WebMock.disable_net_connect!(allow: allowed_sites)
-    WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: {})
+    WebMock.stub_request(:any, /archive.org/).to_return(body: '', headers: {})
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/marcouza/status/875424957613920256'
@@ -44,7 +44,7 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
     WebMock.disable_net_connect!(allow: allowed_sites)
     error = Net::ReadTimeout.new('Exception from WebMock')
-    WebMock.stub_request(:any, /web.archive.org/).to_raise(Net::ReadTimeout.new('Exception from WebMock'))
+    WebMock.stub_request(:any, /archive.org/).to_raise(Net::ReadTimeout.new('Exception from WebMock'))
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/marcouza/status/875424957613920256'

@@ -153,6 +153,7 @@ class ArchiverTest < ActiveSupport::TestCase
       m.as_json(archivers: 'none')
       assert_nil m.data.dig('archives', 'archive_org')
       WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {status: 'error', status_ext: data[:status_ext], message: data[:message]}.to_json)
+      WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
 
       Media.send_to_archive_org(url.to_s, a.id)
       media_data = Pender::Store.current.read(Media.get_id(url), :json)
@@ -773,4 +774,26 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:system)
   end
 
+  test "should return true and get available snapshot if page was already archived on Archive.org" do
+    url = 'https://example.com/'
+    m = Media.new url: url
+    m.as_json
+
+    assert_equal true, Media.get_available_archive_org_snapshot(url, nil)
+    data = m.as_json
+    assert_match /\/\/web.archive.org\/web\/\d+\/#{url}/, data['archives']['archive_org']['location']
+  end
+
+  test "should return nil if page was not previously archived on Archive.org" do
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'archive.org' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+
+    WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json)
+
+    url = 'https://example.com/'
+    assert_nil Media.get_available_archive_org_snapshot(url, nil)
+
+    WebMock.disable!
+  end
 end
