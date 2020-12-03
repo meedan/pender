@@ -357,13 +357,13 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should not redirect to HTTPS if not available" do
-    url = 'http://www.angra.net'
-    https_url = 'https://www.angra.net/'
+    url = 'http://www.angra.net/website'
+    https_url = 'https://www.angra.net/website'
     response = 'mock'; response.stubs(:code).returns(200)
     Media.stubs(:request_url).with(url, 'Head').returns(response)
     Media.stubs(:request_url).with(https_url, 'Head').raises(OpenSSL::SSL::SSLError)
     m = create_media url: url
-    assert_equal 'http://www.angra.net/', m.url
+    assert_equal 'http://www.angra.net/website', m.url
     Media.unstub(:request_url)
   end
 

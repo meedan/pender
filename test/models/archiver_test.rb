@@ -628,9 +628,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:try_https)
     Media.any_instance.stubs(:parse)
     Media.stubs(:supported_video?).returns(true)
-    mock = 'status'
-    Open3.stubs(:capture3).returns(['', 'ERROR: requested format not available', mock])
-    mock.stubs(:success?).returns(false);mock.stubs(:exitstatus).returns(1)
+    Media.stubs(:system).returns(`(exit 1)`)
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://www.tiktok.com/@scout2015/video/6771039287917038854'
@@ -651,7 +649,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:try_https)
     Media.any_instance.unstub(:parse)
     Media.unstub(:supported_video?)
-    Open3.unstub(:capture3)
+    Media.unstub(:system)
   end
 
   test "should generate the public archiving folder for videos" do
@@ -746,7 +744,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     Media.send_to_video_archiver(url, nil)
     assert_nil ApiKey.current
-    %w(endpoint access_key secret_key bucket bucket_region video_bucket).each do |key|
+    %w(endpoint access_key secret_key bucket bucket_region media_asset_path).each do |key|
       assert_equal CONFIG["storage_#{key}"], PenderConfig.current("storage_#{key}")
       assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
@@ -755,7 +753,7 @@ class ArchiverTest < ActiveSupport::TestCase
     api_key = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     Media.send_to_video_archiver(url, api_key.id)
     assert_equal api_key, ApiKey.current
-    %w(endpoint access_key secret_key bucket bucket_region video_bucket).each do |key|
+    %w(endpoint access_key secret_key bucket bucket_region media_asset_path).each do |key|
       assert_equal CONFIG["storage_#{key}"], PenderConfig.current("storage_#{key}")
       assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
