@@ -82,14 +82,17 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ github.event.repository.name }}
         IMAGE_TAG: ${{ github.sha }}
-        CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
         GIT_SHA: ${{ github.sha }}
         BUILD_NUMBER: ${{ github.run_number }}
       run: |
-        curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter && chmod +x ./cc-test-reporter
-        ./cc-test-reporter before-build
-        mkdir $GITHUB_WORKSPACE/coverage
         # rearrange tags so that docker buildx containers match what docker-compose.yml expects
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG pender:latest
         DEPLOY_ENV=travis GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.integration
-        ./cc-test-reporter after-build --exit-code 0 -t simplecov -p /app
+
+    - name: Publish Code Coverage
+      uses: paambaati/codeclimate-action@v2.7.4
+      env:
+        CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+      with:
+        coverageCommand: npm run coverage
+        debug: true
