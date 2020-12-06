@@ -44,6 +44,8 @@ Besides the specific parsers Pender can parse any link with an oEmbed endpoint o
 
 To run Pender, follow these steps:
 
+For developing this service locally, run:
+
 ```
 make run
 ```

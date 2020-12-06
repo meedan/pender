@@ -6,7 +6,7 @@
 #   GITHUB_TOKEN
 #   SERVER_PORT
 
-# TODO: replace with AWS SSM script when ready
+# TODO: use configurator until local/test config is moved into env-files
 configurator() {
     if [ ! -d "configurator" ]; then
         git clone https://${GITHUB_TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
@@ -21,6 +21,7 @@ configurator() {
     done
 }
 
+# TODO: skip for deployments since they will have already been set
 set_config() {
     if [[ "${PRIVATE_REPO_ACCESS}" == "true" ]]; then
         configurator
