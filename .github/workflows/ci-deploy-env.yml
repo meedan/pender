@@ -29,7 +29,8 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Set up Docker Buildx
-      uses: crazy-max/ghaction-docker-buildx@v3
+      id: buildx
+      uses: docker/setup-buildx-action@master
 
     - name: Cache Docker layers
       uses: actions/cache@v2
@@ -55,29 +56,65 @@ jobs:
           --file ./Dockerfile ./
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-#    - name: Run Unit Tests
-#      id: run-unit-tests
-
-    - name: Docker Buildx (push)
-      id: push-image-to-ecr
+    - name: Docker Build and Load
+      id: docker-build-load
+      uses: docker/build-push-action@v2
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ github.event.repository.name }}
         IMAGE_TAG: ${{ github.sha }}
+      with:
+        load: true
+        tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+        builder: ${{ steps.buildx.outputs.name }}
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+        build-args: |
+          BUNDLER_RETRIES=5
+          BUNDLER_WORKERS=20
+          SERVER_PORT=3200
+
+    - name: Run Unit Tests
+      id: run-unit-tests
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ github.event.repository.name }}
+        IMAGE_TAG: ${{ github.sha }}
+        GIT_SHA: ${{ github.sha }}
+        BUILD_NUMBER: ${{ github.run_number }}
       run: |
-        BRANCH=$(echo "${GITHUB_REF#refs/*/}" | sed 's/.*\///')
-        # push with git sha
-        docker buildx build \
-          --cache-from "type=local,src=/tmp/.buildx-cache" \
-          --output "type=image,push=true" \
-          --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-          --file ./Dockerfile ./
-        # push docker tag to indicate branch
-        docker buildx build \
-          --cache-from "type=local,src=/tmp/.buildx-cache" \
-          --output "type=image,push=true" \
-          --tag $ECR_REGISTRY/$ECR_REPOSITORY:$BRANCH \
-          --file ./Dockerfile ./
+        # rearrange tags so that docker buildx containers match what docker-compose.yml expects
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG pender:latest
+        DEPLOY_ENV=travis GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.unit
+
+    - name: Run Integration Tests
+      id: run-int-tests
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ github.event.repository.name }}
+        IMAGE_TAG: ${{ github.sha }}
+        GIT_SHA: ${{ github.sha }}
+        BUILD_NUMBER: ${{ github.run_number }}
+      run: |
+        DEPLOY_ENV=travis GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.integration
+
+    - name: Docker Build and Push To ECR
+      id: docker-build-ecr
+      uses: docker/build-push-action@v2
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ github.event.repository.name }}
+        IMAGE_TAG: ${{ github.sha }}
+      with:
+        push: true
+        tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+        builder: ${{ steps.buildx.outputs.name }}
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+        build-args: |
+          BUNDLER_RETRIES=5
+          BUNDLER_WORKERS=20
+          SERVER_PORT=3200
 
 #    - name: Kick off Terraform deploy in sysops/ if not live
 #      id: sysops-deploy
