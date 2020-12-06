@@ -23,7 +23,9 @@ test:	test.integration
 run.local: build
 	docker-compose --env-file ./.env.local up --abort-on-container-exit pender
 
-# TODO: add ecr, gh token, etc.
+run.background: build
+	APP=pender_background docker-compose --env-file ./.env.local up pender -d
+
 run.prod: build
 	DEPLOY_ENV=${DEPLOY_ENV} docker-compose --env-file ./.env.prod up --abort-on-container-exit
 
