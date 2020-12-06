@@ -37,6 +37,8 @@ A parsing, archiving and rendering service.
 
 ### Running
 
+For developing this service locally, run:
+
 ```
 make build
 ```
