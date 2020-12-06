@@ -51,6 +51,12 @@ if [[ -z ${DEPLOY_ENV+x} || -z ${APP+x} ]]; then
 fi
 echo "Running application [${APP}] in [${DEPLOY_ENV}] environment"
 
+
+# run sidekiq
+if [[ ${APP} == "pender_background" ]]; then
+    bin/sidekiq
+fi
+
 # run test environment setup
 if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
     if [[ "${DEPLOY_ENV}" == "travis" ]]; then
