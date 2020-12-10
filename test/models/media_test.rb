@@ -148,12 +148,9 @@ class MediaTest < ActiveSupport::TestCase
     id = Media.get_id url
     m = create_media url: url
     data = m.as_json
-    assert_equal 'بالصور.. مياه الشرب بالإسماعيلية تواصل عملها لحل مشكلة طفح الصرف ببعض الشوارع - اليوم السابع', data['title']
-    assert_match /واصلت غرفة عمليات شركة/, data['description']
+    assert !data['title'].blank?
     assert_not_nil data['published_at']
     assert_equal '', data['username']
-    assert_match /https?:\/\/www.youm7.com/, data['author_url']
-    assert_match /\/medias\/#{id}\/picture/, data['picture']
   end
 
   test "should store the picture address" do
@@ -357,13 +354,13 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should not redirect to HTTPS if not available" do
-    url = 'http://www.angra.net'
-    https_url = 'https://www.angra.net/'
+    url = 'http://www.angra.net/website'
+    https_url = 'https://www.angra.net/website'
     response = 'mock'; response.stubs(:code).returns(200)
     Media.stubs(:request_url).with(url, 'Head').returns(response)
     Media.stubs(:request_url).with(https_url, 'Head').raises(OpenSSL::SSL::SSLError)
     m = create_media url: url
-    assert_equal 'http://www.angra.net/', m.url
+    assert_equal 'http://www.angra.net/website', m.url
     Media.unstub(:request_url)
   end
 
@@ -1001,9 +998,8 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should get metrics from Facebook" do
     Media.unstub(:request_metrics_from_facebook)
-    app_id = CONFIG['facebook_test_app_id'] || CONFIG['facebook_app_id']
-    app_secret = CONFIG['facebook_test_app_secret'] || CONFIG['facebook_app_secret']
-    stub_configs({'facebook_app_id' => app_id, 'facebook_app_secret' => app_secret })
+    fb_config = CONFIG['facebook_test_app'] || CONFIG['facebook_app']
+    stub_configs({'facebook_app' => fb_config })
     url = 'https://www.google.com/'
     m = create_media url: url
     m.as_json
@@ -1047,21 +1043,47 @@ class MediaTest < ActiveSupport::TestCase
       url = 'https://www.example.com/'
       m = create_media url: url
       Media.unstub(:request_metrics_from_facebook)
-      Media.any_instance.stubs(:unsafe?).returns(false)
+      stub_configs({'facebook_app' => '1111:2222' })
       WebMock.enable!
       WebMock.disable_net_connect!(allow: 'graph.facebook.com')
       WebMock.stub_request(:any, /graph.facebook.com\/oauth\/access_token/).to_return(body: {"access_token":"token"}.to_json)
       WebMock.stub_request(:any, "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=token").to_return(body: response_info[:body], status: response_info[:code].to_i)
       PenderAirbrake.stubs(:notify)
-      assert_equal 0, MetricsWorker.jobs.size
       assert_raises Pender::RetryLater do
-        data = m.as_json
+        assert_nil Media.request_metrics_from_facebook(url)
       end
-      assert_equal 0, MetricsWorker.jobs.size
       WebMock.disable!
       PenderAirbrake.unstub(:notify)
-      Media.any_instance.unstub(:unsafe?)
+      Sidekiq::Worker.clear_all
+      Semaphore.new('1111').unlock
     end
+  end
+
+  test "should use second facebook_app when fails to get fb metrics and api limit reached" do
+    Sidekiq::Testing.fake!
+    url = 'https://www.example.com/'
+    m = create_media url: url
+    Media.unstub(:request_metrics_from_facebook)
+    Media.any_instance.stubs(:unsafe?).returns(false)
+    response_info = { body: "{\"error\":{\"message\":\"(#4) Application request limit reached\",\"type\":\"OAuthException\",\"is_transient\":true,\"code\":4}}", code: "403", message: "Forbidden"}
+    stub_configs({'facebook_app' => '1111:2222;3333:4444' })
+    WebMock.enable!
+    WebMock.disable_net_connect!(allow: 'graph.facebook.com')
+    WebMock.stub_request(:any, 'https://graph.facebook.com/oauth/access_token?client_id=1111&client_secret=2222&grant_type=client_credentials').to_return(body: {"access_token":"app1_token"}.to_json)
+    WebMock.stub_request(:any, 'https://graph.facebook.com/oauth/access_token?client_id=3333&client_secret=4444&grant_type=client_credentials').to_return(body: {"access_token":"app2_token"}.to_json)
+    WebMock.stub_request(:any, "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=app1_token").to_return(body: response_info[:body], status: response_info[:code].to_i)
+    WebMock.stub_request(:any, "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=app2_token").to_return(body: {"engagement":{"reaction_count":15}}.to_json, status: 200)
+    PenderAirbrake.stubs(:notify)
+    assert_raises Pender::RetryLater do
+      Media.request_metrics_from_facebook(url)
+    end
+    assert_equal 15, Media.request_metrics_from_facebook(url)['reaction_count']
+    WebMock.disable!
+    PenderAirbrake.unstub(:notify)
+    Media.any_instance.unstub(:unsafe?)
+    Semaphore.new('1111').unlock
+    Semaphore.new('3333').unlock
+    Sidekiq::Worker.clear_all
   end
 
   test "should return nil when fb metrics returns a permanent error" do
@@ -1081,8 +1103,7 @@ class MediaTest < ActiveSupport::TestCase
 
     Media.get_metrics_from_facebook(url, nil, 10)
     assert_nil ApiKey.current
-    assert_equal CONFIG['facebook_app_id'], PenderConfig.get('facebook_app_id')
-    assert_equal CONFIG['facebook_app_secret'], PenderConfig.get('facebook_app_secret')
+    assert_equal CONFIG['facebook_app'], PenderConfig.get('facebook_app')
     %w(endpoint access_key secret_key bucket bucket_region medias_asset_path).each do |key|
       assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
@@ -1091,21 +1112,19 @@ class MediaTest < ActiveSupport::TestCase
     api_key = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     Media.get_metrics_from_facebook(url, api_key.id, 10)
     assert_equal api_key, ApiKey.current
-    assert_equal CONFIG['facebook_app_id'], PenderConfig.get('facebook_app_id')
-    assert_equal CONFIG['facebook_app_secret'], PenderConfig.get('facebook_app_secret')
+    assert_equal CONFIG['facebook_app'], PenderConfig.get('facebook_app')
     %w(endpoint access_key secret_key bucket bucket_region medias_asset_path).each do |key|
       assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
-    key_config = { facebook_app_id: 'fb-app-id', facebook_app_secret: 'fb-app-secret', storage_endpoint: CONFIG['storage_endpoint'], storage_access_key: CONFIG['storage_access_key'], storage_secret_key: CONFIG['storage_secret_key'], storage_bucket: 'my-bucket', storage_bucket_region: CONFIG['storage_bucket_region'], storage_video_bucket: 'video-bucket', storage_video_asset_path: 'http://video.path', storage_medias_asset_path: 'http://medias.path'}
+    key_config = { facebook_app: 'fb-app-id:fb-app-secret', storage_endpoint: CONFIG['storage_endpoint'], storage_access_key: CONFIG['storage_access_key'], storage_secret_key: CONFIG['storage_secret_key'], storage_bucket: 'my-bucket', storage_bucket_region: CONFIG['storage_bucket_region'], storage_video_bucket: 'video-bucket', storage_video_asset_path: 'http://video.path', storage_medias_asset_path: 'http://medias.path'}
     api_key.application_settings = { config: key_config }; api_key.save
     assert_raises Pender::RetryLater do
       Media.get_metrics_from_facebook(url, api_key.id, 10)
     end
     assert_equal api_key, ApiKey.current
-    assert_equal api_key.settings[:config][:facebook_app_id], PenderConfig.current(:facebook_app_id)
-    assert_equal api_key.settings[:config][:facebook_app_secret], PenderConfig.current(:facebook_app_secret)
+    assert_equal api_key.settings[:config][:facebook_app], PenderConfig.current(:facebook_app)
     %w(endpoint access_key secret_key bucket bucket_region video_bucket video_asset_path medias_asset_path).each do |key|
       assert_equal api_key.settings[:config]["storage_#{key}"], PenderConfig.current("storage_#{key}"), "Expected #{key}"
       assert_equal api_key.settings[:config]["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]

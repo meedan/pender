@@ -9,10 +9,10 @@ class Semaphore
     end
   end
 
-  def lock
+  def lock(expiration = nil)
     # PenderConfig('timeout') sets the max time for a page to be parsed,
     # so the lock duration needs to be at least higher than its value
-    timeout = (PenderConfig.get('timeout').to_i || 20) + 4
+    timeout = (expiration || PenderConfig.get('timeout').to_i || 20) + 4
     @redis.set(@key, Time.now, ex: timeout.round) if @redis
   end
 

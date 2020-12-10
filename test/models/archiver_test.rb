@@ -153,6 +153,7 @@ class ArchiverTest < ActiveSupport::TestCase
       m.as_json(archivers: 'none')
       assert_nil m.data.dig('archives', 'archive_org')
       WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {status: 'error', status_ext: data[:status_ext], message: data[:message]}.to_json)
+      WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
 
       Media.send_to_archive_org(url.to_s, a.id)
       media_data = Pender::Store.current.read(Media.get_id(url), :json)
@@ -628,9 +629,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:try_https)
     Media.any_instance.stubs(:parse)
     Media.stubs(:supported_video?).returns(true)
-    mock = 'status'
-    Open3.stubs(:capture3).returns(['', 'ERROR: requested format not available', mock])
-    mock.stubs(:success?).returns(false);mock.stubs(:exitstatus).returns(1)
+    Media.stubs(:system).returns(`(exit 1)`)
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://www.tiktok.com/@scout2015/video/6771039287917038854'
@@ -651,7 +650,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:try_https)
     Media.any_instance.unstub(:parse)
     Media.unstub(:supported_video?)
-    Open3.unstub(:capture3)
+    Media.unstub(:system)
   end
 
   test "should generate the public archiving folder for videos" do
@@ -746,7 +745,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     Media.send_to_video_archiver(url, nil)
     assert_nil ApiKey.current
-    %w(endpoint access_key secret_key bucket bucket_region video_bucket).each do |key|
+    %w(endpoint access_key secret_key bucket bucket_region media_asset_path).each do |key|
       assert_equal CONFIG["storage_#{key}"], PenderConfig.current("storage_#{key}")
       assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
@@ -755,7 +754,7 @@ class ArchiverTest < ActiveSupport::TestCase
     api_key = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     Media.send_to_video_archiver(url, api_key.id)
     assert_equal api_key, ApiKey.current
-    %w(endpoint access_key secret_key bucket bucket_region video_bucket).each do |key|
+    %w(endpoint access_key secret_key bucket bucket_region media_asset_path).each do |key|
       assert_equal CONFIG["storage_#{key}"], PenderConfig.current("storage_#{key}")
       assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
@@ -775,4 +774,26 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.unstub(:system)
   end
 
+  test "should return true and get available snapshot if page was already archived on Archive.org" do
+    url = 'https://example.com/'
+    m = Media.new url: url
+    m.as_json
+
+    assert_equal true, Media.get_available_archive_org_snapshot(url, nil)
+    data = m.as_json
+    assert_match /\/\/web.archive.org\/web\/\d+\/https?:\/\/(www.)?example.com/, data['archives']['archive_org']['location']
+  end
+
+  test "should return nil if page was not previously archived on Archive.org" do
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'archive.org' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+
+    WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json)
+
+    url = 'https://example.com/'
+    assert_nil Media.get_available_archive_org_snapshot(url, nil)
+
+    WebMock.disable!
+  end
 end
