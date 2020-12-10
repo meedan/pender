@@ -18,14 +18,23 @@ module MediaFacebookEngagementMetrics
 
   module ClassMethods
     def request_metrics_from_facebook(url)
-      api = "https://graph.facebook.com/oauth/access_token?client_id=#{PenderConfig.get('facebook_app_id')}&client_secret=#{PenderConfig.get('facebook_app_secret')}&grant_type=client_credentials"
-      response = Net::HTTP.get_response(URI(api))
-      return unless verify_facebook_metrics_response(url, response)
-      token = JSON.parse(response.body)['access_token']
-      api = "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=#{token}"
-      response = Net::HTTP.get_response(URI(URI.encode(api)))
-      return unless verify_facebook_metrics_response(url, response)
-      JSON.parse(response.body)['engagement']
+      engagement = nil
+      PenderConfig.get('facebook_app', '').split(';').each do |fb_app|
+        app_id, app_secret = fb_app.split(':')
+        @locker = Semaphore.new(app_id)
+        next if @locker.locked?
+        api = "https://graph.facebook.com/oauth/access_token?client_id=#{app_id}&client_secret=#{app_secret}&grant_type=client_credentials"
+        response = Net::HTTP.get_response(URI(api))
+        next unless verify_facebook_metrics_response(url, response)
+        token = JSON.parse(response.body)['access_token']
+        api = "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=#{token}"
+        response = Net::HTTP.get_response(URI(URI.encode(api)))
+        if verify_facebook_metrics_response(url, response)
+          engagement = JSON.parse(response.body)['engagement']
+          break
+        end
+      end
+      engagement
     end
 
     def get_metrics_from_facebook(url, key_id, count = 0, facebook_id = nil)
@@ -47,6 +56,7 @@ module MediaFacebookEngagementMetrics
       error = JSON.parse(response.body)['error']
       unless fb_metrics_error(:permanent, url, error)
         PenderAirbrake.notify("Facebook metrics: #{error['message']}", url: url, key_id: ApiKey.current&.id, error_code: error['code'], error_class: error['type'])
+        @locker.lock(3600) if error['code'].to_i == 4
         raise Pender::RetryLater, 'Metrics request failed' if fb_metrics_error(:retryable, url, error)
       end
       false

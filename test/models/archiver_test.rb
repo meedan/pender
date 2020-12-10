@@ -781,7 +781,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     assert_equal true, Media.get_available_archive_org_snapshot(url, nil)
     data = m.as_json
-    assert_match /\/\/web.archive.org\/web\/\d+\/#{url}/, data['archives']['archive_org']['location']
+    assert_match /\/\/web.archive.org\/web\/\d+\/https?:\/\/(www.)?example.com/, data['archives']['archive_org']['location']
   end
 
   test "should return nil if page was not previously archived on Archive.org" do
