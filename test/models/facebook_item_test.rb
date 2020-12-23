@@ -599,7 +599,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:url' content='https://www.facebook.com/ironmaiden/posts/10156071020577051'>"))
     m = create_media url: 'https://www.facebook.com/ironmaiden/posts/10156071020577051'
     data = m.as_json
-    assert_equal '10156071020577051', data['external_id']
+    assert_match '10156071020577051', data['external_id']
     Media.any_instance.unstub(:doc)
   end
 

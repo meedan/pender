@@ -293,7 +293,7 @@ class Media
 
   def self.html_options(url)
     uri = url.is_a?(String) ? Media.parse_url(url) : url
-    { allow_redirections: :safe, proxy: nil, 'User-Agent' => 'Mozilla/5.0 (X11)', 'Accept' => '*/*', 'Accept-Language' => LANG, 'Cookie' => Media.set_cookies(uri) }.merge(Media.get_cf_credentials(uri))
+    uri.host.match(/twitter\.com/) ? Media.extended_headers(url) : { allow_redirections: :safe, proxy: nil, 'User-Agent' => 'Mozilla/5.0 (X11)', 'Accept' => '*/*', 'Accept-Language' => LANG, 'Cookie' => Media.set_cookies(uri) }.merge(Media.get_cf_credentials(uri))
   end
 
   def self.get_cf_credentials(uri)

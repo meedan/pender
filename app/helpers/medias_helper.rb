@@ -192,16 +192,6 @@ module MediasHelper
     end
   end
 
-  def facebook_headers(uri = nil)
-    uri ||= Media.parse_url(decoded_uri(self.url))
-    ({
-      'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
-      'Accept' =>  'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-      'Accept-Language' => 'en-US',
-      'Cookie' => Media.set_cookies(uri)
-    })
-  end
-
   Media.class_eval do
     def self.decoded_uri(url)
       begin
@@ -249,6 +239,16 @@ module MediasHelper
         Rails.logger.warn level: 'WARN', message: '[Parser] Could not get `crowdtangle` data', crowdtangle_url: uri, error_class: error.class, response_code: response.code, response_message: response.message
         {}
       end
+    end
+
+    def self.extended_headers(uri = nil)
+      uri = Media.parse_url(decoded_uri(uri)) if uri.is_a?(String)
+      ({
+        'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
+        'Accept' =>  'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'Accept-Language' => 'en-US',
+        'Cookie' => Media.set_cookies(uri)
+      })
     end
   end
 end

@@ -29,7 +29,7 @@ module MediaFacebookItem
 
   def parse_facebook_uuid
     self.url = self.url.gsub(/:\/\/m\.facebook\./, '://www.facebook.')
-    self.doc ||= self.get_html(self.facebook_headers)
+    self.doc ||= self.get_html(Media.extended_headers(self.url))
     self.get_facebook_post_id_from_url
     self.get_facebook_user_id
     if self.url.match(EVENT_URL).nil?
