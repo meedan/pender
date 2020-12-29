@@ -25,6 +25,8 @@ services:
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
       - "9555:9555"
+    volumes:
+    - $HOME/.aws/credentials:/home/pender/.aws/credentials:ro
     build:
       context: .
       args:
@@ -37,6 +39,7 @@ services:
       APP: $APP
       TEST_TYPE: $TEST_TYPE
       GITHUB_TOKEN: $GITHUB_TOKEN
+      AWS_DEFAULT_REGION: "eu-west-1"
     depends_on:
       - redis
       - minio

@@ -6,25 +6,41 @@
 #   GITHUB_TOKEN
 #   SERVER_PORT
 
-# TODO: use configurator until local/test config is moved into env-files
+# TODO: remove; keeping this here for sidekiq.yml, database.yml, cookies.txt
 configurator() {
     if [ ! -d "configurator" ]; then
         git clone https://${GITHUB_TOKEN}:x-oauth-basic@github.com/meedan/configurator ./configurator
     fi
     CONFIGURATOR_ENV=${DEPLOY_ENV}
     if [[ $DEPLOY_ENV == "test" ]]; then  # override this One Weird Trick
-        CONFIGURATOR_ENV="local"
+                                          # remove when files in config/ are saved elsewhere
+        CONFIGURATOR_ENV="travis"
     fi
     d=configurator/check/${CONFIGURATOR_ENV}/${APP}/
+    rm configurator/check/${CONFIGURATOR_ENV}/${APP}/config/config.yml
     for f in $(find $d -type f); do
         cp "$f" "${f/$d/}"
     done
 }
 
-# TODO: skip for deployments since they will have already been set
+# NOTE no pagination so there better not be >1000 parameters...
+source_from_ssm() {
+    all_ssm_params=$(aws ssm get-parameters-by-path --path /${DEPLOY_ENV}/${APP}/ | jq -rc .Parameters[])
+    IFS=$'\n'
+    for ssm_param in $all_ssm_params; do
+        param_name=$(echo $ssm_param | jq -r .Name)
+        echo "Retrieving value for $param_name"
+        param_value=$(aws ssm get-parameter --with-decryption --name "$param_name"| jq -r .Parameter.Value)
+        export "${param_name##*/}"="${param_value}"
+    unset IFS
+    done
+}
+
 set_config() {
     if [[ "${PRIVATE_REPO_ACCESS}" == "true" ]]; then
+        mv config/config.yml.example config/config.yml  # for fallback
         configurator
+        source_from_ssm
     else
         find config/ -iname \*.example | rename -v "s/.example//g"
     fi
@@ -66,21 +82,22 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
         fi
         configurator  # always set config with configurator for travis
     elif [[ "${DEPLOY_ENV}" == "test" ]]; then
-        set_config
+        AWS_REGION=eu-west-1 set_config
     fi
 
-    echo "running rake tasks"
+    echo "running rake tasks..."
     bundle exec rake db:create
     bundle exec rake db:migrate
     export SECRET_KEY_BASE=$(bundle exec rake secret)
     bundle exec rake lapis:api_keys:create_default
-    echo "rake tasks complete running puma"
+    echo "rake tasks complete. starting puma..."
 
+    touch tmp/pids/server-${RAILS_ENV}.pid
     if [[ "${TEST_TYPE}" == "unit" ]]; then
         bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid &
         bundle exec rake test:units
     elif [[ "${TEST_TYPE}" == "integration" ]]; then
-        bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid --environment ${DEPLOY_ENV} --workers 3 -t 8:32 &
+        bundle exec puma --port ${SERVER_PORT} --environment test --workers 3 -t 8:32 &
 	test/setup-parallel
 	bundle exec rake "parallel:test[3]"
     fi
