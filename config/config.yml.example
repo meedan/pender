@@ -15,20 +15,18 @@ development: &default
   storage_endpoint: 'http://minio:9000'
   storage_access_key: 'AKIAIOSFODNN7EXAMPLE'
   storage_secret_key: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
-  storage_bucket: 'pender-dev'
+  storage_bucket: 'testbucket'
   storage_bucket_region: 'us-east-1'
-  storage_video_bucket: 'pender-video'
-  storage_video_asset_path: 'http://localhost:9000/pender-video/video'
-  storage_medias_asset_path: 'http://localhost:9000/pender-dev/medias'
+  storage_medias_asset_path: 'https://assets.path/medias'
 
   # Exception reporting using Airbrake or API equivalent https://airbrake.io/
   #
   # OPTIONAL
   #
-  aribrake_host: # '<AIRBRAKE HOST>'
-  aribrake_port: # '<AIRBRAKE PORT>'
-  aribrake_project_key: # '<AIRBRAKE PROJECT KEY>'
-  aribrake_environment: # '<AIRBRAKE ENVIRONMENT>'
+  airbrake_host: # '<AIRBRAKE HOST>'
+  airbrake_port: # '<AIRBRAKE PORT>'
+  airbrake_project_key: # '<AIRBRAKE PROJECT KEY>'
+  airbrake_environment: # '<AIRBRAKE ENVIRONMENT>'
 
   # Google API
   #
@@ -51,7 +49,8 @@ development: &default
   #
   # REQUIRED for Facebook social metrics
   #
-  facebook_app: # '<FACEBOOK APP ID>:<FACEBOOK APP SECRET>'
+  facebook_app: ${FACEBOOK_APP}
+  facebook_test_app: ${FACEBOOK_TEST_APP}
 
   # Luminati proxy service https://luminati.io/
   #
@@ -110,6 +109,8 @@ development: &default
 test:
   <<: *default
   chrome_debug_port: 9444
+  archiver_skip_hosts: ''
+  public_url: 'http://localhost:3005'
   storage_bucket: 'check-test'
   storage_video_bucket:
   storage_video_asset_path:
