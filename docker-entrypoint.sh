@@ -15,9 +15,9 @@ configurator() {
     if [[ $DEPLOY_ENV == "test" ]]; then  # override this One Weird Trick
                                           # remove when files in config/ are saved elsewhere
         CONFIGURATOR_ENV="travis"
+        rm configurator/check/${CONFIGURATOR_ENV}/${APP}/config/config.yml  # do not copy when testing
     fi
     d=configurator/check/${CONFIGURATOR_ENV}/${APP}/
-    rm configurator/check/${CONFIGURATOR_ENV}/${APP}/config/config.yml
     for f in $(find $d -type f); do
         cp "$f" "${f/$d/}"
     done
