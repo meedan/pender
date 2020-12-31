@@ -83,7 +83,7 @@ jobs:
         GIT_SHA: ${{ github.sha }}
         BUILD_NUMBER: ${{ github.run_number }}
       run: |
-        DEPLOY_ENV=travis GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.integration
+        GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.integration
 
     - name: Docker Build and Push To ECR
       id: docker-build-ecr

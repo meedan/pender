@@ -69,7 +69,7 @@ jobs:
       run: |
         # rearrange tags so that docker buildx containers match what docker-compose.yml expects
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG pender:latest
-        DEPLOY_ENV=travis GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.unit
+        GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.unit
 
     - name: Docker Build and Push To ECR
       id: docker-build-ecr
@@ -100,7 +100,7 @@ jobs:
       run: |
         # rearrange tags so that docker buildx containers match what docker-compose.yml expects
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG pender:latest
-        DEPLOY_ENV=travis GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.integration
+        GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.integration
 
     - name: Publish Code Coverage
       uses: paambaati/codeclimate-action@v2.7.4
