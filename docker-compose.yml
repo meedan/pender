@@ -26,20 +26,21 @@ services:
       - ${SERVER_PORT}:${SERVER_PORT}
       - "9555:9555"
     volumes:
-    - $HOME/.aws/credentials:/home/pender/.aws/credentials:ro
+    - $HOME/.aws:/home/pender/.aws:ro
     build:
       context: .
       args:
         BUNDLER_RETRIES: 5
         BUNDLER_WORKERS: 20
     environment:
-      SERVER_PORT: $SERVER_PORT
-      RAILS_ENV: $RAILS_ENV
-      DEPLOY_ENV: $DEPLOY_ENV
-      APP: $APP
-      TEST_TYPE: $TEST_TYPE
-      GITHUB_TOKEN: $GITHUB_TOKEN
-      AWS_DEFAULT_REGION: "eu-west-1"
+      - SERVER_PORT
+      - RAILS_ENV
+      - DEPLOY_ENV
+      - APP
+      - TEST_TYPE
+      - GITHUB_TOKEN
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_ACCESS_KEY_ID
     depends_on:
       - redis
       - minio
