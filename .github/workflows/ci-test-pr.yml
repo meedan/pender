@@ -51,7 +51,6 @@ jobs:
         load: true
         tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
         builder: ${{ steps.buildx.outputs.name }}
-        cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
         build-args: |
           BUNDLER_RETRIES=5
