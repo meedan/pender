@@ -39,8 +39,6 @@ services:
       - APP
       - TEST_TYPE
       - GITHUB_TOKEN
-      - AWS_SECRET_ACCESS_KEY
-      - AWS_ACCESS_KEY_ID
     depends_on:
       - redis
       - minio
