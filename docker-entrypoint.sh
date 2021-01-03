@@ -92,9 +92,8 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
     bundle exec rake lapis:api_keys:create_default
     echo "rake tasks complete. starting puma..."
 
-    touch tmp/pids/server-${RAILS_ENV}.pid
     if [[ "${TEST_TYPE}" == "unit" ]]; then
-        bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid &
+        bundle exec puma --port ${SERVER_PORT} &
         bundle exec rake test:units
     elif [[ "${TEST_TYPE}" == "integration" ]]; then
         bundle exec puma --port ${SERVER_PORT} --environment test --workers 3 -t 8:32 &
