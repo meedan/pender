@@ -28,7 +28,7 @@ RUN apt-get update -qq && \
 RUN curl -L https://youtube-dl.org/downloads/latest/youtube-dl \
          -o /usr/local/bin/youtube-dl
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-    unzip awscliv2.zip && \
+    unzip -qq awscliv2.zip && \
     ./aws/install && \
     rm -r ./aws
 RUN rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
