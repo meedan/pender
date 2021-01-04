@@ -17,6 +17,12 @@ test.unit: build.test
 test.integration: build.test
 	TEST_TYPE=integration docker-compose --env-file ./.env.test up --abort-on-container-exit
 
+test.ci.unit: build.test
+	TEST_TYPE=unit docker-compose -e AWS_SECRET_ACCESS_KEY -e AWS_ACCESS_KEY_ID -e AWS_SECRET_TOKEN --env-file ./.env.test up --abort-on-container-exit
+
+test.ci.integration: build.test
+	TEST_TYPE=integration docker-compose -e AWS_SECRET_ACCESS_KEY -e AWS_ACCESS_KEY_ID -e AWS_SECRET_TOKEN --env-file ./.env.test up --abort-on-container-exit
+
 test:	test.integration
 
 
