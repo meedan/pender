@@ -9,8 +9,6 @@ if [ ! -d "configurator" ]; then git clone https://${GITHUB_TOKEN}:x-oauth-basic
 d=configurator/check/${DEPLOY_ENV}/${APP}/; for f in $(find $d -type f); do cp "$f" "${f/$d/}"; done
 
 echo "--- STARTUP COMPLETE ---"
-python -c 'import syslog; syslog.syslog("Pender configuration complete, starting puma")'
-logger -p local0.notice -t pender "Pender configuration complete, starting puma"
 
 mkdir -p ${PWD}/tmp/pids
 puma="${PWD}/tmp/puma-${DEPLOY_ENV}.rb"
