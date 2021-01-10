@@ -49,8 +49,8 @@ development: &default
   #
   # REQUIRED for Facebook social metrics
   #
-  facebook_app: ${FACEBOOK_APP}
-  facebook_test_app: ${FACEBOOK_TEST_APP}
+  facebook_app:
+  facebook_test_app:
 
   # Luminati proxy service https://luminati.io/
   #
