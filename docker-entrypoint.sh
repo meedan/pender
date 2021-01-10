@@ -82,7 +82,7 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
         fi
         configurator  # always set config with configurator for travis
     elif [[ "${DEPLOY_ENV}" == "test" ]]; then
-        AWS_REGION=eu-west-1 set_config
+        set_config
     fi
 
     echo "running rake tasks..."
@@ -93,7 +93,7 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
     echo "rake tasks complete. starting puma..."
 
     if [[ "${TEST_TYPE}" == "unit" ]]; then
-        bundle exec puma --port ${SERVER_PORT} &
+        bundle exec puma --port ${SERVER_PORT} --environment test &
         bundle exec rake test:units
     elif [[ "${TEST_TYPE}" == "integration" ]]; then
         bundle exec puma --port ${SERVER_PORT} --environment test --workers 3 -t 8:32 &
