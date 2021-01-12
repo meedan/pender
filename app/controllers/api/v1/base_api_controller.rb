@@ -32,6 +32,8 @@ module Api
       end
 
       def get_params
+        @refresh = params[:refresh] == '1'
+        @archivers = params[:archivers]
         params.reject{ |k, _v| ['id', 'action', 'controller', 'format'].include?(k) }
       end
 

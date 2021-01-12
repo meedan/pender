@@ -63,11 +63,15 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should remove line breaks from Twitter item title" do
-    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta name='twitter:title' content='LA Times- USC Dornsife Sunday Poll: <br/> Donald Trump Retains 2 Point <br/> Lead Over Hillary:'>"))
+    twitter_client = ''
+    Media.any_instance.stubs(:twitter_author_url).returns(nil)
+    Media.any_instance.stubs(:twitter_client).returns(twitter_client)
+    twitter_client.stubs(:status).returns({ text: "LA Times- USC Dornsife Sunday Poll: \n Donald Trump Retains 2 Point \n Lead Over Hillary"})
     m = create_media url: 'https://twitter.com/realDonaldTrump/status/785148463868735488'
     data = m.as_json
-    assert_match 'LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary: https://t.co/n05rul4Ycw', data['title']
-    Media.any_instance.unstub(:doc)
+    assert_match 'LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary', data['title']
+    Media.any_instance.unstub(:twitter_client)
+    Media.any_instance.unstub(:twitter_author_url)
   end
 
   test "should parse twitter metatags" do

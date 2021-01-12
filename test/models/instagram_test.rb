@@ -2,15 +2,20 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 require 'cc_deville'
 
 class InstagramTest < ActiveSupport::TestCase
-  # TODO Must be fixed on #8794
-  #test "should parse Instagram post" do
-  #  m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
-  #  data = m.as_json
-  #  assert_equal '@megadeth',data['username']
-  #  assert_equal 'item',data['type']
-  #  assert_match 'megadeth',data['author_name'].downcase
-  #  assert_not_nil data['picture']
-  #end
+  test "should parse Instagram post" do
+    Media.stubs(:get_crowdtangle_id).returns('1328722959803788109_343260652')
+    m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
+    data = m.as_json
+    assert data['raw']['crowdtangle'].is_a? Hash
+    assert !data['raw']['crowdtangle'].empty?
+    assert_equal '@megadeth',data['username']
+    assert_equal 'item',data['type']
+    assert_match 'megadeth',data['author_name'].downcase
+    assert_match /Peace Sells/, data[:description]
+    assert_match /Peace Sells/, data[:title]
+    assert_not_nil data['picture']
+    Media.unstub(:get_crowdtangle_id)
+  end
 
   test "should parse Instagram profile" do
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:title' content='megadeth'><meta property='og:image' content='https://www.instagram.com/megadeth.png'>"))
@@ -31,37 +36,18 @@ class InstagramTest < ActiveSupport::TestCase
     assert_match /https:\/\/www.instagram.com\/p\/CAdW7PMlTWc/, media2.url
   end
 
-  # TODO Must be fixed on #8794
-  #test "should store data of post returned by instagram crowdtangle api and graphql" do
-  #  m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
-  #  data = m.as_json
-  #  assert data['raw']['crowdtangle'].is_a? Hash
-  #  assert !data['raw']['crowdtangle'].empty?
-  #  assert data['raw']['graphql'].is_a? Hash
-  #  assert !data['raw']['graphql'].empty?
+  test "should store crowdtangle data of a instagram post" do
+    Media.stubs(:get_crowdtangle_id).returns('2326406115734344979_3076818846')
+    m = create_media url: 'https://www.instagram.com/p/CBJDglTpFUT/'
+    data = m.as_json
 
-  #  assert_equal '@megadeth', data[:username]
-  #  assert_match /Peace Sells/, data[:description]
-  #  assert_match /Peace Sells/, data[:title]
-  #  assert !data[:picture].blank?
-  #  assert_match /https:\/\/www.instagram.com\/megadeth/, data[:author_url]
-  #  # TODO Generate Instagram html (related: #8761)
-  #  #assert !data[:html].blank?
-  #  assert_equal 'megadeth', data[:author_name].downcase
-  #  assert !data[:published_at].blank?
-  #end
-
-  # TODO Must be fixed on #8794
-  #test "should store crowdtangle data of a instagram post" do
-  #  m = create_media url: 'https://www.instagram.com/p/CBJDglTpFUT/'
-  #  data = m.as_json
-
-  #  assert data['raw']['crowdtangle'].is_a? Hash
-  #  post_info = data['raw']['crowdtangle']['posts'].first
-  #  assert_match 'theintercept', post_info['account']['handle']
-  #  assert_match 'The Intercept', post_info['account']['name']
-  #  assert_match /It was a week/, post_info['description']
-  #end
+    assert data['raw']['crowdtangle'].is_a? Hash
+    post_info = data['raw']['crowdtangle']['posts'].first
+    assert_match 'theintercept', post_info['account']['handle']
+    assert_match 'The Intercept', post_info['account']['name']
+    assert_match /It was a week/, post_info['description']
+    Media.unstub(:get_crowdtangle_id)
+  end
 
   test "should use username as author_name on Instagram profile when a full name is not available" do
     Media.any_instance.stubs(:get_instagram_author_name).returns(nil)
@@ -93,14 +79,15 @@ class InstagramTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:doc)
   end
 
-  # TODO Must be fixed on #8794
-  #test "should parse IGTV link as item" do
-  #  m = create_media url: 'https://www.instagram.com/tv/B47W-ZVJpBv/?igshid=l5tx0fnl421e'
-  #  data = m.as_json
-  #  assert_equal 'item', data['type']
-  #  assert_equal '@biakicis', data['username']
-  #  assert_match /kicis/, data['author_name'].downcase
-  #end
+  test "should parse IGTV link as item" do
+    Media.stubs(:get_crowdtangle_id).returns('2178435889592963183_3651758')
+    m = create_media url: 'https://www.instagram.com/tv/B47W-ZVJpBv/?igshid=l5tx0fnl421e'
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal '@biakicis', data['username']
+    assert_match /kicis/, data['author_name'].downcase
+    Media.unstub(:get_crowdtangle_id)
+  end
 
   test "should return error on data when can't get info from graphql" do
     id = 'B6_wqMHgQ12'
@@ -115,26 +102,25 @@ class InstagramTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:get_instagram_graphql_data)
   end
 
-  # TODO Must be fixed on #8794
-  #test "should parse when only graphql returns data" do
-  #  m = create_media url: 'https://www.instagram.com/p/B6_wqMHgQ12/'
-  #  id = 'B6_wqMHgQ12'
-  #  Media.any_instance.stubs(:get_instagram_json_data).with("https://api.instagram.com/oembed/?url=http://instagr.am/p/#{id}").raises('Net::HTTPNotFound: Not Found')
-  #  graphql_response = { 'graphql' => {
-  #    "shortcode_media"=>{"display_url"=>"https://instagram.net/v/29_n.jpg",
-  #    "edge_media_to_caption"=>{"edges"=>[{"node"=>{"text"=>"Verify misinformation on WhatsApp"}}]},
-  #    "owner"=>{"profile_pic_url"=>"https://instagram.net/v/56_n.jpg", "username"=>"c.afpfact", "full_name"=>"AFP Fact Check"}}}}
-  #  Media.any_instance.stubs(:get_instagram_json_data).with("https://www.instagram.com/p/#{id}/?__a=1").returns(graphql_response)
-  #  data = m.as_json
-  #  assert_equal 'B6_wqMHgQ12',data['external_id']
-  #  assert_equal 'item',data['type']
-  #  assert_equal '@c.afpfact',data['username']
-  #  assert_match 'AFP Fact Check',data['author_name']
-  #  assert_match /misinformation/,data['title']
-  #  assert_match /picture.jpg/,data['picture']
-  #  assert_match /author_picture.jpg/,data['author_picture']
-  #  Media.any_instance.unstub(:get_instagram_json_data)
-  #end
+  test "should parse when only graphql returns data" do
+    Media.stubs(:get_crowdtangle_instagram_data).returns(nil)
+    graphql_response = { 'graphql' => {
+      "shortcode_media"=>{"display_url"=>"https://instagram.net/v/29_n.jpg",
+      "edge_media_to_caption"=>{"edges"=>[{"node"=>{"text"=>"Verify misinformation on WhatsApp"}}]},
+      "owner"=>{"profile_pic_url"=>"https://instagram.net/v/56_n.jpg", "username"=>"c.afpfact", "full_name"=>"AFP Fact Check"}}}}
+    Media.any_instance.stubs(:get_instagram_graphql_data).returns(graphql_response['graphql'])
+    m = create_media url: 'https://www.instagram.com/p/B6_wqMHgQ12/'
+    data = m.as_json
+    assert_equal 'B6_wqMHgQ12', data['external_id']
+    assert_equal 'item', data['type']
+    assert_equal '@c.afpfact', data['username']
+    assert_match 'AFP Fact Check', data['author_name']
+    assert_match /misinformation/, data['title']
+    assert !data['picture'].blank?
+    assert !data['author_picture'].blank?
+    Media.unstub(:get_crowdtangle_instagram_data)
+    Media.any_instance.unstub(:get_instagram_graphql_data)
+  end
 
   test "should not raise error notification when redirected to login page" do
     Media.stubs(:is_a_login_page).returns(true)

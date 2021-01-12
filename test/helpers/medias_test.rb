@@ -131,4 +131,21 @@ class MediasHelperTest < ActionView::TestCase
     Media.unstub(:crowdtangle_request)
   end
 
+  test 'should handle error with crowdtangle requests' do
+    PenderAirbrake.stubs(:notify).once
+    WebMock.enable!
+    WebMock.stub_request(:any, /api.crowdtangle.com/).to_return(body: '["invalid_json" : 123]')
+    assert_equal({}, Media.crowdtangle_request('facebook', '111111_222222'))
+    WebMock.disable!
+    PenderAirbrake.unstub(:notify)
+  end
+
+  test 'should get crowdtandgle id from data' do
+    data = {
+      facebook: { uuid: 'facebook_id' }.with_indifferent_access,
+      instagram: { raw: { graphql: { shortcode_media: { id: '111111', owner: { id: '222222'}}}}}.with_indifferent_access
+    }
+    assert_equal 'facebook_id', Media.get_crowdtangle_id(:facebook, data[:facebook])
+    assert_equal '111111_222222', Media.get_crowdtangle_id(:instagram, data[:instagram])
+  end
 end

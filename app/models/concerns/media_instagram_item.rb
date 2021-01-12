@@ -15,26 +15,23 @@ module MediaInstagramItem
       self.data.merge!(external_id: id)
       data = self.data
       return if data.dig('raw', 'graphql', 'error') && data.dig('raw', 'crowdtangle', 'error')
-      self.data.merge!({
-        external_id: id,
-        username: '@' + get_instagram_username_from_data,
-        description: get_instagram_text_from_data,
-        title: get_instagram_text_from_data,
-        picture: get_instagram_picture_from_data,
-        html: '',
-        author_picture: data.dig('raw', 'graphql', 'shortcode_media', 'owner', 'profile_pic_url'),
-        author_name: data.dig('raw', 'graphql', 'shortcode_media', 'owner', 'full_name')
-      })
+      self.set_data_field('username', self.get_instagram_username_from_data)
+      self.set_data_field('description', self.get_instagram_text_from_data)
+      self.set_data_field('title', self.get_instagram_text_from_data)
+      self.set_data_field('picture', self.get_instagram_picture_from_data)
+      self.set_data_field('author_name', data.dig('raw', 'graphql', 'shortcode_media', 'owner', 'full_name'))
+      self.set_data_field('author_picture', data.dig('raw', 'graphql', 'shortcode_media', 'owner', 'profile_pic_url'))
+      self.data.merge!({ external_id: id })
     end
   end
 
   def get_instagram_username_from_data
     username = get_info_from_data('crowdtangle', self.data, 'handle')
-    username.blank? ? (data.dig('raw', 'graphql', 'shortcode_media', 'owner', 'username') || '' ) : username
+    username = username.blank? ? (data.dig('raw', 'graphql', 'shortcode_media', 'owner', 'username') || '' ) : username
+    username.prepend('@') unless username.blank?
   end
 
   def get_instagram_text_from_data
-    return self.data['description'] unless self.data['description'].blank?
     text = self.data.dig('raw', 'graphql', 'shortcode_media', 'edge_media_to_caption', 'edges')
     (!text.blank? && text.is_a?(Array)) ? text.first.dig('node', 'text') : ''
   end
@@ -64,21 +61,18 @@ module MediaInstagramItem
     raise StandardError.new("#{response.class}: #{response.message}") unless %(200 301 302).include?(response.code)
     return JSON.parse(response.body)['graphql'] if response.code == '200'
     location = response.header['location']
-    raise StandardError.new('Login required') if Media.is_a_login_page(location)
-    self.get_instagram_graphql_data(location)
+    Media.is_a_login_page(location) ? (raise StandardError.new('Login required')) : self.get_instagram_graphql_data(location)
   end
 
   def get_crowdtangle_instagram_data
-    media_info = self.data.dig('raw', 'graphql', 'shortcode_media')
-    self.data['raw']['crowdtangle'] = { error: { message: 'Cannot get data from Crowdtangle. Unknown ID', code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }} and return if media_info.nil?
-    id ="#{media_info['id']}_#{media_info['owner']['id']}"
+    id = Media.get_crowdtangle_id(:instagram, self.data)
+    self.data['raw']['crowdtangle'] = { error: { message: 'Cannot get data from Crowdtangle. Unknown ID', code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }} and return if id.nil?
     crowdtangle_data = Media.crowdtangle_request('instagram', id)
     return unless crowdtangle_data && crowdtangle_data['result']
     self.data['raw']['crowdtangle'] = crowdtangle_data['result']
     post_info = crowdtangle_data['result']['posts'].first
     self.data[:author_name] = post_info['account']['name']
-    self.data[:username] = post_info['account']['handle']
-    self.data[:author_picture] = post_info['account']['profileImage']
+    self.data[:username] = '@' + post_info['account']['handle']
     self.data[:author_url] = post_info['account']['url']
     self.data[:description] = self.data[:title]  = post_info['description']
     self.data[:picture] = post_info['media'].first['url'] if post_info['media']

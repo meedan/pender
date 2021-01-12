@@ -134,7 +134,7 @@ module MediasHelper
       begin
         content = URI.encode(content) if field == 'raw' && is_url?(content)
       rescue StandardError => error
-        Rails.logger.warn level: 'INFO', message: '[Parser] Could not encode URL', url: self.url, content: content, error_class: error.class, error_message: error.message
+        Rails.logger.info level: 'INFO', message: '[Parser] Could not encode URL', url: self.url, content: content, error_class: error.class, error_message: error.message
       end
     elsif content.respond_to?(:each_with_index)
       content = cleanup_collection(content, field)
@@ -178,7 +178,7 @@ module MediasHelper
       return true
     rescue StandardError => error
       PenderAirbrake.notify(StandardError.new("Could not get '#{attr}' image"), url: self.url, img_url: url, error: { class: error.class, message: error.message } )
-      Rails.logger.warn level: 'WARN', message: '[Parser] Could not get image', url: self.url, img_url: url, error_class: error.class, error_message: error.message
+      Rails.logger.warn level: 'WARN', message: "[Parser] Could not get '#{attr}' image", url: self.url, img_url: url, error_class: error.class, error_message: error.message
     end
   end
 
@@ -238,6 +238,15 @@ module MediasHelper
         PenderAirbrake.notify(StandardError.new('Could not parse `crowdtangle` data as JSON'), crowdtangle_url: uri, error_message: error.message, response_body: response.body )
         Rails.logger.warn level: 'WARN', message: '[Parser] Could not get `crowdtangle` data', crowdtangle_url: uri, error_class: error.class, response_code: response.code, response_message: response.message
         {}
+      end
+    end
+
+    def self.get_crowdtangle_id(resource, data)
+      if resource == :instagram
+        media_info = data.dig('raw', 'graphql', 'shortcode_media')
+        media_info.nil? ? nil : "#{media_info['id']}_#{media_info['owner']['id']}"
+      else
+        data.dig('uuid')
       end
     end
 

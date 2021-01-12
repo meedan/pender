@@ -231,11 +231,6 @@ module Api
         end
       end
 
-      def get_params
-        @refresh = params[:refresh] == '1'
-        @archivers = params[:archivers]
-      end
-
       def notify_airbrake(e, extra_info = {})
         PenderAirbrake.notify(e, {url: @url}.merge(extra_info))
       end

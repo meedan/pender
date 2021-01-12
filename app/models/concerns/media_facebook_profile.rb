@@ -109,9 +109,9 @@ module MediaFacebookProfile
       data = self.get_data_from_facebook
       self.data.merge!(data) unless data.nil?
       picture = self.get_value_from_facebook_metatags(self.data['picture'], 'og:image')
+      self.set_data_field('username', self.get_facebook_username)
       self.data.merge!({
         external_id: self.data['id'] || '',
-        username: self.get_facebook_username,
         title: self.get_value_from_facebook_metatags(self.get_facebook_name, 'og:title'),
         description: self.get_value_from_facebook_metatags(self.data['description'], 'og:description'),
         author_url: self.url,
@@ -151,7 +151,6 @@ module MediaFacebookProfile
   end
 
   def get_facebook_username
-    return self.data['username'] unless self.data['username'].blank?
     patterns = [
       /^https?:\/\/([^\.]+\.)?facebook\.com\/people\/([^\/\?]+)/,
       /^https:\/\/(www\.)?facebook\.com\/([0-9]+)$/,
