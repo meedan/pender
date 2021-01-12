@@ -665,6 +665,12 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = Media.new url: url
     data = m.as_json
     assert_equal '2020-09-03T11:01:21.000+00:00', data['published_at']
+
+    url = 'https://example.com'
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML('<div class="_5pcr userContentWrapper"><abbr data-utime="1599260261" class="_5ptz"><span class="timestampContent" id="js_1">4 de setembro de 2020</span></abbr></div>'))
+    m = Media.new url: url
+    assert_equal Time.at(1599260261), m.get_facebook_published_time_from_html
+    Media.any_instance.unstub(:doc)
   end
 
   test "should parse post from public group" do
