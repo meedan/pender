@@ -178,8 +178,9 @@ module MediaFacebookItem
     timestamp = self.doc.to_s.match(/\\"publish_time\\":([0-9]+)/)
     if timestamp
       self.data['published_at'] = Time.at(timestamp[1].to_i)
-    elsif self.doc.at_css('abbr.timestamp')
-      self.data['published_at'] = Time.at(self.doc.at_css('abbr.timestamp').attr('data-utime').to_i)
+    elsif self.doc.css('abbr').find { |x| x.attr('data-utime')}
+      tag = self.doc.css('abbr').find { |x| x.attr('data-utime')}
+      self.data['published_at'] = Time.at(tag.attr('data-utime').to_i)
     else
       time = self.doc.css('div.userContentWrapper').at_css('span.timestampContent') || self.doc.at_css('#MPhotoContent abbr')
       self.data['published_at'] = verify_published_time(time.inner_html, time.parent.attr('data-utime')) unless time.nil?
