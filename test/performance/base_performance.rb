@@ -1,21 +1,9 @@
-require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
-require 'rails/performance_test_help'
+require_relative '../test_helper'
 
-class BasePerformance < ActionDispatch::PerformanceTest
-  self.profile_options = { runs: 0, metrics: [:process_time] }
+class BasePerformance < ActiveSupport::TestCase
 
   def self.test_order
     :alpha
-  end
-
-  def run
-    super
-    ::Minitest::Result.from self
-  end
-
-  def setup
-    @provider = nil
-    @type = nil
   end
 
   def teardown
@@ -27,15 +15,15 @@ class BasePerformance < ActionDispatch::PerformanceTest
     end
   end
 
-  def test_1_validate_link
+  test "1 validate_link" do
     with_time('validate') { Media.validate_url(@url) unless @url.blank? }
   end
 
-  def test_2_instantiate_link
+  test "2 instantiate_link" do
     with_time('instantiate') { @@media = Media.new(url: @url) unless @url.blank? }
   end
 
-  def test_3_parse_link
+  test "3 parse_link" do
     with_time('parse') { @@media.send(:parse) unless @url.blank? }
   end
 end
