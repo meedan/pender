@@ -84,7 +84,7 @@ class Media
   end
 
   # Parsers and archivers
-  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaDropboxItem, MediaTiktokItem, MediaTiktokProfile, MediaPageItem, MediaOembedItem, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg, MediaPermaCcArchiver, MediaVideoArchiver, MediaFacebookEngagementMetrics].each { |concern| include concern }
+  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaDropboxItem, MediaTiktokItem, MediaTiktokProfile, MediaPageItem, MediaOembedItem, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg, MediaPermaCcArchiver, MediaVideoArchiver, MediaFacebookEngagementMetrics, MediaCrowdtangleItem].each { |concern| include concern }
 
   def self.minimal_data(instance)
     data = {}
