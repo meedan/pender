@@ -1,6 +1,6 @@
 COOKIES_PATH = 'config/cookies.txt'
 
-CONFIG['cookies'] ||= {}
+PenderConfig.set('cookies', {}) if PenderConfig.get('cookies').nil?
 if File.file?(COOKIES_PATH)
   File.readlines(COOKIES_PATH).each do |line|
     data = line.split("\t")

@@ -80,7 +80,7 @@ class ActiveSupport::TestCase
 
   def authenticate_with_token(api_key = nil)
     unless @request.nil?
-      header = CONFIG['authorization_header'] || 'X-Token'
+      header = PenderConfig.get('authorization_header', 'X-Token')
       api_key ||= create_api_key
       @request.headers.merge!({ header => api_key.access_token })
     end

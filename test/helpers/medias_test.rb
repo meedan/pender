@@ -51,14 +51,15 @@ class MediasHelperTest < ActionView::TestCase
 
   test "should get config from api key or default config" do
     url = 'http://example.com'
-    timeout = CONFIG['timeout']
+    config_timeout = '100'
+    stub_configs({'timeout' => config_timeout })
 
     key1 = create_api_key application_settings: { config: { timeout: 10 }}
     key2 = create_api_key application_settings: {}
     key3 = create_api_key
 
     m = Media.new url: url
-    assert_equal timeout, m.timeout_value
+    assert_equal config_timeout.to_i, m.timeout_value
 
     PenderConfig.current = nil
     m = Media.new url: url, key: key1
@@ -66,22 +67,31 @@ class MediasHelperTest < ActionView::TestCase
 
     PenderConfig.current = nil
     m = Media.new url: url, key: key2
-    assert_equal timeout, m.timeout_value
+    assert_equal config_timeout.to_i, m.timeout_value
 
     PenderConfig.current = nil
     m = Media.new url: url, key: key3
-    assert_equal timeout, m.timeout_value
-
+    assert_equal config_timeout.to_i, m.timeout_value
   end
 
   test 'should validate proxies subkeys' do
     proxy_keys = [ 'host', 'port', 'user_prefix', 'pass', 'country_prefix', 'session_prefix' ]
     video_proxy_keys = [ 'host', 'port', 'user_prefix', 'pass' ]
+    config = {
+      'proxy_host' => 'proxy.pender',
+      'proxy_port' => '11111',
+      'proxy_user_prefix' => 'user-prefix-static',
+      'proxy_pass' => 'password',
+      'proxy_country_prefix' => '-country-',
+      'proxy_session_prefix' => '-session-'
+    }
+    stub_configs(config)
+
     api_key = create_api_key
 
     ApiKey.current = api_key
     proxy_keys.each do |key|
-      assert_equal CONFIG["proxy_#{key}"], Media.valid_proxy('proxy')[key]
+      assert_equal config["proxy_#{key}"], Media.valid_proxy('proxy')[key]
     end
     assert_nil Media.valid_proxy('ytdl_proxy')
 
