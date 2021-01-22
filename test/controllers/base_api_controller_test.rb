@@ -19,4 +19,12 @@ class BaseApiControllerTest < ActionController::TestCase
     assert_equal [{"key"=>"archive_org", "label"=>"Archive.org"}, {"key"=>"perma_cc", "label"=>"Perma.cc"}, {"key"=>"video", "label"=>"Video"}], response['data']['archivers']
   end
 
+  test "should return unauthorized if not authenticated" do
+    get :about, format: :json
+    assert_response 401
+    response = JSON.parse(@response.body)
+    assert_equal 'error', response['type']
+    assert_equal I18n.t(:unauthorized), response['data']['message']
+  end
+
 end

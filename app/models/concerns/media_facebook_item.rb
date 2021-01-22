@@ -226,7 +226,7 @@ module MediaFacebookItem
   def data_from_facebook_item
     handle_exceptions(self, StandardError) do
       self.parse_facebook_uuid
-      self.get_crowdtangle_facebook_data(self.data['uuid'])
+      self.get_crowdtangle_data(:facebook)
       self.set_data_field('username', self.get_facebook_username || self.data['author_name'])
       self.parse_from_facebook_html unless [:author_name, :username, :author_picture, :author_url, :description, :text, :external_id, :object_id, :picture, :published_at].map { |key| data[key].blank? }.all?
       self.data['text'].strip! if self.data['text']
@@ -277,22 +277,4 @@ module MediaFacebookItem
   def replace_facebook_url(username)
     self.url = self.original_url if username == 'groups'
   end
-
-  def get_crowdtangle_facebook_data(id)
-    crowdtangle_data = Media.crowdtangle_request('facebook', id).with_indifferent_access
-    return unless crowdtangle_data && crowdtangle_data['result']
-    self.data['raw']['crowdtangle'] = crowdtangle_data['result']
-    post_info = crowdtangle_data['result']['posts'].first
-    self.url = post_info.dig('postUrl') if post_info.dig('postUrl') && post_info.dig('postUrl') != self.url
-    self.data[:author_name] = post_info.dig('account', 'name')
-    self.data[:username] = post_info.dig('account', 'handle')
-    self.data[:author_picture] = post_info.dig('account', 'profileImage')
-    self.data[:author_url] = post_info.dig('account', 'url')
-    self.data[:description] = self.data[:text] = post_info.dig('message')
-    self.data[:external_id] = post_info.dig('platformId')
-    self.data[:object_id] = post_info.dig('platformId')
-    self.data[:picture] = post_info['media'].first['full'] if post_info.dig('media')
-    self.data[:published_at] = post_info.dig('date')
-  end
-
 end

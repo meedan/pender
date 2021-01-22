@@ -302,23 +302,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:original_url)
   end
 
-  test "should parse as html when API token is expired and notify Airbrake" do
-    fb_token = CONFIG['facebook_auth_token']
-    Airbrake.stubs(:configured?).returns(true)
-    Airbrake.stubs(:notify).once
-    Media.any_instance.stubs(:get_oembed_data)
-    CONFIG['facebook_auth_token'] = 'EAACMBapoawsBAP8ugWtoTpZBpI68HdM68qgVdLNc8R0F8HMBvTU1mOcZA4R91BsHZAZAvSfTktgBrdjqhYJq2Qet2RMsNZAu12J14NqsP1oyIt74vXlFOBkR7IyjRLLVDysoUploWZC1N76FMPf5Dzvz9Sl0EymSkZD'
-    m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
-    data = m.as_json
-    assert_match /nostalgia/, data['title'].downcase
-    CONFIG['facebook_auth_token'] = fb_token
-    data = m.as_json(force: 1)
-    assert_match /nostalgia/, data['title'].downcase
-    Airbrake.unstub(:configured?)
-    Airbrake.unstub(:notify)
-    Media.any_instance.unstub(:get_oembed_data)
-  end
-
   test "should store data of post returned by oembed" do
     m = create_media url: 'https://www.facebook.com/teste637621352/posts/1028416870556238'
     oembed = m.as_json['raw']['oembed']

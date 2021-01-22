@@ -8,9 +8,6 @@ end
 group :development do
   gem 'web-console', '~> 2.0'
 end
-group :profile do
-  gem 'ruby-prof', '0.15.9'
-end
 group :test do
   gem 'parallel_tests'
 end
@@ -41,7 +38,7 @@ gem 'rack-cors', :require => 'rack/cors'
 gem 'rails-perftest'
 gem 'sidekiq'
 gem 'redis-namespace'
-gem 'nokogiri', '1.10.8'
+gem 'nokogiri', '1.11.0.rc4'
 gem 'sidekiq-scheduler'
 gem 'mida'
 gem 'htmlentities'

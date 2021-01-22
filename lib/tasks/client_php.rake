@@ -186,7 +186,7 @@ namespace :lapis do
               mock_method = "mock_#{path}_returns_#{r[:message].parameterize.gsub('-', '_')}"
               test_method = "test_#{path}_returns_#{r[:message].parameterize.gsub('-', '_')}"
               mock_args = example[:query].nil? ? "''" : example[:query].collect{ |k, v| v.nil? ? "''" : "#{v.inspect}" }.join(', ')
-              token = example[:headers].nil? ? '' : example[:headers][CONFIG['authorization_header'] || 'X-Token']
+              token = example[:headers].nil? ? '' : example[:headers][PenderConfig.get('authorization_header', 'X-Token')]
 
               mock_methods_sigs << "#{mock_method}()"
 
@@ -225,7 +225,7 @@ namespace #{vendor_name_camel}\\#{client_name_camel};
 class #{client_name_camel} extends \\Meedan\\Lapis\\LapisClient \{
 
   function __construct($config = []) \{
-    $config['token_name'] = '#{CONFIG['authorization_header'] || 'X-Token'}';
+    $config['token_name'] = '#{PenderConfig.get('authorization_header', 'X-Token')}';
     parent::__construct($config);
   \}
   #{request_methods}

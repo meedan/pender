@@ -24,7 +24,7 @@ class PenderConfig
   end
 
   def self.get(config_key, default = nil, type = nil)
-    config_value = PenderConfig.current(config_key)
+    config_value = PenderConfig.current(config_key.to_s)
     return default unless config_value
     value = config_value || default
     type == :json ? get_json_config(value, default) : value
@@ -37,4 +37,9 @@ class PenderConfig
       default
     end
   end
+
+  def self.set(key, value)
+    CONFIG[key] = value
+  end
+
 end

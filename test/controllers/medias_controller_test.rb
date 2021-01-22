@@ -272,10 +272,13 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should try to clear upstream cache when asking to" do
+    config = {'public_url' => 'http://localhost:3200' }
+    stub_configs(config)
+
     url = 'https://twitter.com/caiosba/status/742779467521773568'
     encurl = CGI.escape(url)
-    CcDeville.any_instance.expects(:clear_cache).with(CONFIG['public_url'] + '/api/medias.html?url=' + encurl).once
-    CcDeville.any_instance.expects(:clear_cache).with(CONFIG['public_url'] + '/api/medias.html?refresh=1&url=' + encurl).once
+    CcDeville.any_instance.expects(:clear_cache).with(config['public_url'] + '/api/medias.html?url=' + encurl).once
+    CcDeville.any_instance.expects(:clear_cache).with(config['public_url'] + '/api/medias.html?refresh=1&url=' + encurl).once
     get :index, url: url, format: :html
     get :index, url: url, format: :html, refresh: '1'
     CcDeville.any_instance.unstub(:clear_cache)
@@ -789,17 +792,33 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should get config from api key if defined" do
+    config = {'google_api_key' => 'AAABBBCCC' }
+    stub_configs(config)
+
     api_key = create_api_key
     authenticate_with_token(api_key)
 
     get :index, url: 'http://meedan.com', format: :json
     assert_response 200
-    assert_equal CONFIG['google_api_key'], PenderConfig.get('google_api_key')
+    assert_equal config['google_api_key'], PenderConfig.get('google_api_key')
 
     api_key.application_settings = { config: { google_api_key: 'specific_key' }}; api_key.save
     get :index, url: 'http://meedan.com', format: :json
     assert_response 200
     assert_equal 'specific_key', PenderConfig.get('google_api_key')
+  end
+
+  test "should return API limit reached error" do
+    Twitter::REST::Client.any_instance.stubs(:user).raises(Twitter::Error::TooManyRequests)
+    Twitter::Error::TooManyRequests.any_instance.stubs(:rate_limit).returns(OpenStruct.new(reset_in: 123))
+
+    authenticate_with_token
+    get :index, url: 'http://twitter.com/meedan', format: :json
+    assert_response 429
+    assert_equal 123, JSON.parse(@response.body)['data']['message']
+
+    Twitter::REST::Client.any_instance.unstub(:user)
+    Twitter::Error::TooManyRequests.any_instance.unstub(:rate_limit)
   end
 
 end

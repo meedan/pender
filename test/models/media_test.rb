@@ -704,7 +704,7 @@ class MediaTest < ActiveSupport::TestCase
     api_key = create_api_key
     uri = Media.parse_url('http://example.com')
 
-    assert_not_includes CONFIG['cookies'].keys, 'example.com'
+    assert_not_includes PenderConfig.get('cookies').keys, 'example.com'
     assert_equal "", Media.set_cookies(uri)
 
     PenderConfig.current = nil
@@ -733,21 +733,28 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should use specific country on proxy for domains on hosts" do
-    config = CONFIG['hosts']
+    country = 'gb'
+    m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
+    PenderConfig.current = nil
 
-    ['gb', 'us'].each do |country|
-      CONFIG['hosts'] = { 'time.com' => { 'country' => country } }.to_json
-      m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
-      host, user, pass = m.send(:get_proxy)
-      assert_match CONFIG['proxy_host'], host
-      assert_match "#{CONFIG['proxy_user_prefix']}#{CONFIG['proxy_country_prefix']}#{country}", user
-      assert_equal CONFIG['proxy_pass'], pass
+    config = {
+      'hosts' => {'time.com' => { 'country' => country }}.to_json,
+      'proxy_host' => 'proxy.pender',
+      'proxy_port' => '11111',
+      'proxy_user_prefix' => 'user-prefix-static',
+      'proxy_pass' => 'password',
+      'proxy_country_prefix' => '-country-',
+      'proxy_session_prefix' => '-session-'
+    }
 
-      data = m.as_json
-      assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title']
-      PenderConfig.current = nil
-    end
-    CONFIG['hosts'] = config
+    stub_configs(config)
+    host, user, pass = m.send(:get_proxy)
+    assert_match config['proxy_host'], host
+    assert_match "#{config['proxy_user_prefix']}#{config['proxy_country_prefix']}#{country}", user
+    assert_equal config['proxy_pass'], pass
+
+    data = m.as_json
+    assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title']
   end
 
   test "should use data from api key to set proxy" do
@@ -998,7 +1005,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should get metrics from Facebook" do
     Media.unstub(:request_metrics_from_facebook)
-    fb_config = CONFIG['facebook_test_app'] || CONFIG['facebook_app']
+    fb_config = PenderConfig.get('facebook_test_app') || PenderConfig.get('facebook_app')
     stub_configs({'facebook_app' => fb_config })
     url = 'https://www.google.com/'
     m = create_media url: url
@@ -1099,26 +1106,42 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should use api key config to get metrics and storage config if present" do
     Media.unstub(:request_metrics_from_facebook)
+    config = {
+      'facebook_app' => 'config_facebook_app',
+      'storage_endpoint' => 'http://minio:9000',
+      'storage_access_key' => 'AKIAIOSFODNN7EXAMPLE',
+      'storage_secret_key' => 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+      'storage_bucket' => 'pender',
+      'storage_bucket_region' => 'us-east-1',
+      'storage_medias_asset_path' => 'http://localhost:9000/check-dev/medias'
+    }
+
+    stub_configs(config)
+
     url = 'https://www.google.com/'
 
-    Media.get_metrics_from_facebook(url, nil, 10)
+    assert_raises Pender::RetryLater do
+      Media.get_metrics_from_facebook(url, nil, 10)
+    end
     assert_nil ApiKey.current
-    assert_equal CONFIG['facebook_app'], PenderConfig.get('facebook_app')
+    assert_equal config['facebook_app'], PenderConfig.get('facebook_app')
     %w(endpoint access_key secret_key bucket bucket_region medias_asset_path).each do |key|
-      assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
+      assert_equal config["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
     api_key = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    Media.get_metrics_from_facebook(url, api_key.id, 10)
+    assert_raises Pender::RetryLater do
+      Media.get_metrics_from_facebook(url, api_key.id, 10)
+    end
     assert_equal api_key, ApiKey.current
-    assert_equal CONFIG['facebook_app'], PenderConfig.get('facebook_app')
+    assert_equal config['facebook_app'], PenderConfig.get('facebook_app')
     %w(endpoint access_key secret_key bucket bucket_region medias_asset_path).each do |key|
-      assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
+      assert_equal config["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
-    key_config = { facebook_app: 'fb-app-id:fb-app-secret', storage_endpoint: CONFIG['storage_endpoint'], storage_access_key: CONFIG['storage_access_key'], storage_secret_key: CONFIG['storage_secret_key'], storage_bucket: 'my-bucket', storage_bucket_region: CONFIG['storage_bucket_region'], storage_video_bucket: 'video-bucket', storage_video_asset_path: 'http://video.path', storage_medias_asset_path: 'http://medias.path'}
+    key_config = { facebook_app: 'fb-app-id:fb-app-secret', storage_endpoint: config['storage_endpoint'], storage_access_key: config['storage_access_key'], storage_secret_key: config['storage_secret_key'], storage_bucket: 'my-bucket', storage_bucket_region: config['storage_bucket_region'], storage_video_bucket: 'video-bucket', storage_video_asset_path: 'http://video.path', storage_medias_asset_path: 'http://medias.path'}
     api_key.application_settings = { config: key_config }; api_key.save
     assert_raises Pender::RetryLater do
       Media.get_metrics_from_facebook(url, api_key.id, 10)

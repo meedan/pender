@@ -48,7 +48,7 @@ module MediaInstagramItem
       Rails.logger.warn level: 'WARN', message: '[Parser] Cannot get data from Instagram URL', error_class: error.class, error_message: error.message
       self.data['raw']['graphql'] = { error: { message: error.message, code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }}
     end
-    self.get_crowdtangle_instagram_data
+    self.get_crowdtangle_data(:instagram)
   end
 
   def get_instagram_graphql_data(url)
@@ -62,21 +62,6 @@ module MediaInstagramItem
     return JSON.parse(response.body)['graphql'] if response.code == '200'
     location = response.header['location']
     Media.is_a_login_page(location) ? (raise StandardError.new('Login required')) : self.get_instagram_graphql_data(location)
-  end
-
-  def get_crowdtangle_instagram_data
-    id = Media.get_crowdtangle_id(:instagram, self.data)
-    self.data['raw']['crowdtangle'] = { error: { message: 'Cannot get data from Crowdtangle. Unknown ID', code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }} and return if id.nil?
-    crowdtangle_data = Media.crowdtangle_request('instagram', id)
-    return unless crowdtangle_data && crowdtangle_data['result']
-    self.data['raw']['crowdtangle'] = crowdtangle_data['result']
-    post_info = crowdtangle_data['result']['posts'].first
-    self.data[:author_name] = post_info['account']['name']
-    self.data[:username] = '@' + post_info['account']['handle']
-    self.data[:author_url] = post_info['account']['url']
-    self.data[:description] = self.data[:title]  = post_info['description']
-    self.data[:picture] = post_info['media'].first['url'] if post_info['media']
-    self.data[:published_at] = post_info['date']
   end
 
 end 

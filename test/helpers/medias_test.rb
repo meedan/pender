@@ -51,14 +51,15 @@ class MediasHelperTest < ActionView::TestCase
 
   test "should get config from api key or default config" do
     url = 'http://example.com'
-    timeout = CONFIG['timeout']
+    config_timeout = '100'
+    stub_configs({'timeout' => config_timeout })
 
     key1 = create_api_key application_settings: { config: { timeout: 10 }}
     key2 = create_api_key application_settings: {}
     key3 = create_api_key
 
     m = Media.new url: url
-    assert_equal timeout, m.timeout_value
+    assert_equal config_timeout.to_i, m.timeout_value
 
     PenderConfig.current = nil
     m = Media.new url: url, key: key1
@@ -66,22 +67,31 @@ class MediasHelperTest < ActionView::TestCase
 
     PenderConfig.current = nil
     m = Media.new url: url, key: key2
-    assert_equal timeout, m.timeout_value
+    assert_equal config_timeout.to_i, m.timeout_value
 
     PenderConfig.current = nil
     m = Media.new url: url, key: key3
-    assert_equal timeout, m.timeout_value
-
+    assert_equal config_timeout.to_i, m.timeout_value
   end
 
   test 'should validate proxies subkeys' do
     proxy_keys = [ 'host', 'port', 'user_prefix', 'pass', 'country_prefix', 'session_prefix' ]
     video_proxy_keys = [ 'host', 'port', 'user_prefix', 'pass' ]
+    config = {
+      'proxy_host' => 'proxy.pender',
+      'proxy_port' => '11111',
+      'proxy_user_prefix' => 'user-prefix-static',
+      'proxy_pass' => 'password',
+      'proxy_country_prefix' => '-country-',
+      'proxy_session_prefix' => '-session-'
+    }
+    stub_configs(config)
+
     api_key = create_api_key
 
     ApiKey.current = api_key
     proxy_keys.each do |key|
-      assert_equal CONFIG["proxy_#{key}"], Media.valid_proxy('proxy')[key]
+      assert_equal config["proxy_#{key}"], Media.valid_proxy('proxy')[key]
     end
     assert_nil Media.valid_proxy('ytdl_proxy')
 
@@ -122,13 +132,15 @@ class MediasHelperTest < ActionView::TestCase
   end
 
   test 'should encode URLs on raw key' do
-    Media.stubs(:crowdtangle_request).returns({ result: { posts: [{"platform":"Facebook", "expanded":"https://www.facebook.com/people/á<80><99>á<80><84>á<80>ºá<80>¸á<80><91>á<80>®á<80>¸/100056594476400"}]}})
+    Media.any_instance.stubs(:get_crowdtangle_id).returns('111')
+    Media.stubs(:crowdtangle_request).with(:facebook, '111').returns({ result: { posts: [{"platform":"Facebook", "expanded":"https://www.facebook.com/people/á<80><99>á<80><84>á<80>ºá<80>¸á<80><91>á<80>®á<80>¸/100056594476400"}]}})
     url = 'https://www.facebook.com/voice.myanmarnewsmm/posts/148110680335452'
     m = Media.new url: url
     m.data = Media.minimal_data(m)
-    m.get_crowdtangle_facebook_data('111')
+    m.get_crowdtangle_data(:facebook)
     assert_equal "https://www.facebook.com/people/%C3%A1%3C80%3E%3C99%3E%C3%A1%3C80%3E%3C84%3E%C3%A1%3C80%3E%C2%BA%C3%A1%3C80%3E%C2%B8%C3%A1%3C80%3E%3C91%3E%C3%A1%3C80%3E%C2%AE%C3%A1%3C80%3E%C2%B8/100056594476400", cleanup_data_encoding(m.data)['raw']['crowdtangle']['posts'].first['expanded']
     Media.unstub(:crowdtangle_request)
+    Media.any_instance.unstub(:get_crowdtangle_id)
   end
 
   test 'should handle error with crowdtangle requests' do
@@ -145,7 +157,13 @@ class MediasHelperTest < ActionView::TestCase
       facebook: { uuid: 'facebook_id' }.with_indifferent_access,
       instagram: { raw: { graphql: { shortcode_media: { id: '111111', owner: { id: '222222'}}}}}.with_indifferent_access
     }
-    assert_equal 'facebook_id', Media.get_crowdtangle_id(:facebook, data[:facebook])
-    assert_equal '111111_222222', Media.get_crowdtangle_id(:instagram, data[:instagram])
+    url = 'https://example.com'
+    m = Media.new url: url
+
+    m.stubs(:data).returns(data[:facebook])
+    assert_equal 'facebook_id', m.get_crowdtangle_id(:facebook)
+
+    m.stubs(:data).returns(data[:instagram])
+    assert_equal '111111_222222', m.get_crowdtangle_id(:instagram)
   end
 end
