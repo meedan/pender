@@ -202,7 +202,11 @@ module MediasHelper
     end
 
     def self.is_a_login_page(url)
-      url.match?(/^https:\/\/www\.instagram\.com\/accounts\/login/)
+      login_page = false
+      [/^https:\/\/www\.instagram\.com\/accounts\/login/, /^https:\/\/www\.facebook.com\/login/].each do |login_pattern|
+        login_page = true if url.match?(login_pattern)
+      end
+      login_page
     end
 
     def self.api_key_settings(key_id)
