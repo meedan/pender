@@ -16,6 +16,7 @@ module MediaTwitterItem
       raise Pender::ApiLimitReached.new(e.rate_limit.reset_in)
     rescue Twitter::Error => error
       PenderAirbrake.notify(error, url: self.url ) && !self.doc.nil?
+      puts "Twitter error: #{error.inspect}"
       self.data.merge!(error: { message: "#{error.class}: #{error.code} #{error.message}", code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') })
       Rails.logger.warn level: 'WARN', message: "[Parser] #{error.message}", url: self.url, code: error.code, error_class: error.class
       return
