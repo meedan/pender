@@ -249,7 +249,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'facebook', data['provider']
-    assert_match 'https://www.facebook.com/Classic.mou/photos/a.136991166478555/666508790193454/?type=3', m.url
   end
 
   test "should parse Facebook post from media set" do
@@ -396,13 +395,9 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should create Facebook post from user photos URL" do
     m = create_media url: 'https://www.facebook.com/nanabhay/posts/10156130657385246?pnref=story'
     data = m.as_json
-    assert_match '735450245_10156130657385246', data['uuid']
+    assert_match '10156130657385246', data['uuid']
     assert_match 'Such a great evening with friends last night. Sultan Sooud Al-Qassemi has an amazing collecting of modern Arab art. It was a visual tour of the history of the region over the last century.', data['text'].strip
-    assert_match '735450245', data['user_uuid']
     assert_match 'Mohamed Nanabhay', data['author_name']
-    assert_equal 4, data['media_count']
-    assert_match '10156130657385246', data['object_id']
-    assert_equal '27/10/2015', Time.parse(data['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should parse Facebook post from user photo URL" do

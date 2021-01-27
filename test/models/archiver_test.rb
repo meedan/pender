@@ -668,35 +668,31 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal "http://public-storage/my-videos", Media.archiving_folder
   end
 
-  test "include error on data when archiver is skipped" do
-    stub_configs({'archiver_skip_hosts' => 'example.com' })
+  test "include error on data when cannot use archiver" do
+    skip = ENV['archiver_skip_hosts']
+    ENV['archiver_skip_hosts'] = 'example.com'
 
     url = 'http://example.com'
     m = Media.new url: url
     m.data = Media.minimal_data(m)
-    m.archive('archive_org')
 
+    m.archive('archive_org')
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_HOST_SKIPPED'), m.data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal I18n.t(:archiver_host_skipped, info: 'example.com'), m.data.dig('archives', 'archive_org', 'error', 'message')
-  end
+    ENV['archiver_skip_hosts'] = ''
 
-  test "include error on data when archiver is not present or is disabled" do
+    PenderConfig.reload
     status = Media::ARCHIVERS['archive_org'][:enabled]
     Media::ARCHIVERS['archive_org'][:enabled] = false
 
-    url = 'http://example.com'
-    m = Media.new url: url
-    m.data = Media.minimal_data(m)
-    archivers = 'archive_org,unexistent_archive'
-    m.archive(archivers)
+    m.archive('archive_org,unexistent_archive')
 
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_FOUND'), m.data.dig('archives', 'unexistent_archive', 'error', 'code')
     assert_equal I18n.t(:archiver_not_found), m.data.dig('archives', 'unexistent_archive', 'error', 'message')
-
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_DISABLED'), m.data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal I18n.t(:archiver_disabled), m.data.dig('archives', 'archive_org', 'error', 'message')
-
     Media::ARCHIVERS['archive_org'][:enabled] = status
+    ENV['archiver_skip_hosts'] = skip
   end
 
   test "should send to video archiver when call archive to video" do
