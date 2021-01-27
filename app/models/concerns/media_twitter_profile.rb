@@ -13,6 +13,9 @@ module MediaTwitterProfile
   end
 
   def twitter_client
+    ['twitter_consumer_key', 'twitter_consumer_secret', 'twitter_access_token', 'twitter_access_token_secret'].each do |key|
+      puts "TWITTER CONFIG #{key} IS BLANK" if PenderConfig.get(key).blank?
+    end
     Twitter::REST::Client.new do |config|
       config.consumer_key        = PenderConfig.get('twitter_consumer_key')
       config.consumer_secret     = PenderConfig.get('twitter_consumer_secret')

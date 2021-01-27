@@ -1006,6 +1006,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should get metrics from Facebook" do
     Media.unstub(:request_metrics_from_facebook)
     fb_config = PenderConfig.get('facebook_test_app') || PenderConfig.get('facebook_app')
+    puts "FB CONFIG IS BLANK" if fb_config.blank?
     stub_configs({'facebook_app' => fb_config })
     url = 'https://www.google.com/'
     m = create_media url: url
