@@ -7,9 +7,7 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should skip screenshots" do
-    config = CONFIG['archiver_skip_hosts']
-
-    CONFIG['archiver_skip_hosts'] = ''
+    stub_configs({'archiver_skip_hosts' => '' })
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://checkmedia.org/caio-screenshots/project/1121/media/8390'
@@ -17,14 +15,12 @@ class ArchiverTest < ActiveSupport::TestCase
     m = create_media url: url, key: a
     data = m.as_json
 
-    CONFIG['archiver_skip_hosts'] = 'checkmedia.org'
+    stub_configs({'archiver_skip_hosts' => 'checkmedia.org' })
 
     url = 'https://checkmedia.org/caio-screenshots/project/1121/media/8390?hide_tasks=1'
     id = Media.get_id(url)
     m = create_media url: url, key: a
     data = m.as_json
-
-    CONFIG['archiver_skip_hosts'] = config
   end
 
   test "should archive to Archive.is" do
@@ -672,38 +668,31 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal "http://public-storage/my-videos", Media.archiving_folder
   end
 
-  test "include error on data when archiver is skipped" do
-    config = CONFIG['archiver_skip_hosts']
-    CONFIG['archiver_skip_hosts'] = 'example.com'
+  test "include error on data when cannot use archiver" do
+    skip = ENV['archiver_skip_hosts']
+    ENV['archiver_skip_hosts'] = 'example.com'
 
     url = 'http://example.com'
     m = Media.new url: url
     m.data = Media.minimal_data(m)
-    m.archive('archive_org')
 
+    m.archive('archive_org')
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_HOST_SKIPPED'), m.data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal I18n.t(:archiver_host_skipped, info: 'example.com'), m.data.dig('archives', 'archive_org', 'error', 'message')
+    ENV['archiver_skip_hosts'] = ''
 
-    CONFIG['archiver_skip_hosts'] = config
-  end
-
-  test "include error on data when archiver is not present or is disabled" do
+    PenderConfig.reload
     status = Media::ARCHIVERS['archive_org'][:enabled]
     Media::ARCHIVERS['archive_org'][:enabled] = false
 
-    url = 'http://example.com'
-    m = Media.new url: url
-    m.data = Media.minimal_data(m)
-    archivers = 'archive_org,unexistent_archive'
-    m.archive(archivers)
+    m.archive('archive_org,unexistent_archive')
 
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_FOUND'), m.data.dig('archives', 'unexistent_archive', 'error', 'code')
     assert_equal I18n.t(:archiver_not_found), m.data.dig('archives', 'unexistent_archive', 'error', 'message')
-
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_DISABLED'), m.data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal I18n.t(:archiver_disabled), m.data.dig('archives', 'archive_org', 'error', 'message')
-
     Media::ARCHIVERS['archive_org'][:enabled] = status
+    ENV['archiver_skip_hosts'] = skip
   end
 
   test "should send to video archiver when call archive to video" do
@@ -740,27 +729,38 @@ class ArchiverTest < ActiveSupport::TestCase
 
   test "should use api key config when archiving video if present" do
     Media.unstub(:supported_video?)
-    url = 'https://www.youtube.com/watch?v=o1V1LnUU5VM'
+    config = {
+      'storage_endpoint' => 'http://minio:9000',
+      'storage_access_key' => 'AKIAIOSFODNN7EXAMPLE',
+      'storage_secret_key' => 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+      'storage_bucket' => 'pender',
+      'storage_bucket_region' => 'us-east-1',
+      'storage_medias_asset_path' => 'http://localhost:9000/check-dev/medias'
+    }
+
+    stub_configs(config)
     Media.stubs(:system).returns(`(exit 0)`)
+
+    url = 'https://www.youtube.com/watch?v=o1V1LnUU5VM'
 
     Media.send_to_video_archiver(url, nil)
     assert_nil ApiKey.current
-    %w(endpoint access_key secret_key bucket bucket_region media_asset_path).each do |key|
-      assert_equal CONFIG["storage_#{key}"], PenderConfig.current("storage_#{key}")
-      assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
+    %w(endpoint access_key secret_key bucket bucket_region medias_asset_path).each do |key|
+      assert_equal config["storage_#{key}"], PenderConfig.current("storage_#{key}")
+      assert_equal config["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
     api_key = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     Media.send_to_video_archiver(url, api_key.id)
     assert_equal api_key, ApiKey.current
-    %w(endpoint access_key secret_key bucket bucket_region media_asset_path).each do |key|
-      assert_equal CONFIG["storage_#{key}"], PenderConfig.current("storage_#{key}")
-      assert_equal CONFIG["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
+    %w(endpoint access_key secret_key bucket bucket_region medias_asset_path).each do |key|
+      assert_equal config["storage_#{key}"], PenderConfig.current("storage_#{key}")
+      assert_equal config["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
-    api_key.application_settings = { config: { ytdl_proxy_host: 'my-proxy.mine', ytdl_proxy_port: '1111', ytdl_proxy_user_prefix: 'my-user-prefix', ytdl_proxy_pass: '12345', storage_endpoint: CONFIG['storage_endpoint'], storage_access_key: CONFIG['storage_access_key'], storage_secret_key: CONFIG['storage_secret_key'], storage_bucket: 'my-bucket', storage_bucket_region: CONFIG['storage_bucket_region'], storage_video_bucket: 'video-bucket'}}; api_key.save
+    api_key.application_settings = { config: { ytdl_proxy_host: 'my-proxy.mine', ytdl_proxy_port: '1111', ytdl_proxy_user_prefix: 'my-user-prefix', ytdl_proxy_pass: '12345', storage_endpoint: config['storage_endpoint'], storage_access_key: config['storage_access_key'], storage_secret_key: config['storage_secret_key'], storage_bucket: 'my-bucket', storage_bucket_region: config['storage_bucket_region'], storage_video_bucket: 'video-bucket'}}; api_key.save
     Media.send_to_video_archiver(url, api_key.id, 20)
     assert_equal api_key, ApiKey.current
     %w(host port user_prefix pass).each do |key|

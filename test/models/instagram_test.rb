@@ -3,7 +3,7 @@ require 'cc_deville'
 
 class InstagramTest < ActiveSupport::TestCase
   test "should parse Instagram post" do
-    Media.stubs(:get_crowdtangle_id).returns('1328722959803788109_343260652')
+    Media.any_instance.stubs(:get_crowdtangle_id).returns('1328722959803788109_343260652')
     m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
     data = m.as_json
     assert data['raw']['crowdtangle'].is_a? Hash
@@ -14,7 +14,7 @@ class InstagramTest < ActiveSupport::TestCase
     assert_match /Peace Sells/, data[:description]
     assert_match /Peace Sells/, data[:title]
     assert_not_nil data['picture']
-    Media.unstub(:get_crowdtangle_id)
+    Media.any_instance.unstub(:get_crowdtangle_id)
   end
 
   test "should parse Instagram profile" do
@@ -37,7 +37,7 @@ class InstagramTest < ActiveSupport::TestCase
   end
 
   test "should store crowdtangle data of a instagram post" do
-    Media.stubs(:get_crowdtangle_id).returns('2326406115734344979_3076818846')
+    Media.any_instance.stubs(:get_crowdtangle_id).returns('2326406115734344979_3076818846')
     m = create_media url: 'https://www.instagram.com/p/CBJDglTpFUT/'
     data = m.as_json
 
@@ -46,7 +46,7 @@ class InstagramTest < ActiveSupport::TestCase
     assert_match 'theintercept', post_info['account']['handle']
     assert_match 'The Intercept', post_info['account']['name']
     assert_match /It was a week/, post_info['description']
-    Media.unstub(:get_crowdtangle_id)
+    Media.any_instance.unstub(:get_crowdtangle_id)
   end
 
   test "should use username as author_name on Instagram profile when a full name is not available" do
@@ -80,13 +80,13 @@ class InstagramTest < ActiveSupport::TestCase
   end
 
   test "should parse IGTV link as item" do
-    Media.stubs(:get_crowdtangle_id).returns('2178435889592963183_3651758')
+    Media.any_instance.stubs(:get_crowdtangle_id).returns('2178435889592963183_3651758')
     m = create_media url: 'https://www.instagram.com/tv/B47W-ZVJpBv/?igshid=l5tx0fnl421e'
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal '@biakicis', data['username']
     assert_match /kicis/, data['author_name'].downcase
-    Media.unstub(:get_crowdtangle_id)
+    Media.any_instance.unstub(:get_crowdtangle_id)
   end
 
   test "should return error on data when can't get info from graphql" do
@@ -103,7 +103,7 @@ class InstagramTest < ActiveSupport::TestCase
   end
 
   test "should parse when only graphql returns data" do
-    Media.stubs(:get_crowdtangle_instagram_data).returns(nil)
+    Media.stubs(:get_crowdtangle_data).with(:instagram).returns(nil)
     graphql_response = { 'graphql' => {
       "shortcode_media"=>{"display_url"=>"https://instagram.net/v/29_n.jpg",
       "edge_media_to_caption"=>{"edges"=>[{"node"=>{"text"=>"Verify misinformation on WhatsApp"}}]},
@@ -118,7 +118,7 @@ class InstagramTest < ActiveSupport::TestCase
     assert_match /misinformation/, data['title']
     assert !data['picture'].blank?
     assert !data['author_picture'].blank?
-    Media.unstub(:get_crowdtangle_instagram_data)
+    Media.unstub(:get_crowdtangle_data)
     Media.any_instance.unstub(:get_instagram_graphql_data)
   end
 

@@ -1,7 +1,7 @@
 # meedan/pender
 # https://github.com/meedan/pender
 
-FROM ruby:2.4-slim-buster
+FROM ruby:2.5-slim
 MAINTAINER sysops@meedan.com
 
 ENV DEPLOYUSER=pender \

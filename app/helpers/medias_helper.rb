@@ -202,7 +202,11 @@ module MediasHelper
     end
 
     def self.is_a_login_page(url)
-      url.match?(/^https:\/\/www\.instagram\.com\/accounts\/login/)
+      login_page = false
+      [/^https:\/\/www\.instagram\.com\/accounts\/login/, /^https:\/\/www\.facebook.com\/login/].each do |login_pattern|
+        login_page = true if url.match?(login_pattern)
+      end
+      login_page
     end
 
     def self.api_key_settings(key_id)
@@ -220,34 +224,6 @@ module MediasHelper
         proxy[config] = value
       end
       proxy
-    end
-
-    def self.crowdtangle_request(resource, id)
-      uri = URI.parse("https://api.crowdtangle.com/post/#{id}")
-
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      headers = { 'X-API-Token' => PenderConfig.get("crowdtangle_#{resource}_token") }
-      request = Net::HTTP::Get.new(uri.request_uri, headers)
-
-      response = http.request(request)
-      return {} unless !response.nil? && response.code == '200' && !response.body.blank?
-      begin
-        JSON.parse(response.body)
-      rescue JSON::ParserError => error
-        PenderAirbrake.notify(StandardError.new('Could not parse `crowdtangle` data as JSON'), crowdtangle_url: uri, error_message: error.message, response_body: response.body )
-        Rails.logger.warn level: 'WARN', message: '[Parser] Could not get `crowdtangle` data', crowdtangle_url: uri, error_class: error.class, response_code: response.code, response_message: response.message
-        {}
-      end
-    end
-
-    def self.get_crowdtangle_id(resource, data)
-      if resource == :instagram
-        media_info = data.dig('raw', 'graphql', 'shortcode_media')
-        media_info.nil? ? nil : "#{media_info['id']}_#{media_info['owner']['id']}"
-      else
-        data.dig('uuid')
-      end
     end
 
     def self.extended_headers(uri = nil)

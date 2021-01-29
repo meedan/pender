@@ -1,7 +1,7 @@
-unless CONFIG['honeycomb_key'].blank?
+unless PenderConfig.get('honeycomb_key').blank?
   Honeycomb.configure do |config|
-    config.write_key = CONFIG['honeycomb_key']
-    config.dataset = CONFIG['honeycomb_dataset']
+    config.write_key = PenderConfig.get('honeycomb_key')
+    config.dataset = PenderConfig.get('honeycomb_dataset')
     config.notification_events = %w[
       sql.active_record
       render_template.action_view

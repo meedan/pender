@@ -3,19 +3,26 @@ require 'cc_deville'
 
 class FacebookItemTest < ActiveSupport::TestCase
   test "should get canonical URL parsed from facebook html when it is relative" do
-    media1 = create_media url: 'https://www.facebook.com/dina.samak/posts/10153679232246949?pnref=story.unseen-section'
-    media2 = create_media url: 'https://www.facebook.com/dina.samak/posts/10153679232246949'
-    media1.as_json
-    media2.as_json
-    assert_equal media2.url, media1.url
+    relative_url = '/dina.samak/posts/10153679232246949'
+    url = "https://www.facebook.com#{relative_url}"
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='#{relative_url}'>"))
+    Media.any_instance.stubs(:follow_redirections)
+    m = create_media url: url
+    assert_equal url, m.url
+    Media.any_instance.unstub(:get_html)
+    Media.any_instance.unstub(:follow_redirections)
   end
 
   test "should get canonical URL parsed from facebook html when it is a page" do
-    media1 = create_media url: 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479?pnref=story.unseen-section'
-    media2 = create_media url: 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479'
-    media1.as_json
-    media2.as_json
-    assert_equal media2.url, media1.url
+    canonical_url = 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479'
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='#{canonical_url}'>"))
+    Media.any_instance.stubs(:follow_redirections)
+    Media.stubs(:validate_url).with(canonical_url).returns(true)
+    m = create_media url: 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479?pnref=story.unseen-section'
+    assert_equal canonical_url, m.url
+    Media.any_instance.unstub(:get_html)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.unstub(:validate_url)
   end
 
   test "should get canonical URL from facebook object 2" do
@@ -76,12 +83,20 @@ class FacebookItemTest < ActiveSupport::TestCase
   end
 
   test "should parse Facebook pure text post url" do
-    m = create_media url: 'https://www.facebook.com/dina.samak/posts/10153679232246949?pnref=story.unseen-section'
+    Media.any_instance.stubs(:get_crowdtangle_data)
+    url = 'https://www.facebook.com/dina.samak/posts/10153679232246949?pnref=story.unseen-section'
+    html = "<title id='pageTitle'>Dina Samak | Facebook</title>
+            <div data-testid='post_message' class='_5pbx userContent'>
+            <p>إذا كنت تعرف هيثم محمدين كما أعرفه فمن المؤكد انك قد استمتعت بقدرته الرائعة على الحكي..</p>
+           </div>"
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(html))
+    Media.any_instance.stubs(:follow_redirections)
+    m = create_media url: url
     data = m.as_json
     assert_match /Dina Samak/, data['title']
-    assert_not_nil data['description']
-    assert_not_nil data['author_picture']
-    assert_not_nil Time.parse(data['published_at'])
+    Media.any_instance.unstub(:get_html)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_crowdtangle_data)
   end
 
   test "should parse Facebook live post" do
@@ -100,7 +115,7 @@ class FacebookItemTest < ActiveSupport::TestCase
   end
 
   test "should parse Facebook removed live post" do
-    url = 'https://www.facebook.com/teste637621352/posts/1538843716180215/'
+    url = 'https://www.facebook.com/teste637621352/posts/1538843716180215'
     id = Media.get_id url
     m = create_media url: url
     data = m.as_json
@@ -109,8 +124,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal '', data['description']
     assert_equal '', data['published_at']
     assert_match 'teste637621352', data['username']
-    assert_match 'http://facebook.com/749262715138323', data['author_url']
-    assert_match /#{id}\/author_picture.jpg/, data['author_picture']
   end
 
   test "should parse Facebook livemap" do
@@ -227,16 +240,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'facebook', data['provider']
-    assert_match /Dina El Hawary/, data['title']
-    assert_match /ربنا يزيدهن فوق القوة قوة/, data['description']
-    assert_not_nil data['published_at']
-    assert_match 'Dina El Hawary', data['author_name']
-    assert_match 'dina.hawary', data['username']
-    assert_match 'http://facebook.com/813705320', data['author_url']
-    assert_match /#{id}\/author_picture.jpg/, data['author_picture']
-    assert_not_nil data['picture']
-    assert_nil data['error']
-    assert_match 'https://www.facebook.com/dina.hawary/posts/10158416884740321', m.url
   end
 
   test "should parse facebook url with colon mark" do
@@ -246,16 +249,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'facebook', data['provider']
-    assert_match '666508790193454', data['uuid']
-    assert_match /Classic/, data['title']
-    assert_match /إليزابيث تايلو/, data['description']
-    assert_not_nil data['published_at']
-    assert_match 'Classic.mou', data['username']
-    assert_match 'Classic', data['author_name']
-    assert_match /facebook.com\/136985363145802/, data['author_url']
-    assert_match /#{id}\/author_picture.jpg/, data['author_picture']
-    assert_match /#{id}\/picture.jpg/, data['picture']
-    assert_match 'https://www.facebook.com/Classic.mou/photos/a.136991166478555/666508790193454/?type=3', m.url
   end
 
   test "should parse Facebook post from media set" do
@@ -300,23 +293,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match '10154534110871407', data['object_id']
     Media.any_instance.unstub(:url)
     Media.any_instance.unstub(:original_url)
-  end
-
-  test "should parse as html when API token is expired and notify Airbrake" do
-    fb_token = CONFIG['facebook_auth_token']
-    Airbrake.stubs(:configured?).returns(true)
-    Airbrake.stubs(:notify).once
-    Media.any_instance.stubs(:get_oembed_data)
-    CONFIG['facebook_auth_token'] = 'EAACMBapoawsBAP8ugWtoTpZBpI68HdM68qgVdLNc8R0F8HMBvTU1mOcZA4R91BsHZAZAvSfTktgBrdjqhYJq2Qet2RMsNZAu12J14NqsP1oyIt74vXlFOBkR7IyjRLLVDysoUploWZC1N76FMPf5Dzvz9Sl0EymSkZD'
-    m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
-    data = m.as_json
-    assert_match /nostalgia/, data['title'].downcase
-    CONFIG['facebook_auth_token'] = fb_token
-    data = m.as_json(force: 1)
-    assert_match /nostalgia/, data['title'].downcase
-    Airbrake.unstub(:configured?)
-    Airbrake.unstub(:notify)
-    Media.any_instance.unstub(:get_oembed_data)
   end
 
   test "should store data of post returned by oembed" do
@@ -419,13 +395,9 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should create Facebook post from user photos URL" do
     m = create_media url: 'https://www.facebook.com/nanabhay/posts/10156130657385246?pnref=story'
     data = m.as_json
-    assert_match '735450245_10156130657385246', data['uuid']
+    assert_match '10156130657385246', data['uuid']
     assert_match 'Such a great evening with friends last night. Sultan Sooud Al-Qassemi has an amazing collecting of modern Arab art. It was a visual tour of the history of the region over the last century.', data['text'].strip
-    assert_match '735450245', data['user_uuid']
     assert_match 'Mohamed Nanabhay', data['author_name']
-    assert_equal 4, data['media_count']
-    assert_match '10156130657385246', data['object_id']
-    assert_equal '27/10/2015', Time.parse(data['published_at']).strftime("%d/%m/%Y")
   end
 
   test "should parse Facebook post from user photo URL" do
@@ -444,9 +416,16 @@ class FacebookItemTest < ActiveSupport::TestCase
   tests = YAML.load_file(File.join(Rails.root, 'test', 'data', 'fbposts.yml'))
   tests.each do |url, text|
     test "should get text from Facebook user post from URL '#{url}'" do
+      Media.any_instance.stubs(:get_crowdtangle_data)
+      Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta name='description' content='#{text}'>"))
+      Media.any_instance.stubs(:follow_redirections)
+
       m = create_media url: url
       data = m.as_json
       assert_match text, data['text'].gsub(/\s+/, ' ').strip
+      Media.any_instance.unstub(:get_html)
+      Media.any_instance.unstub(:follow_redirections)
+      Media.any_instance.unstub(:get_crowdtangle_data)
     end
   end
 
@@ -479,16 +458,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_kind_of Array, data['photos']
     assert data['media_count'].size > 1, "media_count should be more than 1 image"
     assert data['photos'].size > 1, "photos should have more than 1 image"
-  end
-
-  test "should create Facebook post from Arabic user" do
-    m = create_media url: 'https://www.facebook.com/ahlam.alialshamsi/posts/108561999277346?pnref=story'
-    data = m.as_json
-    assert_match '100003706393630_108561999277346', data['uuid']
-    assert_match '100003706393630', data['user_uuid']
-    assert_match 'Ahlam Ali Al Shāmsi', data['author_name']
-    assert_match '108561999277346', data['object_id']
-    assert_match 'أنا مواد رافعة الآن الأموال اللازمة لمشروع مؤسسة خيرية، ودعم المحتاجين في غرب أفريقيا مساعدتي لبناء مكانا أفضل للأطفال في أفريقيا', data['text']
   end
 
   test "should get normalized URL from crowdtangle" do
@@ -551,13 +520,15 @@ class FacebookItemTest < ActiveSupport::TestCase
 
   test "should return item as oembed when the page has oembed url" do
     url = 'https://www.facebook.com/teste637621352/posts/1028416870556238'
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:title' content='Teste'>"))
     m = create_media url: url
     data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
     assert_match /Teste/, data['title']
     assert_match 'Teste', data['author_name']
-    assert_match /facebook.com\/\d/, data['author_url']
+    assert_match /facebook.com\//, data['author_url']
     assert_equal 'facebook', data['provider_name']
     assert_match /https?:\/\/www.facebook.com/, data['provider_url']
+    Media.any_instance.unstub(:get_html)
   end
 
   test "should not use Facebook embed if is a link to redirect" do
@@ -615,8 +586,8 @@ class FacebookItemTest < ActiveSupport::TestCase
       m = create_media url: url
       data = m.as_json
       assert_equal '', data[:html]
-      assert_equal LapisConstants::ErrorCodes::const_get('NOT_FOUND'), data[:error][:code]
-      assert_equal 'URL Not Found', data[:error][:message]
+      assert_not_nil data[:error][:code]
+      assert_not_nil data[:error][:message]
     end
   end
 
@@ -681,9 +652,35 @@ class FacebookItemTest < ActiveSupport::TestCase
   end
 
   test "should get full text of Facebook post" do
+    Media.any_instance.stubs(:get_crowdtangle_data)
     url = 'https://www.facebook.com/ironmaiden/posts/10157024746512051'
+    html = "<div data-testid='post_message' class='_5pbx userContent'>
+          <p>Legacy of the Beast Touring Update 2020/21</p>
+          <p> I hope you and your loved ones are staying safe and well, wherever you may be, and my continued thanks to you all for bearing with us so patiently.</p>
+          <p> Due to the continuing health issues Worldwide around Covid-19 we regretfully inform you that Iron Maiden will now not be playing any concerts until June 2021.</p>
+          <p> However, we are now in a position to give you details of our touring plans in respect to those shows we had hoped to play this year.</p>
+       </div>"
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(html))
+    Media.any_instance.stubs(:follow_redirections)
     m = Media.new url: url
     data = m.as_json
     assert_match /However, we are now in a position to give you details of our touring plans in respect to those shows we had hoped to play this year/, data['description']
+    Media.any_instance.unstub(:get_html)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_crowdtangle_data)
   end
+
+  test "should not change url when redirected to login page" do
+    url = 'https://www.facebook.com/ugmhmyanmar/posts/2850282508516442'
+    redirection_to_login_page = 'https://www.facebook.com/login/?next=https%3A%2F%2Fwww.facebook.com%2Fugmhmyanmar%2Fposts%2F2850282508516442'
+    response = 'mock'; response.stubs(:code).returns('302')
+    response.stubs(:header).returns({ 'location' => redirection_to_login_page })
+    response_login_page = 'mock'; response_login_page.stubs(:code).returns('200')
+    Media.stubs(:request_url).with(url, 'Head').returns(response)
+    Media.stubs(:request_url).with(redirection_to_login_page, 'Head').returns(response_login_page)
+    m = create_media url: url
+    assert_equal url, m.url
+    Media.unstub(:request_url)
+  end
+
 end
