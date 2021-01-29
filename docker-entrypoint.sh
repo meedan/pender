@@ -25,7 +25,8 @@ configurator() {
 
 # NOTE no pagination so there better not be >1000 parameters...
 source_from_ssm() {
-    all_ssm_params=$(aws ssm get-parameters-by-path --path /${DEPLOY_ENV}/${APP}/ | jq -rc .Parameters[])
+    aws sts get-caller-identity  # TODO for debug
+    all_ssm_params=$(aws ssm get-parameters-by-path --path /${DEPLOY_ENV}/${APP}/ | jq -rcM .Parameters[])
     IFS=$'\n'
     for ssm_param in $all_ssm_params; do
         param_name=$(echo $ssm_param | jq -r .Name)
