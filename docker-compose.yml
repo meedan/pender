@@ -26,7 +26,7 @@ services:
       - ${SERVER_PORT}:${SERVER_PORT}
       - "9555:9555"
     volumes:
-    - $HOME/.aws/credentials:/home/pender/.aws/credentials:ro
+      - $HOME/.aws/:/home/pender/.aws:ro
     build:
       context: .
       args:
