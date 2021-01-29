@@ -52,7 +52,7 @@ module MediaFacebookEngagementMetrics
     end
 
     def verify_facebook_metrics_response(url, response)
-      puts "METRICS RESPONSE #{response.code} - #{response.body}"
+      puts "METRICS RESPONSE #{response.code}"
       return true if response.code.to_i == 200
       error = JSON.parse(response.body)['error']
       unless fb_metrics_error(:permanent, url, error)
