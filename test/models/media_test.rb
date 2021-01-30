@@ -728,7 +728,7 @@ class MediaTest < ActiveSupport::TestCase
       m = create_media url: url
       data = m.as_json
       assert_equal 'facebook', data['provider']
-      assert_equal '', data['html']
+      assert_equal '', data['html'], "html for #{url} should be empty"
     end
   end
 
@@ -1032,12 +1032,13 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should get Facebook metrics from crowdtangle when it's a Facebook item" do
     Media.unstub(:request_metrics_from_facebook)
-    url = 'https://www.facebook.com/ironmaiden/posts/10157433813787051'
-    m = create_media url: url
-    m.as_json
-    id = Media.get_id(url)
-    data = Pender::Store.current.read(id, :json)
-    assert data['metrics']['facebook']['share_count'] > 0
+    ['https://www.facebook.com/172685102050/photos/a.406269382050/10157701432562051/', 'https://www.facebook.com/permalink.php?story_fbid=10157697779652051&id=172685102050'].each do |url|
+      m = create_media url: url
+      m.as_json
+      id = Media.get_id(url)
+      data = Pender::Store.current.read(id, :json)
+      assert data['metrics']['facebook']['share_count'] > 0
+    end
   end
 
   {

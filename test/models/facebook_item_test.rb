@@ -25,12 +25,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     Media.unstub(:validate_url)
   end
 
-  test "should get canonical URL from facebook object 2" do
-    media = Media.new(url: 'https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406')
-    media.as_json({ force: 1 })
-    assert_equal 'https://www.facebook.com/54212446406/photos/a.10154534110871407/10154534111016407/?type=3', media.url
-  end
-
   test "should get canonical URL from facebook object 3" do
     expected = 'https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407?type=3&theater'
     url = 'https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407/?type=3&theater'
@@ -133,11 +127,8 @@ class FacebookItemTest < ActiveSupport::TestCase
       https://www.facebook.com/live/discover/map/#@37.777053833008,-122.41587829590001,4z
     )
 
-    request = 'http://localhost'
-    request.expects(:base_url).returns('http://localhost')
-
     variations.each do |url|
-      m = create_media url: url, request: request
+      m = create_media url: url
       data = m.as_json
       assert_match /facebook\.com/, m.url
       assert_match /Facebook/, data['title']
@@ -228,9 +219,10 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /Mariano Rajoy Brey/, data['title']
     assert_equal 'item', data['type']
     assert_match /#{id}\/author_picture.jpg/, data['author_picture']
-    assert_match /#{id}\/picture.jpg/, data['picture']
+    assert !data['picture'].blank?
     assert_not_nil Time.parse(data['published_at'])
     assert_match '10154534111016407', data['object_id']
+    assert_match 'https://www.facebook.com/54212446406/posts/10154534111016407', m.url
   end
 
   test "should parse facebook user post" do
@@ -305,7 +297,6 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should store oembed data of a facebook post" do
     m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
     data = m.as_json
-
     assert data['raw']['oembed'].is_a? Hash
     assert_match /facebook.com/, data['oembed']['provider_url']
     assert_equal "facebook", data['oembed']['provider_name'].downcase
@@ -322,18 +313,17 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should parse Facebook post from page photo" do
     m = create_media url: 'https://www.facebook.com/quoted.pictures/photos/a.128828073875334.28784.128791873878954/1096134023811396/?type=3&theater'
     data = m.as_json
+
     assert_match /quoted.pictures/, data['title'].downcase
     assert_match 'quoted.pictures', data['username']
     assert_match /quoted.pictures/, data['author_name'].downcase
-    assert_not_nil data['author_url']
-    assert_not_nil data['picture']
-    assert_equal 1, data['media_count']
+    assert !data['author_url'].blank?
+    assert !data['picture'].blank?
     assert_nil data['error']
   end
 
   test "should parse facebook url without identified pattern as item" do
     url = 'https://www.facebook.com/Bimbo.Memories/photos/pb.235404669918505.-2207520000.1481570271./1051597428299221/?type=3&theater'
-    id = Media.get_id url
     m = create_media url: url
     data = m.as_json
     assert_equal 'item', data['type']
@@ -597,17 +587,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal '', data[:html]
     assert_equal 'Login required to see this profile', data[:error][:message]
     assert_equal LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
-  end
-
-  test "should not raise error when canonical URL on meta tags has non-ascii" do
-    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML('<meta property="og:title" content="&#x930;&#x93e;&#x91c;&#x928;&#x940;&#x924;&#x93f; no Facebook Watch" /><meta property="og:url" content="https://www.facebook.com/&#x930;&#x93e;&#x91c;&#x928;&#x940;&#x924;&#x93f;-105391010971335/videos/%E0%A4%AF%E0%A5%87-%E0%A4%B5%E0%A4%BF%E0%A4%A1%E0%A5%80%E0%A4%93-%E0%A4%B6%E0%A4%BE%E0%A4%AF%E0%A4%A6-%E0%A4%B0%E0%A4%BE%E0%A4%9C%E0%A4%B8%E0%A5%8D%E0%A4%A5%E0%A4%BE%E0%A4%A8-%E0%A4%95%E0%A5%8D%E0%A4%B7%E0%A5%87%E0%A4%A4%E0%A5%8D%E0%A4%B0-%E0%A4%95%E0%A5%87-%E0%A4%95%E0%A4%BF%E0%A4%B8%E0%A5%80-%E0%A4%97%E0%A4%BE%E0%A4%81%E0%A4%B5-%E0%A4%95%E0%A4%BE-%E0%A4%B9%E0%A5%88-%E0%A4%95%E0%A4%BF%E0%A4%B8%E0%A5%80-%E0%A4%A8%E0%A5%87-%E0%A4%AD%E0%A5%87%E0%A4%9C%E0%A4%BE-%E0%A4%B9%E0%A5%88-%E0%A4%AF%E0%A4%A6%E0%A4%BF-%E0%A4%95%E0%A4%BF%E0%A4%B8%E0%A5%80-%E0%A4%AC%E0%A4%A8%E0%A5%8D%E0%A4%A6%E0%A5%87/258392245354246/" />'))
-    assert_nothing_raised do
-      m = create_media url: 'https://www.facebook.com/राजनीति-105391010971335/videos/ये-विडीओ-शायद-राजस्थान-क्षेत्र-के-किसी-गाँव-का-है-किसी-ने-भेजा-है-यदि-किसी-बन्दे/258392245354246/'
-      data = m.as_json
-      assert_match 'राजनीति no Facebook Watch on Facebook', data['title']
-      assert_nil data['error']
-    end
-    Media.any_instance.unstub(:doc)
   end
 
   test "should get the group name when parsing group post" do

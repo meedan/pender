@@ -34,8 +34,6 @@ module MediaFacebookProfile
 
     self.get_facebook_privacy_error
     
-    data['likes'] = self.get_facebook_likes
-    
     data['published_at'] = ''
     data
   end
@@ -143,11 +141,6 @@ module MediaFacebookProfile
         'Facebook'
       end
     end
-  end
-
-  def get_facebook_likes
-    page = self.get_facebook_profile_page
-    page.css('#PagesLikesCountDOMID span').text.gsub(/ .*/, '').gsub(/[^0-9]/, '')
   end
 
   def get_facebook_username
