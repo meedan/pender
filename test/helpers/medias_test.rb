@@ -166,4 +166,11 @@ class MediasHelperTest < ActionView::TestCase
     m.stubs(:data).returns(data[:instagram])
     assert_equal '111111_222222', m.get_crowdtangle_id(:instagram)
   end
+
+  test 'should decode url' do
+    url = 'https://example.com'
+    URI.stubs(:decode).raises(Encoding::CompatibilityError)
+    assert_equal url, Media.decoded_uri(url)
+    URI.unstub(:decode)
+  end
 end

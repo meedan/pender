@@ -5,7 +5,7 @@ module MediaFacebookItem
 
   URLS = [
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/posts\/(?<id>[0-9]+).*/,
-    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/photos\/.*a\.([0-9]+)\.([0-9]+)\.([0-9]+)\/([0-9]+).*/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/photos\/.*a\.([0-9]+)\.([0-9]+)\.(?<id>[0-9]+)\/([0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/photos\/pcb\.([0-9]+)\/(?<id>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo(.php)?\/?\?fbid=(?<id>[0-9]+)&set=a\.([0-9]+)(\.([0-9]+)\.([0-9]+))?.*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo(.php)?\?fbid=(?<id>[0-9]+)&set=p\.([0-9]+).*/,
@@ -17,7 +17,7 @@ module MediaFacebookItem
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/watch(\/.*)?/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/live\/map(\/.*)?/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>[0-9]+)\/permalink\/([0-9]+).*/,
-    /^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+).*$/,
+    /^https?:\/\/(www\.)?facebook\.com\/(?<id>[^\/\?]+).*$/,
     EVENT_URL
   ]
 
@@ -52,7 +52,17 @@ module MediaFacebookItem
     params = parse_uri(uri)
     user_id = params['set'].first.split('.').last unless params['set'].blank?
     user_id ||= params['id'].first.match(/([0-9]+).*/)[1] unless params['id'].blank?
-    user_id || self.doc.to_s.match(/"groupID":"(\d+)"/) && self.doc.to_s.match(/"groupID":"(\d+)"/)[1]
+    user_id ||= self.doc.to_s.match(/"groupID":"(\d+)"/) && self.doc.to_s.match(/"groupID":"(\d+)"/)[1]
+    user_id ||= get_facebook_user_id_from_url_pattern
+  end
+
+  def get_facebook_user_id_from_url_pattern
+    URLS.each do |pattern|
+      if pattern.match(self.url)
+        return pattern.match(self.url)['id'] if pattern.match(self.url).names.include?('id')
+        break
+      end
+    end
   end
 
   def get_facebook_post_id_from_url
