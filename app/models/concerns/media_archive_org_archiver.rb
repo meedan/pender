@@ -43,6 +43,7 @@ module MediaArchiveOrgArchiver
       http, request = Media.archive_org_request("http://archive.org/wayback/available?url=#{url}&timestamp=#{timestamp}", 'Get')
       response = http.request(request)
       body = JSON.parse(response.body)
+      puts response.message
       if body.dig('archived_snapshots', 'closest', 'available')
         location = body.dig('archived_snapshots', 'closest', 'url')
         data = { location: location }
