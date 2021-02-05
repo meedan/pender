@@ -105,7 +105,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match 'cbcnews', data['username']
     assert_match /facebook.com\/5823419603/, data['author_url']
     assert_match /#{id}\/author_picture.jpg/, data['author_picture']
-    assert_match /#{id}\/picture.jpg/, data['picture']
+    assert_match /#{id}\/picture.(jpg|png)/, data['picture']
   end
 
   test "should parse Facebook removed live post" do
