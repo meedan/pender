@@ -737,10 +737,11 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should use specific country on proxy for domains on hosts" do
-    country = 'gb'
-    m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
-    PenderConfig.current = nil
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
 
+    country = 'gb'
     config = {
       'hosts' => {'time.com' => { 'country' => country }}.to_json,
       'proxy_host' => 'proxy.pender',
@@ -750,7 +751,8 @@ class MediaTest < ActiveSupport::TestCase
       'proxy_country_prefix' => '-country-',
       'proxy_session_prefix' => '-session-'
     }
-    env = set_env(config)
+    api_key = create_api_key application_settings: { config: config }
+    m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/', key: api_key
 
     host, user, pass = m.send(:get_proxy)
     assert_match config['proxy_host'], host
@@ -758,9 +760,11 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal config['proxy_pass'], pass
 
     data = m.as_json
-    assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title']
-    config.keys { |key| ENV[key] = env_vars[key] }
-    restore_env(env)
+    assert_equal m.url, data['title']
+
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
   end
 
   test "should use data from api key to set proxy" do
