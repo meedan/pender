@@ -38,17 +38,17 @@ class ApiKeyTest < ActiveSupport::TestCase
   end
 
   test "should get config from api key if present" do
-    config = { 'google_api_key' => 'config_key' }.with_indifferent_access
-    stub_configs(config)
+    google_api_key = 'specific_key'
 
     key = create_api_key
-    assert_nil key.settings[:config]
-    assert_equal config[:google_api_key], PenderConfig.get('google_api_key')
-    key.application_settings =  { config: { google_api_key: 'specific_key' }}; key.save
     PenderConfig.current = nil
     ApiKey.current = key
-    assert_equal 'specific_key', key.settings[:config][:google_api_key]
-    assert_equal 'specific_key', PenderConfig.get(:google_api_key)
+    assert_not_equal google_api_key, PenderConfig.get('google_api_key')
+
+    key.application_settings =  { config: { google_api_key: google_api_key }}; key.save
+    PenderConfig.current = nil
+    assert_equal google_api_key, key.settings[:config][:google_api_key]
+    assert_equal google_api_key, PenderConfig.get(:google_api_key)
   end
 
 end
