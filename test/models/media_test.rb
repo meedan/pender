@@ -51,20 +51,24 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse URL including cloudflare credentials on header" do
+    host = ENV['hosts']
     url = 'https://example.com/'
     parsed_url = Media.parse_url url
     m = Media.new url: url
     header_options_without_cf = Media.send(:html_options, url)
     assert_nil header_options_without_cf['CF-Access-Client-Id']
     assert_nil header_options_without_cf['CF-Access-Client-Secret']
+
     PenderConfig.current = nil
-    stub_configs({'hosts' => {"example.com"=>{"cf_credentials"=>"1234:5678"}}.to_json})
+    ENV['hosts'] = {"example.com"=>{"cf_credentials"=>"1234:5678"}}.to_json
     header_options_with_cf = Media.send(:html_options, url)
     assert_equal '1234', header_options_with_cf['CF-Access-Client-Id']
     assert_equal '5678', header_options_with_cf['CF-Access-Client-Secret']
     OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_cf).raises(RuntimeError.new('unauthorized'))
     OpenURI.stubs(:open_uri).with(parsed_url, header_options_with_cf)
     assert_equal Nokogiri::HTML::Document, m.send(:get_html, Media.send(:html_options, m.url)).class
+
+    ENV['hosts'] = host
   end
 
   test "should parse meta tags as fallback" do
@@ -746,8 +750,8 @@ class MediaTest < ActiveSupport::TestCase
       'proxy_country_prefix' => '-country-',
       'proxy_session_prefix' => '-session-'
     }
+    env = set_env(config)
 
-    stub_configs(config)
     host, user, pass = m.send(:get_proxy)
     assert_match config['proxy_host'], host
     assert_match "#{config['proxy_user_prefix']}#{config['proxy_country_prefix']}#{country}", user
@@ -755,6 +759,8 @@ class MediaTest < ActiveSupport::TestCase
 
     data = m.as_json
     assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title']
+    config.keys { |key| ENV[key] = env_vars[key] }
+    restore_env(env)
   end
 
   test "should use data from api key to set proxy" do
@@ -1006,7 +1012,8 @@ class MediaTest < ActiveSupport::TestCase
   test "should get metrics from Facebook" do
     Media.unstub(:request_metrics_from_facebook)
     fb_config = PenderConfig.get('facebook_test_app') || PenderConfig.get('facebook_app')
-    stub_configs({'facebook_app' => fb_config })
+    PenderConfig.current = nil
+    env = set_env({'facebook_app' => fb_config })
     url = 'https://www.google.com/'
     m = create_media url: url
     m.as_json
@@ -1020,14 +1027,19 @@ class MediaTest < ActiveSupport::TestCase
     id = Media.get_id(url)
     data = Pender::Store.current.read(id, :json)
     assert_equal({}, data['metrics']['facebook'])
+    restore_env(env)
   end
 
   test "should get metrics from Facebook when URL has non-ascii" do
     Media.unstub(:request_metrics_from_facebook)
+    fb_config = PenderConfig.get('facebook_test_app') || PenderConfig.get('facebook_app')
+    PenderConfig.current = nil
+    env = set_env({'facebook_app' => fb_config })
     assert_nothing_raised do
       response = Media.request_metrics_from_facebook("http://www.facebook.com/people/\u091C\u0941\u0928\u0948\u0926-\u0905\u0939\u092E\u0926/100014835514496")
       assert_kind_of Hash, response
     end
+    restore_env(env)
   end
 
   test "should get Facebook metrics from crowdtangle when it's a Facebook item" do
@@ -1051,7 +1063,7 @@ class MediaTest < ActiveSupport::TestCase
       url = 'https://www.example.com/'
       m = create_media url: url
       Media.unstub(:request_metrics_from_facebook)
-      stub_configs({'facebook_app' => '1111:2222' })
+      env = set_env({'facebook_app' => '1111:2222' })
       WebMock.enable!
       WebMock.disable_net_connect!(allow: 'graph.facebook.com')
       WebMock.stub_request(:any, /graph.facebook.com\/oauth\/access_token/).to_return(body: {"access_token":"token"}.to_json)
@@ -1064,17 +1076,19 @@ class MediaTest < ActiveSupport::TestCase
       PenderAirbrake.unstub(:notify)
       Sidekiq::Worker.clear_all
       Semaphore.new('1111').unlock
+      restore_env(env)
     end
   end
 
   test "should use second facebook_app when fails to get fb metrics and api limit reached" do
     Sidekiq::Testing.fake!
+    fb_app = ENV['facebook_app']
     url = 'https://www.example.com/'
     m = create_media url: url
     Media.unstub(:request_metrics_from_facebook)
     Media.any_instance.stubs(:unsafe?).returns(false)
     response_info = { body: "{\"error\":{\"message\":\"(#4) Application request limit reached\",\"type\":\"OAuthException\",\"is_transient\":true,\"code\":4}}", code: "403", message: "Forbidden"}
-    stub_configs({'facebook_app' => '1111:2222;3333:4444' })
+    ENV['facebook_app'] = '1111:2222;3333:4444'
     WebMock.enable!
     WebMock.disable_net_connect!(allow: 'graph.facebook.com')
     WebMock.stub_request(:any, 'https://graph.facebook.com/oauth/access_token?client_id=1111&client_secret=2222&grant_type=client_credentials').to_return(body: {"access_token":"app1_token"}.to_json)
@@ -1092,6 +1106,7 @@ class MediaTest < ActiveSupport::TestCase
     Semaphore.new('1111').unlock
     Semaphore.new('3333').unlock
     Sidekiq::Worker.clear_all
+    ENV['facebook_app'] = fb_app
   end
 
   test "should return nil when fb metrics returns a permanent error" do
@@ -1117,7 +1132,7 @@ class MediaTest < ActiveSupport::TestCase
       'storage_medias_asset_path' => 'http://localhost:9000/check-dev/medias'
     }
 
-    stub_configs(config)
+    env = set_env(config)
 
     url = 'https://www.google.com/'
 
@@ -1153,6 +1168,7 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal api_key.settings[:config]["storage_#{key}"], PenderConfig.current("storage_#{key}"), "Expected #{key}"
       assert_equal api_key.settings[:config]["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
+    restore_env(env)
   end
 
   test "should not change media url if url parsed on metatags is not valid" do

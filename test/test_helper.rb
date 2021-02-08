@@ -95,6 +95,21 @@ class ActiveSupport::TestCase
     end
   end
 
+  def set_env(configs = {})
+    env_vars = {}
+    configs.each do |key, value|
+      env_vars[key] = ENV[key]
+      ENV[key] = value
+    end
+    env_vars
+  end
+
+  def restore_env(configs = {})
+    configs.keys do |key|
+      ENV[key] = configs[key]
+    end
+  end
+
   def with_time(operation = '')
     return if @provider.blank? and @type.blank?
     output = File.join(Rails.root, 'tmp', 'performance.csv')

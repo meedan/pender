@@ -39,7 +39,7 @@ class ApiKeyTest < ActiveSupport::TestCase
 
   test "should get config from api key if present" do
     config = { 'google_api_key' => 'config_key' }.with_indifferent_access
-    stub_configs(config)
+    env = set_env(config)
 
     key = create_api_key
     assert_nil key.settings[:config]
@@ -49,6 +49,7 @@ class ApiKeyTest < ActiveSupport::TestCase
     ApiKey.current = key
     assert_equal 'specific_key', key.settings[:config][:google_api_key]
     assert_equal 'specific_key', PenderConfig.get(:google_api_key)
+    restore_env(env)
   end
 
 end
