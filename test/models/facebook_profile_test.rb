@@ -25,17 +25,14 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
   end
 
-  test "should parse Facebook with numeric id" do
+  test "should parse Facebook with numeric id AAA" do
     m = create_media url: 'http://facebook.com/513415662050479'
     data = m.as_json
     assert_match 'https://www.facebook.com/NautilusMag', data['url']
-    assert_match 'Nautilus Magazine', data['title']
-    assert_match 'NautilusMag', data['username']
-    assert !data['description'].blank?
-    assert_match 'https://www.facebook.com/NautilusMag', data['author_url']
-    assert_not_nil data['author_picture']
-    assert_match 'Nautilus Magazine', data['author_name']
-    assert_not_nil data['picture']
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
+    assert_nil data['error']
   end
 
   test "should parse Arabic Facebook page" do
