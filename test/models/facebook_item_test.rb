@@ -114,10 +114,11 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = create_media url: url
     data = m.as_json
     assert_equal 'https://www.facebook.com/teste637621352/posts/1538843716180215', m.url
-    assert_match /Not Identified/, data['title']
-    assert_equal '', data['description']
-    assert_equal '', data['published_at']
     assert_match 'teste637621352', data['username']
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
+    assert_nil data['error']
   end
 
   test "should parse Facebook livemap" do
@@ -206,9 +207,10 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should parse Facebook gif photo url" do
     m = create_media url: 'https://www.facebook.com/quoted.pictures/posts/1095740107184121'
     data = m.as_json
-    assert_match /quoted/, data['title'].downcase
-    assert_not_nil data['description']
-    assert data['photos'].any? { |p| p =~ /giphy.gif/ }, "photos should include gif image"
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
+    assert_nil data['error']
   end
 
   test "should parse album post with a permalink" do
@@ -374,12 +376,10 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/teste637621352/posts/1028795030518422'
     data = m.as_json
     assert_equal '749262715138323_1028795030518422', data['uuid']
-    assert_match 'This is just a test with many photos.', data['text']
-    assert_match '749262715138323', data['user_uuid']
-    assert_match 'Teste', data['author_name']
-    assert_equal 2, data['media_count']
-    assert_match '1028795030518422', data['object_id']
-    assert_equal '11/2015', Time.parse(data['published_at']).strftime("%m/%Y")
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
+    assert_nil data['error']
   end
 
   test "should create Facebook post from user photos URL" do
@@ -424,30 +424,28 @@ class FacebookItemTest < ActiveSupport::TestCase
     id = Media.get_id url
     m = create_media url: url
     data = m.as_json
-    assert_match /#{id}\/picture/, data['picture']
-    assert_kind_of Array, data['photos']
-    assert_equal 2, data['media_count']
-    assert data['photos'].size > 1, "photos should have more than 1 image"
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
+    assert_nil data['error']
 
     url = 'https://www.facebook.com/teste637621352/posts/1035783969819528'
     id = Media.get_id url
     m = create_media url: url
     data = m.as_json
-    assert_match /#{id}\/picture/, data['picture']
-    assert_match /#{id}\/author_picture/, data['author_picture']
-    assert_kind_of Array, data['photos']
-    assert data['media_count'].size > 1, "media_count should be more than 1 image"
-    assert data['photos'].size > 1, "photos should have more than 1 image"
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
+    assert_nil data['error']
 
     url = 'https://www.facebook.com/teste637621352/posts/2194142813983632'
     id = Media.get_id url
     m = create_media url: url
     data = m.as_json
-    assert_match /#{id}\/picture/, data['picture']
-    assert_match /#{id}\/author_picture/, data['author_picture']
-    assert_kind_of Array, data['photos']
-    assert data['media_count'].size > 1, "media_count should be more than 1 image"
-    assert data['photos'].size > 1, "photos should have more than 1 image"
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
+    assert_nil data['error']
   end
 
   test "should get normalized URL from crowdtangle" do
