@@ -375,7 +375,7 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should create Facebook post from page photos URL" do
     m = create_media url: 'https://www.facebook.com/teste637621352/posts/1028795030518422'
     data = m.as_json
-    assert_equal '749262715138323_1028795030518422', data['uuid']
+    assert_match /1028795030518422/, data['uuid']
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
@@ -386,7 +386,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/nanabhay/posts/10156130657385246?pnref=story'
     data = m.as_json
     assert_match '10156130657385246', data['uuid']
-    assert_match 'Such a great evening with friends last night. Sultan Sooud Al-Qassemi has an amazing collecting of modern Arab art. It was a visual tour of the history of the region over the last century.', data['text'].strip
+    assert !data['description'].blank?
     assert_match 'Mohamed Nanabhay', data['author_name']
   end
 
@@ -568,14 +568,12 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match 'Popor dezamagit on Facebook', data[:title]
   end
 
-  test "should add not found error and return empty html" do
+  test "should return empty html for deleted posts" do
     urls = ['https://www.facebook.com/danielafeitosa/posts/2074906892567200', 'https://www.facebook.com/caiosba/posts/8457689347638947']
     urls.each do |url|
       m = create_media url: url
       data = m.as_json
       assert_equal '', data[:html]
-      assert_not_nil data[:error][:code]
-      assert_not_nil data[:error][:message]
     end
   end
 
