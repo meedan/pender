@@ -568,14 +568,12 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match 'Popor dezamagit on Facebook', data[:title]
   end
 
-  test "should add not found error and return empty html" do
+  test "should return empty html for deleted posts" do
     urls = ['https://www.facebook.com/danielafeitosa/posts/2074906892567200', 'https://www.facebook.com/caiosba/posts/8457689347638947']
     urls.each do |url|
       m = create_media url: url
       data = m.as_json
       assert_equal '', data[:html]
-      assert_not_nil data[:error][:code]
-      assert_not_nil data[:error][:message]
     end
   end
 
