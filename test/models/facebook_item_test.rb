@@ -118,7 +118,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
-    assert_nil data['error']
   end
 
   test "should parse Facebook livemap" do
@@ -598,7 +597,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     url = 'https://www.facebook.com/nytimes/posts/10152441141079999'
     m = Media.new url: url
     data = m.as_json
-    assert_equal '2020-09-04T21:25:04.000+00:00', data['published_at']
+    assert_match /2020-09-04T21:25:04/, data['published_at']
   end
 
   test "should parse post date from public person profile" do
