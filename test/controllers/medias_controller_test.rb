@@ -752,10 +752,41 @@ class MediasControllerTest < ActionController::TestCase
   test "should return error if URL is not safe" do
     authenticate_with_token
     url = 'http://malware.wicar.org/data/ms14_064_ole_not_xp.html' # More examples: https://www.wicar.org/test-malware.html
+    Media.stubs(:validate_url).with(url).returns(true)
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<title>Test Malware!</title>"))
+    WebMock.enable!
+    WebMock.disable_net_connect!(allow: 'safebrowsing.googleapis.com')
+    safebrowsing_response = {
+      "matches": [{
+        "threatType": "MALWARE",
+        "platformType": "WINDOWS",
+        "threatEntryType": "URL",
+        "threat": {"url": url},
+        "threatEntryMetadata": {
+          "entries": [{
+            "key": "malware_threat_type",
+            "value": "landing"
+         }]
+        },
+        "cacheDuration": "300.000s"
+      }]
+    }
+
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(body: safebrowsing_response.to_json)
+
     get :index, url: url, format: 'json'
     response = JSON.parse(@response.body)
     assert_equal 'error', response['type']
     assert_equal 'Unsafe URL', response['data']['message']
+    Media.unstub(:validate_url)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:get_html)
+    WebMock.disable!
   end
 
   test "should cache json and html on file" do

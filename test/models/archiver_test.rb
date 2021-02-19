@@ -481,6 +481,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:get_metrics)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
 
+    Media.stubs(:system).returns(`(exit 0)`)
     url = 'https://twitter.com/meedan/status/1202732707597307905'
     m = create_media url: url
     m.as_json(archivers: 'none')
@@ -488,6 +489,7 @@ class ArchiverTest < ActiveSupport::TestCase
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
     assert_nil media_data.dig('archives', 'video_archiver')
 
+    Media.stubs(:system).returns(`(exit 1)`)
     url = 'https://twitter.com/meedan/status/1214263820484521985'
     m = create_media url: url
     m.as_json(archivers: 'none')
@@ -499,6 +501,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     Media.any_instance.unstub(:parse)
     Media.any_instance.unstub(:get_metrics)
+    Media.any_instance.unstub(:system)
   end
 
   test "should check if non-ascii URL support video download" do
@@ -729,34 +732,22 @@ class ArchiverTest < ActiveSupport::TestCase
 
   test "should use api key config when archiving video if present" do
     Media.unstub(:supported_video?)
-    config = {
-      'storage_endpoint' => 'http://minio:9000',
-      'storage_access_key' => 'AKIAIOSFODNN7EXAMPLE',
-      'storage_secret_key' => 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
-      'storage_bucket' => 'pender',
-      'storage_bucket_region' => 'us-east-1',
-      'storage_medias_asset_path' => 'http://localhost:9000/check-dev/medias'
-    }
-
-    stub_configs(config)
     Media.stubs(:system).returns(`(exit 0)`)
 
-    url = 'https://www.youtube.com/watch?v=o1V1LnUU5VM'
-
-    Media.send_to_video_archiver(url, nil)
-    assert_nil ApiKey.current
-    %w(endpoint access_key secret_key bucket bucket_region medias_asset_path).each do |key|
-      assert_equal config["storage_#{key}"], PenderConfig.current("storage_#{key}")
-      assert_equal config["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
+    config = {}
+    %w(ytdl_proxy_host ytdl_proxy_port ytdl_proxy_user_prefix ytdl_proxy_pass storage_endpoint storage_access_key storage_secret_key storage_bucket storage_bucket_region storage_video_bucket).each do |config_key|
+      config[config_key] = PenderConfig.get(config_key, "test_#{config_key}")
     end
+
+    url = 'https://www.youtube.com/watch?v=o1V1LnUU5VM'
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
     api_key = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     Media.send_to_video_archiver(url, api_key.id)
     assert_equal api_key, ApiKey.current
     %w(endpoint access_key secret_key bucket bucket_region medias_asset_path).each do |key|
-      assert_equal config["storage_#{key}"], PenderConfig.current("storage_#{key}")
-      assert_equal config["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
+      assert !PenderConfig.current("storage_#{key}").blank?
+      assert !Pender::Store.current.instance_variable_get(:@storage)[key].blank?
     end
 
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil

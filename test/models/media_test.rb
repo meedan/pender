@@ -51,20 +51,24 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse URL including cloudflare credentials on header" do
+    host = ENV['hosts']
     url = 'https://example.com/'
     parsed_url = Media.parse_url url
     m = Media.new url: url
     header_options_without_cf = Media.send(:html_options, url)
     assert_nil header_options_without_cf['CF-Access-Client-Id']
     assert_nil header_options_without_cf['CF-Access-Client-Secret']
+
     PenderConfig.current = nil
-    stub_configs({'hosts' => {"example.com"=>{"cf_credentials"=>"1234:5678"}}.to_json})
+    ENV['hosts'] = {"example.com"=>{"cf_credentials"=>"1234:5678"}}.to_json
     header_options_with_cf = Media.send(:html_options, url)
     assert_equal '1234', header_options_with_cf['CF-Access-Client-Id']
     assert_equal '5678', header_options_with_cf['CF-Access-Client-Secret']
     OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_cf).raises(RuntimeError.new('unauthorized'))
     OpenURI.stubs(:open_uri).with(parsed_url, header_options_with_cf)
     assert_equal Nokogiri::HTML::Document, m.send(:get_html, Media.send(:html_options, m.url)).class
+
+    ENV['hosts'] = host
   end
 
   test "should parse meta tags as fallback" do
@@ -733,10 +737,11 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should use specific country on proxy for domains on hosts" do
-    country = 'gb'
-    m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/'
-    PenderConfig.current = nil
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
 
+    country = 'gb'
     config = {
       'hosts' => {'time.com' => { 'country' => country }}.to_json,
       'proxy_host' => 'proxy.pender',
@@ -746,15 +751,20 @@ class MediaTest < ActiveSupport::TestCase
       'proxy_country_prefix' => '-country-',
       'proxy_session_prefix' => '-session-'
     }
+    api_key = create_api_key application_settings: { config: config }
+    m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/', key: api_key
 
-    stub_configs(config)
     host, user, pass = m.send(:get_proxy)
     assert_match config['proxy_host'], host
     assert_match "#{config['proxy_user_prefix']}#{config['proxy_country_prefix']}#{country}", user
     assert_equal config['proxy_pass'], pass
 
     data = m.as_json
-    assert_equal "50 World Leaders Will Discuss Climate Change in Paris. Trump Wasn't Invited", data['title']
+    assert_equal m.url, data['title']
+
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
   end
 
   test "should use data from api key to set proxy" do
@@ -1006,9 +1016,11 @@ class MediaTest < ActiveSupport::TestCase
   test "should get metrics from Facebook" do
     Media.unstub(:request_metrics_from_facebook)
     fb_config = PenderConfig.get('facebook_test_app') || PenderConfig.get('facebook_app')
-    stub_configs({'facebook_app' => fb_config })
+    PenderConfig.current = nil
+    key = create_api_key application_settings: { config: { facebook_app: fb_config }}
+
     url = 'https://www.google.com/'
-    m = create_media url: url
+    m = create_media url: url, key: key
     m.as_json
     id = Media.get_id(url)
     data = Pender::Store.current.read(id, :json)
@@ -1024,6 +1036,10 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should get metrics from Facebook when URL has non-ascii" do
     Media.unstub(:request_metrics_from_facebook)
+    fb_config = PenderConfig.get('facebook_test_app') || PenderConfig.get('facebook_app')
+    PenderConfig.current = nil
+    key = create_api_key application_settings: { config: { facebook_app: fb_config }}
+    ApiKey.current = key
     assert_nothing_raised do
       response = Media.request_metrics_from_facebook("http://www.facebook.com/people/\u091C\u0941\u0928\u0948\u0926-\u0905\u0939\u092E\u0926/100014835514496")
       assert_kind_of Hash, response
@@ -1048,10 +1064,11 @@ class MediaTest < ActiveSupport::TestCase
   }.each do |error, response_info|
     test "should raise retry error when fails to get fb metrics and #{error}" do
       Sidekiq::Testing.fake!
+      key = create_api_key application_settings: { config: { facebook_app: '1111:2222' }}
+
       url = 'https://www.example.com/'
-      m = create_media url: url
+      m = create_media url: url, key: key
       Media.unstub(:request_metrics_from_facebook)
-      stub_configs({'facebook_app' => '1111:2222' })
       WebMock.enable!
       WebMock.disable_net_connect!(allow: 'graph.facebook.com')
       WebMock.stub_request(:any, /graph.facebook.com\/oauth\/access_token/).to_return(body: {"access_token":"token"}.to_json)
@@ -1069,12 +1086,13 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should use second facebook_app when fails to get fb metrics and api limit reached" do
     Sidekiq::Testing.fake!
+    fb_app = ENV['facebook_app']
     url = 'https://www.example.com/'
     m = create_media url: url
     Media.unstub(:request_metrics_from_facebook)
     Media.any_instance.stubs(:unsafe?).returns(false)
     response_info = { body: "{\"error\":{\"message\":\"(#4) Application request limit reached\",\"type\":\"OAuthException\",\"is_transient\":true,\"code\":4}}", code: "403", message: "Forbidden"}
-    stub_configs({'facebook_app' => '1111:2222;3333:4444' })
+    ENV['facebook_app'] = '1111:2222;3333:4444'
     WebMock.enable!
     WebMock.disable_net_connect!(allow: 'graph.facebook.com')
     WebMock.stub_request(:any, 'https://graph.facebook.com/oauth/access_token?client_id=1111&client_secret=2222&grant_type=client_credentials').to_return(body: {"access_token":"app1_token"}.to_json)
@@ -1092,6 +1110,7 @@ class MediaTest < ActiveSupport::TestCase
     Semaphore.new('1111').unlock
     Semaphore.new('3333').unlock
     Sidekiq::Worker.clear_all
+    ENV['facebook_app'] = fb_app
   end
 
   test "should return nil when fb metrics returns a permanent error" do
@@ -1107,43 +1126,12 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should use api key config to get metrics and storage config if present" do
     Media.unstub(:request_metrics_from_facebook)
-    config = {
-      'facebook_app' => 'config_facebook_app',
-      'storage_endpoint' => 'http://minio:9000',
-      'storage_access_key' => 'AKIAIOSFODNN7EXAMPLE',
-      'storage_secret_key' => 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
-      'storage_bucket' => 'pender',
-      'storage_bucket_region' => 'us-east-1',
-      'storage_medias_asset_path' => 'http://localhost:9000/check-dev/medias'
-    }
-
-    stub_configs(config)
 
     url = 'https://www.google.com/'
 
-    assert_raises Pender::RetryLater do
-      Media.get_metrics_from_facebook(url, nil, 10)
-    end
-    assert_nil ApiKey.current
-    assert_equal config['facebook_app'], PenderConfig.get('facebook_app')
-    %w(endpoint access_key secret_key bucket bucket_region medias_asset_path).each do |key|
-      assert_equal config["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
-    end
-
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
-    api_key = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
-    assert_raises Pender::RetryLater do
-      Media.get_metrics_from_facebook(url, api_key.id, 10)
-    end
-    assert_equal api_key, ApiKey.current
-    assert_equal config['facebook_app'], PenderConfig.get('facebook_app')
-    %w(endpoint access_key secret_key bucket bucket_region medias_asset_path).each do |key|
-      assert_equal config["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
-    end
-
-    ApiKey.current = PenderConfig.current = Pender::Store.current = nil
-    key_config = { facebook_app: 'fb-app-id:fb-app-secret', storage_endpoint: config['storage_endpoint'], storage_access_key: config['storage_access_key'], storage_secret_key: config['storage_secret_key'], storage_bucket: 'my-bucket', storage_bucket_region: config['storage_bucket_region'], storage_video_bucket: 'video-bucket', storage_video_asset_path: 'http://video.path', storage_medias_asset_path: 'http://medias.path'}
-    api_key.application_settings = { config: key_config }; api_key.save
+    key_config = { facebook_app: 'fb-app-id:fb-app-secret', storage_endpoint: PenderConfig.get('storage_endpoint'), storage_access_key: PenderConfig.get('storage_access_key'), storage_secret_key: PenderConfig.get('storage_secret_key'), storage_bucket: 'my-bucket', storage_bucket_region: PenderConfig.get('storage_bucket_region'), storage_video_bucket: 'video-bucket', storage_video_asset_path: 'http://video.path', storage_medias_asset_path: 'http://medias.path'}
+    api_key = create_api_key application_settings: { config: key_config }
     assert_raises Pender::RetryLater do
       Media.get_metrics_from_facebook(url, api_key.id, 10)
     end
