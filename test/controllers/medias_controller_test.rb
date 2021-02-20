@@ -232,8 +232,9 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return timeout error" do
-    stub_configs({ 'timeout' => 0.001 })
-    authenticate_with_token
+    api_key = create_api_key application_settings: { config: { timeout: '0.001' }}
+    authenticate_with_token(api_key)
+
     get :index, url: 'https://twitter.com/IronMaiden', format: :json
     assert_response 200
     assert_equal 'Timeout', JSON.parse(@response.body)['data']['error']['message']
@@ -248,8 +249,8 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should respect timeout" do
     url = 'http://ca.ios.ba/files/others/test.php' # This link has a sleep(10) function
-    stub_configs({ 'timeout' => 2 })
-    authenticate_with_token
+    api_key = create_api_key application_settings: { config: { timeout: '2' }}
+    authenticate_with_token(api_key)
     start = Time.now.to_i
     get :index, url: url, format: :json
     time = Time.now.to_i - start
@@ -735,14 +736,17 @@ class MediasControllerTest < ActionController::TestCase
     s = Semaphore.new(url)
     assert !s.locked?
 
-    stub_configs({ 'timeout' => 0.001 })
+    api_key = create_api_key application_settings: { config: { timeout: '0.001' }}
+    PenderConfig.current = nil
+    ApiKey.current = api_key
+
     s.lock
     sleep 5
     assert !s.locked?
     s.unlock
 
     PenderConfig.current = nil
-    stub_configs({ 'timeout' => 30 })
+    api_key.application_settings = { config: { timeout: '30' }}; api_key.save
     s.lock
     sleep 5
     assert s.locked?
@@ -823,20 +827,17 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should get config from api key if defined" do
-    config = {'google_api_key' => 'AAABBBCCC' }
-    stub_configs(config)
-
-    api_key = create_api_key
+    api_key = create_api_key application_settings: { config: { }}
     authenticate_with_token(api_key)
 
     get :index, url: 'http://meedan.com', format: :json
     assert_response 200
-    assert_equal config['google_api_key'], PenderConfig.get('google_api_key')
+    assert_nil PenderConfig.get('key_for_test')
 
-    api_key.application_settings = { config: { google_api_key: 'specific_key' }}; api_key.save
+    api_key.application_settings = { config: { key_for_test: 'api_config_value' }}; api_key.save
     get :index, url: 'http://meedan.com', format: :json
     assert_response 200
-    assert_equal 'specific_key', PenderConfig.get('google_api_key')
+    assert_equal 'api_config_value', PenderConfig.get('key_for_test')
   end
 
   test "should return API limit reached error" do
