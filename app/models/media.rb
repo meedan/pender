@@ -242,19 +242,8 @@ class Media
     uri = URI.parse(URI.encode(url))
     proxy = Media.valid_proxy
 
-    # For debug only: what's missing on proxy?
-    if uri.host.match(/facebook\.com/)
-      [:host, :port, :pass, :user_prefix].each do |config|
-        value = PenderConfig.get("proxy_#{config}")
-        puts "get_proxy: Proxy config #{"proxy_#{config}"} IS BLANK. Parsing #{url}" if value.blank?
-      end
-    end
     if proxy
-      if uri.host.match(/facebook\.com/)
-        puts "Returning proxy info for url #{url}"
-        return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['session_prefix'] + Random.rand(100000).to_s, proxy['pass']]
-      end
-      #return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['session_prefix'] + Random.rand(100000).to_s, proxy['pass']] if uri.host.match(/facebook\.com/)
+      return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['session_prefix'] + Random.rand(100000).to_s, proxy['pass']] if uri.host.match(/facebook\.com/)
       country = PenderConfig.get('hosts', {}, :json).dig(uri.host, 'country')
       return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['country_prefix'] + country, proxy['pass']] unless country.nil?
     end
@@ -268,14 +257,6 @@ class Media
     request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
     request['Cookie'] = Media.set_cookies(uri)
     proxy_config = Media.valid_proxy
-    # For debug only: what's missing on proxy?
-    if uri.host.match(/facebook\.com/)
-      [:host, :port, :pass, :user_prefix].each do |config|
-        value = PenderConfig.get("proxy_#{config}")
-        puts "request_uri: Proxy config #{"proxy_#{config}"} IS BLANK. Parsing #{uri}" if value.blank?
-      end
-    end
-
     if uri.host.match(/facebook\.com/) && proxy_config
       proxy = Net::HTTP::Proxy(proxy_config['host'], proxy_config['port'], proxy_config['user_prefix'] + proxy_config['session_prefix'] + Random.rand(100000).to_s, proxy_config['pass'])
       proxy.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http2|
