@@ -104,7 +104,7 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
     fi
 
     # print performance stats and run
-    cat /tmp/performance.csv
+    cat tmp/performance.csv
     ./test/test-coverage
 
 # run deployment environment setup (including local runs)
