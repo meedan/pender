@@ -100,7 +100,12 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
         bundle exec puma --port ${SERVER_PORT} --environment test --workers 3 -t 8:32 &
 	test/setup-parallel
 	bundle exec rake "parallel:test[3]"
+        bundle exec rake parallel:spec
     fi
+
+    # print performance stats and run
+    cat /tmp/performance.csv
+    ./test/test-coverage
 
 # run deployment environment setup (including local runs)
 else
