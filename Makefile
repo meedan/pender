@@ -8,9 +8,7 @@ build.test:
 
 build: build.local
 
-
-# Note: requires databases
-# TODO: setup dockerize
+# NOTE: no unit tests that do not reach out to other services
 test.unit: build.test
 	TEST_TYPE=unit docker-compose --env-file ./.env.test up --abort-on-container-exit
 
