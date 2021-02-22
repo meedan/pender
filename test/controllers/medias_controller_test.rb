@@ -232,8 +232,9 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return timeout error" do
-    stub_configs({ 'timeout' => 0.001 })
-    authenticate_with_token
+    api_key = create_api_key application_settings: { config: { timeout: '0.001' }}
+    authenticate_with_token(api_key)
+
     get :index, url: 'https://twitter.com/IronMaiden', format: :json
     assert_response 200
     assert_equal 'Timeout', JSON.parse(@response.body)['data']['error']['message']
@@ -248,8 +249,8 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should respect timeout" do
     url = 'http://ca.ios.ba/files/others/test.php' # This link has a sleep(10) function
-    stub_configs({ 'timeout' => 2 })
-    authenticate_with_token
+    api_key = create_api_key application_settings: { config: { timeout: '2' }}
+    authenticate_with_token(api_key)
     start = Time.now.to_i
     get :index, url: url, format: :json
     time = Time.now.to_i - start
@@ -735,14 +736,17 @@ class MediasControllerTest < ActionController::TestCase
     s = Semaphore.new(url)
     assert !s.locked?
 
-    stub_configs({ 'timeout' => 0.001 })
+    api_key = create_api_key application_settings: { config: { timeout: '0.001' }}
+    PenderConfig.current = nil
+    ApiKey.current = api_key
+
     s.lock
     sleep 5
     assert !s.locked?
     s.unlock
 
     PenderConfig.current = nil
-    stub_configs({ 'timeout' => 30 })
+    api_key.application_settings = { config: { timeout: '30' }}; api_key.save
     s.lock
     sleep 5
     assert s.locked?
@@ -752,10 +756,41 @@ class MediasControllerTest < ActionController::TestCase
   test "should return error if URL is not safe" do
     authenticate_with_token
     url = 'http://malware.wicar.org/data/ms14_064_ole_not_xp.html' # More examples: https://www.wicar.org/test-malware.html
+    Media.stubs(:validate_url).with(url).returns(true)
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<title>Test Malware!</title>"))
+    WebMock.enable!
+    WebMock.disable_net_connect!(allow: 'safebrowsing.googleapis.com')
+    safebrowsing_response = {
+      "matches": [{
+        "threatType": "MALWARE",
+        "platformType": "WINDOWS",
+        "threatEntryType": "URL",
+        "threat": {"url": url},
+        "threatEntryMetadata": {
+          "entries": [{
+            "key": "malware_threat_type",
+            "value": "landing"
+         }]
+        },
+        "cacheDuration": "300.000s"
+      }]
+    }
+
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(body: safebrowsing_response.to_json)
+
     get :index, url: url, format: 'json'
     response = JSON.parse(@response.body)
     assert_equal 'error', response['type']
     assert_equal 'Unsafe URL', response['data']['message']
+    Media.unstub(:validate_url)
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_canonical_url)
+    Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:get_html)
+    WebMock.disable!
   end
 
   test "should cache json and html on file" do
@@ -792,20 +827,17 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should get config from api key if defined" do
-    config = {'google_api_key' => 'AAABBBCCC' }
-    stub_configs(config)
-
-    api_key = create_api_key
+    api_key = create_api_key application_settings: { config: { }}
     authenticate_with_token(api_key)
 
     get :index, url: 'http://meedan.com', format: :json
     assert_response 200
-    assert_equal config['google_api_key'], PenderConfig.get('google_api_key')
+    assert_nil PenderConfig.get('key_for_test')
 
-    api_key.application_settings = { config: { google_api_key: 'specific_key' }}; api_key.save
+    api_key.application_settings = { config: { key_for_test: 'api_config_value' }}; api_key.save
     get :index, url: 'http://meedan.com', format: :json
     assert_response 200
-    assert_equal 'specific_key', PenderConfig.get('google_api_key')
+    assert_equal 'api_config_value', PenderConfig.get('key_for_test')
   end
 
   test "should return API limit reached error" do

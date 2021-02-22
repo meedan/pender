@@ -51,49 +51,32 @@ class MediasHelperTest < ActionView::TestCase
 
   test "should get config from api key or default config" do
     url = 'http://example.com'
-    config_timeout = '100'
-    stub_configs({'timeout' => config_timeout })
 
-    key1 = create_api_key application_settings: { config: { timeout: 10 }}
-    key2 = create_api_key application_settings: {}
-    key3 = create_api_key
+    key_with_timeout = create_api_key application_settings: { config: { timeout: 10 }}
+    key_without_config = create_api_key application_settings: {}
+    key_without_settings = create_api_key
 
     m = Media.new url: url
-    assert_equal config_timeout.to_i, m.timeout_value
+    assert_equal PenderConfig.get('timeout').to_i, m.timeout_value
 
     PenderConfig.current = nil
-    m = Media.new url: url, key: key1
-    assert_equal 10, m.timeout_value
+    m = Media.new url: url, key: key_with_timeout
+    assert_equal key_with_timeout.application_settings[:config][:timeout], m.timeout_value
 
     PenderConfig.current = nil
-    m = Media.new url: url, key: key2
-    assert_equal config_timeout.to_i, m.timeout_value
+    m = Media.new url: url, key: key_without_config
+    assert_equal PenderConfig.get('timeout').to_i, m.timeout_value
 
     PenderConfig.current = nil
-    m = Media.new url: url, key: key3
-    assert_equal config_timeout.to_i, m.timeout_value
+    m = Media.new url: url, key: key_without_settings
+    assert_equal PenderConfig.get('timeout').to_i, m.timeout_value
   end
 
   test 'should validate proxies subkeys' do
     proxy_keys = [ 'host', 'port', 'user_prefix', 'pass', 'country_prefix', 'session_prefix' ]
     video_proxy_keys = [ 'host', 'port', 'user_prefix', 'pass' ]
-    config = {
-      'proxy_host' => 'proxy.pender',
-      'proxy_port' => '11111',
-      'proxy_user_prefix' => 'user-prefix-static',
-      'proxy_pass' => 'password',
-      'proxy_country_prefix' => '-country-',
-      'proxy_session_prefix' => '-session-'
-    }
-    stub_configs(config)
 
     api_key = create_api_key
-
-    ApiKey.current = api_key
-    proxy_keys.each do |key|
-      assert_equal config["proxy_#{key}"], Media.valid_proxy('proxy')[key]
-    end
-    assert_nil Media.valid_proxy('ytdl_proxy')
 
     proxy = { 'proxy_host' => 'my-proxy.mine', 'proxy_port' => '1111', 'proxy_user_prefix' => 'my-user-prefix', 'proxy_pass' => '12345', 'proxy_country_prefix' => '-cc-', 'proxy_session_prefix' => '-ss-' }
     video_proxy = { 'ytdl_proxy_host' => 'my-video-proxy.mine', 'ytdl_proxy_port' => '1111', 'ytdl_proxy_user_prefix' => 'my-user-prefix', 'ytdl_proxy_pass' => '12345' }
@@ -165,5 +148,12 @@ class MediasHelperTest < ActionView::TestCase
 
     m.stubs(:data).returns(data[:instagram])
     assert_equal '111111_222222', m.get_crowdtangle_id(:instagram)
+  end
+
+  test 'should decode url' do
+    url = 'https://example.com'
+    URI.stubs(:decode).raises(Encoding::CompatibilityError)
+    assert_equal url, Media.decoded_uri(url)
+    URI.unstub(:decode)
   end
 end

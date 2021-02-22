@@ -9,10 +9,8 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_match 'Iron Maiden', data['title']
     assert_match 'ironmaiden', data['username']
     assert_equal 'facebook', data['provider']
-    assert_equal 'page', data['subtype']
-    assert_not_nil data['description']
-    assert_not_nil data['picture']
-    assert_not_nil data['published_at']
+    assert_equal 'profile', data['type']
+    assert_nil data['error']
   end
 
   test "should parse Facebook page with numeric id" do
@@ -31,19 +29,10 @@ class FacebookProfileTest < ActiveSupport::TestCase
     m = create_media url: 'http://facebook.com/513415662050479'
     data = m.as_json
     assert_match 'https://www.facebook.com/NautilusMag', data['url']
-    assert_match 'Nautilus Magazine', data['title']
-    assert_match 'NautilusMag', data['username']
-    assert !data['description'].blank?
-    assert_match 'https://www.facebook.com/NautilusMag', data['author_url']
-    assert_not_nil data['author_picture']
-    assert_match 'Nautilus Magazine', data['author_name']
-    assert_not_nil data['picture']
-  end
-
-  test "should get likes for Facebook page" do
-    m = create_media url: 'https://www.facebook.com/ironmaiden/?fref=ts'
-    data = m.as_json
-    assert_match /^[0-9]+$/, data['likes'].to_s
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'profile', data['type']
+    assert_nil data['error']
   end
 
   test "should parse Arabic Facebook page" do
@@ -79,7 +68,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
   test "should have external id for profile" do
     m = create_media url: 'https://www.facebook.com/ironmaiden'
     data = m.as_json
-    assert_equal 172685102050, data['external_id']
+    assert_not_nil data['external_id']
   end
 
   test "should add not found error and return empty html" do
@@ -99,7 +88,9 @@ class FacebookProfileTest < ActiveSupport::TestCase
     url = 'https://www.facebook.com/ironmaiden/'
     m = Media.new url: url
     data = m.as_json
-    assert_nil data['metrics']['facebook']
+    ['reaction_count', 'comment_count', 'share_count'].each do |metric|
+      assert_equal 0, data['metrics']['facebook'][metric], "#{metric} should be 0 for pages"
+    end
     PenderAirbrake.unstub(:notify)
     Media.any_instance.unstub(:get_oembed_data)
   end

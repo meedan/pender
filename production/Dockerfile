@@ -25,7 +25,7 @@ RUN chmod 755 /opt/bin/*.sh
 RUN apt-get update && apt-get install -y curl build-essential git libpq-dev libsqlite3-dev graphicsmagick inotify-tools python --no-install-recommends
 
 # install youtube-dl
-RUN curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl \
+RUN curl -L https://youtube-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl \
   && chmod a+rx /usr/local/bin/youtube-dl
 
 # pender user

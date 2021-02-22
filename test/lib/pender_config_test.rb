@@ -7,39 +7,37 @@ class PenderConfigTest < ActiveSupport::TestCase
   end
 
   test "should return value from api if present" do
-    stub_configs({'google_api_key' => 'config_key' })
-    key1 = create_api_key application_settings: { config: { google_api_key: 'api_specific_key' }}
+    ENV['key_for_test'] = 'env_key'
+
+    key1 = create_api_key application_settings: { config: { key_for_test: 'api_specific_key' }}
     key2 = create_api_key application_settings: {}
     key3 = create_api_key
 
     PenderConfig.current = nil
     ApiKey.current = key1
-    assert_equal 'api_specific_key', PenderConfig.get('google_api_key')
+    assert_equal 'api_specific_key', PenderConfig.get('key_for_test')
 
     PenderConfig.current = nil
     ApiKey.current = key2
-    assert_equal 'config_key', PenderConfig.get('google_api_key')
+    assert_equal 'env_key', PenderConfig.get('key_for_test')
 
     PenderConfig.current = nil
     ApiKey.current = key3
-    assert_equal 'config_key', PenderConfig.get('google_api_key')
+    assert_equal 'env_key', PenderConfig.get('key_for_test')
 
     PenderConfig.current = nil
     ApiKey.current = nil
-    assert_equal 'config_key', PenderConfig.get('google_api_key')
+    assert_equal 'env_key', PenderConfig.get('key_for_test')
 
-    PenderConfig.current = nil
-    ApiKey.current = nil
-    assert_equal 'config_key', PenderConfig.get('google_api_key')
+    ENV.delete('key_for_test')
   end
 
   test "should return default value if key is absent on api key config" do
-    stub_configs({'timeout' => 'timeout_config_key' })
     key = create_api_key application_settings: { config: {}}
 
     PenderConfig.current = nil
     ApiKey.current = key
-    assert_equal 'timeout_config_key', PenderConfig.get('timeout')
+    assert_equal 10, PenderConfig.get('numeric-key', 10)
     assert_nil PenderConfig.get('invalid-key', nil)
     assert_equal({}, PenderConfig.get('hash-key', {}))
   end

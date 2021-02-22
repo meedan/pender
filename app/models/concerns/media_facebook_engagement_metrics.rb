@@ -59,7 +59,6 @@ module MediaFacebookEngagementMetrics
         @locker.lock(3600) if error['code'].to_i == 4
         raise Pender::RetryLater, 'Metrics request failed' if fb_metrics_error(:retryable, url, error)
       end
-      false
     end
 
     def fb_metrics_error(type, url, response_error)
