@@ -10,12 +10,9 @@ build: build.local
 
 # NOTE: no unit tests that do not reach out to other services
 test.unit: build.test
-	TEST_TYPE=unit docker-compose --env-file ./.env.test up --abort-on-container-exit
+	docker-compose --env-file ./.env.test up --abort-on-container-exit
 
-test.integration: build.test
-	TEST_TYPE=integration docker-compose --env-file ./.env.test up --abort-on-container-exit
-
-test:	test.integration
+test:	test.unit
 
 
 run.local: build
