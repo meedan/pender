@@ -74,8 +74,8 @@ jobs:
           BUNDLER_WORKERS=20
           SERVER_PORT=3200
 
-    - name: Run Integration Tests
-      id: run-int-tests
+    - name: Run Unit Tests
+      id: run-unit-tests
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ github.event.repository.name }}
@@ -83,7 +83,9 @@ jobs:
         GIT_SHA: ${{ github.sha }}
         BUILD_NUMBER: ${{ github.run_number }}
       run: |
-        GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.integration
+        # rearrange tags so that docker buildx containers match what docker-compose.yml expects
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG pender:latest
+        GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.unit
 
     - name: Docker Build and Push To ECR
       id: docker-build-ecr

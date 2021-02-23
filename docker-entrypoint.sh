@@ -93,15 +93,10 @@ if [[ "${DEPLOY_ENV}" == "travis" || "${DEPLOY_ENV}" == "test" ]]; then
     bundle exec rake lapis:api_keys:create_default
     echo "rake tasks complete. starting puma..."
 
-    if [[ "${TEST_TYPE}" == "unit" ]]; then
-        bundle exec puma --port ${SERVER_PORT} --environment test &
-        bundle exec rake test:units
-    elif [[ "${TEST_TYPE}" == "integration" ]]; then
-        bundle exec puma --port ${SERVER_PORT} --environment test --workers 3 -t 8:32 &
-	test/setup-parallel
-	bundle exec rake "parallel:test[3]"
-        bundle exec rake parallel:spec
-    fi
+    bundle exec puma --port ${SERVER_PORT} --environment test --workers 3 -t 8:32 &
+    test/setup-parallel
+    bundle exec rake "parallel:test[3]"
+    bundle exec rake parallel:spec
 
     ./test/test-coverage
 
