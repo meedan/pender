@@ -770,9 +770,17 @@ class ArchiverTest < ActiveSupport::TestCase
     m = Media.new url: url
     m.as_json
 
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'archive.org' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+
+    WebMock.stub_request(:get, /archive.org\/wayback\/available?.+url=#{url}/).to_return(body: {"archived_snapshots":{ closest: { available: true, url: 'http://web.archive.org/web/20210223111252/http://example.com/' }}}.to_json)
+
     assert_equal true, Media.get_available_archive_org_snapshot(url, nil)
     data = m.as_json
-    assert_match /\/\/web.archive.org\/web\/\d+\/https?:\/\/(www.)?example.com/, data['archives']['archive_org']['location']
+    assert_equal 'http://web.archive.org/web/20210223111252/http://example.com/' , data['archives']['archive_org']['location']
+
+    WebMock.disable!
   end
 
   test "should return nil if page was not previously archived on Archive.org" do

@@ -53,7 +53,7 @@ module MediaFacebookItem
     user_id = params['set'].first.split('.').last unless params['set'].blank?
     user_id ||= params['id'].first.match(/([0-9]+).*/)[1] unless params['id'].blank?
     user_id ||= self.doc.to_s.match(/"groupID":"(\d+)"/) && self.doc.to_s.match(/"groupID":"(\d+)"/)[1]
-    user_id ||= get_facebook_user_id_from_url_pattern
+    user_id || get_facebook_user_id_from_url_pattern
   end
 
   def get_facebook_user_id_from_url_pattern
@@ -185,7 +185,7 @@ module MediaFacebookItem
 
   def get_facebook_published_time_from_html
     return if self.doc.nil?
-    timestamp = self.doc.to_s.match(/\\"publish_time\\":([0-9]+)/)
+    timestamp = self.doc.to_s.match(/\\?"publish_time\\?":([0-9]+)/)
     if timestamp
       self.data['published_at'] = Time.at(timestamp[1].to_i)
     elsif self.doc.css('abbr').find { |x| x.attr('data-utime')}
@@ -258,8 +258,7 @@ module MediaFacebookItem
     link = get_facebook_sharing_info
     if link
       original_post = absolute_url(link)
-      media = Media.new(url: original_post, shared_content: true)
-      data = media.as_json
+      data = Media.new(url: original_post, shared_content: true).as_json
       self.data['original_post'] = data['url']
       self.data['picture'] = data['picture']
     end
