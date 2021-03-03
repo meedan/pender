@@ -43,6 +43,7 @@ module MediaFacebookProfile
     title = get_facebook_page_title(page)
     return false if title.blank?
     if ['log in or sign up to view', 'log into facebook', 'log in to facebook'].include?(title.downcase)
+      self.data['title'] = ''
       self.data['error'] = { message: 'Login required to see this profile', code: LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED') }
       return true
     end

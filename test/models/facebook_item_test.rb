@@ -386,7 +386,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_match '10155150801660195_10155150801660195', data['uuid']
     assert_match '10155150801660195', data['user_uuid']
-    assert !data['author_name'].blank?
     assert_match '10155150801660195', data['object_id']
     assert !data['title'].blank?
     assert data['error'].nil?
@@ -463,7 +462,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = create_media url: url
     data = Media.as_oembed(nil, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
     assert !data['title'].blank?
-    assert !data['author_name'].blank?
     assert !data['author_url'].blank?
     assert_equal 'facebook', data['provider_name']
     assert_equal 'http://www.facebook.com', data['provider_url']
@@ -480,7 +478,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     json_data.delete('raw')
     data = Media.as_oembed(json_data, "http://pender.org/medias.html?url=#{url}", 300, 150)
     assert !data['title'].blank?
-    assert !data['author_name'].blank?
     assert !data['author_url'].blank?
     assert_equal 'facebook', data['provider_name']
     assert_equal 'http://www.facebook.com', data['provider_url']
@@ -496,7 +493,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = create_media url: url
     data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
     assert_match /Teste/, data['title']
-    assert_match 'Teste', data['author_name']
+    assert_match 'teste', data['author_name'].downcase
     assert_match /facebook.com\//, data['author_url']
     assert_equal 'facebook', data['provider_name']
     assert_match /https?:\/\/www.facebook.com/, data['provider_url']
@@ -508,7 +505,7 @@ class FacebookItemTest < ActiveSupport::TestCase
 
     m = create_media url: url
     data = m.as_json
-    assert_match 'Leaving Facebook', data['author_name']
+    assert !data['title'].blank?
     assert_equal '', data['html']
   end
 

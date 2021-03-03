@@ -99,7 +99,7 @@ module MediaFacebookItem
 
   def parse_from_facebook_html
     return if self.doc.nil?
-    ['photos_from_html', 'info_from_metadata', 'author_name_from_html', 'text_from_html', 'owner_name_from_html', 'user_info_from_html', 'published_time_from_html', 'media_count_from_html', 'url_from_html'].each { |info| self.send("get_facebook_#{info}") }
+    ['photos_from_html', 'info_from_metadata', 'title_from_html', 'author_name_from_html', 'text_from_html', 'owner_name_from_html', 'user_info_from_html', 'published_time_from_html', 'media_count_from_html', 'url_from_html'].each { |info| self.send("get_facebook_#{info}") }
   end
 
   def get_facebook_metadata
@@ -126,12 +126,12 @@ module MediaFacebookItem
 
   def get_facebook_author_name_from_html
     author_link = self.doc.at_css('.fbPhotoAlbumActionList a') || self.doc.at_css('.uiHeaderTitle a[href^="https://"]') || self.doc.css('div.userContentWrapper').at_css('h5 > span.fwn.fcg > span.fwb.fcg > a') || self.doc.at_css('.userContentWrapper .profileLink')
-    self.set_data_field('author_name', author_link && author_link.text, self.get_facebook_title_from_html, self.metadata['author_name'], self.metadata['title'], self.data['username'])
+    self.set_data_field('author_name', author_link && author_link.text, self.metadata['author_name'], self.data['username'])
   end
 
   def get_facebook_title_from_html
     title = self.doc.at_css('#pageTitle') || self.doc.at_css('title')
-    (title && title.text != 'Facebook') ? title.text : ''
+    self.set_data_field('title', ((title && title.text != 'Facebook') ? title.text : ''), self.metadata['title'])
   end
 
   def get_facebook_photos_from_html
@@ -170,7 +170,7 @@ module MediaFacebookItem
   def get_facebook_owner_name_from_html
     self.get_facebook_event_info_from_html
     user_name = self.doc.to_s.match(/"?ownerName"?:"([^"]+)"/)
-    self.set_data_field('author_name', user_name && user_name[1], 'Not Identified')
+    self.set_data_field('author_name', user_name && user_name[1])
   end
 
   def get_facebook_event_info_from_html
@@ -240,9 +240,6 @@ module MediaFacebookItem
       self.set_data_field('username', self.get_facebook_username || self.data['author_name'])
       self.parse_from_facebook_html unless [:author_name, :username, :author_picture, :author_url, :description, :text, :external_id, :object_id, :picture, :published_at].map { |key| data[key].blank? }.all?
       self.data['text'].strip! if self.data['text']
-      self.set_data_field('author_name', 'Not Identified')
-      self.set_data_field('title', self.data['author_name'])
-      self.data['title'] += ' on Facebook'
       self.set_data_field('author_url', 'http://facebook.com/' + (self.data['user_uuid'] || self.data['username']).to_s)
       self.get_original_post
       replace_facebook_url(self.data[:username])
