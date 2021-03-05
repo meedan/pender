@@ -94,4 +94,25 @@ class FacebookProfileTest < ActiveSupport::TestCase
     PenderAirbrake.unstub(:notify)
     Media.any_instance.unstub(:get_oembed_data)
   end
+
+  test "should parse FB user profile" do
+    Media.any_instance.stubs(:follow_redirections)
+    url = 'https://www.facebook.com/caiosba'
+    html = '<span id="fb-timeline-cover-name" data-testid="profile_name_in_profile_page"><a href="https://www.facebook.com/caiosba">Caio Almeida <span>(Caiosba)</span></a></span>
+           <div id="pagelet_bio" data-referrer="pagelet_bio">
+             <div>
+               <div><span>About Caio</span></div>
+               <ul><li><div><div><span>Software Engineer</span></div></div></li></ul>
+             </div>
+           </div>
+           <div class="profilePicThumb"><img src="https://example.com/image.jpg"></div>'
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(html))
+    m = Media.new url: url
+    data = m.as_json
+    assert_equal 'facebook', data['provider']
+    assert_equal 'profile', data['type']
+    assert_equal 'user', data['subtype']
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_html)
+  end
 end
