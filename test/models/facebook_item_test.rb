@@ -559,11 +559,17 @@ class FacebookItemTest < ActiveSupport::TestCase
   end
 
   test "should add login required error and return empty html" do
+    html = "<title id='pageTitle'>Log in or sign up to view</title>"
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(html))
+    Media.any_instance.stubs(:follow_redirections)
+
     m = create_media url: 'https://www.facebook.com/caiosba/posts/3588207164560845'
     data = m.as_json
-    assert_equal 'Login required to see this profile', data[:error][:message], "Media didn't return login page #{data}"
+    assert_equal 'Login required to see this profile', data[:error][:message]
     assert_equal LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
     assert_equal '', data[:html]
+    Media.any_instance.unstub(:get_html)
+    Media.any_instance.unstub(:follow_redirections)
   end
 
   test "should get the group name when parsing group post" do
