@@ -158,11 +158,9 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should parse Facebook video url from a page" do
     m = create_media url: 'https://www.facebook.com/144585402276277/videos/1127489833985824'
     data = m.as_json
-    assert_match /Trent Aric - Meteorologist/, data['title']
-    assert_match /MATTHEW YOU ARE DRUNK...GO HOME!/, data['description']
+    assert !data['title'].blank?, 'Expected title to not be blank'
+    assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
-    assert_not_nil data['picture']
-    assert_not_nil Time.parse(data['published_at'])
   end
 
   test "should parse Facebook video url from a page with another url pattern" do
@@ -250,7 +248,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert !data['title'].blank?
     assert_match '54212446406', data['user_uuid']
     assert_match '10154534110871407', data['object_id']
-    assert_match 'https://www.facebook.com/pages/category/Politician/Mariano-Rajoy-Brey-54212446406/photos/', m.url
+    assert_match /https:\/\/www.facebook.com\/.*Mariano-Rajoy-Brey-54212446406/, m.url
     assert_equal 'item', data['type']
     assert_equal 'facebook', data['provider']
   end
@@ -554,16 +552,22 @@ class FacebookItemTest < ActiveSupport::TestCase
     urls.each do |url|
       m = create_media url: url
       data = m.as_json
-      assert_equal '', data[:html], "Should display login page (#{data['error']['message']}) or doc should be nil #{m.doc.nil?}"
+      assert_equal '', data[:html], "Should display login page (#{data.dig('error', 'message')}) or doc should be nil #{m.doc.nil?}"
     end
   end
 
   test "should add login required error and return empty html" do
+    html = "<title id='pageTitle'>Log in or sign up to view</title>"
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(html))
+    Media.any_instance.stubs(:follow_redirections)
+
     m = create_media url: 'https://www.facebook.com/caiosba/posts/3588207164560845'
     data = m.as_json
-    assert_equal 'Login required to see this profile', data[:error][:message], "Media didn't return login page #{data}"
+    assert_equal 'Login required to see this profile', data[:error][:message]
     assert_equal LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
     assert_equal '', data[:html]
+    Media.any_instance.unstub(:get_html)
+    Media.any_instance.unstub(:follow_redirections)
   end
 
   test "should get the group name when parsing group post" do
