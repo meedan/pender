@@ -113,6 +113,7 @@ module MediasHelper
 
   def get_error_data(error_data, media, url, id)
     data = media.nil? ? Media.minimal_data(OpenStruct.new(url: url)) : media.data
+    data['title'] = url if data['title'].blank?
     data = data.merge(error: error_data)
     Pender::Store.current.write(id, :json, data)
     data
