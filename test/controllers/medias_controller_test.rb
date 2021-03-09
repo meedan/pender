@@ -853,4 +853,13 @@ class MediasControllerTest < ActionController::TestCase
     Twitter::Error::TooManyRequests.any_instance.unstub(:rate_limit)
   end
 
+  test "should add url on title when timeout" do
+    api_key = create_api_key application_settings: { config: { timeout: '0.001' }}
+    authenticate_with_token(api_key)
+
+    url = 'https://example.com'
+    get :index, url: url, format: :json
+    assert_response 200
+    assert_equal url, JSON.parse(@response.body)['data']['title']
+  end
 end
