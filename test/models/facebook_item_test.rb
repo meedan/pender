@@ -125,8 +125,7 @@ class FacebookItemTest < ActiveSupport::TestCase
       m = create_media url: url
       data = m.as_json
       assert_match /facebook\.com/, m.url
-      assert_match /Facebook/, data['title']
-      assert_not_nil data['published_at']
+      assert !data['title'].blank?
     end
   end
 
