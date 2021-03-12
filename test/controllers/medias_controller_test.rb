@@ -616,7 +616,7 @@ class MediasControllerTest < ActionController::TestCase
 
     url = 'https://ca.ios.ba/files/meedan/sleep.php'
     timeout_error = { error: { message: 'Timeout', code: LapisConstants::ErrorCodes::const_get('TIMEOUT')}}
-    minimal_data = Media.minimal_data(OpenStruct.new(url: url))
+    minimal_data = Media.minimal_data(OpenStruct.new(url: url)).merge(title: url)
     Media.stubs(:minimal_data).with(OpenStruct.new(url: url)).returns(minimal_data)
 
     Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(timeout_error), webhook_info)
