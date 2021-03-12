@@ -616,7 +616,7 @@ class MediasControllerTest < ActionController::TestCase
 
     url = 'https://ca.ios.ba/files/meedan/sleep.php'
     timeout_error = { error: { message: 'Timeout', code: LapisConstants::ErrorCodes::const_get('TIMEOUT')}}
-    minimal_data = Media.minimal_data(OpenStruct.new(url: url))
+    minimal_data = Media.minimal_data(OpenStruct.new(url: url)).merge(title: url)
     Media.stubs(:minimal_data).with(OpenStruct.new(url: url)).returns(minimal_data)
 
     Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(timeout_error), webhook_info)
@@ -660,7 +660,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal 1, MediaParserWorker.jobs.size
 
     parse_error = { error: { "message"=>"OpenSSL::SSL::SSLError", "code"=> LapisConstants::ErrorCodes::const_get('UNKNOWN')}}
-    minimal_data = Media.minimal_data(OpenStruct.new(url: url))
+    minimal_data = Media.minimal_data(OpenStruct.new(url: url)).merge(title: url)
     Media.stubs(:minimal_data).returns(minimal_data)
     Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(parse_error), webhook_info)
     Media.any_instance.stubs(:get_canonical_url).raises(OpenSSL::SSL::SSLError)

@@ -18,7 +18,7 @@ module MediaFacebookEngagementMetrics
 
   module ClassMethods
     def request_metrics_from_facebook(url)
-      engagement = nil
+      engagement = {}
       PenderConfig.get('facebook_app', '').split(';').each do |fb_app|
         app_id, app_secret = fb_app.split(':')
         @locker = Semaphore.new(app_id)
