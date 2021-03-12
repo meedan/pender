@@ -945,7 +945,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should not reach the end of file caused by User-Agent" do
-    m = create_media url: 'https://gnbc.news/9669/'
+    m = create_media url: 'https://www.nbcnews.com/'
     parsed_url = Media.parse_url m.url
     header_options = Media.send(:html_options, m.url)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0', 'Accept-Language' => 'en-US;q=0.6,en;q=0.4')).raises(EOFError)

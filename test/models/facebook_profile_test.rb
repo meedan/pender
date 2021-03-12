@@ -88,9 +88,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
     url = 'https://www.facebook.com/ironmaiden/'
     m = Media.new url: url
     data = m.as_json
-    ['reaction_count', 'comment_count', 'share_count'].each do |metric|
-      assert_equal 0, data['metrics']['facebook'][metric], "#{metric} should be 0 for pages"
-    end
+    assert_equal({}, data['metrics']['facebook'], "Facebook metrics should be empty for pages")
     PenderAirbrake.unstub(:notify)
     Media.any_instance.unstub(:get_oembed_data)
   end
