@@ -58,22 +58,18 @@ class FacebookItemTest < ActiveSupport::TestCase
     id = Media.get_id url
     m = create_media url: url
     data = m.as_json
-    assert_match /South China Morning Post/, data['title']
-    assert_match /SCMP #FacebookLive amid chaotic scenes in #HongKong Legco/, data['description']
-    assert_not_nil data['published_at']
-    assert_match 'South China Morning Post', data['author_name']
+    assert !data['title'].blank?
     assert_match 'facebook.com/355665009819', data['author_url']
-    assert_match /#{id}\/author_picture.jpg/, data['author_picture']
-    assert !data['picture'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
   end
 
   test "should create Facebook post from mobile URL" do
     m = create_media url: 'https://m.facebook.com/KIKOLOUREIROofficial/photos/a.10150618138397252/10152555300292252/?type=3&theater'
     data = m.as_json
-    assert_match /Bolívia/, data['description']
-    assert_match 'kiko', data['author_name'].downcase
-    assert_equal 1, data['media_count']
-    assert_equal '20/11/2014', Time.parse(data['published_at']).strftime("%d/%m/%Y")
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
   end
 
   test "should parse Facebook pure text post url" do
@@ -98,14 +94,12 @@ class FacebookItemTest < ActiveSupport::TestCase
     id = Media.get_id url
     m = create_media url: url
     data = m.as_json
-    assert_equal 'https://www.facebook.com/cbcnews/videos/10154783484119604/', m.url
-    assert_match /CBC News/, data['title']
-    assert_match /Live now: This is the National for Monday, Oct. 31, 2016./, data['description']
-    assert_not_nil data['published_at']
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
+    assert_match /https:\/\/www.facebook.com\/cbcnews\/(videos|posts)\/10154783484119604/, m.url
+    assert_match /cbc/, data['title'].downcase
     assert_match 'cbcnews', data['username']
     assert_match /facebook.com\/5823419603/, data['author_url']
-    assert_match /#{id}\/author_picture.jpg/, data['author_picture']
-    assert_match /#{id}\/picture.(jpg|png)/, data['picture']
   end
 
   test "should parse Facebook removed live post" do
@@ -131,8 +125,7 @@ class FacebookItemTest < ActiveSupport::TestCase
       m = create_media url: url
       data = m.as_json
       assert_match /facebook\.com/, m.url
-      assert_match /Facebook/, data['title']
-      assert_not_nil data['published_at']
+      assert !data['title'].blank?
     end
   end
 
@@ -147,29 +140,26 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_includes variations, m.url
     assert_not_nil data['published_at']
     assert_match /#{data['user_uuid']}/, data['author_url']
-    assert_match /#{data['user_uuid']}/, data['author_picture']
-    assert_match /^https?:/, data['picture']
-    assert_match /Zawya/, data['title']
+    assert_match /\/medias\/[a-z0-9]+\/author_picture.(jpg|png)/, data[:author_picture]
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
   end
 
   test "should parse Facebook event url" do
     m = create_media url: 'https://www.facebook.com/events/1090503577698748'
     data = m.as_json
-    assert_match /Nancy Ajram/, data['title']
-    assert_not_nil data['description']
-    assert_match /^http/, data['picture']
-    assert_not_nil data['published_at']
-    assert_not_nil data['author_picture']
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
   end
 
   test "should parse Facebook video url from a page" do
     m = create_media url: 'https://www.facebook.com/144585402276277/videos/1127489833985824'
     data = m.as_json
-    assert_match /Trent Aric - Meteorologist/, data['title']
-    assert_match /MATTHEW YOU ARE DRUNK...GO HOME!/, data['description']
+    assert !data['title'].blank?, 'Expected title to not be blank'
+    assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
-    assert_not_nil data['picture']
-    assert_not_nil Time.parse(data['published_at'])
   end
 
   test "should parse Facebook video url from a page with another url pattern" do
@@ -209,7 +199,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
-    assert_nil data['error']
   end
 
   test "should parse album post with a permalink" do
@@ -218,12 +207,8 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = create_media url: url
     data = m.as_json
     assert_match /Mariano Rajoy Brey/, data['title']
+    assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
-    assert_match /#{id}\/author_picture.jpg/, data['author_picture']
-    assert !data['picture'].blank?
-    assert_not_nil Time.parse(data['published_at'])
-    assert_match '10154534111016407', data['object_id']
-    assert_match 'https://www.facebook.com/54212446406/posts/10154534111016407', m.url
   end
 
   test "should parse facebook user post" do
@@ -259,11 +244,12 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_match '54212446406_10154534110871407', data['uuid']
-    assert_match(/En el Museo Serralves de Oporto/, data['text'])
+    assert !data['title'].blank?
     assert_match '54212446406', data['user_uuid']
-    assert_match 'Mariano Rajoy Brey', data['author_name']
     assert_match '10154534110871407', data['object_id']
-    assert_match 'https://www.facebook.com/pages/category/Politician/Mariano-Rajoy-Brey-54212446406/photos/', m.url
+    assert_match /https:\/\/www.facebook.com\/.*Mariano-Rajoy-Brey-54212446406/, m.url
+    assert_equal 'item', data['type']
+    assert_equal 'facebook', data['provider']
   end
 
   test "should support facebook pattern with album" do
@@ -280,19 +266,14 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/pg/Mariano-Rajoy-Brey-54212446406/photos'
     data = m.as_json
     assert_match '54212446406_10154534110871407', data['uuid']
-    assert_match(/Militante del Partido Popular/, data['text'])
+    assert !data['title'].blank?
     assert_match '54212446406', data['user_uuid']
-    assert_match 'Mariano', data['author_name']
     assert_match '10154534110871407', data['object_id']
+    assert_match 'Mariano', data['author_name']
+    assert_equal 'item', data['type']
+    assert_equal 'facebook', data['provider']
     Media.any_instance.unstub(:url)
     Media.any_instance.unstub(:original_url)
-  end
-
-  test "should store data of post returned by oembed" do
-    m = create_media url: 'https://www.facebook.com/teste637621352/posts/1028416870556238'
-    oembed = m.as_json['raw']['oembed']
-    assert oembed.is_a? Hash
-    assert !oembed.empty?
   end
 
   test "should store oembed data of a facebook post" do
@@ -306,9 +287,9 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should store oembed data of a facebook page" do
     m = create_media url: 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
     data = m.as_json
-    assert data['raw']['oembed'].is_a? Hash
-    assert_match 'Meedan', data['oembed']['author_name']
-    assert_match 'Meedan', data['oembed']['title']
+    assert data['raw']['oembed'].is_a?(Hash), "Expected #{data['raw']['oembed']} to be a Hash"
+    assert !data['oembed']['author_name'].blank?
+    assert !data['oembed']['title'].blank?
   end
 
   test "should parse Facebook post from page photo" do
@@ -319,8 +300,8 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match 'quoted.pictures', data['username']
     assert_match /quoted.pictures/, data['author_name'].downcase
     assert !data['author_url'].blank?
-    assert !data['picture'].blank?
-    assert_nil data['error']
+    assert_equal 'item', data['type']
+    assert_equal 'facebook', data['provider']
   end
 
   test "should parse facebook url without identified pattern as item" do
@@ -378,15 +359,15 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
-    assert_nil data['error']
   end
 
   test "should create Facebook post from user photos URL" do
     m = create_media url: 'https://www.facebook.com/nanabhay/posts/10156130657385246?pnref=story'
     data = m.as_json
     assert_match '10156130657385246', data['uuid']
-    assert !data['description'].blank?
-    assert_match 'Mohamed Nanabhay', data['author_name']
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
   end
 
   test "should parse Facebook post from user photo URL" do
@@ -396,7 +377,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_match '10155150801660195_10155150801660195', data['uuid']
     assert_match '10155150801660195', data['user_uuid']
-    assert !data['author_name'].blank?
     assert_match '10155150801660195', data['object_id']
     assert !data['title'].blank?
     assert data['error'].nil?
@@ -426,7 +406,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
-    assert_nil data['error']
 
     url = 'https://www.facebook.com/teste637621352/posts/1035783969819528'
     id = Media.get_id url
@@ -435,7 +414,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
-    assert_nil data['error']
 
     url = 'https://www.facebook.com/teste637621352/posts/2194142813983632'
     id = Media.get_id url
@@ -444,7 +422,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
-    assert_nil data['error']
   end
 
   test "should get normalized URL from crowdtangle" do
@@ -462,46 +439,42 @@ class FacebookItemTest < ActiveSupport::TestCase
     url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
     m = create_media url: url
     data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150)
-    assert_match 'Meedan', data['title']
-    assert_match 'Meedan', data['author_name']
+    assert !data['title'].blank?
     assert_match 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
     assert_equal 'facebook', data['provider_name']
     assert_equal 'http://www.facebook.com', data['provider_url']
     assert_equal 300, data['width']
     assert_equal 150, data['height']
     assert_equal '<iframe src="http://pender.org/medias.html?url=https://www.facebook.com/pages/Meedan/105510962816034?fref=ts" width="300" height="150" scrolling="no" border="0" seamless>Not supported</iframe>', data['html']
-    assert_not_nil data['thumbnail_url']
   end
 
   test "should return item as oembed when data is not on cache" do
-    url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
+    url = 'https://www.facebook.com/photo.php?fbid=265901254902229&set=pb.100044470688234.-2207520000..&type=3'
     m = create_media url: url
     data = Media.as_oembed(nil, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
-    assert_match 'Meedan', data['title']
-    assert_match 'Meedan', data['author_name']
-    assert_match 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
+    assert !data['title'].blank?
+    assert !data['author_url'].blank?
     assert_equal 'facebook', data['provider_name']
     assert_equal 'http://www.facebook.com', data['provider_url']
     assert_equal 300, data['width']
     assert_equal 150, data['height']
-    assert_equal '<iframe src="http://pender.org/medias.html?url=https://www.facebook.com/pages/Meedan/105510962816034?fref=ts" width="300" height="150" scrolling="no" border="0" seamless>Not supported</iframe>', data['html']
+    assert_equal "<iframe src=\"http://pender.org/medias.html?url=#{url}\" width=\"300\" height=\"150\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>", data['html']
     assert_not_nil data['thumbnail_url']
   end
 
   test "should return item as oembed when data is on cache and raw key is missing" do
-    url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
+    url = 'https://www.facebook.com/photo/?fbid=264562325036122&set=pb.100044470688234.-2207520000..'
     m = create_media url: url
     json_data = m.as_json
     json_data.delete('raw')
     data = Media.as_oembed(json_data, "http://pender.org/medias.html?url=#{url}", 300, 150)
-    assert_match 'Meedan', data['title']
-    assert_match 'Meedan', data['author_name']
-    assert_match 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
+    assert !data['title'].blank?
+    assert !data['author_url'].blank?
     assert_equal 'facebook', data['provider_name']
     assert_equal 'http://www.facebook.com', data['provider_url']
     assert_equal 300, data['width']
     assert_equal 150, data['height']
-    assert_equal '<iframe src="http://pender.org/medias.html?url=https://www.facebook.com/pages/Meedan/105510962816034?fref=ts" width="300" height="150" scrolling="no" border="0" seamless>Not supported</iframe>', data['html']
+    assert_equal "<iframe src=\"http://pender.org/medias.html?url=#{url}\" width=\"300\" height=\"150\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>", data['html']
     assert_not_nil data['thumbnail_url']
   end
 
@@ -511,7 +484,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = create_media url: url
     data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
     assert_match /Teste/, data['title']
-    assert_match 'Teste', data['author_name']
+    assert_match 'teste', data['author_name'].downcase
     assert_match /facebook.com\//, data['author_url']
     assert_equal 'facebook', data['provider_name']
     assert_match /https?:\/\/www.facebook.com/, data['provider_url']
@@ -523,23 +496,27 @@ class FacebookItemTest < ActiveSupport::TestCase
 
     m = create_media url: url
     data = m.as_json
-    assert_match 'Leaving Facebook', data['author_name']
+    assert !data['title'].blank?
     assert_equal '', data['html']
   end
 
   test "should get image from original post if is a shared content" do
     original_url = 'https://www.facebook.com/dcc1968/posts/1538584976252118'
-    original_id = Media.get_id(original_url)
-    m = create_media url: original_url.to_s
-    data = m.as_json
-    assert_nil data.dig('original_post')
-
     url = 'https://www.facebook.com/danielafeitosa/posts/1862242233833668'
+    doc = '<div class="_5pcr userContentWrapper">'\
+      '<div class="mtm _5pcm">'\
+        '<div class="_5pcp _5lel _2jyu _232_" id="feed_subtitle_1538584976252118:9:0" data-testid="story-subtitle">'\
+          '<span class="z_c3pyo1brp">'\
+            '<span class="fsm fwn fcg">'\
+              '<a rel="theater" ajaxify="/dcc1968/photos/a.481675875276372/1538581552919127/" class="_5pcq" href="/dcc1968/photos/a.481675875276372/1538581552919127/" target="">'\
+                '<abbr data-utime="1526292684" title="Monday, May 14, 2018 at 3:11 AM" data-shorten="1" class="_5ptz">'\
+                  '<span class="timestampContent">May 14, 2018</span>'\
+                '</abbr></a></span></span></div></div></div>'
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(doc))
     id = Media.get_id(url)
     m = create_media url: url.to_s
     data = m.as_json
     assert_match /facebook.com\/dcc1968/, data.dig('original_post')
-    assert data['photos'].any? { |p| p =~ /1538581556252460_5832184448275185664/ }, "photos should include the original image"
   end
 
   #commented until #8563 be fixed
@@ -564,24 +541,34 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should parse Facebook category page" do
     m = create_media url: 'https://www.facebook.com/pages/category/Society---Culture-Website/PoporDezamagit/photos/'
     data = m.as_json
-    assert_match 'Popor dezamagit on Facebook', data[:title]
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
   end
 
   test "should return empty html for deleted posts" do
+    Media.any_instance.stubs(:get_html).returns(nil)
     urls = ['https://www.facebook.com/danielafeitosa/posts/2074906892567200', 'https://www.facebook.com/caiosba/posts/8457689347638947']
     urls.each do |url|
       m = create_media url: url
       data = m.as_json
       assert_equal '', data[:html]
     end
+    Media.any_instance.unstub(:get_html)
   end
 
   test "should add login required error and return empty html" do
-    m = create_media url: 'https://www.facebook.com/caiosba/posts/2914211445293757'
+    html = "<title id='pageTitle'>Log in or sign up to view</title>"
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(html))
+    Media.any_instance.stubs(:follow_redirections)
+
+    m = create_media url: 'https://www.facebook.com/caiosba/posts/3588207164560845'
     data = m.as_json
-    assert_equal '', data[:html]
     assert_equal 'Login required to see this profile', data[:error][:message]
     assert_equal LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
+    assert_equal '', data[:html]
+    Media.any_instance.unstub(:get_html)
+    Media.any_instance.unstub(:follow_redirections)
   end
 
   test "should get the group name when parsing group post" do
@@ -589,40 +576,48 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = Media.new url: url
     data = m.as_json
     assert_no_match "Not Identified", data['title']
-    assert !data['description'].blank?
     assert_match 'permalink/1580570905320222/', data['url']
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
   end
 
   test "should parse page post date from public page profile" do
-    url = 'https://www.facebook.com/nytimes/posts/10152441141079999'
+    url = 'https://www.facebook.com/nytimes/posts/10152617171394999'
+    doc = '<a class="_5pcq" href="/nytimes/posts/10152617171394999"><abbr data-utime="1614206307" title="Wednesday, February 24, 2021 at 22:38 PM" class="_5ptz timestamp livetimestamp"><span class="timestampContent">February 24, 2021</span></abbr></a>'
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(doc))
     m = Media.new url: url
     data = m.as_json
-    assert_match /2020-09-04T21:25:04/, data['published_at']
+    assert_match /2021-02-24T22:38:27/, data['published_at']
+    Media.any_instance.unstub(:get_html)
   end
 
   test "should parse post date from public person profile" do
     url = 'https://www.facebook.com/marc.smolowitz/posts/10158161767684331'
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML('<div class="_5pcr userContentWrapper"><script>{\"publish_time\":1599260261}</script></div>'))
     m = Media.new url: url
     data = m.as_json
     assert_equal '2020-09-04T22:57:41.000+00:00', data['published_at']
 
     url = 'https://www.facebook.com/julien.caidos/posts/10158477528272170'
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML('<div class="_5pcr userContentWrapper"><abbr data-utime="1599130881"><span class="timestampContent">4 de setembro de 2020</span></abbr></div>'))
     m = Media.new url: url
     data = m.as_json
     assert_equal '2020-09-03T11:01:21.000+00:00', data['published_at']
 
-    url = 'https://example.com'
-    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML('<div class="_5pcr userContentWrapper"><abbr data-utime="1599260261" class="_5ptz"><span class="timestampContent" id="js_1">4 de setembro de 2020</span></abbr></div>'))
+    url = 'https://www.facebook.com/marc.smolowitz/posts/10158557445564331'
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML('<div class="_5pcr userContentWrapper"><div id="MPhotoContent" class="timestampContent" data-utime="1599267148"><abbr><span>5 de setembro de 2020</span></abbr></div></div>'))
     m = Media.new url: url
-    assert_equal Time.at(1599260261), m.get_facebook_published_time_from_html
-    Media.any_instance.unstub(:doc)
+    assert_equal Time.at(1599267148), m.get_facebook_published_time_from_html
+    Media.any_instance.unstub(:get_html)
   end
 
   test "should parse post from public group" do
     url = 'https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/'
     m = Media.new url: url
     data = m.as_json
-    assert_match /This group is a gathering for those interested in exploring belief systems/, data['description']
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
+    assert !data['title'].blank?
   end
 
   test "should get full text of Facebook post" do
@@ -655,6 +650,18 @@ class FacebookItemTest < ActiveSupport::TestCase
     m = create_media url: url
     assert_equal url, m.url
     Media.unstub(:request_url)
+  end
+
+  test "should get owner id from info on script tag" do
+    Media.any_instance.stubs(:get_crowdtangle_data)
+    url = 'https://www.facebook.com/AsiNoPresidente/photos/a.457685231695418/861850457945558?type=3&theater'
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML('<script>{"data":{"__isMedia":"Photo","id":"861850457945558","owner":{"__typename":"Page","id":"456567378473870","__isProfile":"Page"}}}</script>'))
+    m = Media.new url: url
+    data = m.as_json
+    assert_equal '456567378473870_861850457945558', data['uuid']
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_crowdtangle_data)
+    Media.any_instance.unstub(:get_html)
   end
 
 end

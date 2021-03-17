@@ -88,10 +88,46 @@ class FacebookProfileTest < ActiveSupport::TestCase
     url = 'https://www.facebook.com/ironmaiden/'
     m = Media.new url: url
     data = m.as_json
-    ['reaction_count', 'comment_count', 'share_count'].each do |metric|
-      assert_equal 0, data['metrics']['facebook'][metric], "#{metric} should be 0 for pages"
-    end
+    assert_equal({}, data['metrics']['facebook'], "Facebook metrics should be empty for pages")
     PenderAirbrake.unstub(:notify)
     Media.any_instance.unstub(:get_oembed_data)
+  end
+
+  test "should parse FB user profile" do
+    Media.any_instance.stubs(:follow_redirections)
+    url = 'https://www.facebook.com/caiosba'
+    html = '<span id="fb-timeline-cover-name" data-testid="profile_name_in_profile_page"><a href="https://www.facebook.com/caiosba">Caio Almeida <span>(Caiosba)</span></a></span>
+           <div id="pagelet_bio" data-referrer="pagelet_bio">
+             <div>
+               <div><span>About Caio</span></div>
+               <ul><li><div><div><span>Software Engineer</span></div></div></li></ul>
+             </div>
+           </div>
+           <div class="profilePicThumb"><img src="https://example.com/image.jpg"></div>'
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(html))
+    m = Media.new url: url
+    data = m.as_json
+    assert_equal 'facebook', data['provider']
+    assert_equal 'profile', data['type']
+    assert_equal 'user', data['subtype']
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_html)
+  end
+
+  test "should parse Facebook not-legacy page" do
+    Media.any_instance.stubs(:follow_redirections)
+    html = '<head><meta name="description" content="Democratic Party. 1,653,325 likes · 73,028 talking about this. For more than 200 years, Democrats have represented the interests of working families,..."></head>
+            <script>[{"__m":"PagesUsername.react"},{"name":"Democratic Party","pageID":"12301006942","username":"democrats","usernameEditDialogProfilePictureURI":"https:\/\/scontent-sea1-1.xx.fbcdn.net\/v\/t1.0-1\/cp0\/p60x60\/1526086_10152061389606943_5631354745317018857_n.png"}]</script>'
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(html))
+
+    m = create_media url: 'https://www.facebook.com/democrats/'
+    data = m.as_json
+    assert_match 'Democratic Party', data['title']
+    assert_match 'democrats', data['username']
+    assert_equal 'facebook', data['provider']
+    assert_equal 'profile', data['type']
+    assert_nil data['error']
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_html)
   end
 end
