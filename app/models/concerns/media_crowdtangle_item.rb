@@ -37,7 +37,7 @@ module MediaCrowdtangleItem
     self.data[:username] = post_info.dig('account', 'handle')
     self.data[:author_picture] = post_info.dig('account', 'profileImage')
     self.data[:author_url] = post_info.dig('account', 'url')
-    self.data[:description] = self.data[:text] = post_info.dig('message')
+    self.data[:title] = self.data[:description] = self.data[:text] = post_info.dig('message')
     self.data[:external_id] = post_info.dig('platformId')
     self.data[:object_id] = post_info.dig('platformId')
     self.data[:picture] = post_info['media'].first['full'] if post_info.dig('media')

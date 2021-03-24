@@ -32,7 +32,6 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'profile', data['type']
-    assert_nil data['error']
   end
 
   test "should parse Arabic Facebook page" do
@@ -84,12 +83,10 @@ class FacebookProfileTest < ActiveSupport::TestCase
   test "should not get metrics from Facebook page" do
     Media.unstub(:request_metrics_from_facebook)
     Media.any_instance.stubs(:get_oembed_data)
-    PenderAirbrake.stubs(:notify).never
     url = 'https://www.facebook.com/ironmaiden/'
     m = Media.new url: url
     data = m.as_json
     assert_equal({}, data['metrics']['facebook'], "Facebook metrics should be empty for pages")
-    PenderAirbrake.unstub(:notify)
     Media.any_instance.unstub(:get_oembed_data)
   end
 
@@ -129,5 +126,15 @@ class FacebookProfileTest < ActiveSupport::TestCase
     assert_nil data['error']
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_html)
+  end
+
+  test "should parse author name" do
+    m = create_media url: 'https://www.facebook.com/75052548906'
+    data = m.as_json
+    assert_match 'Helloween', data['title']
+    assert_match 'Helloween', data['author_name']
+    assert_match 'helloweenofficial', data['username']
+    assert_equal 'facebook', data['provider']
+    assert_equal 'profile', data['type']
   end
 end
