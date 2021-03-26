@@ -38,13 +38,11 @@ source_from_ssm() {
 }
 
 set_config() {
-    if [[ "${PRIVATE_REPO_ACCESS}" == "true" ]]; then
-        mv config/config.yml.example config/config.yml  # for fallback
-        configurator
-        source_from_ssm
-    else
-        find config/ -iname \*.example | rename -v "s/.example//g"
-    fi
+    find config/ -iname \*.example | rename -v "s/.example//g"
+    # mv config/config.yml.example config/config.yml  # for fallback
+    # mv config/database.yml.example config/database.yml  # for fallback
+    # configurator
+    source_from_ssm
 }
 
 

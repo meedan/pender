@@ -23,7 +23,8 @@ RUN apt-get update -qq && \
         libsqlite3-dev \
         libpq-dev \
         python \
-        rename
+        rename \
+        unzip
 
 RUN curl -L https://youtube-dl.org/downloads/latest/youtube-dl \
          -o /usr/local/bin/youtube-dl
