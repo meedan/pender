@@ -36,7 +36,6 @@ module MediaFacebookItem
       self.data['uuid'] = [self.data['user_uuid'].to_s, self.data['object_id'].to_s].reject(&:empty?).join('_')
     else
       self.data['uuid'] = self.data['object_id']
-      get_facebook_picture(self.data['object_id'])
     end
   end
 
@@ -44,15 +43,15 @@ module MediaFacebookItem
     return unless self.url.match(EVENT_URL).nil?
     user_id = IdsPlease::Grabbers::Facebook.new(self.url, Media.request_url(self.url).body.to_s).grab_link.network_id
     self.set_data_field('user_uuid', user_id, get_facebook_user_id_from_url)
-    get_facebook_picture(self.data['user_uuid'])
   end
 
   def get_facebook_user_id_from_url
     params = parse_uri(Media.parse_url(self.url))
-    user_id = params['set'].first.split('.').last unless params['set'].blank?
-    user_id ||= params['id'].first.match(/([0-9]+).*/)[1] unless params['id'].blank?
+    user_id = params['id'].first.match(/([0-9]+).*/)[1] unless params['id'].blank?
     user_id ||= self.doc.to_s.match(/"groupID":"(\d+)"/) && self.doc.to_s.match(/"groupID":"(\d+)"/)[1]
     user_id ||= self.doc.to_s.match(/"owner":{[^\{]+?"id":"(\d+)"[^\{\}]+?}/) && self.doc.to_s.match(/"owner":{[^\{]+?"id":"(\d+)"[^\{\}]+?}/)[1]
+    user_id ||= self.doc.to_s.match(/"userID":"(\d+)"/) && self.doc.to_s.match(/"userID":"(\d+)"/)[1]
+    user_id ||= params['set'].first.split('.').last unless params['set'].blank?
     user_id || get_facebook_user_id_from_url_pattern
   end
 
@@ -92,14 +91,13 @@ module MediaFacebookItem
     CGI.parse(uri.query.to_s)
   end
 
-  def get_facebook_picture(id = '')
-    return if id.blank?
-    self.data['author_picture'] = 'https://graph.facebook.com/' + id + '/picture'
+  def get_facebook_picture_from_html
+    self.set_data_field('author_picture', data.dig('raw', 'json+ld', 'creator', 'image'))
   end
 
   def parse_from_facebook_html
     return if self.doc.nil?
-    ['photos_from_html', 'info_from_metadata', 'title_from_html', 'author_name_from_html', 'text_from_html', 'owner_name_from_html', 'user_info_from_html', 'published_time_from_html', 'media_count_from_html', 'url_from_html'].each { |info| self.send("get_facebook_#{info}") }
+    ['photos_from_html', 'info_from_metadata', 'title_from_html', 'author_name_from_html', 'text_from_html', 'owner_name_from_html', 'user_info_from_html', 'published_time_from_html', 'media_count_from_html', 'url_from_html', 'picture_from_html'].each { |info| self.send("get_facebook_#{info}") }
   end
 
   def get_facebook_metadata
@@ -164,7 +162,6 @@ module MediaFacebookItem
   def get_facebook_user_info_from_html
     user_uuid = self.doc.to_s.match(/"entity_id":"([^"]+)"/)
     self.set_data_field('user_uuid', user_uuid && user_uuid[1])
-    self.get_facebook_picture(self.data['user_uuid']) if !self.data['user_uuid'].blank? && self.data['picture'].blank?
   end
 
   def get_facebook_owner_name_from_html
@@ -245,7 +242,7 @@ module MediaFacebookItem
       replace_facebook_url(self.data[:username])
       self.set_data_field('external_id', self.data['object_id'])
       self.set_data_field('description', get_facebook_description)
-      self.set_data_field('picture', self.data['photos'] && self.data['photos'].first)
+      self.set_data_field('picture', self.data.dig('raw', 'json+ld', 'thumbnailUrl'), self.data['photos'] && self.data['photos'].last)
       self.data[:html] = self.html_for_facebook_post(self.data[:username])
     end
   end

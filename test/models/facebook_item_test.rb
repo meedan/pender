@@ -140,7 +140,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_includes variations, m.url
     assert_not_nil data['published_at']
     assert_match /#{data['user_uuid']}/, data['author_url']
-    assert_match /\/medias\/[a-z0-9]+\/author_picture.(jpg|png)/, data[:author_picture]
+    assert_match /\/medias\/[a-z0-9]+\/picture.(jpg|png)/, data[:picture]
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
@@ -188,7 +188,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /(south china morning post|scmp)/, data['title'].downcase
     assert_match /SCMP #FacebookLive/, data['description']
     assert_match 'scmp', data['username']
-    assert_match /#{id}\/author_picture.jpg/, data['author_picture']
+    assert_match /#{id}\/picture.jpg/, data['picture']
     assert_match /facebook.com\/355665009819/, data['author_url']
     assert_match /(South China Morning Post|scmp)/, data['author_name']
   end
@@ -678,4 +678,19 @@ class FacebookItemTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:render_facebook_embed?)
   end
 
+  test "should get author picture and picture from ld+json" do
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_crowdtangle_data)
+    Media.any_instance.stubs(:upload_images)
+    Media.any_instance.stubs(:jsonld_tag_content).returns({"@type"=>"VideoObject", "name"=>"sem comentários - Davi Perez Perez", "description"=>"sem comentários", "thumbnailUrl"=>"https://fb.com/thumbnail.jpg", "@id"=>"https://video.mp4", "url"=>"https://video.mp4", "thumbnail"=>{"@type"=>"ImageObject", "contentUrl"=>"https://fb.com/thumbnail.jpg", "width"=>832, "height"=>832}, "publisher"=>{"@type"=>"Organization", "logo"=>{"@type"=>"ImageObject", "url"=>"https://fb.com/author.jpg"}, "name"=>"Davi Perez Perez", "url"=>"https://www.facebook.com/davi.pperez"}, "creator"=>{"@type"=>"Organization", "image"=>"https://fb.com/author.jpg", "name"=>"Davi Perez Perez", "url"=>"https://www.facebook.com/davi.pperez"}, "@context"=>"https://schema.org"})
+    url = 'https://www.facebook.com/davi.pperez/posts/3761927773883399'
+    m = Media.new url: url
+    data = m.as_json
+    assert_equal 'https://fb.com/author.jpg', data['author_picture']
+    assert_equal 'https://fb.com/thumbnail.jpg', data['picture']
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_crowdtangle_data)
+    Media.any_instance.unstub(:upload_images)
+    Media.any_instance.unstub(:jsonld_tag_content)
+  end
 end
