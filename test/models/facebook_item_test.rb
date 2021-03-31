@@ -97,7 +97,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
     assert_match /https:\/\/www.facebook.com\/cbcnews\/(videos|posts)\/10154783484119604/, m.url
-    assert_match /cbc/, data['title'].downcase
+    assert_match /live now/, data['title'].downcase
     assert_match 'cbcnews', data['username']
     assert_match /facebook.com\/5823419603/, data['author_url']
   end
@@ -140,7 +140,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_includes variations, m.url
     assert_not_nil data['published_at']
     assert_match /#{data['user_uuid']}/, data['author_url']
-    assert_match /\/medias\/[a-z0-9]+\/author_picture.(jpg|png)/, data[:author_picture]
+    assert_match /\/medias\/[a-z0-9]+\/picture.(jpg|png)/, data[:picture]
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
@@ -165,7 +165,7 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should parse Facebook video url from a page with another url pattern" do
     m = create_media url: 'https://www.facebook.com/democrats/videos/10154268929856943'
     data = m.as_json
-    assert_match /Democratic Party/, data['title']
+    assert_match /On National Voter Registration Day/, data['title']
     assert_match /On National Voter Registration Day/, data['description']
     assert_equal 'item', data['type']
     assert_not_nil data['picture']
@@ -185,10 +185,10 @@ class FacebookItemTest < ActiveSupport::TestCase
     id = Media.get_id url
     m = create_media url: url
     data = m.as_json
-    assert_match /(South China Morning Post|scmp)/, data['title']
+    assert_match /(south china morning post|scmp)/, data['title'].downcase
     assert_match /SCMP #FacebookLive/, data['description']
     assert_match 'scmp', data['username']
-    assert_match /#{id}\/author_picture.jpg/, data['author_picture']
+    assert_match /#{id}\/picture.jpg/, data['picture']
     assert_match /facebook.com\/355665009819/, data['author_url']
     assert_match /(South China Morning Post|scmp)/, data['author_name']
   end
@@ -206,7 +206,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     id = Media.get_id url
     m = create_media url: url
     data = m.as_json
-    assert_match /Mariano Rajoy Brey/, data['title']
+    assert_match /En el Museo Serralves de Oporto/, data['title']
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
   end
@@ -664,4 +664,33 @@ class FacebookItemTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:get_html)
   end
 
+  test "should add text to title when parsing with crowdtangle" do
+    Media.any_instance.stubs(:get_crowdtangle_id).returns('100044387231098_287873752702197')
+    Media.any_instance.stubs(:render_facebook_embed?).returns(true)
+    Media.stubs(:crowdtangle_request).returns({"result"=>{"posts"=>[{"platformId"=>"100044387231098_287873752702197", "date"=>"2021-03-12 16:00:01", "message"=>"Now, that’s a thing of beauty!", "subscriberCount"=>1765162, "media"=>[{"full"=>"https://scontent-sea1-1.xx.fbcdn.net/v/t1.0-9/p720x720/159825434_287873222702250_1913179884649014860_o.jpg?_nc_cat=105&ccb=1-3&_nc_sid=8024bb&_nc_ohc=AVcUyNEYY48AX-slAL_&_nc_ht=scontent-sea1-1.xx&tp=6&oh=d233eeaf648d225af80253841c4c52d1&oe=607295BB"}], "statistics"=>{"actual"=>{"likeCount"=>22415, "shareCount"=>5742, "commentCount"=>2480, "loveCount"=>9991, "wowCount"=>1931, "hahaCount"=>16, "sadCount"=>4, "angryCount"=>0, "thankfulCount"=>0, "careCount"=>382}, "expected"=>{"likeCount"=>4529, "shareCount"=>273, "commentCount"=>206, "loveCount"=>1009, "wowCount"=>19, "hahaCount"=>8, "sadCount"=>2, "angryCount"=>2, "thankfulCount"=>0, "careCount"=>81}}, "account"=>{"id"=>33862, "name"=>"Helloween", "handle"=>"helloweenofficial", "profileImage"=>"https://scontent-sea1-1.xx.fbcdn.net/v/t1.0-1/cp0/p50x50/140782482_257052355784337_1495465363542108697_n.jpg?_nc_cat=1&ccb=1-3&_nc_sid=05dcb7&_nc_ohc=TbrMz5beO2AAX9hex1j&_nc_ht=scontent-sea1-1.xx&tp=27&oh=8a3118e5c28b36277912c6051616bab0&oe=60816335", "subscriberCount"=>1774310, "url"=>"https://www.facebook.com/75052548906", "platform"=>"Facebook", "platformId"=>"100044387231098"}}]}})
+    url = 'https://www.facebook.com/helloweenofficial/posts/287873752702197'
+    m = Media.new url: url
+    data = m.as_json
+    assert_equal 'Now, that’s a thing of beauty!', data['title']
+    assert_equal 'Now, that’s a thing of beauty!', data['description']
+    Media.unstub(:crowdtangle_request)
+    Media.any_instance.unstub(:get_crowdtangle_id)
+    Media.any_instance.unstub(:render_facebook_embed?)
+  end
+
+  test "should get author picture and picture from ld+json" do
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_crowdtangle_data)
+    Media.any_instance.stubs(:upload_images)
+    Media.any_instance.stubs(:jsonld_tag_content).returns({"@type"=>"VideoObject", "name"=>"sem comentários - Davi Perez Perez", "description"=>"sem comentários", "thumbnailUrl"=>"https://fb.com/thumbnail.jpg", "@id"=>"https://video.mp4", "url"=>"https://video.mp4", "thumbnail"=>{"@type"=>"ImageObject", "contentUrl"=>"https://fb.com/thumbnail.jpg", "width"=>832, "height"=>832}, "publisher"=>{"@type"=>"Organization", "logo"=>{"@type"=>"ImageObject", "url"=>"https://fb.com/author.jpg"}, "name"=>"Davi Perez Perez", "url"=>"https://www.facebook.com/davi.pperez"}, "creator"=>{"@type"=>"Organization", "image"=>"https://fb.com/author.jpg", "name"=>"Davi Perez Perez", "url"=>"https://www.facebook.com/davi.pperez"}, "@context"=>"https://schema.org"})
+    url = 'https://www.facebook.com/davi.pperez/posts/3761927773883399'
+    m = Media.new url: url
+    data = m.as_json
+    assert_equal 'https://fb.com/author.jpg', data['author_picture']
+    assert_equal 'https://fb.com/thumbnail.jpg', data['picture']
+    Media.any_instance.unstub(:follow_redirections)
+    Media.any_instance.unstub(:get_crowdtangle_data)
+    Media.any_instance.unstub(:upload_images)
+    Media.any_instance.unstub(:jsonld_tag_content)
+  end
 end

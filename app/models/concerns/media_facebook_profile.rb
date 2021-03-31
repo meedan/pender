@@ -123,9 +123,9 @@ module MediaFacebookProfile
         description: self.get_value_from_facebook_metatags(self.data['description'], 'og:description'),
         author_url: self.url,
         author_picture: picture,
-        author_name: self.data['name'],
         picture: picture
       })
+      self.set_data_field('author_name', self.data['name'], self.data['title'])
     end
   end
 
