@@ -140,7 +140,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_includes variations, m.url
     assert_not_nil data['published_at']
     assert_match /#{data['user_uuid']}/, data['author_url']
-    assert_match /\/medias\/[a-z0-9]+\/picture.(jpg|png)/, data[:picture]
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
@@ -557,8 +556,8 @@ class FacebookItemTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:get_html)
   end
 
-  test "should add login required error and return empty html" do
-    html = "<title id='pageTitle'>Log in or sign up to view</title>"
+  test "should add login required error and return empty html and description" do
+    html = "<title id='pageTitle'>Log in or sign up to view</title><meta property='og:description' content='See posts, photos and more on Facebook.'>"
     Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(html))
     Media.any_instance.stubs(:follow_redirections)
 
@@ -566,6 +565,8 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'Login required to see this profile', data[:error][:message]
     assert_equal LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
+    assert_equal m.url, data[:title]
+    assert_equal '', data[:description]
     assert_equal '', data[:html]
     Media.any_instance.unstub(:get_html)
     Media.any_instance.unstub(:follow_redirections)
