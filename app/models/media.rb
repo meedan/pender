@@ -127,17 +127,23 @@ class Media
 
   def self.notify_webhook(type, url, data, settings)
     if settings['webhook_url'] && settings['webhook_token']
-      uri = URI.parse(settings['webhook_url'])
-      payload = data.merge({ url: url, type: type }).to_json
-      sig = 'sha1=' + OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), settings['webhook_token'], payload)
-      headers = { 'Content-Type': 'text/json', 'X-Signature': sig }
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = uri.scheme == 'https'
-      request = Net::HTTP::Post.new(uri.request_uri, headers)
-      request.body = payload
-      response = http.request(request)
-      Rails.logger.info level: 'INFO', message: 'Webhook notification', url: url, type: type, code: response.code, response: response.message, webhook_url: settings['webhook_url']
-      @webhook_called = true
+      begin
+        uri = URI.parse(settings['webhook_url'])
+        payload = data.merge({ url: url, type: type }).to_json
+        sig = 'sha1=' + OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), settings['webhook_token'], payload)
+        headers = { 'Content-Type': 'text/json', 'X-Signature': sig }
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = uri.scheme == 'https'
+        request = Net::HTTP::Post.new(uri.request_uri, headers)
+        request.body = payload
+        response = http.request(request)
+        Rails.logger.info level: 'INFO', message: 'Webhook notification', url: url, type: type, code: response.code, response: response.message, webhook_url: settings['webhook_url']
+        @webhook_called = true
+      rescue StandardError => e
+        PenderAirbrake.notify(e, url: url, type: type, webhook_url: settings['webhook_url'])
+        Rails.logger.warn level: 'WARN', message: 'Failed to notify webhook', url: url, type: type, error_class: e.class, error_message: e.message, webhook_url: settings['webhook_url']
+        return false
+      end
     end
     true
   end

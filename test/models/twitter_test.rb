@@ -250,7 +250,7 @@ class TwitterTest < ActiveSupport::TestCase
     ['https://twitter.com/caiosba/status/123456789', 'https://twitter.com/cfcffl'].each do |url|
       m = create_media url: url
       data = m.as_json
-      assert_match(/Twitter::Error::NotFound/, data['error']['message'])
+      assert_match(/Twitter::Error::NotFound/, data['raw']['api']['error']['message'])
     end
     Airbrake.unstub(:notify)
     Airbrake.unstub(:configured?)
@@ -277,7 +277,7 @@ class TwitterTest < ActiveSupport::TestCase
     m = create_media url: url
     data = m.as_json
     assert_equal '', data['html']
-    assert_match(/Twitter::Error::Forbidden/, data['error']['message'])
+    assert_match(/Twitter::Error::Forbidden/, data['raw']['api']['error']['message'])
   end
 
   test "should fill in html when html parsing fails but API works" do
@@ -297,7 +297,7 @@ class TwitterTest < ActiveSupport::TestCase
     assert_equal '', PenderConfig.get(:twitter_consumer_secret)
     data = m.as_json
     assert_equal m.url, data['title']
-    assert_match "Twitter::Error::Unauthorized", data['error']['message']
+    assert_match "Twitter::Error::Unauthorized", data['raw']['api']['error']['message']
     PenderConfig.current = nil
 
     key = create_api_key application_settings: { config: { twitter_consumer_key: '' } }
@@ -305,7 +305,7 @@ class TwitterTest < ActiveSupport::TestCase
     assert_equal '', PenderConfig.get(:twitter_consumer_key)
     data = m.as_json
     assert_equal m.url, data['title']
-    assert_match "Twitter::Error::Unauthorized", data['error']['message']
+    assert_match "Twitter::Error::Unauthorized", data['raw']['api']['error']['message']
   end
   
 end

@@ -693,7 +693,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should add cookie from cookie.txt on header if domain matches" do
     url_no_cookie = 'https://www.istqb.org/'
     assert_equal "", Media.send(:html_options, url_no_cookie)['Cookie']
-    url_with_cookie = 'https://www.washingtonpost.com/politics/winter-is-coming-allies-fear-trump-isnt-prepared-for-gathering-legal-storm/2018/08/29/b07fc0a6-aba0-11e8-b1da-ff7faa680710_story.html'
+    url_with_cookie = 'https://example.com/politics/winter-is-coming-allies-fear-trump-isnt-prepared-for-gathering-legal-storm/2018/08/29/b07fc0a6-aba0-11e8-b1da-ff7faa680710_story.html'
     assert_match "wp_devicetype=0", Media.send(:html_options, url_with_cookie)['Cookie']
   end
 
@@ -709,11 +709,11 @@ class MediaTest < ActiveSupport::TestCase
     uri = Media.parse_url('http://example.com')
 
     assert_not_includes PenderConfig.get('cookies').keys, 'example.com'
-    assert_equal "", Media.set_cookies(uri)
+    assert_equal PenderConfig.get('cookies')['.example.com'].map { |k, v| "#{k}=#{v}"}.first, Media.set_cookies(uri)
 
     PenderConfig.current = nil
     ApiKey.current = api_key
-    assert_equal "", Media.set_cookies(uri)
+    assert_equal PenderConfig.get('cookies')['.example.com'].map { |k, v| "#{k}=#{v}"}.first, Media.set_cookies(uri)
 
     api_key.application_settings = { config: { cookies: { 'example.com' => { "example_cookies" => "true", "devicetype"=>"0" }}}}
     api_key.save
@@ -1048,6 +1048,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should get Facebook metrics from crowdtangle when it's a Facebook item" do
     Media.unstub(:request_metrics_from_facebook)
+    Media.any_instance.stubs(:get_crowdtangle_id).returns('172685102050_10157701432562051')
     ['https://www.facebook.com/172685102050/photos/a.406269382050/10157701432562051/', 'https://www.facebook.com/permalink.php?story_fbid=10157697779652051&id=172685102050'].each do |url|
       m = create_media url: url
       m.as_json
@@ -1055,6 +1056,7 @@ class MediaTest < ActiveSupport::TestCase
       data = Pender::Store.current.read(id, :json)
       assert data['metrics']['facebook']['share_count'] > 0
     end
+    Media.any_instance.unstub(:get_crowdtangle_id)
   end
 
   {
@@ -1161,4 +1163,8 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:doc)
   end
 
+  test "should handle error when can't notify webhook" do
+    webhook_info = { 'webhook_url' => 'http://invalid.webhook', 'webhook_token' => 'test' }
+    assert_equal false, Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+  end
 end

@@ -1,16 +1,17 @@
-## Pender
+# Pender
 
 <a href="https://codeclimate.com/repos/5715585edb5e930072004cc5/feed"><img src="https://codeclimate.com/repos/5715585edb5e930072004cc5/badges/f5868b936888747f319f/gpa.svg" /></a>
 [![Issue Count](https://codeclimate.com/repos/5715585edb5e930072004cc5/badges/f5868b936888747f319f/issue_count.svg)](https://codeclimate.com/repos/5715585edb5e930072004cc5/feed)
 [![Test Coverage](https://codeclimate.com/repos/5715585edb5e930072004cc5/badges/f5868b936888747f319f/coverage.svg)](https://codeclimate.com/repos/5715585edb5e930072004cc5/coverage)
 [![Travis](https://travis-ci.org/meedan/pender.svg?branch=develop)](https://travis-ci.org/meedan/pender/)
 
-A parsing, archiving and rendering service.
+Pender is a service for link parsing, archiving and rendering. It is one of the services that supports [Check](https://meedan.com/check), an open source platform for collaborative fact-checking and media annotation.
 
-### Current support
+## General Info
 
-#### Parsers
+The url is visited, parsed and the data found is used to create a media and its attributes. The data can be obtained by API or parsing directly the HTML.
 
+These are the specific parsers supported:
 * Twitter profiles
 * Twitter posts
 * YouTube profiles (users and channels)
@@ -19,15 +20,19 @@ A parsing, archiving and rendering service.
 * Facebook posts (from pages and users)
 * Instagram posts
 * Instagram profiles
-* Any link with an oEmbed endpoint
-* Any other link with metatags
+* TikTok posts
+* TikTok profiles
+* Dropbox links
 
-#### Archivers
+Besides the specific parsers Pender can parse any link with an oEmbed endpoint or metatags.
+
+### Archivers supported
 
 * Archive.is
 * Archive.org
+  * This archiver requires `archive_org_access_key` and `archive_org_secret_key` on `config/config.yml` file to be enabled. Get your account’s keys at https://archive.org/account/s3.php
 * Perma.cc
-  * This archiver requires a `key` on `config` to be enabled.
+  * This archiver requires a `perma_cc_key` on `config/config.yml` file to be enabled. Get your account key at https://perma.cc
 * Video Archiver
   * Pender uses `youtube-dl` to download videos from any page
   * Many requests in a short period of time to a domain (~20 requests/min) can lead to IP blocking.
@@ -35,24 +40,28 @@ A parsing, archiving and rendering service.
     * Oxylabs (recommended)
     * Luminati is not recommended for downloading videos: https://github.com/ytdl-org/youtube-dl/issues/23521
 
-### Running
+## Setup
+
+To run Pender, follow these steps:
 
 ```
-find -name '*.example' | while read f; do cp "$f" "${f%%.example}"; done
-docker-compose build
-docker-compose up --abort-on-container-exit
+$ git clone https://github.com/meedan/pender.git
+$ cd pender
+$ find -name '*.example' | while read f; do cp "$f" "${f%%.example}"; done
+$ docker-compose build
+$ docker-compose up --abort-on-container-exit
 ```
+Open http://localhost:3200/api-docs/index.html to access Pender API directly.
 
-### API
+## API
 
 To make requests to the API, you must set a request header with the value of the configuration option `authorization_header` - by default, this is `X-Pender-Token`. The value of that header should be the API key that you have generated using `bundle exec rake lapis:api_keys:create`, or any API key that was given to you.
 
-#### GET /api/about
+### GET /api/about
 
 Use this method in order to get the archivers enabled on this application
 
 **Parameters**
-
 
 **Response**
 
@@ -84,7 +93,7 @@ Use this method in order to get the archivers enabled on this application
 }
 ```
 
-#### GET /api/medias.format
+### GET /api/medias.format
 
 Get parseable data for a given URL, that can be a post or a profile, from different providers. `format` can be one of the following, see responses below:
 - `html`
@@ -223,7 +232,7 @@ An oEmbed representation of the item, e.g.:
 }
 ```
 
-#### POST /api/medias
+### POST /api/medias
 
 Create background jobs to parse each URL and notify the caller with the result
 
@@ -263,7 +272,7 @@ Create background jobs to parse each URL and notify the caller with the result
 }
 ```
 
-#### DELETE|PURGE /api/medias
+### DELETE|PURGE /api/medias
 
 Clears the cache for the URL(s) passed as parameter.
 
@@ -291,7 +300,13 @@ Clears the cache for the URL(s) passed as parameter.
 }
 ```
 
-### Rake tasks
+## Webhook Notification
+
+The metrics and archiving feature are asynchronous events. Pender can notify your application after it requests the metrics or sends the URLs for archiving.
+
+Pender sends the `url`, `type` and the information associated with the event. The webhook endpoint should have an associated URL (e.g., http://api:3000/api/webhooks/keep) and a token. These information should be added to API key's `application_settings`: `api_key.application_settings = {:webhook_url=>"http://api:3000/api/webhooks/keep", :webhook_token=>"somethingsecret"}`
+
+## Rake tasks
 
 There are rake tasks for a few tasks (besides Rails' default ones). Run them this way: `bundle exec rake <task name>`
 
@@ -306,7 +321,7 @@ There are rake tasks for a few tasks (besides Rails' default ones). Run them thi
 * `lapis:docker:run`: Run the application in Docker
 * `lapis:docker:shell`: Enter the Docker container
 
-### How to add a new parser
+## How to add a new parser
 
 * Add a new file at `app/models/concerns/media_<provider>_<type>` (example... `provider` could be `facebook` and type could be `post` or `profile`)
 * Include the class in `app/models/media.rb`
@@ -334,7 +349,7 @@ module Media<Provider><Type>
 end
 ```
 
-### How to add a new archiver
+## How to add a new archiver
 
 * Add a new file at `app/models/concerns/media_<name>_archiver.rb`
 * Include the class in `app/models/media.rb`
@@ -357,7 +372,7 @@ module Media<Name>Archiver
 end
 ```
 
-### Profiling
+## Profiling
 
 It's possible to profile Pender in order to look for bottlenecks, slownesses, performance issues, etc. To profile a Rails application it is vital to run it using production like settings (cache classes, cache view lookups, etc.). Otherwise, Rail's dependency loading code will overwhelm any time spent in the application itself. The best way to do this is create a new Rails environment. So, follow the steps below:
 
@@ -373,6 +388,6 @@ _Everytime you make a new request, the results on tmp/profile are overwritten_
 
 We can also run performance tests. It calculates the amount of time taken to validate, instantiate and parse a link for each of the supported types/providers. In order to do that, run: `bundle exec rake test:performance`. It will generate a CSV at `tmp/performance.csv`, so that you can compare the time take for each provider.
 
-### Credits
+## Credits
 
 Meedan (hello@meedan.com)

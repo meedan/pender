@@ -33,3 +33,14 @@ services:
     environment:
       RAILS_ENV: development
       SERVER_PORT: 3200
+  pender-background:
+    build: .
+    command: /app/docker-background.sh
+    shm_size: 1G
+    volumes:
+      - ".:/app"
+    depends_on:
+      - pender
+    environment:
+      RAILS_ENV: development
+      SERVER_PORT: 3200

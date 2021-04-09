@@ -65,11 +65,13 @@ class FacebookItemTest < ActiveSupport::TestCase
   end
 
   test "should create Facebook post from mobile URL" do
+    Media.any_instance.stubs(:follow_redirections)
     m = create_media url: 'https://m.facebook.com/KIKOLOUREIROofficial/photos/a.10150618138397252/10152555300292252/?type=3&theater'
     data = m.as_json
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
+    Media.any_instance.unstub(:follow_redirections)
   end
 
   test "should parse Facebook pure text post url" do
@@ -294,8 +296,7 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should parse Facebook post from page photo" do
     m = create_media url: 'https://www.facebook.com/quoted.pictures/photos/a.128828073875334.28784.128791873878954/1096134023811396/?type=3&theater'
     data = m.as_json
-
-    assert_match /quoted.pictures/, data['title'].downcase
+    assert !data['title'].blank?
     assert_match 'quoted.pictures', data['username']
     assert_match /quoted.pictures/, data['author_name'].downcase
     assert !data['author_url'].blank?

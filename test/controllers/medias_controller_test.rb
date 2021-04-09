@@ -67,8 +67,8 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://twitter.com/caiosba32153623', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_match /Twitter::Error::NotFound: [0-9]+ User not found./, data['error']['message']
-    assert_equal LapisConstants::ErrorCodes::const_get('INVALID_VALUE'), data['error']['code']
+    assert_match /Twitter::Error::NotFound: [0-9]+ User not found./, data['raw']['api']['error']['message']
+    assert_equal LapisConstants::ErrorCodes::const_get('INVALID_VALUE'), data['raw']['api']['error']['code']
     assert_equal 'twitter', data['provider']
     assert_equal 'profile', data['type']
     assert_not_nil data['embed_tag']
@@ -129,8 +129,8 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://twitter.com/caiosba/status/0000000000000', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_match /Twitter::Error::NotFound: [0-9]+ No data available for specified ID./, data['error']['message']
-    assert_equal LapisConstants::ErrorCodes::const_get('INVALID_VALUE'), data['error']['code']
+    assert_match /Twitter::Error::NotFound: [0-9]+ No data available for specified ID./, data['raw']['api']['error']['message']
+    assert_equal LapisConstants::ErrorCodes::const_get('INVALID_VALUE'), data['raw']['api']['error']['code']
     assert_equal 'twitter', data['provider']
     assert_equal 'item', data['type']
     assert_not_nil data['embed_tag']

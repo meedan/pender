@@ -180,9 +180,10 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_equal 'Deleted video', data['title']
     assert_equal 'This video is unavailable.', data['description']
     assert_equal '', data['author_url']
-    assert_equal '', data[:raw][:api]['thumbnails']
     assert_equal '', data['picture']
     assert_equal '', data['html']
+    assert_nil data[:raw][:api]['thumbnails']
+    assert_match(/returned no items/, data[:raw][:api]['error']['message'])
   end
 
   test "should have external id for video" do
@@ -201,12 +202,22 @@ class YoutubeTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:doc)
   end
 
-  test "should not parse a youtube post when passing the google_api_key is empty" do
+  test "should get data from metatags when parsing a youtube channel and google_api_key is empty" do
     key = create_api_key application_settings: { config: { google_api_key: '' } }
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ', key: key
     assert_equal '', PenderConfig.get(:google_api_key)
     data = m.as_json
-    assert_equal m.url, data['title']
-    assert_match "The request is missing a valid API key.", data['error']['message']
+    assert_equal 'Iron Maiden', data['title']
+    assert_match "The request is missing a valid API key.", data['raw']['api']['error']['message']
   end
+
+  test "should get data from metatags when parsing a youtube post and google_api_key is empty" do
+    key = create_api_key application_settings: { config: { google_api_key: '' } }
+    m = create_media url: 'https://www.youtube.com/watch?v=nO8ZqH5_Fhg', key: key
+    assert_equal '', PenderConfig.get(:google_api_key)
+    data = m.as_json
+    assert_match(/iron maiden/, data['title'].downcase)
+    assert_match "The request is missing a valid API key.", data['raw']['api']['error']['message']
+  end
+
 end
