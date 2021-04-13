@@ -266,7 +266,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:original_url).returns('https://www.facebook.com/pg/Mariano-Rajoy-Brey-54212446406/photos/?tab=album&album_id=10154534110871407')
     m = create_media url: 'https://www.facebook.com/pg/Mariano-Rajoy-Brey-54212446406/photos'
     data = m.as_json
-    assert_match '54212446406_10154534110871407', data['uuid']
+    assert_match '_10154534110871407', data['uuid']
     assert !data['title'].blank?
     assert_match '54212446406', data['user_uuid']
     assert_match '10154534110871407', data['object_id']

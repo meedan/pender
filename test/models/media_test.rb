@@ -114,7 +114,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should get relative canonical URL parsed from html tags" do
     m = create_media url: 'https://www.bbc.com'
     data = m.as_json
-    assert_equal 'https://www.bbc.com/', m.url
+    assert_match 'https://www.bbc.com', m.url
     assert_match 'BBC', data['title']
     assert_match /Breaking news/, data['description']
     assert_equal '', data['published_at']
@@ -349,12 +349,12 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should redirect to HTTPS if available and not already HTTPS" do
     m = create_media url: 'http://imotorhead.com'
-    assert_equal 'https://imotorhead.com/', m.url
+    assert_match 'https://imotorhead.com', m.url
   end
 
   test "should not redirect to HTTPS if available and already HTTPS" do
     m = create_media url: 'https://imotorhead.com'
-    assert_equal 'https://imotorhead.com/', m.url
+    assert_match 'https://imotorhead.com', m.url
   end
 
   test "should not redirect to HTTPS if not available" do
@@ -405,7 +405,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse dropbox image url with another url pattern" do
     m = create_media url: 'https://dl.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg'
     data = m.as_json
-    assert_equal 'https://dl.dropboxusercontent.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', m.url
+    assert_match '/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', m.url
     assert_equal 'item', data['type']
     assert_equal 'dropbox', data['provider']
     assert_match 'b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', data['title']
