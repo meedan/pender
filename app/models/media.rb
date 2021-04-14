@@ -183,7 +183,7 @@ class Media
   end
 
   def get_parsed_url(tag)
-    canonical_url = tag.attr('content') || tag.attr('href')
+    canonical_url = tag.attr('content') || tag.attr('href') || ''
     return false if !Media.validate_url(canonical_url)
     if canonical_url != self.url && !Media.is_a_login_page(canonical_url)
       self.url = absolute_url(canonical_url)

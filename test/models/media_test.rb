@@ -967,11 +967,13 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should use original url when redirected page requires cookie" do
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='https://www.tandfonline.com/action/cookieAbsent'><meta name='pbContext' content=';wgroup:string:Publication Websites;website:website:TFOPB;page:string:Cookie Absent'>"))
     url = 'https://doi.org/10.1080/10584609.2019.1619639'
     m = create_media url: url
     data = m.as_json
     assert_equal url, data['url']
     assert_nil data['error']
+    Media.any_instance.unstub(:get_html)
   end
 
   test "should ignore author_name when it is twitter default" do
@@ -1152,6 +1154,17 @@ class MediaTest < ActiveSupport::TestCase
     m.as_json
     assert_equal url, m.url
     Media.any_instance.unstub(:doc)
+  end
+
+  test "should ignore metatag when content is not present" do
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' />"))
+    url = 'https://www.mcdonalds.com/'
+    m = Media.new url: url
+    m.as_json
+    assert_equal url, m.url
+    Media.any_instance.unstub(:get_html)
+    Media.any_instance.unstub(:follow_redirections)
   end
 
   test "should return url on title when title is blank" do
