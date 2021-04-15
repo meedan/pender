@@ -20,7 +20,6 @@ services:
       MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
       MINIO_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
   pender:
-    build: .
     shm_size: 1G
     ports:
       - "3200:3200"
@@ -29,9 +28,6 @@ services:
       - $HOME/.aws/:/home/pender/.aws:ro
     build:
       context: .
-      args:
-        BUNDLER_RETRIES: 5
-        BUNDLER_WORKERS: 20
     environment:
       - SERVER_PORT
       - RAILS_ENV
@@ -45,17 +41,10 @@ services:
     depends_on:
       - redis
       - minio
-    environment:
-      RAILS_ENV: development
-      SERVER_PORT: 3200
   pender-background:
     build: .
-    command: /app/docker-background.sh
     shm_size: 1G
     volumes:
-      - ".:/app"
+      - $HOME/.aws/:/home/pender/.aws:ro
     depends_on:
       - pender
-    environment:
-      RAILS_ENV: development
-      SERVER_PORT: 3200

@@ -74,8 +74,8 @@ jobs:
           BUNDLER_WORKERS=20
           SERVER_PORT=3200
 
-    - name: Run Unit Tests
-      id: run-unit-tests
+    - name: Run Tests
+      id: run-tests
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ github.event.repository.name }}
@@ -85,7 +85,9 @@ jobs:
       run: |
         # rearrange tags so that docker buildx containers match what docker-compose.yml expects
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG pender:latest
-        GITHUB_TOKEN=${{ secrets.CONFIGURATOR_TOKEN }} make test.unit
+        make run.test
+        make test.unit
+        make test.coverage
 
     - name: Docker Build and Push To ECR
       id: docker-build-ecr
@@ -118,15 +120,19 @@ jobs:
 #          -d '{"ref": "master", "inputs": {"git_sha": "${{ github.sha }}", "branch": "'$BRANCH'"}}'
 #        fi
 
-#   - name: Send Slack Notification
-#     id: slack-notify
-#     if: ${{ always() }}
-#     uses: 8398a7/action-slack@v3
-#     with:
-#       status: ${{ job.status }}
-#       author_name: 'Github Actions'
-#       icon_emoji: ':octocat:'
-#       fields: repo,message,author # selectable (default: repo,message)
-#     env:
-#       GITHUB_TOKEN: ${{ secrets.CONFIGURATOR_TOKEN }} # optional
-#       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+    - name: Notify Slack
+      id: slack-notify
+      uses: 8398a7/action-slack@v3
+      if: ${{ always() }}
+      with:
+        status: custom
+        fields: workflow,job,commit,repo,ref,author,took,message
+        custom_payload: |
+          {
+            attachments: [{
+              color: '${{ job.status }}' === 'success' ? 'good' : '${{ job.status }}' === 'failure' ? 'danger' : 'warning',
+              text: `${process.env.AS_WORKFLOW}\n${process.env.AS_MESSAGE} (${process.env.AS_COMMIT}) of ${process.env.AS_REPO} @ ${process.env.AS_REF}\nby ${process.env.AS_AUTHOR}\n${{ job.status }} in ${process.env.AS_TOOK}`,
+            }]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

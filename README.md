@@ -59,8 +59,7 @@ make test
 
 If unit tests are run without an exported `GITHUB_TOKEN` environment variable,
 the startup script will assume no elevated credentials exist for the user and
-use the `.example` files from `config/`. To properly retrieve values for
-testing, `GITHUB_TOKEN` is required.
+use the `.example` files from `config/`. Tests may not fully work without this.
 
 ## API
 

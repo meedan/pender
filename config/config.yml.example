@@ -15,9 +15,11 @@ development: &default
   storage_endpoint: 'http://minio:9000'
   storage_access_key: 'AKIAIOSFODNN7EXAMPLE'
   storage_secret_key: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
-  storage_bucket: 'testbucket'
+  storage_bucket: 'pender-dev'
   storage_bucket_region: 'us-east-1'
-  storage_medias_asset_path: 'https://assets.path/medias'
+  storage_video_bucket: 'pender-video'
+  storage_video_asset_path: 'http://localhost:9000/pender-dev/video'
+  storage_medias_asset_path: 'http://localhost:9000/pender-dev/medias'
 
   # Exception reporting using Airbrake or API equivalent https://airbrake.io/
   #
@@ -49,8 +51,7 @@ development: &default
   #
   # REQUIRED for Facebook social metrics
   #
-  facebook_app:
-  facebook_test_app:
+  facebook_app: # '<FACEBOOK APP ID>:<FACEBOOK APP SECRET>'
 
   # Luminati proxy service https://luminati.io/
   #
