@@ -18,7 +18,7 @@ development: &default
   storage_bucket: 'pender-dev'
   storage_bucket_region: 'us-east-1'
   storage_video_bucket: 'pender-video'
-  storage_video_asset_path: 'http://localhost:9000/pender-dev/video'
+  storage_video_asset_path: 'http://localhost:9000/pender-video/video'
   storage_medias_asset_path: 'http://localhost:9000/pender-dev/medias'
 
   # Exception reporting using Airbrake or API equivalent https://airbrake.io/

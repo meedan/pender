@@ -33,6 +33,7 @@ test:	test.unit
 
 coverage: test.coverage
 
+
 clean:
 	docker-compose down && \
 	rm -f db/test*.sqlite3* schema.rb config/cookies.txt config/database.yml sidekiq.yml config.yml

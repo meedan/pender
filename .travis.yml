@@ -1,21 +1,11 @@
 language: minimal
 before_install:
-- openssl aes-256-cbc -K $encrypted_ac629ad7371a_key -iv $encrypted_ac629ad7371a_iv -in config.yml.enc -out config/config.yml -d
-- cp config/database.yml.example config/database.yml
-- cp config/sidekiq.yml.example config/sidekiq.yml
-- cp config/cookies.txt.example config/cookies.txt
-- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-- docker-compose build
-- docker-compose -f docker-compose.yml -f docker-test.yml up -d pender
-- wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
-before_script:
-- docker-compose exec pender test/setup-parallel
-script:
 - DEPLOY_ENV=travis GITHUB_TOKEN=$TOKEN make run.test
+- wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
+script:
 - DEPLOY_ENV=travis GITHUB_TOKEN=$TOKEN make test
 after_script:
-- docker-compose exec pender cat tmp/performance.csv
-- docker-compose exec -e TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST -e TRAVIS_TEST_RESULT=$TRAVIS_TEST_RESULT -e TRAVIS_BRANCH=$TRAVIS_BRANCH -e CC_TEST_REPORTER_ID=$CC_TEST_REPORTER_ID -e GIT_COMMIT_SHA=$GIT_COMMIT_SHA -e GIT_COMMITTED_AT=$GIT_COMMITTED_AT pender test/test-coverage
+- DEPLOY_ENV=travis GITHUB_TOKEN=$TOKEN make coverage
 notifications:
   slack:
     secure: jeHPR5g+4VbyOV4kXEb6kxXmlw1cn67/HEBhpL1V/EdxpnmUbj1DyMcYDHcj4D9A2wjuVNYxhmqVUfkNKeSBYiBR+hqZs4WEvRfSE8WIhnrU+A1u+IfZtv1w5jairrBS9B9+lDhSr/EKTP8FactKLDvWNkZgZTYhSmLxarCUHnAUKo3Kp48cXdt8ywtbVXylnBtE0ofyKSu1qAiM+Oh7mJjgEUymeRNy44DbALnTEpv9y7x+IeDkF0T+IoJYnV7Sk2+vdB18ULVzGfSAnjPIvFPehIQ40I2nfebOksDYqqtTZTXi/yA9tRZdsoIelq1RH8QFSglfqoAR5v/Eamqm13cGO8Xu7e66Lowm0+knSHZrokldFdhcpes1gEYVRiV3CiRbZCJhi69DMuHzm3gvaYyNDWe3Gx9zzekGYGXFpwsLjwOvxWcZSUF3kopFXJIMdMpUKS2OJpGCmsWThXuk4zXm4cEHtZBpWRjxALC+45Lh5/c53Pcv6dUxVx/nN984T8SAdsDfxIMywauYZ3N7CKgVVg5GejX48UaLsh68FczxV5R5ISU3eIOilzU7aslq/vn+uTHTnbx5yQXOpCuTZIoS/eC1PF8wIvq6R9HL7GfZZJv3f7zjddlrdMV9zdM8h1objhfd/4InGncH9YVQbczvO1PTf1CBdNIVSNVEDyE=

@@ -4,8 +4,6 @@
 #   DEPLOY_ENV
 #   APP
 
-export SERVER_PORT=3200
-
 # NOTE no pagination so there better not be >1000 parameters...
 source_from_ssm() {
     env | grep AWS | wc -l
