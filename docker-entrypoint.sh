@@ -4,6 +4,19 @@
 #   DEPLOY_ENV
 #   APP
 
+source_from_ssm() {
+    env | grep AWS | wc -l
+    all_ssm_params=$(aws ssm get-parameters-by-path --path /${DEPLOY_ENV}/${APP}/ | jq -rcM .Parameters[])
+    IFS=$'\n'
+    for ssm_param in $all_ssm_params; do
+        param_name=$(echo $ssm_param | jq -r .Name)
+        echo "Retrieving value for $param_name"
+        param_value=$(aws ssm get-parameter --with-decryption --name "$param_name"| jq -r .Parameter.Value)
+        export "${param_name##*/}"="${param_value}"
+    unset IFS
+    done
+}
+
 set_config() {
     find config/ -iname \*.example | rename -v "s/.example//g"
 }
@@ -43,6 +56,7 @@ main() {
     # run deployment environment setup (including local runs)
     else
         set_config
+        source_from_ssm
         echo "running in deployment env"
         if [[ "${APP}" == "pender" ]]; then
             if [[ "${DEPLOY_ENV}" != "local" ]]; then
