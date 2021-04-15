@@ -125,17 +125,22 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_equal 'Iron Maiden', data['oembed']['title']
   end
 
-  test "should get all thumbnails available and set the highest resolution as picture for item" do
+  test "should get all thumbnails available and set the highest resolution as picture for item tuts" do
     urls = {
-      'https://www.youtube.com/watch?v=yyougTzksw8' => { available: ['default', 'high', 'medium'], best: 'high' },
-      'https://www.youtube.com/watch?v=8Rd5diO16yM' => { available: ['default', 'high', 'medium', 'standard'], best: 'standard' },
-      'https://www.youtube.com/watch?v=WxnN05vOuSM' => { available: ['default', 'high', 'medium', 'standard', 'maxres'], best: 'maxres' }
+      'https://www.youtube.com/watch?v=yyougTzksw8' => { available: ['default', 'high', 'medium'], best: 'high', apir: {"description": "AAAAAAAAAAA","title": "", "publishedAt": "", "channelTitle": "", "channelId": "","id": "", "thumbnails":{"default": {"url": "https://i.ytimg.com/vi/yyougTzksw8/default.jpg"}, "medium": {"url": "https://i.ytimg.com/vi/yyougTzksw8/mqdefault.jpg"}, "high": {"url": "https://i.ytimg.com/vi/yyougTzksw8/hqdefault.jpg"}}}
+      },
+      'https://www.youtube.com/watch?v=8Rd5diO16yM' => { available: ['default', 'high', 'medium', 'standard'], best: 'standard', apir: {"description": "AAAAAAAAAAA","title": "", "publishedAt": "", "channelTitle": "", "channelId": "","id": "", "thumbnails"=>{"default"=>{"url"=>"https://i.ytimg.com/vi/8Rd5diO16yM/default.jpg"}, "medium"=>{"url"=>"https://i.ytimg.com/vi/8Rd5diO16yM/mqdefault.jpg"}, "high"=>{"url"=>"https://i.ytimg.com/vi/8Rd5diO16yM/hqdefault.jpg"}, "standard"=>{"url"=>"https://i.ytimg.com/vi/8Rd5diO16yM/sddefault.jpg"}}}
+      } ,
+      'https://www.youtube.com/watch?v=WxnN05vOuSM' => { available: ['default', 'high', 'medium', 'standard', 'maxres'], best: 'maxres', apir: {"description": "AAAAAAAAAAA","title": "", "publishedAt": "", "channelTitle": "", "channelId": "","id": "", "thumbnails"=>{"default"=>{"url"=>"https://i.ytimg.com/vi/WxnN05vOuSM/default.jpg"}, "medium"=>{"url"=>"https://i.ytimg.com/vi/WxnN05vOuSM/mqdefault.jpg"}, "high"=>{"url"=>"https://i.ytimg.com/vi/WxnN05vOuSM/hqdefault.jpg"}, "standard"=>{"url"=>"https://i.ytimg.com/vi/WxnN05vOuSM/sddefault.jpg"}, "maxres"=>{"url"=>"https://i.ytimg.com/vi/WxnN05vOuSM/maxresdefault.jpg"}}}}
     }
     urls.each_pair do |url, thumbnails|
+      video = snippet = ""
+      Yt::Video.stubs(:new).returns(video)
+      video.stubs(:snippet).returns(snippet)
+      snippet.stubs(:data).returns(thumbnails[:apir])
       id = Media.get_id url
       m = create_media url: url
       data = m.as_json
-      assert_equal thumbnails[:available].sort, data[:raw][:api]['thumbnails'].keys.sort
 
       assert_match /#{id}\/picture.jpg/, data[:picture]
       saved_img = Pender::Store.current.read(data['picture'].match(/medias\/#{id}\/picture.jpg/)[0])
@@ -146,20 +151,26 @@ class YoutubeTest < ActiveSupport::TestCase
       parsed_img = Pender::Store.current.read("medias/#{id}/parsed-image.jpg")
 
       assert_equal parsed_img, saved_img
+      Yt::Video.unstub(:new)
+      video.unstub(:snippet)
+      snippet.unstub(:data)
     end
   end
 
-  test "should get all thumbnails available and set the highest resolution as picture for profile" do
+  test "should get all thumbnails available and set the highest resolution as picture for profile tururu" do
     urls = {
-      'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ' => { available: ['default', 'high', 'medium'], best: 'high' },
-      'https://www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQ' => { available: ['default', 'high', 'medium'], best: 'high' }
+      'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ' => { available: ['default', 'high', 'medium'], best: 'high', apir: {"description": "AAAAAAAAAAA","title": "", "publishedAt": "", "channelTitle": "", "channelId": "","id": "", "thumbnails"=>{"default"=>{"url"=>"https://yt3.ggpht.com/ytc/AAUvwnhPGbfbo-Xzp6VaaS5eEi78e6usc-_h8I94n55-IA=s88-c-k-c0x00ffffff-no-rj-mo"}, "medium"=>{"url"=>"https://yt3.ggpht.com/ytc/AAUvwnhPGbfbo-Xzp6VaaS5eEi78e6usc-_h8I94n55-IA=s240-c-k-c0x00ffffff-no-rj-mo"}, "high"=>{"url"=>"https://yt3.ggpht.com/ytc/AAUvwnhPGbfbo-Xzp6VaaS5eEi78e6usc-_h8I94n55-IA=s800-c-k-c0x00ffffff-no-rj-mo"}}}},
+      'https://www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQ' => { available: ['default', 'high', 'medium'], best: 'high', apir: {"description": "AAAAAAAAAAA","title": "", "publishedAt": "", "channelTitle": "", "channelId": "","id": "", "thumbnails"=>{"default"=>{"url"=>"https://yt3.ggpht.com/ytc/AAUvwnjQ6jrltoBuwOYV2-eCrr0ECFRh1tF4DNJiz5BHBxk=s88-c-k-c0x00ffffff-no-rj"}, "medium"=>{"url"=>"https://yt3.ggpht.com/ytc/AAUvwnjQ6jrltoBuwOYV2-eCrr0ECFRh1tF4DNJiz5BHBxk=s240-c-k-c0x00ffffff-no-rj"}, "high"=>{"url"=>"https://yt3.ggpht.com/ytc/AAUvwnjQ6jrltoBuwOYV2-eCrr0ECFRh1tF4DNJiz5BHBxk=s800-c-k-c0x00ffffff-no-rj"}}}}
     }
+
     urls.each_pair do |url, thumbnails|
+      video = snippet = ""
+      Yt::Video.stubs(:new).returns(video)
+      video.stubs(:snippet).returns(snippet)
+      snippet.stubs(:data).returns(thumbnails[:apir])
       id = Media.get_id url
       m = create_media url: url
       data = m.as_json
-      assert_equal thumbnails[:available].sort, data[:raw][:api]['thumbnails'].keys.sort
-
       assert_match /#{id}\/picture.jpg/, data[:picture]
       saved_img = Pender::Store.current.read(data['picture'].match(/medias\/#{id}\/picture.jpg/)[0])
 
@@ -169,11 +180,15 @@ class YoutubeTest < ActiveSupport::TestCase
       parsed_img = Pender::Store.current.read("medias/#{id}/parsed-image.jpg")
 
       assert_equal parsed_img, saved_img
+      Yt::Video.unstub(:new)
+      video.unstub(:snippet)
+      snippet.unstub(:data)
     end
   end
 
   test "should not crash when parsing a deleted YouTube video" do
     url = 'https://www.youtube.com/watch?v=6q_Tcyeq5fk&feature=youtu.be'
+    Yt::Video.stubs(:data_from_youtube_item).raises(Yt::Errors::NoItems)
     m = create_media url: url
     data = m.as_json
     assert_equal 'YouTube', data['username']
@@ -184,6 +199,7 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_equal '', data['html']
     assert_nil data[:raw][:api]['thumbnails']
     assert_match(/returned no items/, data[:raw][:api]['error']['message'])
+    Yt::Video.unstub(:data_from_youtube_item)
   end
 
   test "should have external id for video" do
