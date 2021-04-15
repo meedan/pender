@@ -6,9 +6,9 @@ ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 
-ARG BUNDLER_WORKERS
-ARG BUNDLER_RETRIES
-ARG SERVER_PORT
+ARG BUNDLER_WORKERS=5
+ARG BUNDLER_RETRIES=20
+ARG SERVER_PORT=3200
 
 WORKDIR /app
 
@@ -38,7 +38,7 @@ RUN groupadd -r pender
 RUN useradd -ms /bin/bash -g pender pender
 RUN chown pender:pender .
 COPY --chown=pender:pender Gemfile Gemfile.lock ./
-RUN if [ "${DEPLOY_ENV}" = "prod" ]; then \
+RUN if [ "${DEPLOY_ENV}" = "live" ]; then \
         bundle install --deployment --without development test; \
     else \
         gem install bundler -v "< 2.0" && \
@@ -48,5 +48,6 @@ RUN if [ "${DEPLOY_ENV}" = "prod" ]; then \
 COPY --chown=pender:pender . ./
 
 USER pender
-EXPOSE ${SERVER_PORT}
+# TODO: use 8000 container port, change for deployments
+EXPOSE 3200
 ENTRYPOINT ["./docker-entrypoint.sh"]

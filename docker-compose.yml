@@ -23,7 +23,7 @@ services:
     build: .
     shm_size: 1G
     ports:
-      - ${SERVER_PORT}:${SERVER_PORT}
+      - "3200:3200"
       - "9555:9555"
     volumes:
       - $HOME/.aws/:/home/pender/.aws:ro

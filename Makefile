@@ -1,31 +1,37 @@
 SHELL := /bin/sh
 
 build.local:
-	docker-compose --log-level ERROR --env-file ./.env.local build pender
-
-build.test:
-	docker-compose --log-level ERROR --env-file ./.env.test build pender
+	docker-compose --log-level ERROR build pender
 
 build: build.local
 
+
+run.local: build
+	docker-compose --env-file ./.env.local up -d pender
+
+run.background: build
+	docker-compose --env-file ./.env.background_local up -d pender
+
+run.deploy: build
+	DEPLOY_ENV=${DEPLOY_ENV} docker-compose --env-file ./.env.${DEPLOY_ENV} up pender -d
+
+run.test: build
+	docker-compose --env-file ./.env.test up -d
+
+run: run.local
+
+
 # NOTE: no unit tests that do not reach out to other services
-test.unit: build.test
-	docker-compose --env-file ./.env.test up --abort-on-container-exit
+test.unit: run.test
+	docker-compose exec pender ./run_test.sh
+
+test.coverage:
+	docker-compose exec pender ./test/test-coverage
 
 test:	test.unit
 
 
-run.local: build
-	docker-compose --env-file ./.env.local up --abort-on-container-exit pender
-
-run.background: build
-	APP=pender_background docker-compose --env-file ./.env.local up pender -d
-
-run.prod: build
-	DEPLOY_ENV=${DEPLOY_ENV} docker-compose --env-file ./.env.prod up --abort-on-container-exit
-
-run: run.local
-
+coverage: test.coverage
 
 clean:
 	docker-compose --log-level ERROR --env-file ./.env.local down && \
