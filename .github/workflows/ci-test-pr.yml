@@ -53,10 +53,6 @@ jobs:
         tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
         builder: ${{ steps.buildx.outputs.name }}
         cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
-        build-args: |
-          BUNDLER_RETRIES=5
-          BUNDLER_WORKERS=20
-          SERVER_PORT=3200
 
     - name: Docker Build and Push To ECR
       id: docker-build-ecr
@@ -84,7 +80,6 @@ jobs:
         # rearrange tags so that docker buildx containers match what docker-compose.yml expects
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG pender:latest
         make run.test
-        wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
         make test
         make coverage
 

@@ -13,7 +13,7 @@ run.background: build
 	docker-compose --env-file ./.env.background_local up -d pender-background
 
 run.deploy: build
-	DEPLOY_ENV=${DEPLOY_ENV} docker-compose --env-file ./.env.${DEPLOY_ENV} up pender -d
+	DEPLOY_ENV=${DEPLOY_ENV} docker-compose --env-file ./.env.${DEPLOY_ENV} up -d pender
 
 run.test: build
 	docker-compose --env-file .env.test up --abort-on-container-exit pender &
