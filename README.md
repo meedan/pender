@@ -53,6 +53,14 @@ Open http://localhost:3200/api-docs/index.html to access Pender API directly.
 
 ### Testing
 
+To run Pender in testing mode, run:
+
+```
+make run.test
+```
+
+To start running tests, run:
+
 ```
 make test
 ```
@@ -60,6 +68,14 @@ make test
 If unit tests are run without an exported `GITHUB_TOKEN` environment variable,
 the startup script will assume no elevated credentials exist for the user and
 use the `.example` files from `config/`. Tests may not fully work without this.
+
+### Cleanup
+
+To cleanup the containers, run:
+
+```
+make clean
+```
 
 ## API
 
