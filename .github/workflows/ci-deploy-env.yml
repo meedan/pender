@@ -6,6 +6,7 @@ on:
       - 'develop'
       - 'master'
       - '*deploy/*'
+      - 'dmou/run-tests-gha'
 
 jobs:
   build-test-deploy:
@@ -13,6 +14,7 @@ jobs:
 
     outputs:
       image: ${{ steps.build-image.outputs.image }}
+
     steps:
     - uses: actions/checkout@v2
 
@@ -55,8 +57,30 @@ jobs:
           --file ./Dockerfile ./
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-#    - name: Run Unit Tests
-#      id: run-unit-tests
+    - name: Setup Tests
+      id: setup-tests
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ github.event.repository.name }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # rearrange tags so that docker buildx containers match what docker-compose.yml expects
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG pender:latest
+	docker-compose build
+	docker-compose -f docker-compose.yml -f docker-test.yml up -d pender
+        wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
+        docker-compose exec pender test/setup-parallel
+
+    - name: Run Tests
+      id: run-tests
+      env:
+        GIT_SHA: ${{ github.sha }}
+        BUILD_NUMBER: ${{ github.run_number }}
+        CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+      run: |
+        docker-compose exec pender bundle exec rake "parallel:test[3]"
+        docker-compose exec pender bundle exec rake parallel:spec
+        docker-compose exec -e CC_TEST_REPORTER_ID=$CC_TEST_REPORTER_ID -e GIT_COMMIT_SHA=$GIT_SHA pender test/test-coverage
 
     - name: Docker Buildx (push)
       id: push-image-to-ecr
