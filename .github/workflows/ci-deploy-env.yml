@@ -68,6 +68,7 @@ jobs:
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG pender:latest
         docker-compose -f docker-compose.yml -f docker-test.yml up -d pender
         wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
+        echo "setting up parallel databases"
         docker-compose exec pender test/setup-parallel
 
     - name: Run Tests
