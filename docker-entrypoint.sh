@@ -1,4 +1,6 @@
 #!/bin/bash
+cd config/ && find -name '*.example' | while read f; do cp "$f" "${f%%.example}"; done && cd ..
+
 bundle exec rake db:create
 bundle exec rake db:migrate
 export SECRET_KEY_BASE=$(bundle exec rake secret)
