@@ -66,8 +66,7 @@ jobs:
       run: |
         # rearrange tags so that docker buildx containers match what docker-compose.yml expects
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG pender:latest
-	docker-compose build
-	docker-compose -f docker-compose.yml -f docker-test.yml up -d pender
+        docker-compose -f docker-compose.yml -f docker-test.yml up -d pender
         wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
         docker-compose exec pender test/setup-parallel
 
