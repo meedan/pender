@@ -4,3 +4,7 @@ services:
     environment:
       RAILS_ENV: test
       DEPLOY_ENV: test
+      AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+      AWS_SESSION_TOKEN: $AWS_SESSION_TOKEN
+      AWS_REGION: eu-west-1

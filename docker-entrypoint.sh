@@ -17,6 +17,7 @@ set_config() {
 }
 
 if [[ "${DEPLOY_ENV}" == "test" ]]; then
+    echo "setting up SSM..."
     set_config
     source_from_ssm
 fi
