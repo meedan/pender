@@ -67,7 +67,7 @@ jobs:
         # rearrange tags so that docker buildx containers match what docker-compose.yml expects
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG pender:latest
         docker-compose -f docker-compose.yml -f docker-test.yml up -d pender
-        wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
+        until curl --silent -I -f --fail http://localhost:3200 ; do printf .; sleep 1; done
         echo "setting up parallel databases"
         docker-compose exec pender test/setup-parallel
 
