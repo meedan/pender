@@ -10,7 +10,7 @@ ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 
 # install dependencies
-RUN apt-get update -qq && apt-get install -y curl build-essential git graphicsmagick inotify-tools libsqlite3-dev libpq-dev python --no-install-recommends
+RUN apt-get update -qq && apt-get install -y curl build-essential git graphicsmagick inotify-tools libsqlite3-dev libpq-dev python jq unzip --no-install-recommends
 
 # install our app
 RUN mkdir -p /app
@@ -22,6 +22,10 @@ COPY . /app/
 # install youtube-dl
 RUN curl -L https://youtube-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl \
   && chmod a+rx /usr/local/bin/youtube-dl
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+    unzip -qq awscliv2.zip && \
+   ./aws/install && \
+   rm -r ./aws
 
 # startup
 RUN chmod +x /app/docker-entrypoint.sh
