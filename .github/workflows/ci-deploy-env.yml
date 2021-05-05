@@ -69,7 +69,7 @@ jobs:
         docker-compose -f docker-compose.yml -f docker-test.yml up -d pender
         until curl --silent -I -f --fail http://localhost:3200 ; do printf .; sleep 1; done
         echo "setting up parallel databases"
-        docker-compose exec pender test/setup-parallel
+        docker-compose exec -T pender test/setup-parallel
 
     - name: Run Tests
       id: run-tests
@@ -78,8 +78,8 @@ jobs:
         BUILD_NUMBER: ${{ github.run_number }}
         CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
       run: |
-        docker-compose exec pender bundle exec rake "parallel:test[3]"
-        docker-compose exec pender bundle exec rake parallel:spec
+        docker-compose exec -T pender bundle exec rake "parallel:test[3]"
+        docker-compose exec -T pender bundle exec rake parallel:spec
         docker-compose exec -e CC_TEST_REPORTER_ID=$CC_TEST_REPORTER_ID -e GIT_COMMIT_SHA=$GIT_SHA pender test/test-coverage
 
     - name: Docker Buildx (push)
