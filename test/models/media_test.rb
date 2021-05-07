@@ -722,18 +722,29 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal "example_cookies=true; devicetype=0", Media.set_cookies(uri)
   end
 
-  test "should return empty html when FB url cannot be embedded" do
-    urls = %w(
-      https://www.facebook.com/groups/976472102413753/permalink/2013383948722558/
-      https://www.facebook.com/caiosba/posts/1913749825339929
-      https://www.facebook.com/events/331430157280289
-    )
-    urls.each do |url|
-      m = create_media url: url
-      data = m.as_json
-      assert_equal 'facebook', data['provider']
-      assert_equal '', data['html'], "html for #{url} should be empty"
-    end
+  test "should return empty html when FB url is from group and cannot be embedded" do
+    url = 'https://www.facebook.com/groups/976472102413753/permalink/2013383948722558/'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'facebook', data['provider']
+    assert_equal 'groups', data['username']
+    assert_equal '', data['html']
+  end
+
+  test "should return empty html when FB url is private and cannot be embedded" do
+    url = 'https://www.facebook.com/caiosba/posts/1913749825339929'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'facebook', data['provider']
+    assert_equal '', data['html']
+  end
+
+  test "should return empty html when FB url is event and cannot be embedded" do
+    url = 'https://www.facebook.com/events/331430157280289'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'facebook', data['provider']
+    assert_equal '', data['html']
   end
 
   test "should use specific country on proxy for domains on hosts" do

@@ -2,7 +2,7 @@ module MediaYoutubeItem
   extend ActiveSupport::Concern
 
   included do
-    Media.declare('youtube_item', [/^https?:\/\/(www\.)?youtube\.com\/watch\?v=([^&]+)/])
+    Media.declare('youtube_item', [/^https?:\/\/(www\.)?youtube\.com\/watch\?.*&?v=(?<id>[^&]+)&?/])
   end
 
   def youtube_item_direct_attributes
