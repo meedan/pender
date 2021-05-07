@@ -16,7 +16,7 @@ run.deploy: build
 	DEPLOY_ENV=${DEPLOY_ENV} docker-compose --env-file ./.env.${DEPLOY_ENV} up -d pender
 
 run.test: build
-	docker-compose --env-file .env.test up --abort-on-container-exit pender &
+	docker-compose --env-file .env.test up -d pender
 
 run: run.local
 
