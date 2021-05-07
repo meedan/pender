@@ -23,10 +23,10 @@ run: run.local
 
 # NOTE: test commands assume a container is running (ie. with make run.test)
 test.unit:
-	docker-compose exec pender ./run_test.sh
+	docker-compose exec -T pender ./run_test.sh
 
 test.coverage:
-	docker-compose exec pender ./test/test-coverage
+	docker-compose exec -T pender ./test/test-coverage
 
 test:	test.unit
 
