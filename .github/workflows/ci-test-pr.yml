@@ -1,10 +1,7 @@
 name: Build and Run Tests
 
 on:
-  pull_request:
-  push:
-    branches:
-      - dmou/standardize-app-startup
+  push
 
 jobs:
   test:
@@ -86,7 +83,7 @@ jobs:
     - name: Notify Slack If Failed
       id: slack-notify
       uses: 8398a7/action-slack@v3
-      if: ${{ failure() }}
+      if: ${{ always() }}
       with:
         status: custom
         fields: workflow,job,commit,repo,ref,author,took,message

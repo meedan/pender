@@ -65,13 +65,11 @@ main() {
                     exit 1
                 fi
                 if [[ "${DEPLOY_ENV}" == "live" || "${DEPLOY_ENV}" == "qa" ]]; then
-                    bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid --environment ${DEPLOY_ENV} --workers 3 -t 8:32
+                    bundle exec puma --port ${SERVER_PORT} --environment ${DEPLOY_ENV} --workers 3 -t 8:32
                 fi
             else
-                bundle exec puma --port ${SERVER_PORT} --pidfile tmp/pids/server-${RAILS_ENV}.pid
+                bundle exec puma --port ${SERVER_PORT}
             fi
-        elif [[ "${APP}" == "pender_background" ]]; then
-            bundle exec sidekiq
         fi
     fi
 }

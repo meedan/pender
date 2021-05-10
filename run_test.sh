@@ -24,7 +24,7 @@ set_config() {
 }
 
 main() {
-    wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
+    until curl --silent -I -f --fail http://localhost:3200 ; do printf .; sleep 1; done
 
     set -e
     # check that required environment variables are set
