@@ -236,4 +236,21 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_match "The request is missing a valid API key.", data['raw']['api']['error']['message']
   end
 
+  test "should ignore consent page and parse youtube item" do
+    consent_page = 'https://consent.youtube.com/m?continue=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fapp%3Ddesktop%26v%3Dp8y8IzeF9u8%26feature%3Dyoutu.be%26ab_channel%3DDra.RobertaLacerda&gl=IE&m=0&pc=yt&uxe=23983172&hl=en&src=1'
+    response = ''
+    response.stubs(:code).returns('302')
+    response.stubs(:header).returns({ 'location' => consent_page })
+    Media.any_instance.stubs(:request_media_url).returns(response)
+    url = 'https://www.youtube.com/watch?app=desktop&v=p8y8IzeF9u8&feature=youtu.be&ab_channel=Dra.RobertaLacerda'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal 'youtube', data['provider']
+    assert_match /desconstruir a eficácia da hidroxicloroquina/, data['title']
+    assert_match /desconstruir a eficácia da hidroxicloroquina/, data['description']
+    assert_equal 'https://www.youtube.com/channel/UCAw-vsuGe530nLru8vSYUcw', data['author_url']
+    assert !data['html'].blank?
+    assert_equal 'https://www.youtube.com/watch?v=p8y8IzeF9u8', m.url
+  end
 end
