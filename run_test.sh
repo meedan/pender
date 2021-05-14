@@ -24,8 +24,6 @@ set_config() {
 }
 
 main() {
-    wget -q --waitretry=5 --retry-connrefused -t 20 -T 10 -O - http://localhost:3200
-
     set -e
     # check that required environment variables are set
     if [[ -z ${DEPLOY_ENV+x} || -z ${APP+x} ]]; then
