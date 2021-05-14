@@ -1,4 +1,3 @@
-require 'timeout'
 require 'pender_store'
 
 class MediaParserWorker
@@ -21,11 +20,9 @@ class MediaParserWorker
     media = nil
     return [type, cached] if !cached.nil? && !refresh
     begin
-      Timeout::timeout(timeout_value) do
-        return ['error', invalid_url_error] unless Media.validate_url(url)
-        media = Media.new(url: url, key: key)
-        data = media.as_json(force: refresh, archivers: archivers)
-      end
+      return ['error', invalid_url_error] unless Media.validate_url(url)
+      media = Media.new(url: url, key: key)
+      data = media.as_json(force: refresh, archivers: archivers)
     rescue Timeout::Error
       data = get_timeout_data(nil, url, id)
     rescue StandardError => e
