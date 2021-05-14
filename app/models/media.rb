@@ -88,7 +88,7 @@ class Media
 
   def self.minimal_data(instance)
     data = {}
-    %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field] = '' }
+    %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field.to_sym] = '' }
     data[:raw] = data[:archives] = data[:metrics] = {}
     data.merge(Media.required_fields(instance)).with_indifferent_access
   end
@@ -232,7 +232,7 @@ class Media
 
   def request_media_url
     response = nil
-    Retryable.retryable(tries: 3, sleep: 1) do
+    Retryable.retryable(tries: 3, sleep: 1, :not => [Net::ReadTimeout]) do
       response = Media.request_url(url, 'Head')
     end
     response

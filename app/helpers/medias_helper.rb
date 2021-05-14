@@ -29,17 +29,16 @@ module MediasHelper
   end
 
   def get_metatags(media)
-    fields = []
+    media.data['raw']['metatags'] = []
     unless media.doc.nil?
       media.doc.search('meta').each do |meta|
         metatag = {}
         meta.each do |key, value|
           metatag.merge!({key => value.strip}) unless value.blank?
         end
-        fields << metatag
+        media.data['raw']['metatags'] << metatag
       end
     end
-    media.data['raw']['metatags'] = fields
   end
 
   def get_jsonld_data(media)

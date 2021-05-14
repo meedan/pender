@@ -129,8 +129,6 @@ class InstagramTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'CFld5x6B6Bw', data['external_id']
     assert_equal 'item', data['type']
-    assert_equal '', data['username']
-    assert_equal '', data['author_name']
     assert_equal '', data['html']
     assert_match /Login required/, data['raw']['graphql']['error']['message']
     Media.unstub(:is_a_login_page)

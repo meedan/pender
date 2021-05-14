@@ -1,26 +1,32 @@
 source 'https://rubygems.org'
 gem 'rails', '4.2.11.1'
-gem 'sqlite3'
+gem 'sqlite3', '~> 1.3.6'
 gem 'pg', '0.20'
 group :development, :test do
   gem 'byebug'
+  gem 'gem-licenses'
+  gem 'rspec-rails'
+  # workaround for https://github.com/rswag/rswag/issues/317, remove GIT repository after https://github.com/rswag/rswag/pull/319 is merged
+  gem 'rswag-specs', git: 'https://github.com/jetpackworkflow/rswag.git', branch: 'allow_oas3_param_schema_array'
+  gem 'get_process_mem'
+  gem 'memory_profiler'
+  gem 'derailed'
 end
 group :development do
   gem 'web-console', '~> 2.0'
+  gem 'awesome_print', require: false
 end
 group :test do
   gem 'parallel_tests'
+  gem "mocha", "~> 1.3.0", require: false
+  gem 'simplecov', '0.13.0', require: false
+  gem 'simplecov-console', require: false
+  gem 'codeclimate-test-reporter', '1.0.8', group: :test, require: nil
 end
 gem 'logstash-logger'
 gem 'webmock'
-gem 'mocha'
-gem 'simplecov', '0.13.0', require: false, group: :test
-gem 'simplecov-console', require: false, group: :test
 gem 'railroady'
-gem 'airbrake', '9.4.4'
-gem 'codeclimate-test-reporter', '1.0.8', group: :test, require: nil
-gem 'awesome_print', require: false, group: :development
-gem 'gem-licenses'
+gem 'airbrake', '10.0.0'
 gem 'thin'
 gem 'protected_attributes'
 gem 'responders'
@@ -54,10 +60,3 @@ gem 'aws-sdk-s3'
 gem 'honeycomb-beeline'
 gem 'lograge'
 gem 'request_store'
-
-group :development, :test do
-  gem 'rspec-rails'
-
-  # workaround for https://github.com/rswag/rswag/issues/317, remove GIT repository after https://github.com/rswag/rswag/pull/319 is merged
-  gem 'rswag-specs', git: 'https://github.com/jetpackworkflow/rswag.git', branch: 'allow_oas3_param_schema_array'
-end
