@@ -80,10 +80,10 @@ jobs:
         make test
         make coverage
 
-    - name: Notify Slack If Failed
+    - name: Notify Slack
       id: slack-notify
       uses: 8398a7/action-slack@v3
-      if: ${{ failure() }}
+      if: ${{ always() }}
       with:
         status: custom
         fields: workflow,job,commit,repo,ref,author,took,message

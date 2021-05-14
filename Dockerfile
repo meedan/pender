@@ -24,7 +24,8 @@ RUN apt-get update -qq && \
         libpq-dev \
         python \
         rename \
-        unzip
+        unzip \
+        wget
 
 RUN curl -L https://youtube-dl.org/downloads/latest/youtube-dl \
          -o /usr/local/bin/youtube-dl
