@@ -83,7 +83,7 @@ jobs:
     - name: Notify Slack If Failed
       id: slack-notify
       uses: 8398a7/action-slack@v3
-      if: ${{ always() }}
+      if: ${{ failure() }}
       with:
         status: custom
         fields: workflow,job,commit,repo,ref,author,took,message

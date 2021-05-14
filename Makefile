@@ -36,4 +36,4 @@ coverage: test.coverage
 
 clean:
 	docker-compose down && \
-	rm -f db/test*.sqlite3* schema.rb config/cookies.txt config/database.yml sidekiq.yml config.yml
+	rm -f db/test*.sqlite3* schema.rb config/cookies.txt config/database.yml config/sidekiq.yml config/config.yml

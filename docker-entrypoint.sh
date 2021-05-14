@@ -50,7 +50,7 @@ main() {
         bundle exec rake lapis:api_keys:create_default
         echo "rake tasks complete. starting puma..."
 
-        bundle exec puma --port ${SERVER_PORT} --environment test --workers 3 -t 8:32
+        bundle exec puma --port ${SERVER_PORT} --environment test --workers 2 -t 8:32
         echo "puma running..."
 
     # run deployment environment setup (including local runs)

@@ -40,7 +40,6 @@ main() {
         test/setup-parallel
         bundle exec rake "parallel:test[3]"
         bundle exec rake parallel:spec
-        test/test-coverage
     else
         exit 1
     fi
