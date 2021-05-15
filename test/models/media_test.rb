@@ -55,13 +55,13 @@ class MediaTest < ActiveSupport::TestCase
     url = 'https://example.com/'
     parsed_url = Media.parse_url url
     m = Media.new url: url
-    header_options_without_cf = Media.send(:html_options, url)
+    header_options_without_cf = Media.send(:html_options, url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     assert_nil header_options_without_cf['CF-Access-Client-Id']
     assert_nil header_options_without_cf['CF-Access-Client-Secret']
 
     PenderConfig.current = nil
     ENV['hosts'] = {"example.com"=>{"cf_credentials"=>"1234:5678"}}.to_json
-    header_options_with_cf = Media.send(:html_options, url)
+    header_options_with_cf = Media.send(:html_options, url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     assert_equal '1234', header_options_with_cf['CF-Access-Client-Id']
     assert_equal '5678', header_options_with_cf['CF-Access-Client-Secret']
     OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_cf).raises(RuntimeError.new('unauthorized'))
@@ -310,7 +310,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should handle zlib error when opening a url" do
     m = create_media url: 'https://ca.yahoo.com'
     parsed_url = Media.parse_url( m.url)
-    header_options = Media.send(:html_options, m.url)
+    header_options = Media.send(:html_options, m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Zlib::DataError)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
     m.send(:get_html, Media.send(:html_options, m.url))
@@ -320,7 +320,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should handle zlib buffer error when opening a url" do
     m = create_media url: 'https://www.businessdailyafrica.com/'
     parsed_url = Media.parse_url( m.url)
-    header_options = Media.send(:html_options, m.url)
+    header_options = Media.send(:html_options, m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Zlib::BufError)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
     m.send(:get_html, Media.send(:html_options, m.url))
@@ -334,7 +334,7 @@ class MediaTest < ActiveSupport::TestCase
 
     m = create_media url: 'https://www.scmp.com/news/china/diplomacy-defence/article/2110488/china-tries-build-bigger-bloc-stop-brics-crumbling'
     parsed_url = Media.parse_url(m.url)
-    header_options = Media.send(:html_options, m.url)
+    header_options = Media.send(:html_options, m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises('redirection forbidden')
     Airbrake.stubs(:configured?).returns(true)
 
@@ -958,7 +958,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should not reach the end of file caused by User-Agent" do
     m = create_media url: 'https://www.nbcnews.com/'
     parsed_url = Media.parse_url m.url
-    header_options = Media.send(:html_options, m.url)
+    header_options = Media.send(:html_options, m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0', 'Accept-Language' => 'en-US;q=0.6,en;q=0.4')).raises(EOFError)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0 (X11)', 'Accept-Language' => 'en-US;q=0.6,en;q=0.4'))
     assert_nothing_raised do

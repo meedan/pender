@@ -136,8 +136,7 @@ class Media
         http.use_ssl = uri.scheme == 'https'
         request = Net::HTTP::Post.new(uri.request_uri, headers)
         request.body = payload
-        response = http.request(request)
-        Rails.logger.info level: 'INFO', message: 'Webhook notification', url: url, type: type, code: response.code, response: response.message, webhook_url: settings['webhook_url']
+        http.request(request)
         @webhook_called = true
       rescue StandardError => e
         PenderAirbrake.notify(e, url: url, type: type, webhook_url: settings['webhook_url'])
@@ -176,14 +175,12 @@ class Media
 
   def get_canonical_url
     self.doc = self.get_html(Media.html_options(self.url))
-    if self.doc
-      tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")
-      get_parsed_url(tag) unless tag.blank?
-    end
+    tag = self.doc&.at_css("meta[property='og:url']") || self.doc&.at_css("meta[property='twitter:url']") || self.doc&.at_css("link[rel='canonical']")
+    canonical_url = tag&.attr('content') || tag&.attr('href')
+    get_parsed_url(canonical_url) if canonical_url
   end
 
-  def get_parsed_url(tag)
-    canonical_url = tag.attr('content') || tag.attr('href') || ''
+  def get_parsed_url(canonical_url)
     return false if !Media.validate_url(canonical_url)
     if canonical_url != self.url && !Media.ignore_url?(canonical_url)
       self.url = absolute_url(canonical_url)
@@ -278,7 +275,7 @@ class Media
       options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
       uri = Media.parse_url(decoded_uri(self.url))
       html = ''
-      OpenURI.open_uri(uri, options) do |f|
+      OpenURI.open_uri(uri, options.merge(read_timeout: PenderConfig.get('timeout', 30).to_i)) do |f|
         f.binmode
         html = f.read
       end

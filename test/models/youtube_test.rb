@@ -76,7 +76,7 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_equal data[:raw][:api]['description'], data['description']
     assert_equal data[:raw][:api]['title'], data['title']
     assert_match /#{id}\/picture/, data['picture']
-    assert_equal m.html_for_youtube_item('mtLxD7r4BZQ'), data['html']
+    assert_equal m.html_for_youtube_item, data['html']
     assert_equal data[:raw][:api]['channel_title'], data['author_name']
     assert_equal 'https://www.youtube.com/channel/' + data[:raw][:api]['channel_id'], data['author_url']
     assert_equal data[:raw][:api]['published_at'], data['published_at']
