@@ -23,7 +23,7 @@ module MediaYoutubeItem
     self.data[:raw] ||= {}
     self.data[:raw][:api] = {}
 
-    begin
+    handle_youtube_exceptions do
       Yt.configuration.api_key = PenderConfig.get(:google_api_key)
       video = Yt::Video.new url: self.url
       video_data = video.snippet.data.with_indifferent_access
@@ -32,16 +32,7 @@ module MediaYoutubeItem
         # puts "video_data.dig #{video_data.dig(attr.camelize(:lower))}"
         self.data[:raw][:api][attr] = video_data.dig(attr.camelize(:lower)) || video.send(attr) || ''
       end
-    rescue Yt::Errors::NoItems => e
-      self.data['username'] = self.data['author_name'] = 'YouTube'
-      self.data['title'] = 'Deleted video'
-      self.data['description'] = 'This video is unavailable.'
-      self.data[:raw][:api] = { error: { message: e.message, code: LapisConstants::ErrorCodes::const_get('NOT_FOUND') }}
-    rescue Yt::Errors::Forbidden => e
-      self.data[:raw][:api] = { error: { message: e.message, code: LapisConstants::ErrorCodes::const_get('UNAUTHORIZED') }}
     end
-
-    id = get_info_from_data('api', data, 'id')
 
     metadata = self.get_opengraph_metadata || {}
     self.set_data_field('title', get_info_from_data('api', data, 'title'), metadata.dig('title'))
@@ -49,8 +40,8 @@ module MediaYoutubeItem
     self.set_data_field('picture', self.get_youtube_thumbnail, metadata.dig('picture'))
     self.set_data_field('username', get_info_from_data('api', data, 'channel_title'))
     self.data.merge!({
-      external_id: id,
-      html: html_for_youtube_item(id),
+      external_id: get_info_from_data('api', data, 'id'),
+      html: html_for_youtube_item,
       author_name: get_info_from_data('api', data, 'channel_title'),
       author_picture: self.get_youtube_item_author_picture, 
       author_url: self.get_youtube_item_author_url,
@@ -84,8 +75,15 @@ module MediaYoutubeItem
     "https://www.youtube.com/oembed?format=json&url=#{self.url}"
   end
 
-  def html_for_youtube_item(id)
+  def html_for_youtube_item
     return '' if data[:raw][:api]['channel_id'].blank?
-    "<iframe width='480' height='270' src='//www.youtube.com/embed/#{id}' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe>"
+    "<iframe width='480' height='270' src='//www.youtube.com/embed/#{get_info_from_data('api', data, 'id')}' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe>"
+  end
+
+  def set_youtube_item_deleted_info(e)
+    self.data['username'] = self.data['author_name'] = 'YouTube'
+    self.data['title'] = 'Deleted video'
+    self.data['description'] = 'This video is unavailable.'
+    self.data[:raw][:api] = { error: { message: e.message, code: LapisConstants::ErrorCodes::const_get('NOT_FOUND') }}
   end
 end

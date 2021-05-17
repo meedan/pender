@@ -49,9 +49,9 @@ module MediaFacebookItem
   def get_facebook_user_id_from_url
     params = parse_uri(Media.parse_url(self.url))
     user_id = params['id'].first.match(/([0-9]+).*/)[1] unless params['id'].blank?
-    user_id ||= self.doc.to_s.match(/"groupID":"(\d+)"/) && self.doc.to_s.match(/"groupID":"(\d+)"/)[1]
-    user_id ||= self.doc.to_s.match(/"owner":{[^\{]+?"id":"(\d+)"[^\{\}]+?}/) && self.doc.to_s.match(/"owner":{[^\{]+?"id":"(\d+)"[^\{\}]+?}/)[1]
-    user_id ||= self.doc.to_s.match(/"userID":"(\d+)"/) && self.doc.to_s.match(/"userID":"(\d+)"/)[1]
+    user_id ||= self.doc.to_s[/"groupID":"(\d+)"/, 1]
+    user_id ||= self.doc.to_s[/"owner":{[^\{]+?"id":"(\d+)"[^\{\}]+?}/, 1]
+    user_id ||= self.doc.to_s[/"userID":"(\d+)"/, 1]
     user_id ||= params['set'].first.split('.').last unless params['set'].blank?
     user_id || get_facebook_user_id_from_url_pattern
   end

@@ -23,7 +23,7 @@ module MediaYoutubeProfile
     self.data[:raw] ||= {}
     self.data[:raw][:api] = {}
 
-    begin
+    handle_youtube_exceptions do
       Yt.configuration.api_key = PenderConfig.get(:google_api_key)
       channel = Yt::Channel.new url: self.url
       video_data = channel.snippet.data
@@ -38,8 +38,6 @@ module MediaYoutubeProfile
       self.set_data_field('country', get_info_from_data('api', data, 'country'))
       self.set_data_field('video_count', get_info_from_data('api', data, 'video_count'))
       self.set_data_field('subscriber_count', get_info_from_data('api', data, 'subscriber_count'))
-    rescue Yt::Errors::Forbidden => e
-      self.data[:raw][:api] = { error: { message: e.message, code: LapisConstants::ErrorCodes::const_get('UNAUTHORIZED') }}
     end
 
     self.set_data_field('external_id', get_info_from_data('api', data, 'id'), get_youtube_channel_id)
@@ -48,13 +46,10 @@ module MediaYoutubeProfile
     self.set_data_field('description', get_info_from_data('api', data, 'description'), metadata.dig('description'))
     self.set_data_field('picture', self.get_youtube_thumbnail, metadata.dig('picture'))
     self.set_data_field('username', self.get_youtube_username)
-
-    self.data.merge!({
-      published_at: get_info_from_data('api', data, 'published_at'),
-      author_picture: self.data[:picture],
-      author_name: self.data[:title],
-      subtype: self.get_youtube_subtype
-    })
+    self.set_data_field('published_at', get_info_from_data('api', data, 'published_at'))
+    self.set_data_field('author_picture', self.data[:picture])
+    self.set_data_field('author_name', self.data[:title])
+    self.set_data_field('subtype', self.get_youtube_subtype)
   end
 
   # def parse_youtube_playlists(playlists)
@@ -115,5 +110,15 @@ module MediaYoutubeProfile
   def get_youtube_subtype
     match = self.url.match(/^https?:\/\/(www\.)?youtube\.com\/(user|channel)\/([^\/]+)/)
     match[2]
+  end
+
+  def handle_youtube_exceptions
+    begin
+      yield
+    rescue Yt::Errors::NoItems => e
+      self.set_youtube_item_deleted_info(e)
+    rescue Yt::Errors::Forbidden => e
+      self.data[:raw][:api] = { error: { message: e.message, code: LapisConstants::ErrorCodes::const_get('UNAUTHORIZED') }}
+    end
   end
 end
