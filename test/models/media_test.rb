@@ -55,13 +55,13 @@ class MediaTest < ActiveSupport::TestCase
     url = 'https://example.com/'
     parsed_url = Media.parse_url url
     m = Media.new url: url
-    header_options_without_cf = Media.send(:html_options, url)
+    header_options_without_cf = Media.send(:html_options, url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     assert_nil header_options_without_cf['CF-Access-Client-Id']
     assert_nil header_options_without_cf['CF-Access-Client-Secret']
 
     PenderConfig.current = nil
     ENV['hosts'] = {"example.com"=>{"cf_credentials"=>"1234:5678"}}.to_json
-    header_options_with_cf = Media.send(:html_options, url)
+    header_options_with_cf = Media.send(:html_options, url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     assert_equal '1234', header_options_with_cf['CF-Access-Client-Id']
     assert_equal '5678', header_options_with_cf['CF-Access-Client-Secret']
     OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_cf).raises(RuntimeError.new('unauthorized'))
@@ -194,7 +194,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match 'How social media is being weaponized across the world', data['description']
     assert !data['published_at'].blank?
     assert_match 'Emerson T. Brooking and P. W. Singer', data['username']
-    assert_match 'https://www.theatlantic.com', data['author_url']
+    assert_match /https?:\/\/www.theatlantic.com/, data['author_url']
     assert_match /\/#{id}\/picture/, data['picture']
   end
 
@@ -310,7 +310,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should handle zlib error when opening a url" do
     m = create_media url: 'https://ca.yahoo.com'
     parsed_url = Media.parse_url( m.url)
-    header_options = Media.send(:html_options, m.url)
+    header_options = Media.send(:html_options, m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Zlib::DataError)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
     m.send(:get_html, Media.send(:html_options, m.url))
@@ -320,7 +320,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should handle zlib buffer error when opening a url" do
     m = create_media url: 'https://www.businessdailyafrica.com/'
     parsed_url = Media.parse_url( m.url)
-    header_options = Media.send(:html_options, m.url)
+    header_options = Media.send(:html_options, m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Zlib::BufError)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
     m.send(:get_html, Media.send(:html_options, m.url))
@@ -334,7 +334,7 @@ class MediaTest < ActiveSupport::TestCase
 
     m = create_media url: 'https://www.scmp.com/news/china/diplomacy-defence/article/2110488/china-tries-build-bigger-bloc-stop-brics-crumbling'
     parsed_url = Media.parse_url(m.url)
-    header_options = Media.send(:html_options, m.url)
+    header_options = Media.send(:html_options, m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises('redirection forbidden')
     Airbrake.stubs(:configured?).returns(true)
 
@@ -693,7 +693,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should add cookie from cookie.txt on header if domain matches" do
     url_no_cookie = 'https://www.istqb.org/'
     assert_equal "", Media.send(:html_options, url_no_cookie)['Cookie']
-    url_with_cookie = 'https://www.washingtonpost.com/politics/winter-is-coming-allies-fear-trump-isnt-prepared-for-gathering-legal-storm/2018/08/29/b07fc0a6-aba0-11e8-b1da-ff7faa680710_story.html'
+    url_with_cookie = 'https://example.com/politics/winter-is-coming-allies-fear-trump-isnt-prepared-for-gathering-legal-storm/2018/08/29/b07fc0a6-aba0-11e8-b1da-ff7faa680710_story.html'
     assert_match "wp_devicetype=0", Media.send(:html_options, url_with_cookie)['Cookie']
   end
 
@@ -709,11 +709,11 @@ class MediaTest < ActiveSupport::TestCase
     uri = Media.parse_url('http://example.com')
 
     assert_not_includes PenderConfig.get('cookies').keys, 'example.com'
-    assert_equal "", Media.set_cookies(uri)
+    assert_equal PenderConfig.get('cookies')['.example.com'].map { |k, v| "#{k}=#{v}"}.first, Media.set_cookies(uri)
 
     PenderConfig.current = nil
     ApiKey.current = api_key
-    assert_equal "", Media.set_cookies(uri)
+    assert_equal PenderConfig.get('cookies')['.example.com'].map { |k, v| "#{k}=#{v}"}.first, Media.set_cookies(uri)
 
     api_key.application_settings = { config: { cookies: { 'example.com' => { "example_cookies" => "true", "devicetype"=>"0" }}}}
     api_key.save
@@ -722,18 +722,29 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal "example_cookies=true; devicetype=0", Media.set_cookies(uri)
   end
 
-  test "should return empty html when FB url cannot be embedded" do
-    urls = %w(
-      https://www.facebook.com/groups/976472102413753/permalink/2013383948722558/
-      https://www.facebook.com/caiosba/posts/1913749825339929
-      https://www.facebook.com/events/331430157280289
-    )
-    urls.each do |url|
-      m = create_media url: url
-      data = m.as_json
-      assert_equal 'facebook', data['provider']
-      assert_equal '', data['html'], "html for #{url} should be empty"
-    end
+  test "should return empty html when FB url is from group and cannot be embedded" do
+    url = 'https://www.facebook.com/groups/976472102413753/permalink/2013383948722558/'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'facebook', data['provider']
+    assert_equal 'groups', data['username']
+    assert_equal '', data['html']
+  end
+
+  test "should return empty html when FB url is private and cannot be embedded" do
+    url = 'https://www.facebook.com/caiosba/posts/1913749825339929'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'facebook', data['provider']
+    assert_equal '', data['html']
+  end
+
+  test "should return empty html when FB url is event and cannot be embedded" do
+    url = 'https://www.facebook.com/events/331430157280289'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'facebook', data['provider']
+    assert_equal '', data['html']
   end
 
   test "should use specific country on proxy for domains on hosts" do
@@ -947,7 +958,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should not reach the end of file caused by User-Agent" do
     m = create_media url: 'https://www.nbcnews.com/'
     parsed_url = Media.parse_url m.url
-    header_options = Media.send(:html_options, m.url)
+    header_options = Media.send(:html_options, m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0', 'Accept-Language' => 'en-US;q=0.6,en;q=0.4')).raises(EOFError)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0 (X11)', 'Accept-Language' => 'en-US;q=0.6,en;q=0.4'))
     assert_nothing_raised do
@@ -967,11 +978,13 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should use original url when redirected page requires cookie" do
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='https://www.tandfonline.com/action/cookieAbsent'><meta name='pbContext' content=';wgroup:string:Publication Websites;website:website:TFOPB;page:string:Cookie Absent'>"))
     url = 'https://doi.org/10.1080/10584609.2019.1619639'
     m = create_media url: url
     data = m.as_json
     assert_equal url, data['url']
     assert_nil data['error']
+    Media.any_instance.unstub(:get_html)
   end
 
   test "should ignore author_name when it is twitter default" do
@@ -1048,6 +1061,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should get Facebook metrics from crowdtangle when it's a Facebook item" do
     Media.unstub(:request_metrics_from_facebook)
+    Media.any_instance.stubs(:get_crowdtangle_id).returns('172685102050_10157701432562051')
     ['https://www.facebook.com/172685102050/photos/a.406269382050/10157701432562051/', 'https://www.facebook.com/permalink.php?story_fbid=10157697779652051&id=172685102050'].each do |url|
       m = create_media url: url
       m.as_json
@@ -1055,6 +1069,7 @@ class MediaTest < ActiveSupport::TestCase
       data = Pender::Store.current.read(id, :json)
       assert data['metrics']['facebook']['share_count'] > 0
     end
+    Media.any_instance.unstub(:get_crowdtangle_id)
   end
 
   {
@@ -1152,6 +1167,17 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:doc)
   end
 
+  test "should ignore metatag when content is not present" do
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' />"))
+    url = 'https://www.mcdonalds.com/'
+    m = Media.new url: url
+    m.as_json
+    assert_equal url, m.url
+    Media.any_instance.unstub(:get_html)
+    Media.any_instance.unstub(:follow_redirections)
+  end
+
   test "should return url on title when title is blank" do
     Media.any_instance.stubs(:doc).returns(nil)
     url = 'http://example.com/empty-page'
@@ -1161,4 +1187,8 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:doc)
   end
 
+  test "should handle error when can't notify webhook" do
+    webhook_info = { 'webhook_url' => 'http://invalid.webhook', 'webhook_token' => 'test' }
+    assert_equal false, Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+  end
 end

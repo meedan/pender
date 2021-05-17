@@ -76,7 +76,7 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_equal data[:raw][:api]['description'], data['description']
     assert_equal data[:raw][:api]['title'], data['title']
     assert_match /#{id}\/picture/, data['picture']
-    assert_equal m.html_for_youtube_item('mtLxD7r4BZQ'), data['html']
+    assert_equal m.html_for_youtube_item, data['html']
     assert_equal data[:raw][:api]['channel_title'], data['author_name']
     assert_equal 'https://www.youtube.com/channel/' + data[:raw][:api]['channel_id'], data['author_url']
     assert_equal data[:raw][:api]['published_at'], data['published_at']
@@ -180,9 +180,10 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_equal 'Deleted video', data['title']
     assert_equal 'This video is unavailable.', data['description']
     assert_equal '', data['author_url']
-    assert_equal '', data[:raw][:api]['thumbnails']
     assert_equal '', data['picture']
     assert_equal '', data['html']
+    assert_nil data[:raw][:api]['thumbnails']
+    assert_match(/returned no items/, data[:raw][:api]['error']['message'])
   end
 
   test "should have external id for video" do
@@ -201,12 +202,39 @@ class YoutubeTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:doc)
   end
 
-  test "should not parse a youtube post when passing the google_api_key is empty" do
+  test "should get data from metatags when parsing a youtube channel and google_api_key is empty" do
     key = create_api_key application_settings: { config: { google_api_key: '' } }
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ', key: key
     assert_equal '', PenderConfig.get(:google_api_key)
     data = m.as_json
-    assert_equal m.url, data['title']
-    assert_match "The request is missing a valid API key.", data['error']['message']
+    assert_equal 'Iron Maiden', data['title']
+    assert_match "The request is missing a valid API key.", data['raw']['api']['error']['message']
+  end
+
+  test "should get data from metatags when parsing a youtube post and google_api_key is empty" do
+    key = create_api_key application_settings: { config: { google_api_key: '' } }
+    m = create_media url: 'https://www.youtube.com/watch?v=nO8ZqH5_Fhg', key: key
+    assert_equal '', PenderConfig.get(:google_api_key)
+    data = m.as_json
+    assert_match(/iron maiden/, data['title'].downcase)
+    assert_match "The request is missing a valid API key.", data['raw']['api']['error']['message']
+  end
+
+  test "should ignore consent page and parse youtube item" do
+    consent_page = 'https://consent.youtube.com/m?continue=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fapp%3Ddesktop%26v%3Dp8y8IzeF9u8%26feature%3Dyoutu.be%26ab_channel%3DDra.RobertaLacerda&gl=IE&m=0&pc=yt&uxe=23983172&hl=en&src=1'
+    response = ''
+    response.stubs(:code).returns('302')
+    response.stubs(:header).returns({ 'location' => consent_page })
+    Media.any_instance.stubs(:request_media_url).returns(response)
+    url = 'https://www.youtube.com/watch?app=desktop&v=p8y8IzeF9u8&feature=youtu.be&ab_channel=Dra.RobertaLacerda'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal 'youtube', data['provider']
+    assert_match /desconstruir a eficácia da hidroxicloroquina/, data['title']
+    assert_match /desconstruir a eficácia da hidroxicloroquina/, data['description']
+    assert_equal 'https://www.youtube.com/channel/UCAw-vsuGe530nLru8vSYUcw', data['author_url']
+    assert !data['html'].blank?
+    assert_equal 'https://www.youtube.com/watch?v=p8y8IzeF9u8', m.url
   end
 end

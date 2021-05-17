@@ -1,4 +1,3 @@
-require 'timeout'
 require 'pender_exceptions'
 require 'pender_store'
 require 'cc_deville'
@@ -102,12 +101,11 @@ module Api
           render_timeout_media(data, must_render, oembed) and return true
         end
         begin
-          Timeout::timeout(timeout_value) { yield }
-        rescue Timeout::Error
+          yield
+        rescue Timeout::Error, Net::ReadTimeout
           @data = get_timeout_data(nil, @url, @id)
           render_timeout_media(@data, must_render) and return true
         end
-
         return false
       end
 

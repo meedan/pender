@@ -6,6 +6,7 @@ module MediaFacebookItem
   URLS = [
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/posts\/(?<id>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/photos\/.*a\.([0-9]+)\.([0-9]+)\.(?<id>[0-9]+)\/([0-9]+).*/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/photos\/.*a\.([0-9]+)\/([0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/photos\/pcb\.([0-9]+)\/(?<id>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo(.php)?\/?\?fbid=(?<id>[0-9]+)&set=a\.([0-9]+)(\.([0-9]+)\.([0-9]+))?.*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo(.php)?\?fbid=(?<id>[0-9]+)&set=p\.([0-9]+).*/,
@@ -48,19 +49,18 @@ module MediaFacebookItem
   def get_facebook_user_id_from_url
     params = parse_uri(Media.parse_url(self.url))
     user_id = params['id'].first.match(/([0-9]+).*/)[1] unless params['id'].blank?
-    user_id ||= self.doc.to_s.match(/"groupID":"(\d+)"/) && self.doc.to_s.match(/"groupID":"(\d+)"/)[1]
-    user_id ||= self.doc.to_s.match(/"owner":{[^\{]+?"id":"(\d+)"[^\{\}]+?}/) && self.doc.to_s.match(/"owner":{[^\{]+?"id":"(\d+)"[^\{\}]+?}/)[1]
-    user_id ||= self.doc.to_s.match(/"userID":"(\d+)"/) && self.doc.to_s.match(/"userID":"(\d+)"/)[1]
+    user_id ||= self.doc.to_s[/"groupID":"(\d+)"/, 1]
+    user_id ||= self.doc.to_s[/"owner":{[^\{]+?"id":"(\d+)"[^\{\}]+?}/, 1]
+    user_id ||= self.doc.to_s[/"userID":"(\d+)"/, 1]
     user_id ||= params['set'].first.split('.').last unless params['set'].blank?
     user_id || get_facebook_user_id_from_url_pattern
   end
 
   def get_facebook_user_id_from_url_pattern
     URLS.each do |pattern|
-      if pattern.match(self.url)
-        return pattern.match(self.url)['id'] if pattern.match(self.url).names.include?('id')
-        break
-      end
+      match = pattern.match(self.url)
+      user_id = (match&.names&.include?('profile') && match['profile'].to_i > 0 && match['profile']) || (match&.names&.include?('id') && match['id'])
+      break user_id if user_id
     end
   end
 

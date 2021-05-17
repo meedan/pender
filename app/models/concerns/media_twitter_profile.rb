@@ -27,18 +27,16 @@ module MediaTwitterProfile
     self.data[:raw][:api] = {}
     handle_twitter_exceptions do
       self.data[:raw][:api].merge!(self.twitter_client.user(username).as_json)
+      self.process_twitter_profile_images
+      self.set_data_field('picture', self.data[:pictures][:original])
+      self.set_data_field('author_picture', self.data[:pictures][:original])
     end
-
-    self.process_twitter_profile_images
-
+    self.set_data_field('title', get_info_from_data('api', data, 'name'), username)
     self.data.merge!({
       external_id: username,
       username: '@' + username,
-      title: self.data[:raw][:api][:name],
-      author_name: self.data[:raw][:api][:name],
-      picture: self.data[:pictures][:original],
-      author_picture: self.data[:pictures][:original],
-      published_at: self.data[:raw][:api][:created_at],
+      author_name: self.data[:title],
+      published_at: get_info_from_data('api', data, 'created_at'),
       description: get_info_from_data('api', data, 'description')
     })
   end

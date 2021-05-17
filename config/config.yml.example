@@ -3,38 +3,36 @@ development: &default
   authorization_header: 'X-Pender-Token'
   timeout: 25
   public_url: 'http://localhost:3200'
-  redis:
-    host: 'redis'
-    port: 6379
-    database: 1
+  redis_host: 'redis'
+  redis_port: 6379
+  redis_database: 1
 
   # File storage on S3 or API equivalent
   #
   # REQUIRED
   # Use values below for local development
   #
-  storage:
-    endpoint: 'http://minio:9000'
-    access_key: 'AKIAIOSFODNN7EXAMPLE'
-    secret_key: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
-    bucket: 'check-dev'
-    bucket_region: 'us-east-1'
-    video_bucket: 'pender-video'
-    video_asset_path: 'http://localhost:9000/pender-video/video'
+  storage_endpoint: 'http://minio:9000'
+  storage_access_key: 'AKIAIOSFODNN7EXAMPLE'
+  storage_secret_key: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+  storage_bucket: 'pender-dev'
+  storage_bucket_region: 'us-east-1'
+  storage_video_bucket: 'pender-video'
+  storage_video_asset_path: 'http://localhost:9000/pender-video/video'
+  storage_medias_asset_path: 'http://localhost:9000/pender-dev/medias'
 
   # Exception reporting using Airbrake or API equivalent https://airbrake.io/
   #
   # OPTIONAL
   #
-  airbrake:
-    host: # '<AIRBRAKE HOST>'
-    port: # '<AIRBRAKE PORT>'
-    project_key: # '<AIRBRAKE PROJECT KEY>'
-    environment: # '<AIRBRAKE ENVIRONMENT>'
+  aribrake_host: # '<AIRBRAKE HOST>'
+  aribrake_port: # '<AIRBRAKE PORT>'
+  aribrake_project_key: # '<AIRBRAKE PROJECT KEY>'
+  aribrake_environment: # '<AIRBRAKE ENVIRONMENT>'
 
   # Google API
   #
-  # REQUIRED for YouTube links
+  # REQUIRED for parsing YouTube links using the API
   # OPTIONAL for Safe Browsing Lookup API https://developers.google.com/safe-browsing/v4/lookup-api
   # To get a key, follow these instructions https://developers.google.com/safe-browsing/v4/get-started
   #
@@ -44,59 +42,70 @@ development: &default
   #
   # REQUIRED for Twitter posts
   #
-  twitter:
-    consumer_key: # '<TWITTER APP CONSUMER KEY>'
-    consumer_secret: # '<TWITTER APP CONSUMER SECRET>'
-    access_token: # '<TWITTER APP ACCESS TOKEN>'
-    access_token_secret: # '<TWITTER APP ACCESS TOKEN SECRET>'
+  twitter_consumer_key: # '<TWITTER APP CONSUMER KEY>'
+  twitter_consumer_secret: # '<TWITTER APP CONSUMER SECRET>'
+  twitter_access_token: # '<TWITTER APP ACCESS TOKEN>'
+  twitter_access_token_secret: # '<TWITTER APP ACCESS TOKEN SECRET>'
 
   # Facebook API
   #
   # REQUIRED for Facebook social metrics
   #
-  facebook:
-    app_id: # '<FACEBOOK APP ID>'
-    app_secret: # '<FACEBOOK APP SECRET>'
+  facebook_app: # '<FACEBOOK APP ID>:<FACEBOOK APP SECRET>'
 
   # Luminati proxy service https://luminati.io/
   #
   # OPTIONAL
   #
-  proxy:
-    host: # '<LUMINATI HOST>'
-    port: # '<LUMINATI PORT>'
-    user_prefix: # '<LUMINATI ACCOUNT PREFIX>'
-    country_prefix: #'<LUMINATI COUNTRY PREFIX>'
-    session_prefix: #'<LUMINATI SESSION PREFIX>'
-    pass: # '<LUMINATI ACCOUNT PASSWORD>'
+  proxy_host: # '<LUMINATI HOST>'
+  proxy_port: # '<LUMINATI PORT>'
+  proxy_user_prefix: # '<LUMINATI ACCOUNT PREFIX>'
+  proxy_country_prefix: #'<LUMINATI COUNTRY PREFIX>'
+  proxy_session_prefix: #'<LUMINATI SESSION PREFIX>'
+  proxy_pass: # '<LUMINATI ACCOUNT PASSWORD>'
 
   # Proxy service to download videos using youtube-dl https://youtube-dl.org/
   #
   # OPTIONAL
   #
-  ytdl_proxy:
-    host: # '<HOST>'
-    port: # '<PORT>'
-    user_prefix: # '<ACCOUNT PREFIX>'
-    pass: # '<ACCOUNT PASSWORD>'
+  ytdl_proxy_host: # '<HOST>'
+  ytdl_proxy_port: # '<PORT>'
+  ytdl_proxy_user_prefix: # '<ACCOUNT PREFIX>'
+  ytdl_proxy_pass: # '<ACCOUNT PASSWORD>'
 
   # Special instructions to access specific domains
   #
   # OPTIONAL
   #
-  hosts:
-    <HOST DOMAIN>:
-      country: '<COUNTRY CODE FOR PROXY SETTING>'
-      cf_credentials: '<CLOUDFLARE CREDENTIALS>'
+  hosts: "{\"<HOST DOMAIN>\":{\"country\":\"<COUNTRY CODE FOR PROXY SETTING>\"},\"<HOST DOMAIN>\":{\"cf_credentials\":\"<CLOUDFLARE CREDENTIALS>\"}}"
 
   # CloudFlare caching https://support.cloudflare.com/hc/en-us/categories/200275248-Caching
   #
   # OPTIONAL
   #
-  cloudflare:
-    auth_email: # '<CLOUDFLARE AUTH EMAIL>'
-    auth_key: # '<CLOUDFLARE AUTH KEY>'
-    zone: # '<CLOUDFLARE ZONE>'
+  cloudflare_auth_email: # '<CLOUDFLARE AUTH EMAIL>'
+  cloudflare_auth_key: # '<CLOUDFLARE AUTH KEY>'
+  cloudflare_zone: # '<CLOUDFLARE ZONE>'
+
+  # Crowdtangle parsing
+  #
+  # OPTIONAL
+  #
+  crowdtangle_facebook_token: # '<CROWDTANGLE TOKEN FOR FACEBOOK POSTS>'
+  crowdtangle_instagram_token: # '<CROWDTANGLE TOKEN FOR INSTAGRAM POSTS>'
+
+  # Archive.org service to archive pages https://archive.org/account/s3.php
+  #
+  # OPTIONAL
+  #
+  archive_org_access_key: # '<ARCHIVE.ORG ACCESS KEY>'
+  archive_org_secret_key: # '<ARCHIVE.ORG SECRET KEY>'
+
+  # Perma.cc service to archive pages https://perma.cc/
+  #
+  # OPTIONAL
+  #
+  perma_cc_key: # '<PERMA.CC ACCESS KEY>'
 
 test:
   <<: *default

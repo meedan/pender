@@ -67,8 +67,8 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://twitter.com/caiosba32153623', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_match /Twitter::Error::NotFound: [0-9]+ User not found./, data['error']['message']
-    assert_equal LapisConstants::ErrorCodes::const_get('INVALID_VALUE'), data['error']['code']
+    assert_match /Twitter::Error::NotFound: [0-9]+ User not found./, data['raw']['api']['error']['message']
+    assert_equal LapisConstants::ErrorCodes::const_get('INVALID_VALUE'), data['raw']['api']['error']['code']
     assert_equal 'twitter', data['provider']
     assert_equal 'profile', data['type']
     assert_not_nil data['embed_tag']
@@ -129,8 +129,8 @@ class MediasControllerTest < ActionController::TestCase
     get :index, url: 'https://twitter.com/caiosba/status/0000000000000', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_match /Twitter::Error::NotFound: [0-9]+ No data available for specified ID./, data['error']['message']
-    assert_equal LapisConstants::ErrorCodes::const_get('INVALID_VALUE'), data['error']['code']
+    assert_match /Twitter::Error::NotFound: [0-9]+ No data available for specified ID./, data['raw']['api']['error']['message']
+    assert_equal LapisConstants::ErrorCodes::const_get('INVALID_VALUE'), data['raw']['api']['error']['code']
     assert_equal 'twitter', data['provider']
     assert_equal 'item', data['type']
     assert_not_nil data['embed_tag']
@@ -248,13 +248,15 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should respect timeout" do
-    url = 'http://ca.ios.ba/files/others/test.php' # This link has a sleep(10) function
-    api_key = create_api_key application_settings: { config: { timeout: '2' }}
+    url = 'https://ca.ios.ba/files/others/test.php' # This link has a sleep(10) function
+    timeout = '2'
+    api_key = create_api_key application_settings: { config: { timeout: timeout }}
     authenticate_with_token(api_key)
     start = Time.now.to_i
     get :index, url: url, format: :json
     time = Time.now.to_i - start
-    assert time <= 3, "Expected it to take less than 3 seconds, but took #{time} seconds"
+    expected_time = timeout.to_i + 3
+    assert time <= expected_time, "Expected it to take less than #{expected_time} seconds, but took #{time} seconds"
     assert_equal 'Timeout', JSON.parse(@response.body)['data']['error']['message']
     assert_response 200
   end
@@ -610,19 +612,28 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should enqueue, parse and notify with error when timeout" do
+    Sidekiq::Testing.fake!
     webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
-    a = create_api_key application_settings: webhook_info
+    a = create_api_key application_settings: webhook_info.merge(config: { timeout: '0.001' })
     authenticate_with_token(a)
 
     url = 'https://ca.ios.ba/files/meedan/sleep.php'
-    timeout_error = { error: { message: 'Timeout', code: LapisConstants::ErrorCodes::const_get('TIMEOUT')}}
+    id = Media.get_id(url)
+    timeout_error = {"message" => "Timeout", "code" => LapisConstants::ErrorCodes::const_get('TIMEOUT')}
     minimal_data = Media.minimal_data(OpenStruct.new(url: url)).merge(title: url)
-    Media.stubs(:minimal_data).with(OpenStruct.new(url: url)).returns(minimal_data)
+    Media.stubs(:minimal_data).returns(minimal_data)
 
-    Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(timeout_error), webhook_info)
+    Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(error: timeout_error).with_indifferent_access, a.settings)
+    assert_equal 0, MediaParserWorker.jobs.size
     post :bulk, url: url, format: :json
     assert_response :success
     assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
+    assert_equal 1, MediaParserWorker.jobs.size
+    assert_equal url, MediaParserWorker.jobs[0]['args'][0]
+
+    assert_nil Pender::Store.current.read(id, :json)
+    MediaParserWorker.drain
+    assert_equal timeout_error, Pender::Store.current.read(id, :json)['error']
     Media.unstub(:notify_webhook)
     Media.unstub(:minimal_data)
   end

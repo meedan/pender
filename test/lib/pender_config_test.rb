@@ -60,4 +60,12 @@ class PenderConfigTest < ActiveSupport::TestCase
       ENV[key] = env_values[key]
     end
   end
+
+  test "should return default value if raises error when parsing json" do
+    PenderConfig.current = nil
+    config = { :hosts => "{ domain:{ country: us }}" }
+    ApiKey.current = create_api_key application_settings: { config: config }
+    assert_equal({}, PenderConfig.get('hosts', {}, :json))
+  end
+
 end

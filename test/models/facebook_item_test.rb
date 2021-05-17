@@ -96,7 +96,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
-    assert_match /https:\/\/www.facebook.com\/cbcnews\/(videos|posts)\/10154783484119604/, m.url
+    assert_match /https:\/\/www.facebook.com\/(5823419603|cbcnews)\/(videos|posts)\/10154783484119604/, m.url
     assert_match /live now/, data['title'].downcase
     assert_match 'cbcnews', data['username']
     assert_match /facebook.com\/5823419603/, data['author_url']
@@ -134,13 +134,13 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     variations = %w(
       https://www.facebook.com/events/364677040588691/permalink/376287682760960?ref=1&action_history=null
+      https://www.facebook.com/events/zawya/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691
       https://www.facebook.com/events/zawya/zawyas-tribute-to-mohamed-khan-%D9%85%D9%88%D8%B9%D8%AF-%D9%85%D8%B9-%D8%AE%D8%A7%D9%86/364677040588691/
       https://web.facebook.com/events/364677040588691/permalink/376287682760960?ref=1&action_history=null&_rdc=1&_rdr
     )
     assert_includes variations, m.url
     assert_not_nil data['published_at']
     assert_match /#{data['user_uuid']}/, data['author_url']
-    assert_match /\/medias\/[a-z0-9]+\/picture.(jpg|png)/, data[:picture]
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
@@ -187,8 +187,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_match /(south china morning post|scmp)/, data['title'].downcase
     assert_match /SCMP #FacebookLive/, data['description']
-    assert_match 'scmp', data['username']
-    assert_match /#{id}\/picture.jpg/, data['picture']
     assert_match /facebook.com\/355665009819/, data['author_url']
     assert_match /(South China Morning Post|scmp)/, data['author_name']
   end
@@ -295,8 +293,7 @@ class FacebookItemTest < ActiveSupport::TestCase
   test "should parse Facebook post from page photo" do
     m = create_media url: 'https://www.facebook.com/quoted.pictures/photos/a.128828073875334.28784.128791873878954/1096134023811396/?type=3&theater'
     data = m.as_json
-
-    assert_match /quoted.pictures/, data['title'].downcase
+    assert !data['title'].blank?
     assert_match 'quoted.pictures', data['username']
     assert_match /quoted.pictures/, data['author_name'].downcase
     assert !data['author_url'].blank?
@@ -557,8 +554,8 @@ class FacebookItemTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:get_html)
   end
 
-  test "should add login required error and return empty html" do
-    html = "<title id='pageTitle'>Log in or sign up to view</title>"
+  test "should add login required error and return empty html and description" do
+    html = "<title id='pageTitle'>Log in or sign up to view</title><meta property='og:description' content='See posts, photos and more on Facebook.'>"
     Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(html))
     Media.any_instance.stubs(:follow_redirections)
 
@@ -566,6 +563,8 @@ class FacebookItemTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'Login required to see this profile', data[:error][:message]
     assert_equal LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
+    assert_equal m.url, data[:title]
+    assert_equal '', data[:description]
     assert_equal '', data[:html]
     Media.any_instance.unstub(:get_html)
     Media.any_instance.unstub(:follow_redirections)

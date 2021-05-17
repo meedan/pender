@@ -88,7 +88,7 @@ class Media
 
   def self.minimal_data(instance)
     data = {}
-    %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field] = '' }
+    %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field.to_sym] = '' }
     data[:raw] = data[:archives] = data[:metrics] = {}
     data.merge(Media.required_fields(instance)).with_indifferent_access
   end
@@ -127,17 +127,22 @@ class Media
 
   def self.notify_webhook(type, url, data, settings)
     if settings['webhook_url'] && settings['webhook_token']
-      uri = URI.parse(settings['webhook_url'])
-      payload = data.merge({ url: url, type: type }).to_json
-      sig = 'sha1=' + OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), settings['webhook_token'], payload)
-      headers = { 'Content-Type': 'text/json', 'X-Signature': sig }
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = uri.scheme == 'https'
-      request = Net::HTTP::Post.new(uri.request_uri, headers)
-      request.body = payload
-      response = http.request(request)
-      Rails.logger.info level: 'INFO', message: 'Webhook notification', url: url, type: type, code: response.code, response: response.message, webhook_url: settings['webhook_url']
-      @webhook_called = true
+      begin
+        uri = URI.parse(settings['webhook_url'])
+        payload = data.merge({ url: url, type: type }).to_json
+        sig = 'sha1=' + OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), settings['webhook_token'], payload)
+        headers = { 'Content-Type': 'text/json', 'X-Signature': sig }
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = uri.scheme == 'https'
+        request = Net::HTTP::Post.new(uri.request_uri, headers)
+        request.body = payload
+        http.request(request)
+        @webhook_called = true
+      rescue StandardError => e
+        PenderAirbrake.notify(e, url: url, type: type, webhook_url: settings['webhook_url'])
+        Rails.logger.warn level: 'WARN', message: 'Failed to notify webhook', url: url, type: type, error_class: e.class, error_message: e.message, webhook_url: settings['webhook_url']
+        return false
+      end
     end
     true
   end
@@ -170,16 +175,14 @@ class Media
 
   def get_canonical_url
     self.doc = self.get_html(Media.html_options(self.url))
-    if self.doc
-      tag = self.doc.at_css("meta[property='og:url']") || self.doc.at_css("meta[property='twitter:url']") || self.doc.at_css("link[rel='canonical']")
-      get_parsed_url(tag) unless tag.blank?
-    end
+    tag = self.doc&.at_css("meta[property='og:url']") || self.doc&.at_css("meta[property='twitter:url']") || self.doc&.at_css("link[rel='canonical']")
+    canonical_url = tag&.attr('content') || tag&.attr('href')
+    get_parsed_url(canonical_url) if canonical_url
   end
 
-  def get_parsed_url(tag)
-    canonical_url = tag.attr('content') || tag.attr('href')
+  def get_parsed_url(canonical_url)
     return false if !Media.validate_url(canonical_url)
-    if canonical_url != self.url && !Media.is_a_login_page(canonical_url)
+    if canonical_url != self.url && !Media.ignore_url?(canonical_url)
       self.url = absolute_url(canonical_url)
       self.doc = self.get_html(Media.html_options(self.url)) if self.doc.nil?
     end
@@ -215,7 +218,7 @@ class Media
 
   def set_url_from_location(response, path)
     if %w(301 302).include?(response.code)
-      self.url = response.header['location'] if !Media.is_a_login_page(response.header['location'])
+      self.url = response.header['location'] unless Media.ignore_url?(response.header['location'])
       if self.url !~ /^https?:/
         self.url.prepend('/') unless self.url.match(/^\//)
         previous = path.last.match(/^https?:\/\/[^\/]+/)[0]
@@ -226,7 +229,7 @@ class Media
 
   def request_media_url
     response = nil
-    Retryable.retryable(tries: 3, sleep: 1) do
+    Retryable.retryable(tries: 3, sleep: 1, :not => [Net::ReadTimeout]) do
       response = Media.request_url(url, 'Head')
     end
     response
@@ -272,7 +275,7 @@ class Media
       options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
       uri = Media.parse_url(decoded_uri(self.url))
       html = ''
-      OpenURI.open_uri(uri, options) do |f|
+      OpenURI.open_uri(uri, options.merge(read_timeout: PenderConfig.get('timeout', 30).to_i)) do |f|
         f.binmode
         html = f.read
       end
