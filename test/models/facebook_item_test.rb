@@ -97,7 +97,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
     assert_match /https:\/\/www.facebook.com\/(5823419603|cbcnews)\/(videos|posts)\/10154783484119604/, m.url
-    assert_match /live now/, data['title'].downcase
+    assert_match /live/, data['title'].downcase
     assert_match 'cbcnews', data['username']
     assert_match /facebook.com\/5823419603/, data['author_url']
   end

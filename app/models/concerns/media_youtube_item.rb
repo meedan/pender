@@ -27,9 +27,7 @@ module MediaYoutubeItem
       Yt.configuration.api_key = PenderConfig.get(:google_api_key)
       video = Yt::Video.new url: self.url
       video_data = video.snippet.data.with_indifferent_access
-      # puts "video_data: #{video_data}"
       self.youtube_item_direct_attributes.each do |attr|
-        # puts "video_data.dig #{video_data.dig(attr.camelize(:lower))}"
         self.data[:raw][:api][attr] = video_data.dig(attr.camelize(:lower)) || video.send(attr) || ''
       end
     end
