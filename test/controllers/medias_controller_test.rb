@@ -618,9 +618,10 @@ class MediasControllerTest < ActionController::TestCase
     assert_response :success
     sleep 2
     data1 = Pender::Store.current.read(id1, :json)
-    assert_not_nil data1['title']
+    assert !data1['title'].blank?
     data2 = Pender::Store.current.read(id2, :json)
-    assert_not_nil data2['title']
+    assert !data2['title'].blank?
+
   end
 
   test "should enqueue, parse and notify with error when timeout" do
