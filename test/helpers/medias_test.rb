@@ -102,8 +102,8 @@ class MediasHelperTest < ActionView::TestCase
   test 'should upload images to s3 and update media data' do
     urls = %w(
       https://meedan.com
-      https://twitter.com/meedan/status/1292864876361154561
-      https://www.youtube.com/watch?v=qAogQrF7NFs
+      https://opensource.globo.com/hacktoberfest/
+      https://hacktoberfest.digitalocean.com/
     )
     urls.each do |url|
       id = Media.get_id(url)

@@ -110,6 +110,10 @@ development: &default
 test:
   <<: *default
   chrome_debug_port: 9444
+  storage_bucket: 'check-test'
+  storage_video_bucket:
+  storage_video_asset_path:
+  storage_medias_asset_path: 'http://localhost:9000/check-test/medias'
 
 production:
   <<: *default

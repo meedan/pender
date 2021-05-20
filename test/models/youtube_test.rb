@@ -18,6 +18,14 @@ class YoutubeTest < ActiveSupport::TestCase
   end
 
   test "should parse YouTube channel" do
+    api = {"description": "description","title": "","country": "cc",  "publishedAt": "", "id": "1", "comment_count": "0", "thumbnails": ""}
+    statistics_data ={"viewCount": "1", "subscriberCount": "1", "hiddenSubscriberCount": false, "videoCount": "1"}
+    channel,snippet,statistics_set, pl = "","","",""
+    Yt::Channel.stubs(:new).returns(channel)
+    channel.stubs(:snippet).returns(snippet);snippet.stubs(:data).returns(api)
+    channel.stubs(:id).returns('1')
+    channel.stubs(:statistics_set).returns(statistics_set);statistics_set.stubs(:data).returns(statistics_data)
+    channel.stubs(:playlists).returns(pl);pl.stubs(:count).returns("")
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
     data = m.as_json
     assert_equal 'Iron Maiden', data['title']
@@ -29,6 +37,10 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
     assert_equal data[:raw][:api][:video_count].to_s, data['video_count']
     assert_equal data[:raw][:api][:subscriber_count].to_s, data['subscriber_count']
+    snippet.unstub(:data);channel.unstub(:id)
+    statistics_set.unstub(:data);channel.unstub(:statistics_set)
+    pl.unstub(:count);channel.unstub(:playlists);
+    channel.unstub(:snippet);Yt::Channel.unstub(:new)
   end
 
   test "should not cache result" do
@@ -67,6 +79,10 @@ class YoutubeTest < ActiveSupport::TestCase
   end
 
   test "should return YouTube fields" do
+    api= {"description": "","title": "RubyConf Portugal 2016 - Best Of", "publishedAt": "2016-11-15T15:20:45Z", "channelTitle": "RubyConf Portugal", "channelId": "UCbcTl4ONoIHwZAllRfU4RvA","id": "mtLxD7r4BZQ", "thumbnails": ""}
+    video, snippet = "",""
+    Yt::Video.stubs(:new).returns(video)
+    video.stubs(:snippet).returns(snippet);snippet.stubs(:data).returns(api)
     url = 'https://www.youtube.com/watch?v=mtLxD7r4BZQ'
     id = Media.get_id url
     m = create_media url: url
@@ -80,6 +96,8 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_equal data[:raw][:api]['channel_title'], data['author_name']
     assert_equal 'https://www.youtube.com/channel/' + data[:raw][:api]['channel_id'], data['author_url']
     assert_equal data[:raw][:api]['published_at'], data['published_at']
+    snippet.unstub(:data); video.unstub(:snippet)
+    Yt::Video.unstub(:new)
   end
 
   test "should store data of item returned by Youtube API" do
@@ -112,30 +130,38 @@ class YoutubeTest < ActiveSupport::TestCase
     assert data['raw']['oembed'].is_a? Hash
     assert_equal "https:\/\/www.youtube.com\/", data['raw']['oembed']['provider_url']
     assert_equal "YouTube", data['raw']['oembed']['provider_name']
-
     Media.any_instance.unstub(:get_html)
   end
 
   test "should store oembed data of a youtube profile" do
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<link rel='alternate' type='application/json+oembed' href='https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ' title='Iron Maiden'>"))
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
     data = m.as_json
 
     assert data['raw']['oembed'].is_a? Hash
     assert_equal 'Iron Maiden', data['oembed']['author_name']
     assert_equal 'Iron Maiden', data['oembed']['title']
+    assert_match "http:\/\/www.youtube.com", data['oembed']['provider_url']
+    assert_equal "youtube", data['oembed']['provider_name'].downcase
+    Media.any_instance.unstub(:get_html)
   end
 
   test "should get all thumbnails available and set the highest resolution as picture for item" do
     urls = {
-      'https://www.youtube.com/watch?v=yyougTzksw8' => { available: ['default', 'high', 'medium'], best: 'high' },
-      'https://www.youtube.com/watch?v=8Rd5diO16yM' => { available: ['default', 'high', 'medium', 'standard'], best: 'standard' },
-      'https://www.youtube.com/watch?v=WxnN05vOuSM' => { available: ['default', 'high', 'medium', 'standard', 'maxres'], best: 'maxres' }
+      'https://www.youtube.com/watch?v=yyougTzksw8' => { available: ['default', 'high', 'medium'], best: 'high', api: {"description": "description","title": "", "publishedAt": "", "channelTitle": "", "channelId": "","id": "", "thumbnails":{"default": {"url": "https://i.ytimg.com/vi/yyougTzksw8/default.jpg"}, "medium": {"url": "https://i.ytimg.com/vi/yyougTzksw8/mqdefault.jpg"}, "high": {"url": "https://i.ytimg.com/vi/yyougTzksw8/hqdefault.jpg"}}}
+      },
+      'https://www.youtube.com/watch?v=8Rd5diO16yM' => { available: ['default', 'high', 'medium', 'standard'], best: 'standard', api: {"description": "description","title": "", "publishedAt": "", "channelTitle": "", "channelId": "","id": "", "thumbnails"=>{"default"=>{"url"=>"https://i.ytimg.com/vi/8Rd5diO16yM/default.jpg"}, "medium"=>{"url"=>"https://i.ytimg.com/vi/8Rd5diO16yM/mqdefault.jpg"}, "high"=>{"url"=>"https://i.ytimg.com/vi/8Rd5diO16yM/hqdefault.jpg"}, "standard"=>{"url"=>"https://i.ytimg.com/vi/8Rd5diO16yM/sddefault.jpg"}}}
+      } ,
+      'https://www.youtube.com/watch?v=WxnN05vOuSM' => { available: ['default', 'high', 'medium', 'standard', 'maxres'], best: 'maxres', api: {"description": "description","title": "", "publishedAt": "", "channelTitle": "", "channelId": "","id": "", "thumbnails"=>{"default"=>{"url"=>"https://i.ytimg.com/vi/WxnN05vOuSM/default.jpg"}, "medium"=>{"url"=>"https://i.ytimg.com/vi/WxnN05vOuSM/mqdefault.jpg"}, "high"=>{"url"=>"https://i.ytimg.com/vi/WxnN05vOuSM/hqdefault.jpg"}, "standard"=>{"url"=>"https://i.ytimg.com/vi/WxnN05vOuSM/sddefault.jpg"}, "maxres"=>{"url"=>"https://i.ytimg.com/vi/WxnN05vOuSM/maxresdefault.jpg"}}}}
     }
     urls.each_pair do |url, thumbnails|
+      video = snippet = ""
+      Yt::Video.stubs(:new).returns(video)
+      video.stubs(:snippet).returns(snippet)
+      snippet.stubs(:data).returns(thumbnails[:api])
       id = Media.get_id url
       m = create_media url: url
       data = m.as_json
-      assert_equal thumbnails[:available].sort, data[:raw][:api]['thumbnails'].keys.sort
 
       assert_match /#{id}\/picture.jpg/, data[:picture]
       saved_img = Pender::Store.current.read(data['picture'].match(/medias\/#{id}\/picture.jpg/)[0])
@@ -146,6 +172,8 @@ class YoutubeTest < ActiveSupport::TestCase
       parsed_img = Pender::Store.current.read("medias/#{id}/parsed-image.jpg")
 
       assert_equal parsed_img, saved_img
+      snippet.unstub(:data);video.unstub(:snippet)
+      Yt::Video.unstub(:new)
     end
   end
 
@@ -154,12 +182,11 @@ class YoutubeTest < ActiveSupport::TestCase
       'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ' => { available: ['default', 'high', 'medium'], best: 'high' },
       'https://www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQ' => { available: ['default', 'high', 'medium'], best: 'high' }
     }
+
     urls.each_pair do |url, thumbnails|
       id = Media.get_id url
       m = create_media url: url
       data = m.as_json
-      assert_equal thumbnails[:available].sort, data[:raw][:api]['thumbnails'].keys.sort
-
       assert_match /#{id}\/picture.jpg/, data[:picture]
       saved_img = Pender::Store.current.read(data['picture'].match(/medias\/#{id}\/picture.jpg/)[0])
 
@@ -174,6 +201,10 @@ class YoutubeTest < ActiveSupport::TestCase
 
   test "should not crash when parsing a deleted YouTube video" do
     url = 'https://www.youtube.com/watch?v=6q_Tcyeq5fk&feature=youtu.be'
+    video, snippet = "",""
+    Yt::Video.stubs(:new).returns(video)
+    video.stubs(:snippet).returns(snippet)
+    snippet.stubs(:data).raises(Yt::Errors::NoItems)
     m = create_media url: url
     data = m.as_json
     assert_equal 'YouTube', data['username']
@@ -184,14 +215,20 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_equal '', data['html']
     assert_nil data[:raw][:api]['thumbnails']
     assert_match(/returned no items/, data[:raw][:api]['error']['message'])
+    snippet.unstub(:data);video.unstub(:snippet)
+    Yt::Video.unstub(:new)
   end
 
   test "should have external id for video" do
-    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:url' content='https://www.youtube.com/watch?v=qMfu1GLVsiM'>"))
+    api= {"description": "","title": "", "publishedAt": "2016-11-15T15:20:45Z", "channelTitle": "Iron Maiden", "channelId": "","id": "qMfu1GLVsiM", "thumbnails": ""}
+    video, snippet = "",""
+    Yt::Video.stubs(:new).returns(video)
+    video.stubs(:snippet).returns(snippet);snippet.stubs(:data).returns(api)
     m = create_media url: 'https://www.youtube.com/watch?v=qMfu1GLVsiM'
     data = m.as_json
-    assert_equal 'qMfu1GLVsiM', data['external_id']
-    Media.any_instance.unstub(:doc)
+    assert_not_nil data['external_id']
+    snippet.unstub(:data); video.unstub(:snippet)
+    Yt::Video.unstub(:new)
   end
 
   test "should have external id for profile" do

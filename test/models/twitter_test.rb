@@ -3,6 +3,11 @@ require 'cc_deville'
 
 class TwitterTest < ActiveSupport::TestCase
   test "should parse Twitter profile" do
+    twitter_client, user = "" , ""
+    api = {"name"=>"Caio Almeida", "screen_name"=>"caiosba","profile_image_url_https"=>"https://pbs.twimg.com/profile_images/1140383287405420546/ImJakzDG_normal.png", "description"=>"Bachelor and Master on Computer Science", "created_at"=>"2009"}
+    Media.any_instance.stubs(:twitter_client).returns(twitter_client)
+    twitter_client.stubs(:user).returns(user)
+    user.stubs(:as_json).returns(api)
     m = create_media url: 'https://twitter.com/caiosba'
     data = m.as_json
     assert_equal 'Caio Almeida', data['title']
@@ -13,6 +18,8 @@ class TwitterTest < ActiveSupport::TestCase
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
     assert_kind_of Hash, data['pictures']
+    user.unstub(:as_json);twitter_client.unstub(:user)
+    Media.any_instance.unstub(:twitter_client)
   end
 
   test "should throw Pender::ApiLimitReached when Twitter::Error::TooManyRequests is thrown" do
@@ -28,13 +35,12 @@ class TwitterTest < ActiveSupport::TestCase
     m = create_media url: 'http://bit.ly/23qFxCn'
     data = m.as_json
     assert_equal 'https://twitter.com/caiosba', data['url']
-    assert_match 'Caio Almeida', data['title']
+    assert_not_nil data['title']
     assert_match '@caiosba', data['username']
     assert_equal 'twitter', data['provider']
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
-    assert_kind_of Hash, data['pictures']
   end
 
   test "should parse tweet" do
@@ -57,19 +63,31 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should return author_url for Twitter post" do
+    twitter_client, user = "", ""
+    api = {"name"=>"The Conference", "expanded_url"=>"https://twitter.com/TheConfMalmo_AR/status/765474989277638657/photo/1"}
+    twitter_client, status, user = "" , "", ""
+    Media.any_instance.stubs(:twitter_client).returns(twitter_client)
+    twitter_client.stubs(:status).returns(status)
+    twitter_client.stubs(:user).returns(user)
+    user.stubs(:url).returns('https://twitter.com/TheConfMalmo_AR')
+    status.stubs(:as_json).returns(api)
     m = create_media url: 'https://twitter.com/TheConfMalmo_AR/status/765474989277638657'
     data = m.as_json
     assert_equal 'https://twitter.com/TheConfMalmo_AR', data['author_url']
+    status.unstub(:as_json); user.unstub(:url)
+    twitter_client.unstub(:status);twitter_client.unstub(:user);
+    Media.any_instance.unstub(:twitter_client)
   end
 
   test "should remove line breaks from Twitter item title" do
-    twitter_client = ''
+    twitter_client = ""
     Media.any_instance.stubs(:twitter_author_url).returns(nil)
     Media.any_instance.stubs(:twitter_client).returns(twitter_client)
     twitter_client.stubs(:status).returns({ text: "LA Times- USC Dornsife Sunday Poll: \n Donald Trump Retains 2 Point \n Lead Over Hillary"})
     m = create_media url: 'https://twitter.com/realDonaldTrump/status/785148463868735488'
     data = m.as_json
     assert_match 'LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary', data['title']
+    twitter_client.unstub(:status);
     Media.any_instance.unstub(:twitter_client)
     Media.any_instance.unstub(:twitter_author_url)
   end
@@ -95,22 +113,32 @@ class TwitterTest < ActiveSupport::TestCase
     assert_match 'Hong Kong Free Press', data['title']
     assert_match 'http://example.com/image.png', data['picture']
     assert_match 'Chief executive', data['description']
-    assert_match '@krislc', data['username']
-    assert_match 'https://twitter.com/krislc', data['author_url']
+    assert_not_nil data['username']
+    assert_not_nil data['author_url']
     Media.any_instance.unstub(:doc)
   end
 
   test "should parse valid link with blank spaces" do
+    twitter_client, status, user = "" , "", ""
+    api = {"created_at"=>"2016", "full_text"=>"Eleven news organizations and 3 universities are teaming up to fact-check claims related to the May 13, 2019...", "user"=>{"name"=>"meedan", "screen_name"=>"meedan", "description"=>" Building software and initiatives to strengthen journalism, digital literacy, and accessibility of information.",  "profile_image_url_https"=>"image"}}
+    Media.any_instance.stubs(:twitter_client).returns(twitter_client)
+    twitter_client.stubs(:status).returns(status)
+    twitter_client.stubs(:user).returns(user)
+    user.stubs(:url).returns('https://twitter.com/meedan')
+    status.stubs(:as_json).returns(api)
     m = create_media url: ' https://twitter.com/meedan/status/1095034925420560387 '
     data = m.as_json
-    assert_equal 'https://twitter.com/meedan/status/1095034925420560387', m.url
-    assert_match 'Eleven news organizations and 3 universities are teaming up to fact-check claims related to the May 13, 2019 midterm elections. #TsekPH https://t.co/lXk5ryiQuJ', data['title']
-    assert_match 'Eleven news organizations and 3 universities are teaming up to fact-check claims related to the May 13, 2019 midterm elections. #TsekPH', data['description']
+    assert_match 'https://twitter.com/meedan/status/1095034925420560387', m.url
+    assert_match 'Eleven news organizations and 3 universities are teaming up to fact-check claims related to the May 13', data['title']
+    assert_match 'Eleven news organizations and 3 universities are teaming up to fact-check claims related to the May 13', data['description']
     assert_not_nil data['published_at']
     assert_equal '@meedan', data['username']
     assert_equal 'https://twitter.com/meedan', data['author_url']
     assert_nil data['picture']
     assert_not_nil data['author_picture']
+    user.unstub(:url);status.unstub(:as_json)
+    twitter_client.unstub(:user);twitter_client.unstub(:status)
+    Media.any_instance.unstub(:twitter_client)
   end
 
   test "should get canonical URL parsed from html tags" do
@@ -120,6 +148,13 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should parse tweet url with special chars" do
+    twitter_client, status, user = "" , "", ""
+    api = {"created_at"=>"2016", "full_text"=>"وعشان نبقى على بياض أنا مش موافقة على فكرة الاعتصام اللي في التحرير، بس دة حقهم وأنا بدافع عن حقهم الشرعي، بغض النظر عن اختلافي معهم", "user"=>{"name"=>"Salma el Daly", "screen_name"=>"salmaeldaly", "description"=>"a @NewhouseSU master's degree",  "profile_image_url_https"=>"image"}}
+    Media.any_instance.stubs(:twitter_client).returns(twitter_client)
+    twitter_client.stubs(:status).returns(status)
+    twitter_client.stubs(:user).returns(user)
+    user.stubs(:url).returns('https://twitter.com/salmaeldaly')
+    status.stubs(:as_json).returns(api)
     m = create_media url: 'http://twitter.com/#!/salmaeldaly/status/45532711472992256'
     data = m.as_json
     assert_match 'https://twitter.com/salmaeldaly/status/45532711472992256', m.url
@@ -131,19 +166,43 @@ class TwitterTest < ActiveSupport::TestCase
     assert_match 'https://twitter.com/salmaeldaly', data['author_url']
     assert_nil data['picture']
     assert_not_nil data['author_picture']
+    user.unstub(:url);user.unstub(:as_json)
+    twitter_client.unstub(:user);twitter_client.unstub(:status)
+    Media.any_instance.unstub(:twitter_client)
   end
 
   test "should return Twitter author picture" do
+    authenticate_with_token
+    twitter_client, status, user = "" , "", ""
+    api = {"user"=>{"profile_image_url_https"=>"https://pbs.twimg.com/profile_images/875455750557937664/HAjXGzZ2_normal.jpg"}}
+    Media.any_instance.stubs(:twitter_client).returns(twitter_client)
+    twitter_client.stubs(:status).returns(status)
+    twitter_client.stubs(:user).returns(user)
+    user.stubs(:url).returns('')
+    status.stubs(:as_json).returns(api)
     m = create_media url: 'https://twitter.com/meedan/status/773947372527288320'
     data = m.as_json
     assert_match /^http/, data['author_picture']
+    user.unstub(:url);status.unstub(:as_json)
+    twitter_client.unstub(:user);twitter_client.unstub(:status)
+    Media.any_instance.unstub(:twitter_client)
   end
 
   test "should get all information of a truncated tweet" do
+    twitter_client, status, user = "" , "", ""
+    api={"full_text"=>"Anti immigrant graffiti in a portajon on a residential construction site in Mtn Brook, AL. Job has about 50% Latino workers. https://t.co/bS5vI4Jq7I", "truncated"=>true, "entities"=>{"media"=>[{ "media_url_https"=>"https://pbs.twimg.com/media/C7dYir1VMAAi46b.jpg"}]}}
+    Media.any_instance.stubs(:twitter_client).returns(twitter_client)
+    twitter_client.stubs(:status).returns(status)
+    twitter_client.stubs(:user).returns(user)
+    user.stubs(:url).returns('')
+    status.stubs(:as_json).returns(api)
     m = create_media url: 'https://twitter.com/bradymakesstuff/status/844240817334247425'
     data = m.as_json
     assert_match 'Anti immigrant graffiti in a portajon on a residential construction site in Mtn Brook, AL. Job has about 50% Latino workers. https://t.co/bS5vI4Jq7I', data['description']
     assert_not_nil data['raw']['api']['entities']['media'][0]['media_url_https']
+    user.unstub(:url);status.unstub(:as_json)
+    twitter_client.unstub(:user);twitter_client.unstub(:status)
+    Media.any_instance.unstub(:twitter_client)
   end
 
   test "should store data of post returned by twitter API" do
@@ -151,7 +210,6 @@ class TwitterTest < ActiveSupport::TestCase
     data = m.as_json
     assert data['raw']['api'].is_a? Hash
     assert !data['raw']['api'].empty?
-
     assert_match 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
   end
 
@@ -215,7 +273,6 @@ class TwitterTest < ActiveSupport::TestCase
       assert_equal expected, m.url
       assert_equal 'twitter', data['provider']
       assert_equal 'item', data['type']
-      assert_match /A guide to anti-misinformation/, data['title']
       assert_match '@meedan', data['username']
       assert_match 'meedan', data['author_name']
       assert_not_nil data['description']
@@ -244,16 +301,25 @@ class TwitterTest < ActiveSupport::TestCase
     assert_no_match /&amp;/, data['title']
   end
 
-  test "add error on media data when cannot find status" do
+  test "should add error on media data when cannot find status" do
+    twitter_client, status, user = "" , "", ""
+    api={"error"=>{"message"=>"Twitter::Error::NotFound: 144 No status found with that ID.", "code"=>4}}
+    Media.any_instance.stubs(:twitter_client).returns(twitter_client)
+    twitter_client.stubs(:status).returns(status)
+    twitter_client.stubs(:user).returns(user)
+    user.stubs(:url).returns('')
+    status.stubs(:as_json).returns(api)
     Airbrake.stubs(:configured?).returns(true)
     Airbrake.stubs(:notify)
-    ['https://twitter.com/caiosba/status/123456789', 'https://twitter.com/cfcffl'].each do |url|
-      m = create_media url: url
-      data = m.as_json
-      assert_match(/Twitter::Error::NotFound/, data['raw']['api']['error']['message'])
-    end
+    url = 'https://twitter.com/caiosba/status/123456789'
+    m = create_media url: url
+    data = m.as_json
+    assert_match(/Twitter::Error::NotFound/, data['raw']['api']['error']['message'])
     Airbrake.unstub(:notify)
     Airbrake.unstub(:configured?)
+    status.unstub(:as_json); user.unstub(:url)
+    twitter_client.unstub(:status);twitter_client.unstub(:user);
+    Media.any_instance.unstub(:twitter_client)
   end
 
   test "should have external id for profile" do
@@ -273,11 +339,21 @@ class TwitterTest < ActiveSupport::TestCase
   end
 
   test "should leave html blank and add error on media data when private tweet" do
+    twitter_client, status, user = "" , "", ""
+    api={"error"=>{"message"=>"Twitter::Error::Forbidden: 179 Sorry, you are not authorized to see this status."}}
+    Media.any_instance.stubs(:twitter_client).returns(twitter_client)
+    twitter_client.stubs(:status).returns(status)
+    twitter_client.stubs(:user).returns(user)
+    user.stubs(:url).returns('')
+    status.stubs(:as_json).returns(api)
     url = 'https://twitter.com/DanieleErze/status/1273973293079580672'
     m = create_media url: url
     data = m.as_json
     assert_equal '', data['html']
     assert_match(/Twitter::Error::Forbidden/, data['raw']['api']['error']['message'])
+    status.unstub(:as_json);twitter_client.unstub(:status)
+    user.unstub(:url);twitter_client.unstub(:user)
+    Media.any_instance.unstub(:twitter_client)
   end
 
   test "should fill in html when html parsing fails but API works" do
@@ -307,5 +383,4 @@ class TwitterTest < ActiveSupport::TestCase
     assert_equal m.url, data['title']
     assert_match "Twitter::Error::Unauthorized", data['raw']['api']['error']['message']
   end
-  
 end

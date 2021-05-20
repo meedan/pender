@@ -125,15 +125,25 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return error message on hash if twitter post url does not exist" do
+    twitter_client, status, user = "" , "", ""
+    api={"error"=>{"message"=>"Twitter::Error::NotFound: 144 No status found with that ID.", "code"=>4}}
+    Media.any_instance.stubs(:twitter_client).returns(twitter_client)
+    twitter_client.stubs(:status).returns(status)
+    twitter_client.stubs(:user).returns(user)
+    user.stubs(:url).returns('')
+    status.stubs(:as_json).returns(api)
     authenticate_with_token
     get :index, url: 'https://twitter.com/caiosba/status/0000000000000', format: :json
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_match /Twitter::Error::NotFound: [0-9]+ No data available for specified ID./, data['raw']['api']['error']['message']
+    assert_match /Twitter::Error::NotFound: [0-9]+/, data['raw']['api']['error']['message']
     assert_equal LapisConstants::ErrorCodes::const_get('INVALID_VALUE'), data['raw']['api']['error']['code']
     assert_equal 'twitter', data['provider']
     assert_equal 'item', data['type']
     assert_not_nil data['embed_tag']
+    status.unstub(:as_json); user.unstub(:url)
+    twitter_client.unstub(:status);twitter_client.unstub(:user);
+    Media.any_instance.unstub(:twitter_client)
   end
 
   test "should parse facebook url when fb post url does not exist" do
@@ -539,6 +549,7 @@ class MediasControllerTest < ActionController::TestCase
     test "should archive on `#{archivers}`" do
       Media.any_instance.unstub(:archive_to_archive_is)
       Media.any_instance.unstub(:archive_to_archive_org)
+      Media.stubs(:get_available_archive_org_snapshot).returns(nil)
       a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
       WebMock.enable!
       allowed_sites = lambda{ |uri| !['archive.today', 'web.archive.org'].include?(uri.host) }
@@ -547,7 +558,7 @@ class MediasControllerTest < ActionController::TestCase
       WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
       WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
 
-      url = 'https://twitter.com/meedan/status/1095035552221540354'
+      url = 'https://www.nytimes.com/section/world/europe'
       archived = {"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/timestamp/#{url}"}}
 
       authenticate_with_token(a)
@@ -560,6 +571,7 @@ class MediasControllerTest < ActionController::TestCase
       end
 
       WebMock.disable!
+      Media.unstub(:get_available_archive_org_snapshot)
     end
   end
 
@@ -593,8 +605,8 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should parse multiple URLs sent as list" do
     authenticate_with_token
-    url1 = 'https://twitter.com/meedan/status/1098927618626330625'
-    url2 = 'https://twitter.com/meedan/status/1098556958590816260'
+    url1 = 'https://meedan.com/check'
+    url2 = 'https://meedan.com/team'
     id1 = Media.get_id(url1)
     id2 = Media.get_id(url2)
     assert_nil Pender::Store.current.read(id1, :json)
@@ -606,9 +618,10 @@ class MediasControllerTest < ActionController::TestCase
     assert_response :success
     sleep 2
     data1 = Pender::Store.current.read(id1, :json)
-    assert_match /The Checklist: How Google Fights #Disinformation/, data1['title']
+    assert !data1['title'].blank?
     data2 = Pender::Store.current.read(id2, :json)
-    assert_match /The internet is as much about affirmation as information/, data2['title']
+    assert !data2['title'].blank?
+
   end
 
   test "should enqueue, parse and notify with error when timeout" do
@@ -706,10 +719,23 @@ class MediasControllerTest < ActionController::TestCase
     assert_match /v1$/, @response.headers['Accept']
   end
 
-  test "should add data title on embed title metatag" do
+  test "should add data url when on embed title metatag" do
+    authenticate_with_token
+    twitter_client, status, user = "" , "", ""
+    api = {"full_text"=>"@InternetFF Our Meedani @WafHeikal will be joining the amazing line of participants at #IFF, come say hi and get a free trail to our verification tool @check" }
+    Media.any_instance.stubs(:twitter_client).returns(twitter_client)
+    twitter_client.stubs(:status).returns(status)
+    twitter_client.stubs(:user).returns(user)
+    user.stubs(:url).returns('')
+    status.stubs(:as_json).returns(api)
     get :index, url: 'https://twitter.com/meedan/status/1110219801295765504', format: :html
     assert_response :success
     assert_match("<title>@InternetFF Our Meedani @WafHeikal will be...</title>", response.body)
+    status.unstub(:as_json)
+    twitter_client.unstub(:status)
+    user.unstub(:url)
+    twitter_client.unstub(:user)
+    Media.any_instance.unstub(:twitter_client)
   end
 
   test "should rescue and unlock url when raises error" do

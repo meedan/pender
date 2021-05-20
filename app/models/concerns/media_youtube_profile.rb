@@ -26,9 +26,8 @@ module MediaYoutubeProfile
     handle_youtube_exceptions do
       Yt.configuration.api_key = PenderConfig.get(:google_api_key)
       channel = Yt::Channel.new url: self.url
-      video_data = channel.snippet.data
-      video_statistics = channel.statistics_set.data
-
+      video_data = channel.snippet.data.with_indifferent_access
+      video_statistics = channel.statistics_set.data.with_indifferent_access
       self.data[:raw][:api][:id] = channel.id
       self.youtube_profile_direct_attributes.each do |attr|
         camel_attr = attr.camelize(:lower)

@@ -4,6 +4,8 @@ require 'cc_deville'
 class InstagramTest < ActiveSupport::TestCase
   test "should parse Instagram post" do
     Media.any_instance.stubs(:get_crowdtangle_id).returns('1328722959803788109_343260652')
+    data = {"result"=>{"posts"=>[{"description"=>"Peace Sells✌💲#vicrattlehead #megadeth #dystopiaworldtour #mexicocity","account"=>{"id"=>529101, "name"=>"Megadeth", "handle"=>"megadeth"}}]}}
+    Media.stubs(:crowdtangle_request).returns(data)
     m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
     data = m.as_json
     assert data['raw']['crowdtangle'].is_a? Hash
@@ -14,6 +16,7 @@ class InstagramTest < ActiveSupport::TestCase
     assert_match /Peace Sells/, data[:description]
     assert_match /Peace Sells/, data[:title]
     assert_not_nil data['picture']
+    Media.unstub(:crowdtangle_request)
     Media.any_instance.unstub(:get_crowdtangle_id)
   end
 
@@ -42,6 +45,8 @@ class InstagramTest < ActiveSupport::TestCase
     data = m.as_json
 
     assert data['raw']['crowdtangle'].is_a? Hash
+    assert !data['raw']['crowdtangle'].empty?
+    assert_equal 'item',data['type']
     post_info = data['raw']['crowdtangle']['posts'].first
     assert_match 'theintercept', post_info['account']['handle']
     assert_match 'The Intercept', post_info['account']['name']
@@ -81,11 +86,14 @@ class InstagramTest < ActiveSupport::TestCase
 
   test "should parse IGTV link as item" do
     Media.any_instance.stubs(:get_crowdtangle_id).returns('2178435889592963183_3651758')
+    data = {"result"=>{"posts"=>[{"description"=>"Vejam que lindo o Lula sendo recebido com todo amor e carinho","account"=>{"id"=>6506893, "name"=>"Bia Kicis \u{1F9FF}", "handle"=>"biakicis"}}]}}
+    Media.stubs(:crowdtangle_request).returns(data)
     m = create_media url: 'https://www.instagram.com/tv/B47W-ZVJpBv/?igshid=l5tx0fnl421e'
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal '@biakicis', data['username']
     assert_match /kicis/, data['author_name'].downcase
+    Media.unstub(:crowdtangle_request)
     Media.any_instance.unstub(:get_crowdtangle_id)
   end
 
