@@ -3,6 +3,7 @@ before_install:
 - openssl aes-256-cbc -K $encrypted_ac629ad7371a_key -iv $encrypted_ac629ad7371a_iv -in config.yml.enc -out config/config.yml -d
 - cp config/database.yml.example config/database.yml
 - cp config/sidekiq.yml.example config/sidekiq.yml
+- cp config/cookies.txt.example config/cookies.txt
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 - docker-compose build
 - docker-compose -f docker-compose.yml -f docker-test.yml up -d pender
