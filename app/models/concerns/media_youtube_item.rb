@@ -26,7 +26,7 @@ module MediaYoutubeItem
     handle_youtube_exceptions do
       Yt.configuration.api_key = PenderConfig.get(:google_api_key)
       video = Yt::Video.new url: self.url
-      video_data = video.snippet.data
+      video_data = video.snippet.data.with_indifferent_access
       self.youtube_item_direct_attributes.each do |attr|
         self.data[:raw][:api][attr] = video_data.dig(attr.camelize(:lower)) || video.send(attr) || ''
       end

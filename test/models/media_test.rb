@@ -114,7 +114,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should get relative canonical URL parsed from html tags" do
     m = create_media url: 'https://www.bbc.com'
     data = m.as_json
-    assert_equal 'https://www.bbc.com/', m.url
+    assert_match 'https://www.bbc.com', m.url
     assert_match 'BBC', data['title']
     assert_match /Breaking news/, data['description']
     assert_equal '', data['published_at']
@@ -349,12 +349,12 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should redirect to HTTPS if available and not already HTTPS" do
     m = create_media url: 'http://imotorhead.com'
-    assert_equal 'https://imotorhead.com/', m.url
+    assert_match 'https://imotorhead.com', m.url
   end
 
   test "should not redirect to HTTPS if available and already HTTPS" do
     m = create_media url: 'https://imotorhead.com'
-    assert_equal 'https://imotorhead.com/', m.url
+    assert_match 'https://imotorhead.com', m.url
   end
 
   test "should not redirect to HTTPS if not available" do
@@ -405,7 +405,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should parse dropbox image url with another url pattern" do
     m = create_media url: 'https://dl.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg'
     data = m.as_json
-    assert_equal 'https://dl.dropboxusercontent.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', m.url
+    assert_match '/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', m.url
     assert_equal 'item', data['type']
     assert_equal 'dropbox', data['provider']
     assert_match 'b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', data['title']
@@ -649,12 +649,14 @@ class MediaTest < ActiveSupport::TestCase
   test "should handle errors when call parse" do
     url = 'http://example.com'
     m = create_media url: url
+    Media.any_instance.stubs(:get_oembed_data)
     %w(oembed_item instagram_profile instagram_item page_item dropbox_item facebook_item).each do |parser|
       Media.any_instance.stubs("data_from_#{parser}").raises(StandardError)
       data = m.as_json
       assert_equal "StandardError: StandardError", data['error']['message']
       Media.any_instance.unstub("data_from_#{parser}")
     end
+    Media.any_instance.unstub(:get_oembed_data)
   end
 
   test "should parse page when item on microdata doesn't have type" do
@@ -751,6 +753,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
 
     country = 'gb'
     config = {
@@ -776,6 +779,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_canonical_url)
     Media.any_instance.unstub(:try_https)
+    Media.any_instance.unstub(:parse)
   end
 
   test "should use data from api key to set proxy" do
@@ -1060,8 +1064,10 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should get Facebook metrics from crowdtangle when it's a Facebook item" do
+    crowdtangle_data = {"result"=>{"posts"=>[{"account"=>{"id"=>33862, "name"=>"Account name", "handle"=>"accoutn"},"statistics"=>{"actual"=>{"likeCount"=>30813, "shareCount"=>1640, "commentCount"=>457, "loveCount"=>5131, "wowCount"=>74, "hahaCount"=>543, "sadCount"=>2, "angryCount"=>1, "thankfulCount"=>0, "careCount"=>136}, "expected"=>{"likeCount"=>12142, "shareCount"=>641, "commentCount"=>446, "loveCount"=>2044, "wowCount"=>48, "hahaCount"=>10, "sadCount"=>3, "angryCount"=>2, "thankfulCount"=>0, "careCount"=>71}}}]}}
     Media.unstub(:request_metrics_from_facebook)
     Media.any_instance.stubs(:get_crowdtangle_id).returns('172685102050_10157701432562051')
+    Media.stubs(:crowdtangle_request).returns(crowdtangle_data)
     ['https://www.facebook.com/172685102050/photos/a.406269382050/10157701432562051/', 'https://www.facebook.com/permalink.php?story_fbid=10157697779652051&id=172685102050'].each do |url|
       m = create_media url: url
       m.as_json
@@ -1070,6 +1076,7 @@ class MediaTest < ActiveSupport::TestCase
       assert data['metrics']['facebook']['share_count'] > 0
     end
     Media.any_instance.unstub(:get_crowdtangle_id)
+    Media.unstub(:crowdtangle_request)
   end
 
   {
