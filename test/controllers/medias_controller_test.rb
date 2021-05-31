@@ -74,17 +74,6 @@ class MediasControllerTest < ActionController::TestCase
     assert_not_nil data['embed_tag']
   end
 
-  test "should return error message on hash if facebook url does not exist" do
-    authenticate_with_token
-    get :index, url: 'https://www.facebook.com/blah_blah', format: :json
-    assert_response 200
-    data = JSON.parse(@response.body)['data']
-    assert_match 'Login required to see this profile', data['error']['message']
-    assert_equal 'facebook', data['provider']
-    assert_equal 'profile', data['type']
-    assert_not_nil data['embed_tag']
-  end
-
   test "should return error message on hash if url does not exist and page returns empty doc" do
     Media.any_instance.stubs(:doc).returns(nil)
     authenticate_with_token
@@ -168,9 +157,8 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should not return error message on HTML format response" do
-    get :index, url: 'https://www.facebook.com/non-sense-stuff-892173891273', format: :html
+    get :index, url: 'https://www.facebook.com/caiosba/posts/3588207164560845', format: :html, refresh: '1'
     assert_response 200
-
     assert_match('Login required to see this profile', assigns(:media).data['error']['message'])
   end
 

@@ -46,7 +46,7 @@ class Media
   [ActiveModel::Validations, ActiveModel::Conversion, MediasHelper, MediaOembed, MediaArchiver, MediaMetrics].each { |concern| include concern }
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url
+  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :unavailable_page
 
   TYPES = {}
 
@@ -181,7 +181,7 @@ class Media
 
   def get_parsed_url(canonical_url)
     return false if !Media.validate_url(canonical_url)
-    if canonical_url != self.url && !Media.ignore_url?(canonical_url)
+    if canonical_url != self.url && !self.ignore_url?(canonical_url)
       self.url = absolute_url(canonical_url)
       self.doc = self.get_html(Media.html_options(self.url)) if self.doc.nil?
     end
@@ -217,7 +217,7 @@ class Media
 
   def set_url_from_location(response, path)
     if %w(301 302).include?(response.code)
-      self.url = response.header['location'] unless Media.ignore_url?(response.header['location'])
+      self.url = response.header['location'] unless self.ignore_url?(response.header['location'])
       if self.url !~ /^https?:/
         self.url.prepend('/') unless self.url.match(/^\//)
         previous = path.last.match(/^https?:\/\/[^\/]+/)[0]

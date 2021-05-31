@@ -31,9 +31,6 @@ module MediaFacebookProfile
       data['subtype'] = 'page'
     end
     data['id'] = self.get_facebook_id_from_url
-
-    self.get_facebook_privacy_error
-    
     data['published_at'] = ''
     data
   end
@@ -41,8 +38,8 @@ module MediaFacebookProfile
   def get_facebook_privacy_error(doc = nil)
     page = doc || self.get_facebook_profile_page
     title = get_facebook_page_title(page)
-    return false if title.blank?
-    if ['log in or sign up to view', 'log into facebook', 'log in to facebook'].include?(title.downcase)
+    return false if title.blank? || self.data.dig('raw', 'crowdtangle', 'error').nil?
+    if self.unavailable_page || ['log in or sign up to view', 'log into facebook', 'log in to facebook'].include?(title.downcase)
       self.data['title'] = self.data['description'] = ''
       self.data['error'] = { message: 'Login required to see this profile', code: LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED') }
       return true
@@ -50,8 +47,8 @@ module MediaFacebookProfile
   end
 
   def get_facebook_page_title(page)
-    title_element = page.css('meta[property="og:title"]')
-    title_element = page.css('title') if title_element.blank?
+    title_element = page&.css('meta[property="og:title"]')
+    title_element = page&.css('title') if title_element.blank?
     return nil if title_element.blank?
     (title_element.attr('content') && title_element.attr('content').value) || title_element.text
   end
@@ -116,16 +113,17 @@ module MediaFacebookProfile
       data = self.get_data_from_facebook
       self.data.merge!(data) unless data.nil?
       picture = self.get_value_from_facebook_metatags(self.data['picture'], 'og:image')
+      self.set_data_field('author_picture', picture)
+      self.set_data_field('picture', picture)
       self.set_data_field('username', self.get_facebook_username)
       self.data.merge!({
         external_id: self.data['id'] || '',
         title: self.get_value_from_facebook_metatags(self.get_facebook_name, 'og:title'),
         description: self.get_value_from_facebook_metatags(self.data['description'], 'og:description'),
-        author_url: self.url,
-        author_picture: picture,
-        picture: picture
+        author_url: self.url
       })
-      self.set_data_field('author_name', self.data['name'], self.data['title'])
+      self.set_data_field('author_name', self.data['name'], self.data['username'], self.data['title'])
+      self.get_facebook_privacy_error
     end
   end
 
@@ -189,5 +187,13 @@ module MediaFacebookProfile
       return match[2] unless match.nil?
     end
     nil
+  end
+
+  def ignore_facebook_urls
+    [
+      { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/login/, reason: :login_page },
+      { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/?$/, reason: :login_page },
+      { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/cookie\/consent-page/, reason: :consent_page }
+    ]
   end
 end

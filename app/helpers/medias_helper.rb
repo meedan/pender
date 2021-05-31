@@ -192,6 +192,22 @@ module MediasHelper
     end
   end
 
+  def ignore_url?(url)
+    ignore_url = false
+    Media::TYPES.keys.map { |type| type[/(.+)_(item|profile)$/, 1] }.uniq.each do |provider|
+      if self.respond_to?("ignore_#{provider}_urls")
+        self.send("ignore_#{provider}_urls").each do |item|
+          if url.match?(item[:pattern])
+            ignore_url = true
+            self.unavailable_page = item[:reason]
+          end
+        end
+      end
+    end
+    self.unavailable_page = nil unless ignore_url
+    ignore_url
+  end
+
   Media.class_eval do
     def self.decoded_uri(url)
       begin
@@ -199,14 +215,6 @@ module MediasHelper
       rescue Encoding::CompatibilityError
         url
       end
-    end
-
-    def self.ignore_url?(url)
-      ignore_url = false
-      [/^https:\/\/www\.instagram\.com\/accounts\/login/, /^https:\/\/www\.facebook.com\/login/, /^https:\/\/consent.youtube.com/].each do |pattern|
-        ignore_url = true if url.match?(pattern)
-      end
-      ignore_url
     end
 
     def self.api_key_settings(key_id)

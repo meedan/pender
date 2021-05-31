@@ -131,15 +131,18 @@ class InstagramTest < ActiveSupport::TestCase
   end
 
   test "should not raise error notification when redirected to login page" do
-    Media.stubs(:is_a_login_page).returns(true)
     PenderAirbrake.stubs(:notify).never
-    m = create_media url: 'https://www.instagram.com/p/CFld5x6B6Bw/'
+    id = 'CFld5x6B6Bw'
+    m = create_media url: "https://www.instagram.com/p/#{id}/"
+    WebMock.enable!
+    WebMock.stub_request(:any, /instagram.com\/p\/#{id}\/\?__a=1/).to_return(body: '', headers: { location: 'https://www.instagram.com/accounts/login/' }, status: 302)
+
     data = m.as_json
     assert_equal 'CFld5x6B6Bw', data['external_id']
     assert_equal 'item', data['type']
     assert_equal '', data['html']
     assert_match /Login required/, data['raw']['graphql']['error']['message']
-    Media.unstub(:is_a_login_page)
     PenderAirbrake.unstub(:notify)
+    WebMock.disable!
   end
 end 

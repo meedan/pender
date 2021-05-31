@@ -120,4 +120,8 @@ module MediaYoutubeProfile
       self.data[:raw][:api] = { error: { message: e.message, code: LapisConstants::ErrorCodes::const_get('UNAUTHORIZED') }}
     end
   end
+
+  def ignore_youtube_urls
+    [{ pattern: /^https:\/\/consent.youtube.com/, reason: :consent_page }]
+  end
 end
