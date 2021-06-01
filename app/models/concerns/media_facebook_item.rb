@@ -177,10 +177,8 @@ module MediaFacebookItem
     author_name = self.doc.at_css('h1[data-testid="event-permalink-event-name"]')
     self.data['title'] = author_name.content if author_name.respond_to?(:content)
     author = self.doc.at_css('div#event_header_primary a.profileLink')
-    if author
-      self.data['author_name'] = author.content
-      self.data['author_url'] = author.attr('href')
-    end
+    self.set_data_field('author_name', author&.content)
+    self.set_data_field('author_url', author&.attr('href'))
   end
 
   def get_facebook_published_time_from_html

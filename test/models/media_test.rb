@@ -44,13 +44,12 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should follow redirection of relative paths" do
     WebMock.enable!
-    WebMock.stub_request(:any, 'https://www.almasryalyoum.com/node/517699').to_return(body: '', headers: { location: '/editor/details/968' }, status: 302)
-
-    assert_nothing_raised do
-      m = create_media url: 'http://www.almasryalyoum.com/node/517699'
-      assert_match /https:\/\/www.almasryalyoum.com\/editor\/details\/968/, m.url, "Expected to be recognized as dropbox: #{m.data}"
-    end
+    WebMock.stub_request(:any, /https?:\/\/www.almasryalyoum.com\/node\/517699/).to_return(body: '', headers: { location: '/editor/details/968' }, status: 302)
+    Media.any_instance.stubs(:get_canonical_url).returns(false)
+    m = create_media url: 'https://www.almasryalyoum.com/node/517699'
+    assert_match /almasryalyoum.com\/editor\/details\/968/, m.url
     WebMock.disable!
+    Media.any_instance.unstub(:get_canonical_url)
   end
 
   test "should parse URL including cloudflare credentials on header" do
@@ -927,12 +926,12 @@ class MediaTest < ActiveSupport::TestCase
   test "should follow redirections of path relative urls" do
     url = 'https://www.yousign.org/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358'
     WebMock.enable!
-    WebMock.stub_request(:any, /yousign.org/).to_return(body: '', headers: { location: 'v2_404.php?notfound=%2FChina-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358' }, status: 302)
-    assert_nothing_raised do
-      m = create_media url: url
-      assert_equal 'https://www.yousign.org/v2_404.php?notfound=/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358', m.url, "Expected to follow the redirections: #{m.data}"
-    end
+    WebMock.stub_request(:any, 'https://www.yousign.org/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358').to_return(body: '', headers: { location: 'v2_404.php?notfound=%2FChina-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358' }, status: 302)
+    Media.any_instance.stubs(:get_canonical_url).returns(false)
+    m = create_media url: url
+    assert_equal 'https://www.yousign.org/v2_404.php?notfound=/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358', m.url
     WebMock.disable!
+    Media.any_instance.unstub(:get_canonical_url)
   end
 
   test "should return error if URL is not safe" do

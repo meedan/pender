@@ -45,7 +45,8 @@ module MediasHelper
     return if media.doc.nil?
     data = jsonld_tag_content(media)
     if data
-      (data.is_a?(Hash) && data.dig('@context')) == 'http://schema.org' ? add_schema_to_data(media, data, data.dig('@type')) : media.data['raw']['json+ld'] = data
+      media.data['raw']['json+ld'] = data
+      media.add_schema_to_data(media, data, data.dig('@type')) if (data.is_a?(Hash) && data.dig('@context')).match?('https?://schema.org')
     end
   end
 

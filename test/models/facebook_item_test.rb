@@ -136,6 +136,21 @@ class FacebookItemTest < ActiveSupport::TestCase
   end
 
   test "should parse Facebook event post" do
+    doc = '<div id="event_header_primary">' \
+      '<div class="_5gmv">' \
+        '<div class="clearfix _7wy" id="title_subtitle">' \
+          '<div class="_42ef">' \
+            '<div class="_5gmw">' \
+              '<h1 id="seo_h1_tag" class="_5gmx" data-testid="event-permalink-event-name">Zawya\'s Tribute to Mohamed Khan | موعد مع خان</h1>' \
+              '<div class="_5gnb">Public · Hosted by <span class="fwb"><a class="profileLink" href="https://www.facebook.com/zawyacinema/?fref=tag">Zawya</a></span>' \
+              '</div>' \
+            '</div>' \
+          '</div>' \
+        '</div>' \
+      '</div>' \
+    '</div>'
+
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(doc))
     m = create_media url: 'https://www.facebook.com/events/364677040588691/permalink/376287682760960/?ref=1&action_history=null'
     data = m.as_json
     assert_match /https:\/\/www.facebook\.com\/events\/(364677040588691|zawya)/, m.url
@@ -143,6 +158,9 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
+    assert_equal 'Zawya', data['author_name']
+    assert_equal 'https://www.facebook.com/zawyacinema/?fref=tag', data['author_url']
+    Media.any_instance.unstub(:get_html)
   end
 
   test "should parse Facebook event url" do
