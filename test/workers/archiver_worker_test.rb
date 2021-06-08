@@ -43,7 +43,6 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
     WebMock.disable_net_connect!(allow: allowed_sites)
-    error = Net::ReadTimeout.new('Exception from WebMock')
     WebMock.stub_request(:any, /archive.org/).to_raise(Net::ReadTimeout.new('Exception from WebMock'))
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
@@ -57,7 +56,7 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
 
     data = m.as_json
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), data.dig('archives', 'archive_org', 'error', 'code')
-    assert_equal 'Net::ReadTimeout: Exception from WebMock', data.dig('archives', 'archive_org', 'error', 'message')
+    assert_equal 'Net::ReadTimeout with "Exception from WebMock"', data.dig('archives', 'archive_org', 'error', 'message')
     WebMock.disable!
   end
 

@@ -16,11 +16,10 @@ module Pender
       g.assets false
     end
     
-    config.active_record.raise_in_transactional_callbacks = true
     config.autoload_paths << "#{config.root}/lib"
 
     cfg = YAML.load_file("#{Rails.root}/config/config.yml")[Rails.env]
-    config.middleware.insert_before 0, "Rack::Cors" do
+    config.middleware.insert_before 0, Rack::Cors do
       allow do
         origins '*'
         resource '*',
@@ -33,6 +32,8 @@ module Pender
       'Access-Control-Allow-Credentials' => 'true',
       'Access-Control-Request-Method' => '*'
     })
+
+    config.active_record.sqlite3.represent_boolean_as_integer = true
   end
 end
 

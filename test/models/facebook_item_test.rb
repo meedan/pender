@@ -325,7 +325,6 @@ class FacebookItemTest < ActiveSupport::TestCase
     assert_match /Bimbo/, data['title']
     assert_not_nil data['description']
     assert_not_nil data['published_at']
-    assert_match 'Bimbo', data['author_name']
     assert_match 'Bimbo', data['username']
     assert_match /facebook.com\/(235404669918505|Bimbo.Memories)/, data['author_url']
   end

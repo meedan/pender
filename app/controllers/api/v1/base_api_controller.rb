@@ -4,9 +4,9 @@ module Api
   module V1
     class BaseApiController < ApplicationController
 
-      before_filter :remove_empty_params_and_headers
-      before_filter :set_custom_response_headers
-      before_filter :authenticate_from_token!
+      before_action :remove_empty_params_and_headers
+      before_action :set_custom_response_headers
+      before_action :authenticate_from_token!
 
       respond_to :json
 

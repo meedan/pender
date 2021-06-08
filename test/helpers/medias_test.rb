@@ -3,7 +3,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 class MediasHelperTest < ActionView::TestCase
   def setup
     super
-    @request = ActionController::TestRequest.new 
+    @request = ActionController::TestRequest.create(self.class)
     @request.host = 'foo.bar'
     @request
   end

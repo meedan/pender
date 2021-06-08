@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-gem 'rails', '4.2.11.1'
+gem 'rails', '5.2.5'
 gem 'sqlite3', '~> 1.3.6'
 gem 'pg', '0.20'
 group :development, :test do
@@ -22,13 +22,15 @@ group :test do
   gem 'simplecov', '0.13.0', require: false
   gem 'simplecov-console', require: false
   gem 'codeclimate-test-reporter', '1.0.8', group: :test, require: nil
+  gem 'rails-controller-testing'
+  gem 'minitest', '5.10.1'
+  gem 'minitest-retry'
 end
 gem 'logstash-logger'
 gem 'webmock'
 gem 'railroady'
 gem 'airbrake', '10.0.0'
 gem 'thin'
-gem 'protected_attributes'
 gem 'responders'
 gem 'yt', '~> 0.25.5'
 gem 'rswag-api'
@@ -51,10 +53,10 @@ gem 'htmlentities'
 gem 'rack-protection', '2.0.1'
 gem 'loofah', '2.3.1'
 gem 'rails-html-sanitizer', '1.0.4'
-gem 'minitest-retry'
 gem 'sprockets', '3.7.2'
-gem 'activejob', '4.2.11.1'
-gem 'actionview', '4.2.11.1'
+gem 'activejob', '5.2.5'
+gem 'actionview', '5.2.5'
+gem 'actionpack', '5.2.5'
 gem 'rack', '>= 1.6.11'
 gem 'aws-sdk-s3'
 gem 'honeycomb-beeline'
