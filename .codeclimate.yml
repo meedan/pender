@@ -45,6 +45,6 @@ exclude_patterns:
 - "public/coverage"
 - "test"
 - "spec"
-- "app/assets/javascripts/jquery-2.1.3.min.js"
-- "app/assets/javascripts/md5.js"
+- "public/javascripts/jquery-2.1.3.min.js"
+- "public/javascripts/md5.js"
 - "config/environments/*"
