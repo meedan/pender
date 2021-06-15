@@ -15,8 +15,9 @@ module Pender
       g.helper false
       g.assets false
     end
-    
-    config.autoload_paths << "#{config.root}/lib"
+
+    config.autoload_paths << Rails.root.join("lib")
+    config.eager_load_paths << Rails.root.join("lib")
 
     cfg = YAML.load_file("#{Rails.root}/config/config.yml")[Rails.env]
     config.middleware.insert_before 0, Rack::Cors do
