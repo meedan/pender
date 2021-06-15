@@ -21,7 +21,9 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
     WebMock.disable_net_connect!(allow: allowed_sites)
-    WebMock.stub_request(:any, /archive.org/).to_return(body: '', headers: {})
+    WebMock.stub_request(:any, /archive.org\/wayback\/available/).to_return(body: "{\"archived_snapshots\": {}}", headers: {})
+    WebMock.stub_request(:post, /archive.org\/save/).to_return(body: "{\"job_id\":\"spn2-invalid-job-id\"}", headers: {})
+    WebMock.stub_request(:get, /archive.org\/save\/status/).to_return(body: "{\"job_id\":\"spn2-invalid-job-id\",\"status\":\"pending\"}", headers: {})
 
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/marcouza/status/875424957613920256'

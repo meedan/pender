@@ -82,6 +82,15 @@ Rails.application.configure do
   config.lograge.custom_options = lambda do |event|
     options = event.payload.slice(:request_id, :user_id)
     options[:params] = event.payload[:params].except("controller", "action")
+    status = event.payload[:status].to_i
+    options[:level] =
+      if status < 300
+        'INFO'
+      elsif status < 400
+        'WARN'
+      else
+        'ERROR'
+      end
     options
   end
   config.lograge.formatter = Lograge::Formatters::Json.new

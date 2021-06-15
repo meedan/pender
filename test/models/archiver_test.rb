@@ -368,9 +368,11 @@ class ArchiverTest < ActiveSupport::TestCase
 
   test "return the enabled archivers" do
     assert_equal ['archive_is', 'archive_org'].sort, Media.enabled_archivers(['archive_is', 'archive_org']).keys
-    Media::ARCHIVERS['archive_org'][:enabled] = false
+    enabled = Media::ENABLED_ARCHIVERS
+    Media.const_set(:ENABLED_ARCHIVERS, enabled.select { |archiver| archiver[:key] != 'archive_org' })
     assert_equal ['archive_is'].sort, Media.enabled_archivers(['archive_is', 'archive_org']).keys
-    Media::ARCHIVERS['archive_org'][:enabled] = true
+    Media.send(:remove_const, :ENABLED_ARCHIVERS)
+    Media.const_set(:ENABLED_ARCHIVERS, enabled)
   end
 
   test "should archive to perma.cc and store the URL on archives if perma_cc_key is present" do
@@ -695,8 +697,8 @@ class ArchiverTest < ActiveSupport::TestCase
     ENV['archiver_skip_hosts'] = ''
 
     PenderConfig.reload
-    status = Media::ARCHIVERS['archive_org'][:enabled]
-    Media::ARCHIVERS['archive_org'][:enabled] = false
+    enabled = Media::ENABLED_ARCHIVERS
+    Media.const_set(:ENABLED_ARCHIVERS, enabled.select { |archiver| archiver[:key] != 'archive_org' })
 
     m.archive('archive_org,unexistent_archive')
 
@@ -704,7 +706,8 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal I18n.t(:archiver_not_found), m.data.dig('archives', 'unexistent_archive', 'error', 'message')
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_DISABLED'), m.data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal I18n.t(:archiver_disabled), m.data.dig('archives', 'archive_org', 'error', 'message')
-    Media::ARCHIVERS['archive_org'][:enabled] = status
+    Media.send(:remove_const, :ENABLED_ARCHIVERS)
+    Media.const_set(:ENABLED_ARCHIVERS, enabled)
     ENV['archiver_skip_hosts'] = skip
   end
 

@@ -614,6 +614,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should enqueue, parse and notify with error when timeout" do
     Sidekiq::Testing.fake!
+    Media.any_instance.stubs(:get_metrics)
     webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
     a = create_api_key application_settings: webhook_info.merge(config: { timeout: '0.001' })
     authenticate_with_token(a)
@@ -621,12 +622,9 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://ca.ios.ba/files/meedan/sleep.php'
     id = Media.get_id(url)
     timeout_error = {"message" => "Timeout", "code" => LapisConstants::ErrorCodes::const_get('TIMEOUT')}
-    minimal_data = Media.minimal_data(OpenStruct.new(url: url)).merge(title: url)
-    Media.stubs(:minimal_data).returns(minimal_data)
 
-    Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(error: timeout_error).with_indifferent_access, a.settings)
     assert_equal 0, MediaParserWorker.jobs.size
-    post :bulk, params: { url: url, format: :json }
+    post :bulk, params: { url: url, format: :json, refresh: '1' }
     assert_response :success
     assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
     assert_equal 1, MediaParserWorker.jobs.size
@@ -635,8 +633,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_nil Pender::Store.current.read(id, :json)
     MediaParserWorker.drain
     assert_equal timeout_error, Pender::Store.current.read(id, :json)['error']
-    Media.unstub(:notify_webhook)
-    Media.unstub(:minimal_data)
+    Media.any_instance.unstub(:get_metrics)
   end
 
   test "should return data with error message if can't parse" do
@@ -852,6 +849,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should get config from api key if defined" do
+    @controller.stubs(:unload_current_config)
     api_key = create_api_key application_settings: { config: { }}
     authenticate_with_token(api_key)
 
@@ -863,6 +861,7 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'http://meedan.com', format: :json }
     assert_response 200
     assert_equal 'api_config_value', PenderConfig.get('key_for_test')
+    @controller.unstub(:unload_current_config)
   end
 
   test "should return API limit reached error" do

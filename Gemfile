@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 gem 'rails', '5.2.6'
-gem 'sqlite3', '~> 1.3.6'
+gem 'sqlite3', '~> 1.3.6', require: false
 gem 'pg', '0.20'
 group :development, :test do
   gem 'byebug'
@@ -13,7 +13,7 @@ group :development, :test do
   gem 'derailed'
 end
 group :development do
-  gem 'web-console', '~> 2.0'
+  gem 'web-console', '~> 3.5.1'
   gem 'awesome_print', require: false
 end
 group :test do

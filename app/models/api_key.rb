@@ -4,7 +4,9 @@ class ApiKey < ApplicationRecord
 
   before_validation :generate_access_token, on: :create
   before_validation :calculate_expiration_date, on: :create
-  
+
+  scope :valid, -> { where('expire_at > ?', Time.now) }
+
   serialize :application_settings
 
   # Reimplement this method in your application

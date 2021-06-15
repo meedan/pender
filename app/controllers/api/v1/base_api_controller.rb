@@ -7,26 +7,32 @@ module Api
       before_action :remove_empty_params_and_headers
       before_action :set_custom_response_headers
       before_action :authenticate_from_token!
+      after_action :unload_current_config
 
       respond_to :json
 
       def about
         return unless request.format.json?
-        archivers = Media.enabled_archivers(Media::ARCHIVERS.keys)
         info = {
           name: "Keep",
           version: VERSION,
-          archivers: archivers.map {|a| {key: a[0], label: a[0].tr('_', '.').capitalize }}
+          archivers: Media::ENABLED_ARCHIVERS
         }
         render_success 'about', info
       end
 
       private
 
+      def unload_current_config
+        ApiKey.current = nil
+        PenderConfig.current = nil
+        Pender::Store.current = nil
+      end
+
       def authenticate_from_token!
         header = PenderConfig.get('authorization_header') || 'X-Token'
         token = request.headers[header]
-        ApiKey.current = ApiKey.where(access_token: token).where('expire_at > ?', Time.now).last
+        ApiKey.current = ApiKey.valid.where(access_token: token).last
         PenderConfig.reload
         (render_unauthorized and return false) if ApiKey.current.nil?
       end

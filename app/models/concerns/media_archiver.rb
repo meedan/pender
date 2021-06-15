@@ -5,6 +5,7 @@ module MediaArchiver
   extend ActiveSupport::Concern
 
   ARCHIVERS = {}
+  ENABLED_ARCHIVERS = []
 
   def archive(archivers = nil)
     url = self.url
@@ -57,7 +58,9 @@ module MediaArchiver
 
   module ClassMethods
     def declare_archiver(name, patterns, modifier, enabled = true)
-      ARCHIVERS[name] = { patterns: patterns, modifier: modifier, enabled: enabled }
+      archiver = { patterns: patterns, modifier: modifier, enabled: enabled }
+      ARCHIVERS[name] = archiver
+      ENABLED_ARCHIVERS << { key: name, label: name.tr('_', '.').capitalize } if enabled
     end
 
     def give_up(info = {})
@@ -80,10 +83,10 @@ module MediaArchiver
       available
     end
 
-    def enabled_archivers(archivers, media = nil)
-      enabled = ARCHIVERS.select { |name, rule| archivers.include?(name) && rule[:enabled]}
-      media.update_data_with_archivers_errors(archivers - enabled.keys, { type: 'ARCHIVER_DISABLED' }) if media
-      enabled
+    def enabled_archivers(archivers = Media::ARCHIVERS.keys, media = nil)
+      enabled_keys = Media::ENABLED_ARCHIVERS.select { |archiver| archivers.include?(archiver[:key]) }.map { |a| a[:key]}
+      media.update_data_with_archivers_errors(archivers - enabled_keys, { type: 'ARCHIVER_DISABLED' }) if media
+      ARCHIVERS.select {|name, _rule| enabled_keys.include?(name)}
     end
 
     def handle_archiving_exceptions(archiver, params)

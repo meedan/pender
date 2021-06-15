@@ -13,10 +13,13 @@ class BaseApiControllerTest < ActionController::TestCase
     response = JSON.parse(@response.body)
     assert_equal [{"key"=>"archive_is", "label"=>"Archive.is"}, {"key"=>"archive_org", "label"=>"Archive.org"}, {"key"=>"perma_cc", "label"=>"Perma.cc"}, {"key"=>"video", "label"=>"Video"}], response['data']['archivers']
 
-    Media::ARCHIVERS['archive_is'][:enabled] = false
+    enabled = Media::ENABLED_ARCHIVERS
+    Media.const_set(:ENABLED_ARCHIVERS, enabled.select { |archiver| archiver[:key] != 'archive_is' })
     get :about, params: { format: :json }
     response = JSON.parse(@response.body)
     assert_equal [{"key"=>"archive_org", "label"=>"Archive.org"}, {"key"=>"perma_cc", "label"=>"Perma.cc"}, {"key"=>"video", "label"=>"Video"}], response['data']['archivers']
+    Media.send(:remove_const, :ENABLED_ARCHIVERS)
+    Media.const_set(:ENABLED_ARCHIVERS, enabled)
   end
 
   test "should return unauthorized if not authenticated" do

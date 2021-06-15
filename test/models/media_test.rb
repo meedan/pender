@@ -192,7 +192,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match 'War Goes Viral', data['title']
     assert_match 'How social media is being weaponized across the world', data['description']
     assert !data['published_at'].blank?
-    assert_match 'Emerson T. Brooking and P. W. Singer', data['username']
+    assert_match /Brooking.+Singer/, data['username']
     assert_match /https?:\/\/www.theatlantic.com/, data['author_url']
     assert_match /\/#{id}\/picture/, data['picture']
   end
