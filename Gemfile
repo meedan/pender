@@ -29,7 +29,7 @@ end
 gem 'logstash-logger'
 gem 'webmock'
 gem 'railroady'
-gem 'airbrake', '10.0.0'
+gem 'airbrake', '11.0.0'
 gem 'thin'
 gem 'responders'
 gem 'yt', '~> 0.25.5'
