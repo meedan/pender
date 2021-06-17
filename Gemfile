@@ -9,9 +9,9 @@ group :development, :test do
   # workaround for https://github.com/rswag/rswag/issues/317, remove GIT repository after https://github.com/rswag/rswag/pull/319 is merged
   gem 'rswag-specs', git: 'https://github.com/jetpackworkflow/rswag.git', branch: 'allow_oas3_param_schema_array'
   gem 'get_process_mem'
-  gem 'memory_profiler'
   gem 'derailed'
 end
+gem 'memory_profiler'
 group :development do
   gem 'web-console', '~> 3.5.1'
   gem 'awesome_print', require: false
