@@ -87,7 +87,7 @@ class Media
 
   def self.minimal_data(instance)
     data = {}
-    %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field.to_sym] = '' }
+    %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field.to_sym] = ''.freeze }
     data[:raw] = data[:archives] = data[:metrics] = {}
     data.merge(Media.required_fields(instance)).with_indifferent_access
   end
@@ -95,7 +95,7 @@ class Media
   def self.required_fields(instance = nil)
     provider = instance.respond_to?(:provider) ? instance.provider : 'page'
     type = instance.respond_to?(:type) ? instance.type : 'item'
-    { url: instance.url, provider: provider || 'page', type: type || 'item', parsed_at: Time.now.to_s, favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, '')}" }
+    { url: instance.url, provider: provider || 'page', type: type || 'item', parsed_at: Time.now.to_s, favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}" }
   end
 
   def self.validate_url(url)
@@ -156,7 +156,7 @@ class Media
     parsed = false
     TYPES.each do |type, patterns|
       patterns.each do |pattern|
-        unless pattern.match(self.url).nil?
+        if pattern.match?(self.url)
           self.provider, self.type = type.split('_')
           self.send("data_from_#{type}")
           self.get_oembed_data
@@ -219,7 +219,7 @@ class Media
     if %w(301 302).include?(response.code)
       self.url = response.header['location'] unless self.ignore_url?(response.header['location'])
       if self.url !~ /^https?:/
-        self.url.prepend('/') unless self.url.match(/^\//)
+        self.url.prepend('/') unless self.url.match?(/^\//)
         previous = path.last.match(/^https?:\/\/[^\/]+/)[0]
         self.url = previous + self.url
       end
@@ -244,7 +244,7 @@ class Media
     uri = URI.parse(URI.encode(url))
     proxy = Media.valid_proxy
     if proxy
-      return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['session_prefix'] + Random.rand(100000).to_s, proxy['pass']] if uri.host.match(/facebook\.com/)
+      return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['session_prefix'] + Random.rand(100000).to_s, proxy['pass']] if uri.host.match?(/facebook\.com/)
       country = PenderConfig.get('hosts', {}, :json).dig(uri.host, 'country')
       return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['country_prefix'] + country, proxy['pass']] unless country.nil?
     end
@@ -253,12 +253,12 @@ class Media
   def self.request_uri(uri, verb = 'Get')
     http = Net::HTTP.new(uri.host, uri.port)
     http.read_timeout = PenderConfig.get('timeout', 30).to_i
-    http.use_ssl = uri.scheme == 'https'
+    http.use_ssl = uri.scheme == 'https'.freeze
     headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }.merge(Media.get_cf_credentials(uri))
     request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
     request['Cookie'] = Media.set_cookies(uri)
     proxy_config = Media.valid_proxy
-    if uri.host.match(/facebook\.com/) && proxy_config
+    if uri.host.match?(/facebook\.com/) && proxy_config
       proxy = Net::HTTP::Proxy(proxy_config['host'], proxy_config['port'], proxy_config['user_prefix'] + proxy_config['session_prefix'] + Random.rand(100000).to_s, proxy_config['pass'])
       proxy.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http2|
         http2.request(request)
@@ -295,7 +295,7 @@ class Media
 
   def self.html_options(url)
     uri = url.is_a?(String) ? Media.parse_url(url) : url
-    uri.host.match(/twitter\.com/) ? Media.extended_headers(url) : { allow_redirections: :safe, proxy: nil, 'User-Agent' => 'Mozilla/5.0 (X11)', 'Accept' => '*/*', 'Accept-Language' => LANG, 'Cookie' => Media.set_cookies(uri) }.merge(Media.get_cf_credentials(uri))
+    uri.host.match?(/twitter\.com/) ? Media.extended_headers(url) : { allow_redirections: :safe, proxy: nil, 'User-Agent' => 'Mozilla/5.0 (X11)', 'Accept' => '*/*', 'Accept-Language' => LANG, 'Cookie' => Media.set_cookies(uri) }.merge(Media.get_cf_credentials(uri))
   end
 
   def self.get_cf_credentials(uri)
@@ -347,20 +347,21 @@ class Media
   end
 
   def redirect_https_to_http?(header_options, message)
-    message.match('redirection forbidden') && header_options[:allow_redirections] != :all
+    message.match?('redirection forbidden') && header_options[:allow_redirections] != :all
   end
 
   def self.set_cookies(uri)
+    empty = ''.freeze
     begin
       host = PublicSuffix.parse(uri.host).domain
       cookies = []
       PenderConfig.get('cookies', {}).each do |domain, content|
-        next unless domain.match(host)
+        next unless domain.match?(host)
         content.each { |k, v| cookies << "#{k}=#{v}" }
       end
-      cookies.join('; ')
+      cookies.empty? ? empty : cookies.join('; '.freeze)
     rescue
-      ''
+      empty
     end
   end
 end

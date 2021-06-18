@@ -5,9 +5,12 @@ module MediasHelper
   end
 
   def convert_url_to_format(url, format)
-    url = url.sub(/medias([^\?]*)/, 'medias.' + format)
+    empty = ''.freeze
+    url.sub!(/medias([^\?]*)/, 'medias.' + format)
     if url =~ /refresh=1/
-      url = url.sub(/refresh=1/, '').sub(/medias\.#{format}\?/, "medias.#{format}?refresh=1&").sub(/\&$/, '')
+      url.sub!(/refresh=1/, empty)
+      url.sub!(/medias\.#{format}\?/, "medias.#{format}?refresh=1&")
+      url.sub!(/\&$/, empty)
     end
     url
   end
@@ -34,7 +37,7 @@ module MediasHelper
       media.doc.search('meta').each do |meta|
         metatag = {}
         meta.each do |key, value|
-          metatag.merge!({key => value.strip}) unless value.blank?
+          metatag.merge!({key.freeze => value.strip}) unless value.blank?
         end
         media.data['raw']['metatags'] << metatag
       end
@@ -72,12 +75,13 @@ module MediasHelper
   end
 
   def get_info_from_data(source, data, *args)
+    empty = ''.freeze
     hash = data['raw'][source]
-    return '' if hash.nil?
+    return empty if hash.nil?
     args.each do |i|
       return hash[i] if !hash[i].nil?
     end
-    ''
+    empty
   end
 
   def list_formats
@@ -131,14 +135,14 @@ module MediasHelper
 
   def cleanup_text(content, field = nil)
     if content.is_a?(String)
-      content = content.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "�")
+      content = content.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "�".freeze)
       begin
-        content = URI.encode(content) if field == 'raw' && is_url?(content)
+        return URI.encode(content) if field == 'raw' && is_url?(content)
       rescue StandardError => error
         Rails.logger.info level: 'INFO', message: '[Parser] Could not encode URL', url: self.url, content: content, error_class: error.class, error_message: error.message
       end
     elsif content.respond_to?(:each_with_index)
-      content = cleanup_collection(content, field)
+      return cleanup_collection(content, field)
     end
     content
   end
@@ -225,7 +229,7 @@ module MediasHelper
 
     def self.valid_proxy(config_key = 'proxy')
       subkeys = [:host, :port, :pass, :user_prefix]
-      subkeys += [:country_prefix, :session_prefix] if config_key == 'proxy'
+      subkeys += [:country_prefix, :session_prefix] if config_key == 'proxy'.freeze
       proxy = {}.with_indifferent_access
       subkeys.each do |config|
         value = PenderConfig.get("#{config_key}_#{config}")

@@ -58,8 +58,7 @@ module MediaArchiver
 
   module ClassMethods
     def declare_archiver(name, patterns, modifier, enabled = true)
-      archiver = { patterns: patterns, modifier: modifier, enabled: enabled }
-      ARCHIVERS[name] = archiver
+      ARCHIVERS[name] = { patterns: patterns, modifier: modifier, enabled: enabled }
       ENABLED_ARCHIVERS << { key: name, label: name.tr('_', '.').capitalize } if enabled
     end
 

@@ -102,7 +102,7 @@ module Api
         end
         begin
           yield
-        rescue Timeout::Error, Net::ReadTimeout
+        rescue Net::ReadTimeout
           @data = get_timeout_data(nil, @url, @id)
           render_timeout_media(@data, must_render) and return true
         end
