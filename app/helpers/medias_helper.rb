@@ -111,8 +111,12 @@ module MediasHelper
   end
 
   def is_url?(url)
-    uri = URI.parse(URI.encode(url))
-    !uri.host.nil? && uri.userinfo.nil?
+    begin
+      uri = URI.parse(URI.encode(url))
+      !uri.host.nil? && uri.userinfo.nil?
+    rescue URI::InvalidURIError
+      false
+    end
   end
 
   def get_error_data(error_data, media, url, id)
