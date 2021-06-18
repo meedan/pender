@@ -130,6 +130,23 @@ class MediasHelperTest < ActionView::TestCase
     Media.any_instance.unstub(:get_crowdtangle_id)
   end
 
+  test 'should handle error when cannot encode URLs on raw key' do
+    Media.any_instance.stubs(:get_crowdtangle_id).returns('111')
+    encoded_url = "https://www.facebook.com/people/á<80><99>á<80><84>á<80>ºá<80>¸á<80><91>á<80>®á<80>¸/100056594476400"
+    Media.stubs(:crowdtangle_request).with(:facebook, '111').returns({ result: { posts: [{"platform":"Facebook", "expanded": encoded_url }]}})
+    url = 'https://www.facebook.com/voice.myanmarnewsmm/posts/148110680335452'
+    m = Media.new url: url
+    m.data = Media.minimal_data(m)
+    m.get_crowdtangle_data(:facebook)
+
+    URI.stubs(:encode)
+    URI.stubs(:encode).with(encoded_url).raises(StandardError)
+    assert_equal encoded_url, m.cleanup_data_encoding(m.data)['raw']['crowdtangle']['posts'].first['expanded']
+    Media.unstub(:crowdtangle_request)
+    Media.any_instance.unstub(:get_crowdtangle_id)
+    URI.unstub(:encode)
+  end
+
   test 'should handle error with crowdtangle requests' do
     PenderAirbrake.stubs(:notify).once
     WebMock.enable!

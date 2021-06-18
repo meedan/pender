@@ -702,4 +702,14 @@ class FacebookItemTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:upload_images)
     Media.any_instance.unstub(:jsonld_tag_content)
   end
+
+  test "should return nil when FB post id is not present on set url params" do
+    Media.any_instance.stubs(:get_crowdtangle_data)
+    Media.any_instance.stubs(:parse_from_facebook_html)
+    url = 'https://www.facebook.com/media/set?vanity=thelucidpoints'
+    media = Media.new(url: url)
+    assert_nil media.get_facebook_post_id_from_url
+    Media.any_instance.unstub(:get_crowdtangle_data)
+    Media.any_instance.unstub(:parse_from_facebook_html)
+  end
 end

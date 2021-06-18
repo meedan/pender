@@ -86,7 +86,7 @@ module MediaFacebookItem
     end
     return '' if params.empty?
     post_id = params[key].first
-    post_id = post_id.split('.')[1] if id == 'set'
+    post_id = post_id.split('.')[1] if id == 'set' && post_id
     post_id
   end
 
