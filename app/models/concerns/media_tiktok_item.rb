@@ -11,6 +11,7 @@ module MediaTiktokItem
     handle_exceptions(self, StandardError) do
       self.get_tiktok_api_data
       match = self.url.match(TIKTOK_URL)
+      self.set_data_field('author_picture', self.get_tiktok_author_picture)
       self.data.merge!({
         username: match['username'],
         external_id: match['id'],
@@ -19,7 +20,6 @@ module MediaTiktokItem
         picture: data['raw']['api']['thumbnail_url'],
         author_url: data['raw']['api']['author_url'],
         html: data['raw']['api']['html'],
-        author_picture: self.get_tiktok_author_picture,
         author_name: data['raw']['api']['author_name']
       })
     end
@@ -36,6 +36,7 @@ module MediaTiktokItem
   end
 
   def get_tiktok_author_picture
+    return if self.doc.nil?
     avatar = self.doc.at_css('.user-info .avatar avatar-wrapper')
     avatar['style'].match(/url\("(.+)"\)/)[1] if avatar && avatar['style']
   end

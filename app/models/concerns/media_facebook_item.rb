@@ -239,11 +239,11 @@ module MediaFacebookItem
       self.set_data_field('username', self.get_facebook_username || self.get_facebook_profile_from_url_pattern(false) || self.data['author_name'])
       self.parse_from_facebook_html unless [:author_name, :username, :author_picture, :author_url, :description, :text, :external_id, :object_id, :picture, :published_at].map { |key| data[key].blank? }.all?
       self.data['text'].strip! if self.data['text']
+      self.get_facebook_description
       self.set_data_field('author_url', 'http://facebook.com/' + (self.data['username'] || self.data['user_uuid']).to_s)
       self.get_original_post
       replace_facebook_url(self.data[:username])
       self.set_data_field('external_id', self.data['object_id'])
-      self.set_data_field('description', get_facebook_description)
       self.set_data_field('picture', self.data.dig('raw', 'json+ld', 'thumbnailUrl'), self.data.dig('photos')&.last)
       self.data[:html] = self.html_for_facebook_post(self.data[:username])
     end
@@ -272,11 +272,13 @@ module MediaFacebookItem
   end
 
   def get_facebook_description
-    default_description = self.data['text'] || self.data['description']
-    post_full_text = self.doc && self.doc.at_css('div[data-testid="post_message"]') ? self.doc.css('div[data-testid="post_message"]').text : nil
-    group_post_content = self.doc.to_s.match(/"message":{[^}]+"text":"([^"]+)"/)
-    description = group_post_content ? group_post_content[1].gsub('\\n', ' ') : (post_full_text || default_description)
-    description.gsub!(/\s+/, ' ')
+    return unless self.data['description'].blank?
+    group_post_content = nil
+    if self.doc.to_s.match?(/"message":{[^}]+"text":"([^"]+)"/)
+      group_post_content = self.doc.to_s.match(/"message":{[^}]+"text":"([^"]+)"/)[1].gsub!('\\n', ' ')
+      group_post_content.gsub!(/\s+/, ' ')
+    end
+    self.set_data_field('description', group_post_content, self.doc&.at_css('div[data-testid="post_message"]')&.text, self.data['text'])
   end
 
   def replace_facebook_url(username)
