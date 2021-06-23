@@ -97,7 +97,6 @@ GEM
     crack (0.4.5)
       rexml
     crass (1.0.6)
-    daemons (1.4.0)
     dead_end (1.1.7)
     derailed (0.1.0)
       derailed_benchmarks
@@ -117,20 +116,13 @@ GEM
     docile (1.1.5)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
-    e2mmap (0.1.0)
     equalizer (0.0.11)
     erubi (1.10.0)
-    et-orbi (1.2.4)
-      tzinfo
-    eventmachine (1.2.7)
     excon (0.82.0)
     ffi (1.15.1)
     ffi-compiler (1.0.1)
       ffi (>= 1.0.0)
       rake
-    fugit (1.4.5)
-      et-orbi (~> 1.1, >= 1.1.8)
-      raabro (~> 1.4)
     gem-licenses (0.2.2)
     get_process_mem (0.2.7)
       ffi (~> 1.0)
@@ -209,9 +201,8 @@ GEM
       nokogiri (>= 1.8.0)
       public_suffix (>= 2.0.0, < 2.1)
     public_suffix (2.0.5)
-    puma (4.3.8)
+    puma (5.3.2)
       nio4r (~> 2.0)
-    raabro (1.4.0)
     racc (1.5.2)
     rack (2.2.3)
     rack-cors (1.1.1)
@@ -252,9 +243,7 @@ GEM
       thor (>= 0.19.0, < 2.0)
     rake (13.0.3)
     rbtree3 (0.6.0)
-    redis (4.2.5)
-    redis-namespace (1.8.1)
-      redis (>= 3.0.4)
+    redis (4.3.1)
     request_store (1.5.0)
       rack (>= 1.4)
     responders (3.0.1)
@@ -285,8 +274,6 @@ GEM
       actionpack (>= 3.1, < 7.0)
       railties (>= 3.1, < 7.0)
     ruby-statistics (2.1.3)
-    rufus-scheduler (3.7.0)
-      fugit (~> 1.1, >= 1.1.6)
     sass-rails (6.0.0)
       sassc-rails (~> 2.1, >= 2.1.1)
     sassc (2.4.0)
@@ -301,13 +288,6 @@ GEM
       connection_pool (>= 2.2.2)
       rack (~> 2.0)
       redis (>= 4.2.0)
-    sidekiq-scheduler (3.1.0)
-      e2mmap
-      redis (>= 3, < 5)
-      rufus-scheduler (~> 3.2)
-      sidekiq (>= 3)
-      thwait
-      tilt (>= 1.4.0)
     simple_oauth (0.3.1)
     simplecov (0.13.0)
       docile (~> 1.1.0)
@@ -328,14 +308,8 @@ GEM
     sqlite3 (1.3.13)
     terminal-table (3.0.1)
       unicode-display_width (>= 1.1.1, < 3)
-    thin (1.8.1)
-      daemons (~> 1.0, >= 1.0.9)
-      eventmachine (~> 1.0, >= 1.0.4)
-      rack (>= 1, < 3)
     thor (1.1.0)
     thread_safe (0.3.6)
-    thwait (0.2.0)
-      e2mmap
     tilt (2.0.10)
     twitter (7.0.0)
       addressable (~> 2.3)
@@ -400,7 +374,7 @@ DEPENDENCIES
   parallel_tests
   pg (= 0.20)
   postrank-uri
-  puma
+  puma (= 5.3.2)
   rack (>= 1.6.11)
   rack-cors
   rack-protection (= 2.0.1)
@@ -409,7 +383,7 @@ DEPENDENCIES
   rails-controller-testing
   rails-html-sanitizer (= 1.0.4)
   rails-perftest
-  redis-namespace
+  redis (= 4.3.1)
   request_store
   responders
   retryable
@@ -419,12 +393,10 @@ DEPENDENCIES
   rswag-ui
   sass-rails
   sidekiq
-  sidekiq-scheduler
   simplecov (= 0.13.0)
   simplecov-console
   sprockets (= 3.7.2)
   sqlite3 (~> 1.3.6)
-  thin
   twitter
   web-console (~> 3.5.1)
   webmock

@@ -42,6 +42,10 @@
 #    2. If the page has an oEmbed url, request it and get the response
 #    2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media json data
 
+require 'open_uri_redirections'
+require 'postrank-uri'
+require 'nokogiri'
+
 class Media
   [ActiveModel::Validations, ActiveModel::Conversion, MediasHelper, MediaOembed, MediaArchiver, MediaMetrics].each { |concern| include concern }
   extend ActiveModel::Naming
@@ -55,9 +59,7 @@ class Media
   def initialize(attributes = {})
     key = attributes.delete(:key)
     ApiKey.current = key if key
-    attributes.each do |name, value|
-      send("#{name}=", value)
-    end
+    attributes.each { |name, value| send("#{name}=", value) }
     self.original_url = self.url.strip
     self.data = {}.with_indifferent_access
     self.follow_redirections
@@ -273,12 +275,12 @@ class Media
       proxy = self.get_proxy
       options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
       uri = Media.parse_url(decoded_uri(self.url))
-      html = ''
+      html = ''.freeze
       OpenURI.open_uri(uri, options.merge(read_timeout: PenderConfig.get('timeout', 30).to_i)) do |f|
         f.binmode
         html = f.read
       end
-      Nokogiri::HTML preprocess_html(html).gsub('<!-- <div', '<div').gsub('div> -->', 'div>')
+      Nokogiri::HTML preprocess_html(html)
     rescue OpenURI::HTTPError, Errno::ECONNRESET => e
       PenderAirbrake.notify(e, url: self.url)
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: self.url, error_class: e.class, error_message: e.message
@@ -287,7 +289,7 @@ class Media
     rescue Zlib::DataError, Zlib::BufError
       self.get_html(Media.html_options(self.url).merge('Accept-Encoding' => 'identity'))
     rescue RuntimeError => e
-      PenderAirbrake.notify(e, url: self.url) if !redirect_https_to_http?(header_options, e.message) && Airbrake.configured?
+      PenderAirbrake.notify(e, url: self.url) if !redirect_https_to_http?(header_options, e.message)
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: self.url, error_class: e.class, error_message: e.message
       return nil
     end
@@ -310,8 +312,7 @@ class Media
 
   def top_url(url)
     uri = Media.parse_url(url)
-    port = (uri.port == 80 || uri.port == 443) ? '' : ":#{uri.port}"
-    "#{uri.scheme}://#{uri.host}#{port}"
+    (uri.port == 80 || uri.port == 443) ? "#{uri.scheme}://#{uri.host}" : "#{uri.scheme}://#{uri.host}:#{uri.port}"
   end
 
   def absolute_url(path = '')

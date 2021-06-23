@@ -621,12 +621,18 @@ class FacebookItemTest < ActiveSupport::TestCase
   end
 
   test "should parse post from public group" do
+    Media.any_instance.stubs(:get_crowdtangle_data)
+    html = '{"__bbox":{"result":{"data":{"group":{"description_with_entities":{"text":"A gathering for those interested in exploring belief systems."}},"node":{"comet_sections":{"content":{"story":{"comet_sections":{"message":{"__typename":"CometFeedStoryDefaultMessageRenderingStrategy","story":{"is_text_only_story":true,"message":{"color_ranges":[],"text":"Welcome! This group is a gathering for \nthose interested in exploring belief systems"}}'
     url = 'https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/'
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(html))
     m = Media.new url: url
     data = m.as_json
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
     assert !data['title'].blank?
+    assert_match /This group is a gathering for those interested in exploring belief systems/, data['description']
+    Media.any_instance.unstub(:get_crowdtangle_data)
+    Media.any_instance.unstub(:get_html)
   end
 
   test "should get full text of Facebook post" do

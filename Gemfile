@@ -25,40 +25,38 @@ group :test do
   gem 'rails-controller-testing'
   gem 'minitest', '5.10.1'
   gem 'minitest-retry'
+  gem 'webmock'
 end
 gem 'logstash-logger'
-gem 'webmock'
 gem 'railroady'
 gem 'airbrake', '11.0.0'
-gem 'thin'
 gem 'responders'
 gem 'yt', '~> 0.25.5'
 gem 'rswag-api'
 gem 'rswag-ui'
 gem 'sass-rails'
 gem 'twitter'
-gem 'ids_please', git: 'https://github.com/meedan/ids_please', branch: 'master', ref: '31b9e0'
-gem 'open_uri_redirections'
-gem 'postrank-uri'
+gem 'ids_please', git: 'https://github.com/meedan/ids_please', branch: 'master', ref: '31b9e0', require: false
+gem 'open_uri_redirections', require: false
+gem 'postrank-uri', require: false
 gem 'retryable'
-gem 'puma'
+gem 'puma', '5.3.2'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'rails-perftest'
 gem 'sidekiq'
-gem 'redis-namespace'
-gem 'nokogiri', '1.11.7'
-gem 'sidekiq-scheduler'
-gem 'mida'
-gem 'htmlentities'
+gem 'redis', '4.3.1'
+gem 'nokogiri', '1.11.7', require: false
+gem 'mida', require: false
+gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
-gem 'loofah', '2.3.1'
+gem 'loofah', '2.3.1', require: false
 gem 'rails-html-sanitizer', '1.0.4'
 gem 'sprockets', '3.7.2'
 gem 'activejob', '5.2.6'
 gem 'actionview', '5.2.6'
 gem 'actionpack', '5.2.6'
-gem 'rack', '>= 1.6.11'
-gem 'aws-sdk-s3'
+gem 'rack', '>= 1.6.11', require: false
+gem 'aws-sdk-s3', require: false
 gem 'honeycomb-beeline'
 gem 'lograge'
 gem 'request_store'

@@ -1,3 +1,5 @@
+require 'mida'
+
 module MediaSchemaOrg
   extend ActiveSupport::Concern
 

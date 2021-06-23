@@ -38,7 +38,7 @@ module MediaOembedItem
       return true
     rescue JSON::ParserError => error
       self.data[:raw][:oembed] = { error: { message: response.body, code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') } }
-      Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse `oembed` data as JSON', url: self.url, oembed_url: oembed_url, error_class: error.class, response_code: response.code, response_message: response.message
+      Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse `oembed` data as JSON', url: self.url, oembed_url: oembed_url, error_class: error.class, error_message: error.message, response_code: response.code
       return false
     end
   end

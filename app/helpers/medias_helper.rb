@@ -1,3 +1,5 @@
+require 'htmlentities'
+
 module MediasHelper
   def embed_url(request = @request)
     src = convert_url_to_format(request.original_url, 'js')

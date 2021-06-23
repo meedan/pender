@@ -2,8 +2,12 @@ module MediaHtmlPreprocessor
   extend ActiveSupport::Concern
 
   def preprocess_html(html)
-    return html unless include_sharethefacts_js(html)
-    find_sharethefacts_links(html)
+    html = find_sharethefacts_links(html) if include_sharethefacts_js(html)
+    unless html.blank?
+      html.gsub!('<!-- <div', '<div')
+      html.gsub!('div> -->', 'div>')
+    end
+    html
   end
 
   def include_sharethefacts_js(html)

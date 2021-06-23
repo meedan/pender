@@ -1,3 +1,5 @@
+require 'ids_please'
+
 module MediaFacebookItem
   extend ActiveSupport::Concern
 
@@ -275,7 +277,8 @@ module MediaFacebookItem
     return unless self.data['description'].blank?
     group_post_content = nil
     if self.doc.to_s.match?(/"message":{[^}]+"text":"([^"]+)"/)
-      group_post_content = self.doc.to_s.match(/"message":{[^}]+"text":"([^"]+)"/)[1].gsub!('\\n', ' ')
+      group_post_content = self.doc.to_s.match(/"message":{[^}]+"text":"([^"]+)"/)[1]
+      group_post_content.gsub!('\\n', ' ')
       group_post_content.gsub!(/\s+/, ' ')
     end
     self.set_data_field('description', group_post_content, self.doc&.at_css('div[data-testid="post_message"]')&.text, self.data['text'])
