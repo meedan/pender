@@ -27,7 +27,7 @@ module MediaOembed
       {
         type: 'rich',
         version: '1.0',
-        title: data['title'] || 'Pender',
+        title: data['title'].blank? ? 'Pender' : data['title'],
         author_name: data['author_name'],
         author_url: (data['type'] === 'profile' ? data['url'] : data['author_url']),
         provider_name: data['provider'],

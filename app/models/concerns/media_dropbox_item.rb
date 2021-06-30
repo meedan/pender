@@ -3,7 +3,7 @@ module MediaDropboxItem
 
   URLS = [
     /^https?:\/\/(www\.)?dropbox\.com\/sh?\/([^\/]+)/,
-    /^https?:\/\/(dl\.)?dropboxusercontent\.com\/s\/([^\/]+)/
+    /^https?:\/\/([^\.]+\.)?(dropboxusercontent|dropbox)\.com\/s\/([^\/]+)/
   ]
 
   included do

@@ -26,7 +26,7 @@ class MediaTest < ActiveSupport::TestCase
     end
 
     media = Media.new(url: 'http://ca.ios.ba/a%c3%82/%7Euser?a=b')
-    assert_equal 'https://ca.ios.ba/a%C3%82/~user?a=b', media.url
+    assert_match '//ca.ios.ba/a%C3%82/~user?a=b', media.url
 
   end
 
@@ -43,11 +43,13 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should follow redirection of relative paths" do
-    assert_nothing_raised do
-      m = create_media url: 'http://www.almasryalyoum.com/node/517699'
-      data = m.as_json
-      assert_match /https:\/\/www.almasryalyoum.com\/editor\/details\/968/, data['url']
-    end
+    WebMock.enable!
+    WebMock.stub_request(:any, /https?:\/\/www.almasryalyoum.com\/node\/517699/).to_return(body: '', headers: { location: '/editor/details/968' }, status: 302)
+    Media.any_instance.stubs(:get_canonical_url).returns(false)
+    m = create_media url: 'https://www.almasryalyoum.com/node/517699'
+    assert_match /almasryalyoum.com\/editor\/details\/968/, m.url
+    WebMock.disable!
+    Media.any_instance.unstub(:get_canonical_url)
   end
 
   test "should parse URL including cloudflare credentials on header" do
@@ -85,15 +87,12 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should parse opengraph metatags" do
     m = create_media url: 'https://meedan.com/en/check/'
-    data = m.as_json
+    m.as_json
+    data = m.get_opengraph_metadata
     assert_match 'Product', data['title']
     assert_match(/Engage your audience/, data['description'])
-    assert_equal '', data['published_at']
-    assert_equal '', data['username']
-    assert_match 'https://meedan.com/check', m.url
-    assert_match 'https://meedan.com', data['author_url']
+    assert_match 'Meedan', data['author_name']
     assert_not_nil data['picture']
-    assert_equal '' , data['external_id']
   end
   
   test "should not overwrite metatags with nil" do
@@ -193,7 +192,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match 'War Goes Viral', data['title']
     assert_match 'How social media is being weaponized across the world', data['description']
     assert !data['published_at'].blank?
-    assert_match 'Emerson T. Brooking and P. W. Singer', data['username']
+    assert_match /Brooking.+Singer/, data['username']
     assert_match /https?:\/\/www.theatlantic.com/, data['author_url']
     assert_match /\/#{id}\/picture/, data['picture']
   end
@@ -402,20 +401,25 @@ class MediaTest < ActiveSupport::TestCase
     assert_nil data['error']
   end
 
-  test "should parse dropbox image url with another url pattern" do
-    m = create_media url: 'https://dl.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg'
-    data = m.as_json
-    assert_match '/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', m.url
-    assert_equal 'item', data['type']
-    assert_equal 'dropbox', data['provider']
-    assert_match 'b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', data['title']
-    assert_match 'Shared with Dropbox', data['description']
-    assert_not_nil data['published_at']
-    assert_equal '', data['username']
-    assert_equal '', data['author_url']
-    assert_not_nil data['picture']
-    assert data['html'].blank?
-    assert_nil data['error']
+  test "should parse dropbox image url with dl subdomain url pattern" do
+    %w(
+      https://dl.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg
+      https://dl.dropboxusercontent.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg
+    ).each do |url|
+      m = create_media url: url
+      data = m.as_json
+      assert_match '/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', m.url
+      assert_equal 'item', data['type']
+      assert_equal 'dropbox', data['provider'], "Expected to be recognized as dropbox: #{data}"
+      assert_match 'b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg', data['title']
+      assert_match 'Shared with Dropbox', data['description']
+      assert_not_nil data['published_at']
+      assert_equal '', data['username']
+      assert_equal '', data['author_url']
+      assert_not_nil data['picture']
+      assert data['html'].blank?
+      assert_nil data['error']
+    end
   end
 
   test "should parse dropbox url with sh" do
@@ -553,6 +557,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should return empty html on oembed when script has http src" do
+    Media.any_instance.stubs(:get_oembed_url).returns('https://www.politico.com/story/2017/09/07/facebook-fake-news-social-media-242407?_embed=true&_format=oembed')
     m = create_media url: 'https://politi.co/2j7qyT0'
     oembed = '{"version":"1.0","type":"rich","html":"<script type=\"text/javascript\" src=\"http://www.politico.com/story/2017/09/07/facebook-fake-news-social-media-242407?_embed=true&amp;_format=js\"></script>"}'
     response = 'mock';response.expects(:code).returns('200');response.stubs(:body).returns(oembed)
@@ -562,6 +567,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /script.*src="http:\/\//, JSON.parse(response.body)['html']
     assert_equal '', data['html']
     Media.any_instance.unstub(:oembed_get_data_from_url)
+    Media.any_instance.unstub(:get_oembed_url)
   end
 
   test "should store ClaimReview schema" do
@@ -919,11 +925,13 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should follow redirections of path relative urls" do
     url = 'https://www.yousign.org/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358'
-    assert_nothing_raised do
-      m = create_media url: url
-      data = m.as_json
-      assert_equal 'https://www.yousign.org/v2_404.php?notfound=/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358', m.url
-    end
+    WebMock.enable!
+    WebMock.stub_request(:any, 'https://www.yousign.org/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358').to_return(body: '', headers: { location: 'v2_404.php?notfound=%2FChina-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358' }, status: 302)
+    Media.any_instance.stubs(:get_canonical_url).returns(false)
+    m = create_media url: url
+    assert_equal 'https://www.yousign.org/v2_404.php?notfound=/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358', m.url
+    WebMock.disable!
+    Media.any_instance.unstub(:get_canonical_url)
   end
 
   test "should return error if URL is not safe" do

@@ -37,4 +37,8 @@ module MediaInstagramProfile
     author_name = self.doc.to_s.match(/"full_name": "([^"]+)"/)
     return author_name[1] unless author_name.nil?
   end
+
+  def ignore_instagram_urls
+    [{ pattern: /^https:\/\/www\.instagram\.com\/accounts\/login/, reason: :login_page }]
+  end
 end 

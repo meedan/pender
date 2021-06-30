@@ -58,12 +58,16 @@ module Pender
     end
 
     def bucket_name
-      "#{@storage.dig('bucket')}#{ENV['TEST_ENV_NUMBER']}"
+      ENV['TEST_ENV_NUMBER'] ? "#{@storage.dig('bucket')}#{ENV['TEST_ENV_NUMBER']}" : @storage.dig('bucket')
     end
 
     def video_bucket_name
       video_bucket = @storage.dig('video_bucket')
-      video_bucket ? "#{video_bucket}#{ENV['TEST_ENV_NUMBER']}" : bucket_name
+      if video_bucket
+        ENV['TEST_ENV_NUMBER'] ? "#{video_bucket}#{ENV['TEST_ENV_NUMBER']}" : video_bucket
+      else
+        bucket_name
+      end
     end
 
     def storage_path(data = 'medias')
@@ -91,10 +95,11 @@ module Pender
       end
     end
 
-    def store_object(file_key, content, key_prefix = '')
+    def store_object(file_key, content, key_prefix = nil)
+      file_key.prepend(key_prefix) if key_prefix
       content_type = Rack::Mime.mime_type(File.extname(file_key))
       @client.put_object(
-        key: key_prefix + file_key,
+        key: file_key,
         body: content,
         bucket: bucket_name,
         content_type: content_type

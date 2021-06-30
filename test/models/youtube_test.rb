@@ -273,5 +273,6 @@ class YoutubeTest < ActiveSupport::TestCase
     assert_equal 'https://www.youtube.com/channel/UCAw-vsuGe530nLru8vSYUcw', data['author_url']
     assert !data['html'].blank?
     assert_equal 'https://www.youtube.com/watch?v=p8y8IzeF9u8', m.url
+    Media.any_instance.unstub(:request_media_url)
   end
 end

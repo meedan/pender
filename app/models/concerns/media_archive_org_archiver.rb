@@ -29,7 +29,7 @@ module MediaArchiveOrgArchiver
         Rails.logger.info level: 'INFO', message: '[archive_org] Sent URL to archive', url: url, code: response.code, response: response.message
         body = JSON.parse(response.body)
         if body['job_id']
-          Media.delay.get_archive_org_status(body['job_id'], url, key_id)
+          Media.delay_for(2.minutes).get_archive_org_status(body['job_id'], url, key_id)
         else
           PenderAirbrake.notify(StandardError.new(body['message']), url: url, response_body: body)
           data = { error: { message: "(#{body['status_ext']}) #{body['message']}", code: LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR') }}

@@ -5,4 +5,4 @@ begin
 rescue
   raise "Error when loading configuration file"
 end
-WebMock.allow_net_connect!
+WebMock.allow_net_connect! if Rails.env.test?

@@ -1,3 +1,5 @@
+require 'htmlentities'
+
 module MediasHelper
   def embed_url(request = @request)
     src = convert_url_to_format(request.original_url, 'js')
@@ -5,9 +7,12 @@ module MediasHelper
   end
 
   def convert_url_to_format(url, format)
-    url = url.sub(/medias([^\?]*)/, 'medias.' + format)
+    empty = ''.freeze
+    url.sub!(/medias([^\?]*)/, 'medias.' + format)
     if url =~ /refresh=1/
-      url = url.sub(/refresh=1/, '').sub(/medias\.#{format}\?/, "medias.#{format}?refresh=1&").sub(/\&$/, '')
+      url.sub!(/refresh=1/, empty)
+      url.sub!(/medias\.#{format}\?/, "medias.#{format}?refresh=1&")
+      url.sub!(/\&$/, empty)
     end
     url
   end
@@ -34,7 +39,7 @@ module MediasHelper
       media.doc.search('meta').each do |meta|
         metatag = {}
         meta.each do |key, value|
-          metatag.merge!({key => value.strip}) unless value.blank?
+          metatag.merge!({key.freeze => value.strip}) unless value.blank?
         end
         media.data['raw']['metatags'] << metatag
       end
@@ -45,7 +50,8 @@ module MediasHelper
     return if media.doc.nil?
     data = jsonld_tag_content(media)
     if data
-      (data.is_a?(Hash) && data.dig('@context')) == 'http://schema.org' ? add_schema_to_data(media, data, data.dig('@type')) : media.data['raw']['json+ld'] = data
+      media.data['raw']['json+ld'] = data
+      media.add_schema_to_data(media, data, data.dig('@type')) if (data.is_a?(Hash) && data.dig('@context')).match?('https?://schema.org')
     end
   end
 
@@ -71,12 +77,13 @@ module MediasHelper
   end
 
   def get_info_from_data(source, data, *args)
+    empty = ''.freeze
     hash = data['raw'][source]
-    return '' if hash.nil?
+    return empty if hash.nil?
     args.each do |i|
       return hash[i] if !hash[i].nil?
     end
-    ''
+    empty
   end
 
   def list_formats
@@ -106,8 +113,12 @@ module MediasHelper
   end
 
   def is_url?(url)
-    uri = URI.parse(URI.encode(url))
-    !uri.host.nil? && uri.userinfo.nil?
+    begin
+      uri = URI.parse(URI.encode(url))
+      !uri.host.nil? && uri.userinfo.nil?
+    rescue URI::InvalidURIError
+      false
+    end
   end
 
   def get_error_data(error_data, media, url, id)
@@ -130,14 +141,14 @@ module MediasHelper
 
   def cleanup_text(content, field = nil)
     if content.is_a?(String)
-      content = content.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "�")
+      content = content.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "�".freeze)
       begin
-        content = URI.encode(content) if field == 'raw' && is_url?(content)
+        return URI.encode(content) if field == 'raw' && is_url?(content)
       rescue StandardError => error
         Rails.logger.info level: 'INFO', message: '[Parser] Could not encode URL', url: self.url, content: content, error_class: error.class, error_message: error.message
       end
     elsif content.respond_to?(:each_with_index)
-      content = cleanup_collection(content, field)
+      return cleanup_collection(content, field)
     end
     content
   end
@@ -192,6 +203,22 @@ module MediasHelper
     end
   end
 
+  def ignore_url?(url)
+    ignore_url = false
+    Media::TYPES.keys.map { |type| type[/(.+)_(item|profile)$/, 1] }.uniq.each do |provider|
+      if self.respond_to?("ignore_#{provider}_urls")
+        self.send("ignore_#{provider}_urls").each do |item|
+          if url.match?(item[:pattern])
+            ignore_url = true
+            self.unavailable_page = item[:reason]
+          end
+        end
+      end
+    end
+    self.unavailable_page = nil unless ignore_url
+    ignore_url
+  end
+
   Media.class_eval do
     def self.decoded_uri(url)
       begin
@@ -201,14 +228,6 @@ module MediasHelper
       end
     end
 
-    def self.ignore_url?(url)
-      ignore_url = false
-      [/^https:\/\/www\.instagram\.com\/accounts\/login/, /^https:\/\/www\.facebook.com\/login/, /^https:\/\/consent.youtube.com/].each do |pattern|
-        ignore_url = true if url.match?(pattern)
-      end
-      ignore_url
-    end
-
     def self.api_key_settings(key_id)
       key = ApiKey.where(id: key_id).last
       key ? key.settings : {}
@@ -216,7 +235,7 @@ module MediasHelper
 
     def self.valid_proxy(config_key = 'proxy')
       subkeys = [:host, :port, :pass, :user_prefix]
-      subkeys += [:country_prefix, :session_prefix] if config_key == 'proxy'
+      subkeys += [:country_prefix, :session_prefix] if config_key == 'proxy'.freeze
       proxy = {}.with_indifferent_access
       subkeys.each do |config|
         value = PenderConfig.get("#{config_key}_#{config}")

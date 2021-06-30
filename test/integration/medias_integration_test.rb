@@ -35,14 +35,14 @@ class MediasIntegrationTest < ActionDispatch::IntegrationTest
     threads = []
 
     threads << Thread.new do
-      get "/api/medias.html?url=#{url}"
+      get "/api/medias.html?url=#{url}", params: {}
       assert_response :success
     end
 
     sleep 1
 
     threads << Thread.new do
-      get "/api/medias.html?url=#{url}"
+      get "/api/medias.html?url=#{url}", params: {}
       assert_response :conflict
     end
 
@@ -51,7 +51,7 @@ class MediasIntegrationTest < ActionDispatch::IntegrationTest
 
   test "should normalize request URL" do
     url = '/api/medias.html?referrer=https%3A%2F%2Fmedium.com%2Fmedia%2F11d9292b164066cd07ec67d8090734cf%3FpostId%3D4308e5aacf6c&url=https%3A%2F%2Fcheckmedia.org%2F2222%2Fproject%2F691%2Fmedia%2F6923'
-    get url
+    get url, params: {}
     assert_response 302
     assert_equal 'api/medias.html?url=https%3A%2F%2Fcheckmedia.org%2F2222%2Fproject%2F691%2Fmedia%2F6923', @response.redirect_url.split('/', 4).last
   end

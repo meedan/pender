@@ -1,17 +1,12 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
-  skip_before_filter :verify_authenticity_token
+  skip_before_action :verify_authenticity_token
 
-  def append_info_to_payload(payload)
-    super
-    case
-      when payload[:status].to_i < 300
-        payload[:level] = 'INFO'
-      when payload[:status].to_i < 400
-        payload[:level] = 'WARN'
-      else
-        payload[:level] = 'ERROR'
+  def process_action(*)
+    if Rails.env.production?
+      MemoryProfiler.report { super }.pretty_print(detailed_report: true, scale_bytes: true)
+    else
+      super
     end
   end
-
 end

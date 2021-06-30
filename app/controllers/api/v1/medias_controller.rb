@@ -8,7 +8,7 @@ module Api
     class MediasController < Api::V1::BaseApiController
       include MediasHelper
 
-      skip_before_filter :authenticate_from_token!, if: proc { request.format.html? || request.format.js? || request.format.oembed? }
+      skip_before_action :authenticate_from_token!, if: proc { request.format.html? || request.format.js? || request.format.oembed? }
       before_action :strip_params, only: :index, if: proc { request.format.html? }
       before_action :get_params, only: [:index, :bulk]
       before_action :lock_url, only: :index
@@ -102,7 +102,7 @@ module Api
         end
         begin
           yield
-        rescue Timeout::Error, Net::ReadTimeout
+        rescue Net::ReadTimeout
           @data = get_timeout_data(nil, @url, @id)
           render_timeout_media(@data, must_render) and return true
         end
@@ -131,7 +131,7 @@ module Api
           if @refresh || !Pender::Store.current.exist?(@id, :html)
             save_cache
           end
-          render text: Pender::Store.current.read(@id, :html), status: 200
+          render plain: Pender::Store.current.read(@id, :html), status: 200
         rescue
           render html: 'Could not parse this media'
         end

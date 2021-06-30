@@ -8,19 +8,22 @@ class BaseApiControllerTest < ActionController::TestCase
 
   test "should return only enabled archivers" do
     authenticate_with_token
-    get :about, format: :json
+    get :about, params: { format: :json }
     assert_response :success
     response = JSON.parse(@response.body)
     assert_equal [{"key"=>"archive_is", "label"=>"Archive.is"}, {"key"=>"archive_org", "label"=>"Archive.org"}, {"key"=>"perma_cc", "label"=>"Perma.cc"}, {"key"=>"video", "label"=>"Video"}], response['data']['archivers']
 
-    Media::ARCHIVERS['archive_is'][:enabled] = false
-    get :about, format: :json
+    enabled = Media::ENABLED_ARCHIVERS
+    Media.const_set(:ENABLED_ARCHIVERS, enabled.select { |archiver| archiver[:key] != 'archive_is' })
+    get :about, params: { format: :json }
     response = JSON.parse(@response.body)
     assert_equal [{"key"=>"archive_org", "label"=>"Archive.org"}, {"key"=>"perma_cc", "label"=>"Perma.cc"}, {"key"=>"video", "label"=>"Video"}], response['data']['archivers']
+    Media.send(:remove_const, :ENABLED_ARCHIVERS)
+    Media.const_set(:ENABLED_ARCHIVERS, enabled)
   end
 
   test "should return unauthorized if not authenticated" do
-    get :about, format: :json
+    get :about, params: { format: :json }
     assert_response 401
     response = JSON.parse(@response.body)
     assert_equal 'error', response['type']

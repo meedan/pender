@@ -61,7 +61,7 @@ module MediaInstagramItem
     raise StandardError.new("#{response.class}: #{response.message}") unless %(200 301 302).include?(response.code)
     return JSON.parse(response.body)['graphql'] if response.code == '200'
     location = response.header['location']
-    Media.is_a_login_page(location) ? (raise StandardError.new('Login required')) : self.get_instagram_graphql_data(location)
+    self.ignore_url?(location) ? (raise StandardError.new('Login required')) : self.get_instagram_graphql_data(location)
   end
 
 end 

@@ -1,4 +1,4 @@
-VERSION = 'v0.76.0'
+VERSION = 'v0.76.0'.freeze
 
 # if ENV['RAILS_ENV'] == 'development'
 #   path = File.absolute_path(__FILE__)

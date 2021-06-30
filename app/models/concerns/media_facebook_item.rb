@@ -1,3 +1,5 @@
+require 'ids_please'
+
 module MediaFacebookItem
   extend ActiveSupport::Concern
 
@@ -13,7 +15,7 @@ module MediaFacebookItem
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/(?<id>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/vb\.([0-9]+)\/(?<id>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/permalink.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
-    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/story.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
+    /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/story.php\?story_fbid=(?<id>[0-9]+)&id=(?<profile>[0-9]+).*/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/livemap(\/.*)?/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/watch(\/.*)?/,
     /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/live\/map(\/.*)?/,
@@ -53,15 +55,18 @@ module MediaFacebookItem
     user_id ||= self.doc.to_s[/"owner":{[^\{]+?"id":"(\d+)"[^\{\}]+?}/, 1]
     user_id ||= self.doc.to_s[/"userID":"(\d+)"/, 1]
     user_id ||= params['set'].first.split('.').last unless params['set'].blank?
-    user_id || get_facebook_user_id_from_url_pattern
+    user_id || get_facebook_profile_from_url_pattern
   end
 
-  def get_facebook_user_id_from_url_pattern
+  def get_facebook_profile_from_url_pattern(integer_only = true)
+    profile = nil
     URLS.each do |pattern|
       match = pattern.match(self.url)
-      user_id = (match&.names&.include?('profile') && match['profile'].to_i > 0 && match['profile']) || (match&.names&.include?('id') && match['id'])
-      break user_id if user_id
+      profile = match['profile'] if match&.names&.include?('profile')
+      profile = (match&.names&.include?('id') && match['id']) if integer_only && profile.to_s.to_i.zero?
+      break profile if profile
     end
+    profile
   end
 
   def get_facebook_post_id_from_url
@@ -83,7 +88,7 @@ module MediaFacebookItem
     end
     return '' if params.empty?
     post_id = params[key].first
-    post_id = post_id.split('.')[1] if id == 'set'
+    post_id = post_id.split('.')[1] if id == 'set' && post_id
     post_id
   end
 
@@ -174,10 +179,8 @@ module MediaFacebookItem
     author_name = self.doc.at_css('h1[data-testid="event-permalink-event-name"]')
     self.data['title'] = author_name.content if author_name.respond_to?(:content)
     author = self.doc.at_css('div#event_header_primary a.profileLink')
-    if author
-      self.data['author_name'] = author.content
-      self.data['author_url'] = author.attr('href')
-    end
+    self.set_data_field('author_name', author&.content)
+    self.set_data_field('author_url', author&.attr('href'))
   end
 
   def get_facebook_published_time_from_html
@@ -234,15 +237,16 @@ module MediaFacebookItem
     handle_exceptions(self, StandardError) do
       self.parse_facebook_uuid
       self.get_crowdtangle_data(:facebook)
-      self.set_data_field('username', self.get_facebook_username || self.data['author_name'])
+
+      self.set_data_field('username', self.get_facebook_username || self.get_facebook_profile_from_url_pattern(false) || self.data['author_name'])
       self.parse_from_facebook_html unless [:author_name, :username, :author_picture, :author_url, :description, :text, :external_id, :object_id, :picture, :published_at].map { |key| data[key].blank? }.all?
       self.data['text'].strip! if self.data['text']
-      self.set_data_field('author_url', 'http://facebook.com/' + (self.data['user_uuid'] || self.data['username']).to_s)
+      self.get_facebook_description
+      self.set_data_field('author_url', 'http://facebook.com/' + (self.data['username'] || self.data['user_uuid']).to_s)
       self.get_original_post
       replace_facebook_url(self.data[:username])
       self.set_data_field('external_id', self.data['object_id'])
-      self.set_data_field('description', get_facebook_description)
-      self.set_data_field('picture', self.data.dig('raw', 'json+ld', 'thumbnailUrl'), self.data['photos'] && self.data['photos'].last)
+      self.set_data_field('picture', self.data.dig('raw', 'json+ld', 'thumbnailUrl'), self.data.dig('photos')&.last)
       self.data[:html] = self.html_for_facebook_post(self.data[:username])
     end
   end
@@ -270,11 +274,14 @@ module MediaFacebookItem
   end
 
   def get_facebook_description
-    default_description = self.data['text'] || self.data['description']
-    post_full_text = self.doc && self.doc.at_css('div[data-testid="post_message"]') ? self.doc.css('div[data-testid="post_message"]').text : nil
-    group_post_content = self.doc.to_s.match(/"message":{[^}]+"text":"([^"]+)"/)
-    description = group_post_content ? group_post_content[1].gsub('\\n', ' ') : (post_full_text || default_description)
-    description.gsub!(/\s+/, ' ')
+    return unless self.data['description'].blank?
+    group_post_content = nil
+    if self.doc.to_s.match?(/"message":{[^}]+"text":"([^"]+)"/)
+      group_post_content = self.doc.to_s.match(/"message":{[^}]+"text":"([^"]+)"/)[1]
+      group_post_content.gsub!('\\n', ' ')
+      group_post_content.gsub!(/\s+/, ' ')
+    end
+    self.set_data_field('description', group_post_content, self.doc&.at_css('div[data-testid="post_message"]')&.text, self.data['text'])
   end
 
   def replace_facebook_url(username)

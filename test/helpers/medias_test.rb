@@ -3,7 +3,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 class MediasHelperTest < ActionView::TestCase
   def setup
     super
-    @request = ActionController::TestRequest.new 
+    @request = ActionController::TestRequest.create(self.class)
     @request.host = 'foo.bar'
     @request
   end
@@ -24,10 +24,14 @@ class MediasHelperTest < ActionView::TestCase
   end
 
   test "should not crash if jsonld content is null" do
+    null_content = '<script type="application/ld+json">null</script>'
     m = create_media url: 'https://www.facebook.com/dina.samak/posts/10153679232246949'
+    m.data = Media.minimal_data(m)
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(null_content))
     assert_nothing_raised do
       get_jsonld_data(m)
     end
+    Media.any_instance.unstub(:doc)
   end
 
   test "should not crash if jsonld content is not valid" do
@@ -124,6 +128,23 @@ class MediasHelperTest < ActionView::TestCase
     assert_equal "https://www.facebook.com/people/%C3%A1%3C80%3E%3C99%3E%C3%A1%3C80%3E%3C84%3E%C3%A1%3C80%3E%C2%BA%C3%A1%3C80%3E%C2%B8%C3%A1%3C80%3E%3C91%3E%C3%A1%3C80%3E%C2%AE%C3%A1%3C80%3E%C2%B8/100056594476400", cleanup_data_encoding(m.data)['raw']['crowdtangle']['posts'].first['expanded']
     Media.unstub(:crowdtangle_request)
     Media.any_instance.unstub(:get_crowdtangle_id)
+  end
+
+  test 'should handle error when cannot encode URLs on raw key' do
+    Media.any_instance.stubs(:get_crowdtangle_id).returns('111')
+    encoded_url = "https://www.facebook.com/people/á<80><99>á<80><84>á<80>ºá<80>¸á<80><91>á<80>®á<80>¸/100056594476400"
+    Media.stubs(:crowdtangle_request).with(:facebook, '111').returns({ result: { posts: [{"platform":"Facebook", "expanded": encoded_url }]}})
+    url = 'https://www.facebook.com/voice.myanmarnewsmm/posts/148110680335452'
+    m = Media.new url: url
+    m.data = Media.minimal_data(m)
+    m.get_crowdtangle_data(:facebook)
+
+    URI.stubs(:encode)
+    URI.stubs(:encode).with(encoded_url).raises(StandardError)
+    assert_equal encoded_url, m.cleanup_data_encoding(m.data)['raw']['crowdtangle']['posts'].first['expanded']
+    Media.unstub(:crowdtangle_request)
+    Media.any_instance.unstub(:get_crowdtangle_id)
+    URI.unstub(:encode)
   end
 
   test 'should handle error with crowdtangle requests' do

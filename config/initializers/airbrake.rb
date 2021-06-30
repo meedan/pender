@@ -5,6 +5,7 @@ unless PenderConfig.get('airbrake_host').blank?
     config.host = "https://#{PenderConfig.get('airbrake_host')}:#{PenderConfig.get('airbrake_port')}"
     config.ignore_environments = %w(development test)
     config.environment = PenderConfig.get('airbrake_environment')
+    config.performance_stats = false
   end
 
   Airbrake.add_filter do |notice|

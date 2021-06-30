@@ -14,6 +14,7 @@ class MediaParserWorker
 
   def parse(url, key, refresh, archivers)
     id = Media.get_id(url)
+    ApiKey.current = key
     cached = Pender::Store.current.read(id, :json)
     data = {}
     type = 'media_parsed'
@@ -23,7 +24,7 @@ class MediaParserWorker
       return ['error', invalid_url_error] unless Media.validate_url(url)
       media = Media.new(url: url, key: key)
       data = media.as_json(force: refresh, archivers: archivers)
-    rescue Timeout::Error
+    rescue Net::ReadTimeout
       data = get_timeout_data(nil, url, id)
     rescue StandardError => e
       data = get_error_data({ message: e.message, code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }, media, url, id)
