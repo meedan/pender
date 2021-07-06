@@ -96,10 +96,9 @@ module Pender
     end
 
     def store_object(file_key, content, key_prefix = nil)
-      file_key.prepend(key_prefix) if key_prefix
       content_type = Rack::Mime.mime_type(File.extname(file_key))
       @client.put_object(
-        key: file_key,
+        key: key_prefix.to_s + file_key,
         body: content,
         bucket: bucket_name,
         content_type: content_type

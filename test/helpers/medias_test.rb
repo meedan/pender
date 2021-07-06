@@ -113,8 +113,8 @@ class MediasHelperTest < ActionView::TestCase
       id = Media.get_id(url)
       m = Media.new url: url
       data = m.as_json
-      assert_match /\/medias\/#{id}\/author_picture.(jpg|png)/, data[:author_picture], "Can't get `author_picture` from url #{url}"
-      assert_match /\/medias\/#{id}\/picture.(jpg|png)/, data[:picture], "Can't get `picture` from url #{url}"
+      assert_match /#{Pender::Store.current.storage_path('medias')}\/#{id}\/author_picture.(jpg|png)/, data[:author_picture], "Can't get `author_picture` from url #{url}"
+      assert_match /#{Pender::Store.current.storage_path('medias')}\/#{id}\/picture.(jpg|png)/, data[:picture], "Can't get `picture` from url #{url}"
     end
   end
 
