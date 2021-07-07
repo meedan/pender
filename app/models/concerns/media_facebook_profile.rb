@@ -38,7 +38,7 @@ module MediaFacebookProfile
   def get_facebook_privacy_error(doc = nil)
     page = doc || self.get_facebook_profile_page
     title = get_facebook_page_title(page)
-    return false if title.blank? || self.data.dig('raw', 'crowdtangle', 'error').nil?
+    return false if title.blank? || (!self.data.dig('raw', 'crowdtangle').blank? && self.data.dig('raw', 'crowdtangle', 'error').nil?)
     if self.unavailable_page || ['log in or sign up to view', 'log into facebook', 'log in to facebook'].include?(title.downcase)
       self.data['title'] = self.data['description'] = ''
       self.data['error'] = { message: 'Login required to see this profile', code: LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED') }

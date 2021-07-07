@@ -127,8 +127,8 @@ class MediaTest < ActiveSupport::TestCase
     open('test/data/page-with-url-on-tag.html') { |f| doc = f.read }
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
 
-    media1 = create_media url: 'http://mulher30.com.br/2016/08/bom-dia-2.html'
-    media2 = create_media url: 'http://mulher30.com.br/?p=6704&fake=123'
+    media1 = create_media url: 'http://example.com/2016/08/bom-dia-2.html'
+    media2 = create_media url: 'http://example.com/?p=6704&fake=123'
     assert_equal media1.url, media2.url
     Media.any_instance.unstub(:doc)
   end

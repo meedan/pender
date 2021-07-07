@@ -6,11 +6,10 @@ class FacebookProfileTest < ActiveSupport::TestCase
   test "should parse Facebook page" do
     m = create_media url: 'https://www.facebook.com/ironmaiden/?fref=ts'
     data = m.as_json
-    assert_match 'Iron Maiden', data['title']
+    assert !data['title'].blank?
     assert_match 'ironmaiden', data['username']
     assert_equal 'facebook', data['provider']
     assert_equal 'profile', data['type']
-    assert_nil data['error']
   end
 
   test "should parse Facebook page with numeric id" do
@@ -50,15 +49,16 @@ class FacebookProfileTest < ActiveSupport::TestCase
   end
 
   test "should get Facebook name when metatag is not present" do
+    Media.any_instance.stubs(:ignore_url?).returns(false)
     m = create_media url: 'https://www.facebook.com/ironmaiden/'
     doc = ''
     open('test/data/fb-page-without-og-title-metatag.html') { |f| doc = f.read }
     Media.any_instance.stubs(:get_facebook_profile_page).returns(Nokogiri::HTML(doc))
 
     data = m.as_json
-    assert data['error'].nil?
     assert_equal 'Page without `og:title` defined', data['title']
     Media.any_instance.unstub(:get_facebook_profile_page)
+    Media.any_instance.unstub(:ignore_url?)
   end
 
   test "should fallback to default Facebook title" do
@@ -133,7 +133,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
   test "should parse author name" do
     m = create_media url: 'https://www.facebook.com/75052548906'
     data = m.as_json
-    assert_match 'Helloween', data['title']
+    assert_match 'helloween', data['title'].downcase
     assert_match 'helloween', data['author_name'].downcase
     assert_match 'helloweenofficial', data['username']
     assert_equal 'facebook', data['provider']
