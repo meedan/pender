@@ -30,7 +30,7 @@ module MediaVideoArchiver
         if $?.success?
           Media.store_video_folder(url, local_folder, self.archiving_folder, key_id)
         else
-          raise Pender::RetryLater, "(#{$?.exitstatus}) #{I18n.t(:archiver_video_not_downloaded)}"
+          raise Pender::RetryLater, "(#{$?.exitstatus}) Requested video not available for download"
         end
       end
     end
@@ -51,7 +51,7 @@ module MediaVideoArchiver
       uri = URI.encode url
       system('youtube-dl', uri, "--proxy=#{Media.yt_download_proxy(uri)}", '--restrict-filenames', '--no-warnings', '-g', '-q')
       unless $?.success?
-        data = { error: { message: I18n.t(:archiver_not_supported_media, code: $?.exitstatus), code: LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA') }}
+        data = { error: { message: "#{$?.exitstatus} Unsupported URL", code: LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA') }}
         Media.notify_webhook_and_update_cache('video_archiver', url, data, key_id)
       end
       $?.success?

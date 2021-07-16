@@ -450,7 +450,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m.as_json(archivers: 'perma_cc')
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_MISSING_KEY'), cached.dig('perma_cc', 'error', 'code')
-    assert_equal I18n.t(:archiver_missing_key), cached.dig('perma_cc', 'error', 'message')
+    assert_match 'missing authentication', cached.dig('perma_cc', 'error', 'message').downcase
 
     Media.unstub(:available_archivers)
   end
@@ -509,7 +509,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA'), media_data.dig('archives', 'video_archiver', 'error', 'code')
-    assert_equal I18n.t(:archiver_not_supported_media, code: 1), media_data.dig('archives', 'video_archiver', 'error', 'message')
+    assert_equal '1 Unsupported URL', media_data.dig('archives', 'video_archiver', 'error', 'message')
 
     Media.any_instance.unstub(:parse)
     Media.any_instance.unstub(:get_metrics)
@@ -652,7 +652,7 @@ class ArchiverTest < ActiveSupport::TestCase
       Media.send_to_video_archiver(url, a.id, 20)
       media_data = Pender::Store.current.read(Media.get_id(url), :json)
       assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'video_archiver', 'error', 'code')
-      assert_equal "1 #{I18n.t(:archiver_video_not_downloaded)}", media_data.dig('archives', 'video_archiver', 'error', 'message')
+      assert_match 'not available', media_data.dig('archives', 'video_archiver', 'error', 'message').downcase
     end
 
     WebMock.disable!
@@ -693,7 +693,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     m.archive('archive_org')
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_HOST_SKIPPED'), m.data.dig('archives', 'archive_org', 'error', 'code')
-    assert_equal I18n.t(:archiver_host_skipped, info: 'example.com'), m.data.dig('archives', 'archive_org', 'error', 'message')
+    assert_match 'Host Skipped: example.com', m.data.dig('archives', 'archive_org', 'error', 'message')
     ENV['archiver_skip_hosts'] = ''
 
     PenderConfig.reload
@@ -703,9 +703,9 @@ class ArchiverTest < ActiveSupport::TestCase
     m.archive('archive_org,unexistent_archive')
 
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_FOUND'), m.data.dig('archives', 'unexistent_archive', 'error', 'code')
-    assert_equal I18n.t(:archiver_not_found), m.data.dig('archives', 'unexistent_archive', 'error', 'message')
+    assert_match 'Not Found', m.data.dig('archives', 'unexistent_archive', 'error', 'message')
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_DISABLED'), m.data.dig('archives', 'archive_org', 'error', 'code')
-    assert_equal I18n.t(:archiver_disabled), m.data.dig('archives', 'archive_org', 'error', 'message')
+    assert_match 'Disabled', m.data.dig('archives', 'archive_org', 'error', 'message')
     Media.send(:remove_const, :ENABLED_ARCHIVERS)
     Media.const_set(:ENABLED_ARCHIVERS, enabled)
     ENV['archiver_skip_hosts'] = skip

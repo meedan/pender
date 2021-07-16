@@ -82,6 +82,7 @@ class ActiveSupport::TestCase
     unless @request.nil?
       header = PenderConfig.get('authorization_header', 'X-Token')
       api_key ||= create_api_key
+      ApiKey.current = api_key
       @request.headers.merge!({ header => api_key.access_token })
     end
   end

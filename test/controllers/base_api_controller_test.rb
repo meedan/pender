@@ -27,7 +27,18 @@ class BaseApiControllerTest < ActionController::TestCase
     assert_response 401
     response = JSON.parse(@response.body)
     assert_equal 'error', response['type']
-    assert_equal I18n.t(:unauthorized), response['data']['message']
+    assert_match 'unauthorized', response['data']['message'].downcase
   end
 
+  test "should return info when memory report is enabled" do
+    MemoryProfiler::Results.any_instance.stubs(:pretty_print)
+    api_key = create_api_key application_settings: { config: {memory_report: true} }
+    authenticate_with_token(api_key)
+
+    get :about, params: { format: :json }
+    assert_response :success
+    response = JSON.parse(@response.body)
+    assert_equal 'Keep', response['data']['name']
+    MemoryProfiler::Results.any_instance.unstub(:pretty_print)
+  end
 end

@@ -41,7 +41,7 @@ module MediaPermaCcArchiver
 
     def skip_perma_cc_archiver(perma_cc_key, url, key_id)
       if perma_cc_key.nil?
-        data = { error: { message: I18n.t(:archiver_missing_key), code: LapisConstants::ErrorCodes::const_get('ARCHIVER_MISSING_KEY') }}
+        data = { error: { message: 'Missing authentication key', code: LapisConstants::ErrorCodes::const_get('ARCHIVER_MISSING_KEY') }}
         Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
       else
         id = Media.get_id(url)

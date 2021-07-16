@@ -33,7 +33,7 @@ class MediaParserWorker
   end
 
   def invalid_url_error
-    { error: { message: I18n.t(:url_not_valid), code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') }}
+    { error: { message: 'The URL is not valid', code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') }}
   end
 end
 
