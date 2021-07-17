@@ -241,17 +241,6 @@ class Media
     Media.request_uri(uri, verb)
   end
 
-  def get_proxy
-    require 'uri'
-    uri = URI.parse(URI.encode(url))
-    proxy = Media.valid_proxy
-    if proxy
-      return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['session_prefix'] + Random.rand(100000).to_s, proxy['pass']] if uri.host.match?(/facebook\.com/)
-      country = PenderConfig.get('hosts', {}, :json).dig(uri.host, 'country')
-      return ["http://#{proxy['host']}:#{proxy['port']}", proxy['user_prefix'] + proxy['country_prefix'] + country, proxy['pass']] unless country.nil?
-    end
-  end
-
   def self.request_uri(uri, verb = 'Get')
     http = Net::HTTP.new(uri.host, uri.port)
     http.read_timeout = PenderConfig.get('timeout', 30).to_i
@@ -259,9 +248,9 @@ class Media
     headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }.merge(Media.get_cf_credentials(uri))
     request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
     request['Cookie'] = Media.set_cookies(uri)
-    proxy_config = Media.valid_proxy
-    if uri.host.match?(/facebook\.com/) && proxy_config
-      proxy = Net::HTTP::Proxy(proxy_config['host'], proxy_config['port'], proxy_config['user_prefix'] + proxy_config['session_prefix'] + Random.rand(100000).to_s, proxy_config['pass'])
+    proxy_config = Media.get_proxy(uri, :hash)
+    if proxy_config
+      proxy = Net::HTTP::Proxy(proxy_config['host'], proxy_config['port'], proxy_config['user'], proxy_config['pass'])
       proxy.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http2|
         http2.request(request)
       end
@@ -270,11 +259,11 @@ class Media
     end
   end
 
-  def get_html(header_options = {})
+  def get_html(header_options = {}, force_proxy = false)
     begin
-      proxy = self.get_proxy
-      options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
       uri = Media.parse_url(decoded_uri(self.url))
+      proxy = Media.get_proxy(uri, :array, force_proxy)
+      options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
       html = ''.freeze
       OpenURI.open_uri(uri, options.merge(read_timeout: PenderConfig.get('timeout', 30).to_i)) do |f|
         f.binmode
@@ -282,10 +271,13 @@ class Media
       end
       Nokogiri::HTML preprocess_html(html)
     rescue OpenURI::HTTPError, Errno::ECONNRESET => e
-      PenderAirbrake.notify(e, url: self.url)
-      Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: self.url, error_class: e.class, error_message: e.message
-      self.data[:error] = { message: 'URL Not Found', code: LapisConstants::ErrorCodes::const_get('NOT_FOUND')}
-      return nil
+      if force_proxy
+        PenderAirbrake.notify(e, url: self.url)
+        Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: self.url, error_class: e.class, error_message: e.message
+        self.data[:error] = { message: 'URL Not Found', code: LapisConstants::ErrorCodes::const_get('NOT_FOUND')}
+        return nil
+      end
+      self.get_html(header_options, true)
     rescue Zlib::DataError, Zlib::BufError
       self.get_html(Media.html_options(self.url).merge('Accept-Encoding' => 'identity'))
     rescue RuntimeError => e

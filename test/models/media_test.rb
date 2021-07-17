@@ -774,7 +774,7 @@ class MediaTest < ActiveSupport::TestCase
     api_key = create_api_key application_settings: { config: config }
     m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/', key: api_key
 
-    host, user, pass = m.send(:get_proxy)
+    host, user, pass = Media.get_proxy(URI.parse(m.url))
     assert_match config['proxy_host'], host
     assert_match "#{config['proxy_user_prefix']}#{config['proxy_country_prefix']}#{country}", user
     assert_equal config['proxy_pass'], pass
@@ -796,7 +796,7 @@ class MediaTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { config: { hosts: { 'example.com': { country: 'gb'}}.to_json, proxy_host: 'my-host', proxy_port: '11111', proxy_user_prefix: 'my-user-prefix', proxy_country_prefix: '-cc-', proxy_session_prefix: '-sid-', proxy_pass: 'mypass' }}
 
     m = create_media url: 'http://example.com', key: a
-    host, user, pass = m.send(:get_proxy)
+    host, user, pass = Media.get_proxy(URI.parse(m.url))
     assert_match 'http://my-host:11111', host
     assert_match 'my-user-prefix-cc-gb', user
     assert_equal 'mypass', pass
@@ -815,7 +815,7 @@ class MediaTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { config: { hosts: { 'example.com': { country: 'gb'}}.to_json, proxy_host: 'my-host', proxy_port: '11111', proxy_user_prefix: '', proxy_country_prefix: '', proxy_session_prefix: '', proxy_pass: '' }}
 
     m = create_media url: 'http://example.com', key: a
-    assert_nil m.send(:get_proxy)
+    assert_nil Media.get_proxy(URI.parse(m.url))
 
     Media.any_instance.unstub(:follow_redirections)
     Media.any_instance.unstub(:get_canonical_url)
@@ -1205,5 +1205,16 @@ class MediaTest < ActiveSupport::TestCase
   test "should handle error when can't notify webhook" do
     webhook_info = { 'webhook_url' => 'http://invalid.webhook', 'webhook_token' => 'test' }
     assert_equal false, Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+  end
+
+  test "should handle forbidden error when opening a url and parse with proxy without loop" do
+    m = create_media url: 'https://nasional.tempo.co/read/1457804/opm-kkb-dicap-teroris-amnesty-nilai-pemerintah-tak-paham-masalah-papua'
+    parsed_url = Media.parse_url(m.url)
+    header_options = Media.send(:html_options, m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(OpenURI::HTTPError.new('','403 Forbidden'))
+    header_with_proxy = { proxy_http_basic_authentication: Media.get_proxy(URI.parse(m.url), :array, true), 'Accept-Language' => Media::LANG, read_timeout: PenderConfig.get('timeout', 30).to_i }
+    OpenURI.stubs(:open_uri).with(parsed_url, header_with_proxy).raises(OpenURI::HTTPError.new('','403 Forbidden'))
+    m.send(:get_html, Media.send(:html_options, m.url))
+    OpenURI.unstub(:open_uri)
   end
 end
