@@ -583,8 +583,8 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token(a)
     url1 = 'http://invalid-url'
     url2 = 'not-url'
-    Media.stubs(:notify_webhook).with('error', url1, { error: { message: I18n.t(:url_not_valid), code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') }}, webhook_info)
-    Media.stubs(:notify_webhook).with('error', url2, { error: { message: I18n.t(:url_not_valid), code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') }}, webhook_info)
+    Media.stubs(:notify_webhook).with('error', url1, { error: { message: 'The URL is not valid', code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') }}, webhook_info)
+    Media.stubs(:notify_webhook).with('error', url2, { error: { message: 'The URL is not valid', code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') }}, webhook_info)
     post :bulk, params: { url: [url1, url2], format: :json }
     assert_response :success
     assert_equal({"enqueued"=>[url1, url2], "failed"=>[]}, JSON.parse(@response.body)['data'])

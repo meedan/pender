@@ -37,11 +37,8 @@ module MediaArchiver
     return if archivers.empty?
     self.data['archives'] ||= {}
     archivers.each do |archiver|
-      message = if error[:info]
-                  I18n.t(error[:type].downcase.to_sym, info: error[:info])
-                else
-                  I18n.t(error[:type].downcase.to_sym)
-                end
+      message = error[:type].titleize
+      message += ": #{error[:info]}" if error[:info]
       data = { error: { message: message, code: LapisConstants::ErrorCodes::const_get(error[:type]) }}
       self.data['archives'].merge!({"#{archiver}": data })
       Rails.logger.warn level: 'WARN', message: error[:type], url: self.url, archiver: archiver
@@ -66,7 +63,7 @@ module MediaArchiver
       url, archiver, key_id = info[:args][0], info[:args][1], info[:args][2]
       PenderAirbrake.notify(StandardError.new(info[:error_message]), info.merge({ url: url, archiver: archiver, key_id: key_id }))
       Rails.logger.warn level: 'WARN', message: "[#{info[:error_class]}] #{info[:error_message]}", url: url, archiver: archiver
-      data = { error: { message: I18n.t(:archiver_failure, message: info[:error_message]), code: LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE') }}
+      data = { error: { message: info[:error_message], code: LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE') }}
       Media.notify_webhook_and_update_cache(archiver, url, data, key_id)
     end
 

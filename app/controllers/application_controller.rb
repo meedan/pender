@@ -3,8 +3,8 @@ class ApplicationController < ActionController::Base
   skip_before_action :verify_authenticity_token
 
   def process_action(*)
-    if Rails.env.production?
-      MemoryProfiler.report { super }.pretty_print(detailed_report: true, scale_bytes: true)
+    if PenderConfig.get('memory_report', false).to_s == 'true'
+     MemoryProfiler.report { super }.pretty_print(detailed_report: true, scale_bytes: true)
     else
       super
     end

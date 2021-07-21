@@ -245,6 +245,19 @@ module MediasHelper
       proxy
     end
 
+    def self.get_proxy(uri, format = :array, force = false)
+      proxy = Media.valid_proxy
+      if proxy || force
+        country = force ? 'us' : PenderConfig.get('hosts', {}, :json).dig(uri.host, 'country')
+        if uri.host.match?(/facebook\.com/)
+          proxy['user'] = proxy['user_prefix'] + proxy['session_prefix'] + Random.rand(100000).to_s
+        elsif country
+          proxy['user'] = proxy['user_prefix'] + proxy['country_prefix'] + country
+        end
+        return format == :array ? ["http://#{proxy['host']}:#{proxy['port']}", proxy['user'], proxy['pass']] : proxy if proxy['user']
+      end
+    end
+
     def self.extended_headers(uri = nil)
       uri = Media.parse_url(decoded_uri(uri)) if uri.is_a?(String)
       ({

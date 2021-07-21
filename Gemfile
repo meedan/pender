@@ -57,6 +57,5 @@ gem 'actionview', '5.2.6'
 gem 'actionpack', '5.2.6'
 gem 'rack', '>= 1.6.11', require: false
 gem 'aws-sdk-s3', require: false
-gem 'honeycomb-beeline'
 gem 'lograge'
 gem 'request_store'
