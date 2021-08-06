@@ -22,7 +22,7 @@ class TiktokTest < ActiveSupport::TestCase
     assert_equal '@scout2015', data['username']
     assert_equal 'item', data['type']
     assert_match /Who agrees/, data['title']
-    assert_match 'Scout and Suki', data['author_name']
+    assert_match /Scout.+Suki/, data['author_name']
     assert_equal '6771039287917038854', data['external_id']
     assert_match 'https://www.tiktok.com/@scout2015', data['author_url']
     assert_match /^http/, data['picture']
