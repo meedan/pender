@@ -3,8 +3,9 @@ require 'cc_deville'
 
 class InstagramTest < ActiveSupport::TestCase
   test "should parse Instagram post" do
-    Media.any_instance.stubs(:get_crowdtangle_id).returns('1328722959803788109_343260652')
-    data = {"result"=>{"posts"=>[{"description"=>"Peace Sells✌💲#vicrattlehead #megadeth #dystopiaworldtour #mexicocity","account"=>{"id"=>529101, "name"=>"Megadeth", "handle"=>"megadeth"}}]}}
+    post_id = '1328722959803788109_343260652'
+    Media.any_instance.stubs(:get_crowdtangle_id).returns(post_id)
+    data = {"result"=>{"posts"=>[{"platformId"=>post_id,"description"=>"Peace Sells✌💲#vicrattlehead #megadeth #dystopiaworldtour #mexicocity","account"=>{"id"=>529101, "name"=>"Megadeth", "handle"=>"megadeth"}}]}}
     Media.stubs(:crowdtangle_request).returns(data)
     m = create_media url: 'https://www.instagram.com/p/BJwkn34AqtN/'
     data = m.as_json
@@ -85,8 +86,9 @@ class InstagramTest < ActiveSupport::TestCase
   end
 
   test "should parse IGTV link as item" do
-    Media.any_instance.stubs(:get_crowdtangle_id).returns('2178435889592963183_3651758')
-    data = {"result"=>{"posts"=>[{"description"=>"Vejam que lindo o Lula sendo recebido com todo amor e carinho","account"=>{"id"=>6506893, "name"=>"Bia Kicis \u{1F9FF}", "handle"=>"biakicis"}}]}}
+    post_id = '2178435889592963183_3651758'
+    Media.any_instance.stubs(:get_crowdtangle_id).returns(post_id)
+    data = {"result"=>{"posts"=>[{"platformId":post_id,"description"=>"Vejam que lindo o Lula sendo recebido com todo amor e carinho","account"=>{"id"=>6506893, "name"=>"Bia Kicis \u{1F9FF}", "handle"=>"biakicis"}}]}}
     Media.stubs(:crowdtangle_request).returns(data)
     m = create_media url: 'https://www.instagram.com/tv/B47W-ZVJpBv/?igshid=l5tx0fnl421e'
     data = m.as_json

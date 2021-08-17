@@ -1072,9 +1072,10 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should get Facebook metrics from crowdtangle when it's a Facebook item" do
-    crowdtangle_data = {"result"=>{"posts"=>[{"account"=>{"id"=>33862, "name"=>"Account name", "handle"=>"accoutn"},"statistics"=>{"actual"=>{"likeCount"=>30813, "shareCount"=>1640, "commentCount"=>457, "loveCount"=>5131, "wowCount"=>74, "hahaCount"=>543, "sadCount"=>2, "angryCount"=>1, "thankfulCount"=>0, "careCount"=>136}, "expected"=>{"likeCount"=>12142, "shareCount"=>641, "commentCount"=>446, "loveCount"=>2044, "wowCount"=>48, "hahaCount"=>10, "sadCount"=>3, "angryCount"=>2, "thankfulCount"=>0, "careCount"=>71}}}]}}
+    post_id = '172685102050_10157701432562051'
+    crowdtangle_data = {"result"=>{"posts"=>[{"platformId"=>post_id,"account"=>{"id"=>33862, "name"=>"Account name", "handle"=>"accoutn"},"statistics"=>{"actual"=>{"likeCount"=>30813, "shareCount"=>1640, "commentCount"=>457, "loveCount"=>5131, "wowCount"=>74, "hahaCount"=>543, "sadCount"=>2, "angryCount"=>1, "thankfulCount"=>0, "careCount"=>136}, "expected"=>{"likeCount"=>12142, "shareCount"=>641, "commentCount"=>446, "loveCount"=>2044, "wowCount"=>48, "hahaCount"=>10, "sadCount"=>3, "angryCount"=>2, "thankfulCount"=>0, "careCount"=>71}}}]}}
     Media.unstub(:request_metrics_from_facebook)
-    Media.any_instance.stubs(:get_crowdtangle_id).returns('172685102050_10157701432562051')
+    Media.any_instance.stubs(:get_crowdtangle_id).returns(post_id)
     Media.stubs(:crowdtangle_request).returns(crowdtangle_data)
     ['https://www.facebook.com/172685102050/photos/a.406269382050/10157701432562051/', 'https://www.facebook.com/permalink.php?story_fbid=10157697779652051&id=172685102050'].each do |url|
       m = create_media url: url
@@ -1083,6 +1084,21 @@ class MediaTest < ActiveSupport::TestCase
       data = Pender::Store.current.read(id, :json)
       assert data['metrics']['facebook']['share_count'] > 0
     end
+    Media.any_instance.unstub(:get_crowdtangle_id)
+    Media.unstub(:crowdtangle_request)
+  end
+
+  test "should not store crowdtangle data when id on response is different from request" do
+    crowdtangle_data = {"result"=>{"posts"=>[{"platformId"=>"537326876328007_4451640454896610","platform"=>"Facebook","type"=>"native_video","message"=>"Attention‼️ ","account"=>{"id"=>1852061,"platform"=>"Facebook","platformId"=>"537326876328007"}}]}}
+    Media.unstub(:request_metrics_from_facebook)
+    Media.any_instance.stubs(:get_crowdtangle_id).returns('563555033699775_1866497603524209')
+    Media.stubs(:crowdtangle_request).returns(crowdtangle_data)
+    url = 'https://www.facebook.com/watch/?v=1866497603524209'
+    m = create_media url: url
+    m.as_json
+    id = Media.get_id(url)
+    data = Pender::Store.current.read(id, :json)
+    assert_match /Cannot get data/, data['raw']['crowdtangle']['error']['message']
     Media.any_instance.unstub(:get_crowdtangle_id)
     Media.unstub(:crowdtangle_request)
   end

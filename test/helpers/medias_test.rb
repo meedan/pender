@@ -120,7 +120,7 @@ class MediasHelperTest < ActionView::TestCase
 
   test 'should encode URLs on raw key' do
     Media.any_instance.stubs(:get_crowdtangle_id).returns('111')
-    Media.stubs(:crowdtangle_request).with(:facebook, '111').returns({ result: { posts: [{"platform":"Facebook", "expanded":"https://www.facebook.com/people/á<80><99>á<80><84>á<80>ºá<80>¸á<80><91>á<80>®á<80>¸/100056594476400"}]}})
+    Media.stubs(:crowdtangle_request).with(:facebook, '111').returns({ result: { posts: [{"platformId": "111", "platform":"Facebook", "expanded":"https://www.facebook.com/people/á<80><99>á<80><84>á<80>ºá<80>¸á<80><91>á<80>®á<80>¸/100056594476400"}]}})
     url = 'https://www.facebook.com/voice.myanmarnewsmm/posts/148110680335452'
     m = Media.new url: url
     m.data = Media.minimal_data(m)
@@ -133,7 +133,7 @@ class MediasHelperTest < ActionView::TestCase
   test 'should handle error when cannot encode URLs on raw key' do
     Media.any_instance.stubs(:get_crowdtangle_id).returns('111')
     encoded_url = "https://www.facebook.com/people/á<80><99>á<80><84>á<80>ºá<80>¸á<80><91>á<80>®á<80>¸/100056594476400"
-    Media.stubs(:crowdtangle_request).with(:facebook, '111').returns({ result: { posts: [{"platform":"Facebook", "expanded": encoded_url }]}})
+    Media.stubs(:crowdtangle_request).with(:facebook, '111').returns({ result: { posts: [{"platformId":"111","platform":"Facebook", "expanded": encoded_url }]}})
     url = 'https://www.facebook.com/voice.myanmarnewsmm/posts/148110680335452'
     m = Media.new url: url
     m.data = Media.minimal_data(m)

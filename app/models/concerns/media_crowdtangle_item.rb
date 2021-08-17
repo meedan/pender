@@ -14,11 +14,12 @@ module MediaCrowdtangleItem
     id = self.get_crowdtangle_id(resource)
     self.data['raw']['crowdtangle'] = { error: { message: 'Unknown ID', code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }} and return if id.blank?
     crowdtangle_data = Media.crowdtangle_request(resource, id).with_indifferent_access
-    unless crowdtangle_data && crowdtangle_data['result']
+    result = crowdtangle_data.dig('result')
+    post_info = (crowdtangle_data.dig('result', 'posts') || []).first
+    unless post_info && post_info['platformId'] == id
       self.data['raw']['crowdtangle'] = { error: { message: "Cannot get data from Crowdtangle. #{crowdtangle_data['notes']}", code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }} and return
     end
-    self.data['raw']['crowdtangle'] = crowdtangle_data['result']
-    post_info = crowdtangle_data['result']['posts'].first
+    self.data['raw']['crowdtangle'] = result
     self.send("get_crowdtangle_#{resource}_result", post_info)
   end
 
