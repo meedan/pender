@@ -41,7 +41,7 @@ module MediaCrowdtangleItem
     self.data[:title] = self.data[:description] = self.data[:text] = post_info.dig('message')
     self.data[:external_id] = post_info.dig('platformId')
     self.data[:object_id] = post_info.dig('platformId')
-    self.data[:picture] = post_info['media'].first['full'] if post_info.dig('media')
+    self.data[:picture] = (post_info.dig('media').select { |m| m['type'] == 'photo'}.first || {}).dig('full') if post_info.dig('media')
     self.data[:published_at] = post_info.dig('date')
   end
 

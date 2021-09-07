@@ -833,7 +833,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     url = 'https://most-popular-lists.blogspot.com/2019/07/fishermen-diokno-were-fooled-us-into.html'
     get :index, params: { url: url, format: 'json' }
-    assert_match /Fishermen/, JSON.parse(@response.body)['data']['title']
+    assert_match /fishermen/, JSON.parse(@response.body)['data']['title'].downcase
   end
 
   test "should parse suspended Twitter profile" do
