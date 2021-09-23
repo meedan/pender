@@ -106,7 +106,7 @@ module MediaPageItem
   def get_basic_metadata
     metatags = { title: 'title',  description: 'description', username: 'author', author_name: 'application-name' }
     data = get_html_metadata(self, metatags)
-    title = self.doc.at_css("title")
+    title = self.doc&.at_css("title")
     data[:title] ||= title.nil? ? '' : title.content
     data[:description] ||= ''
     data[:username] ||= ''

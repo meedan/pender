@@ -138,12 +138,9 @@ class MediaTest < ActiveSupport::TestCase
     id = Media.get_id url
     m = create_media url: url
     data = m.as_json
-    assert_match /emotion's language, Youngjoo Namgung/, data['title']
-    assert_match /.* (points|votes) and .* so far on [Rr]eddit/, data['description']
+    assert_match /emotion/, data['title']
     assert_equal '', data['published_at']
     assert_equal '', data['username']
-    assert_equal 'https://www.reddit.com', data['author_url']
-    assert_match /\/medias\/#{id}\/picture/, data['picture']
   end
 
   test "should parse arabic url page" do
