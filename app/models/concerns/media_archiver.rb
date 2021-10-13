@@ -47,7 +47,7 @@ module MediaArchiver
   end
 
   def filter_archivers(archivers)
-    id = Media.get_id(url)
+    id = Media.get_id(original_url)
     data = Pender::Store.current.read(id, :json)
     return archivers if data.nil? || data.dig(:archives).nil?
     archivers - data[:archives].keys
