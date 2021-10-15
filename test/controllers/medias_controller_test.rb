@@ -157,9 +157,11 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should not return error message on HTML format response" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:title' content='Log In or Sign Up to View'>"))
     get :index, params: { url: 'https://www.facebook.com/caiosba/posts/3588207164560845', format: :html, refresh: '1' }
     assert_response 200
     assert_match('Login required to see this profile', assigns(:media).data['error']['message'])
+    Media.any_instance.unstub(:doc)
   end
 
   test "should return message with HTML error 2" do

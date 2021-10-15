@@ -656,7 +656,7 @@ class FacebookItemTest < ActiveSupport::TestCase
 
   test "should not change url when redirected to login page" do
     url = 'https://www.facebook.com/ugmhmyanmar/posts/2850282508516442'
-    redirection_to_login_page = 'https://www.facebook.com/login/?next=https%3A%2F%2Fwww.facebook.com%2Fugmhmyanmar%2Fposts%2F2850282508516442'
+    redirection_to_login_page = 'https://www.facebook.com/login/'
     response = 'mock'; response.stubs(:code).returns('302')
     response.stubs(:header).returns({ 'location' => redirection_to_login_page })
     response_login_page = 'mock'; response_login_page.stubs(:code).returns('200')
