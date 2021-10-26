@@ -662,6 +662,7 @@ class FacebookItemTest < ActiveSupport::TestCase
     response_login_page = 'mock'; response_login_page.stubs(:code).returns('200')
     Media.stubs(:request_url).with(url, 'Head').returns(response)
     Media.stubs(:request_url).with(redirection_to_login_page, 'Head').returns(response_login_page)
+    Media.stubs(:request_url).with(redirection_to_login_page + '?next=https%3A%2F%2Fwww.facebook.com%2Fugmhmyanmar%2Fposts%2F2850282508516442', 'Head').returns(response_login_page)
     m = create_media url: url
     assert_equal url, m.url
     Media.unstub(:request_url)

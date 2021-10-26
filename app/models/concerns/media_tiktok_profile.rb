@@ -13,6 +13,7 @@ module MediaTiktokProfile
     username = match['username']
 
     handle_exceptions(self, StandardError) do
+      reparse_if_default_tiktok_page
       metatags = { picture: 'og:image', title: 'twitter:creator', description: 'description' }
       data.merge! get_html_metadata(self, metatags)
 
@@ -24,6 +25,13 @@ module MediaTiktokProfile
         author_url: self.url,
         url: self.url
       })
+    end
+  end
+
+  def reparse_if_default_tiktok_page
+    if self.doc.css('title').text == 'TikTok'
+      self.doc = self.get_html(Media.html_options(self.url), true)
+      self.send(:get_metatags, self)
     end
   end
 end

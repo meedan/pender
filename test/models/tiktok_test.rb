@@ -29,4 +29,25 @@ class TiktokTest < ActiveSupport::TestCase
     assert_nil data['error']
   end
 
+  test "should parse Tiktok profile with proxy if title is the site name" do
+    blank_page = '<html><head><title>TikTok</title></head><body></body></html>'
+    page = '<html><head><title>Huxley the Panda Puppy</title><meta property="og:image" content="https://tiktokcdn.com/image.jpeg"><meta property="twitter:creator" content="Huxley the Panda Puppy"><meta property="og:description" content="Here to make ur day"></head><body></body></html>'
+    url = 'https://www.tiktok.com/@huxleythepandapuppy'
+    header_options = Media.send(:html_options, url)
+    Media.any_instance.stubs(:get_html).with(header_options, true).returns(Nokogiri::HTML(page))
+    Media.any_instance.stubs(:get_html).with(header_options, false).returns(Nokogiri::HTML(blank_page))
+    Media.any_instance.stubs(:get_html).with(header_options).returns(Nokogiri::HTML(blank_page))
+    m = create_media url: url
+    data = m.as_json
+    assert_equal '@huxleythepandapuppy', data['username']
+    assert_equal 'profile', data['type']
+    assert_equal 'tiktok', data['provider']
+    assert_equal 'Huxley the Panda Puppy', data['title']
+    assert_equal 'Huxley the Panda Puppy', data['author_name']
+    assert_equal '@huxleythepandapuppy', data['external_id']
+    assert_equal 'https://tiktokcdn.com/image.jpeg', data['picture']
+    assert_match 'https://www.tiktok.com/@huxleythepandapuppy', m.url
+    Media.any_instance.unstub(:get_html)
+  end
+
 end
