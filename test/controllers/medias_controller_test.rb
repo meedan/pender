@@ -733,8 +733,8 @@ class MediasControllerTest < ActionController::TestCase
       @controller.stubs("render_as_#{format}".to_sym).raises(RuntimeError.new('error'))
       get :index, params: { url: url, format: format }
       assert !Semaphore.new(url).locked?
-      assert_response 400
-      assert_equal 'error', JSON.parse(response.body)['data']['message']
+      assert_equal url, JSON.parse(response.body)['data']['url']
+      assert_equal 'error', JSON.parse(response.body)['data']['error']['message']
       @controller.unstub("render_as_#{format}".to_sym)
     end
   end
@@ -748,8 +748,9 @@ class MediasControllerTest < ActionController::TestCase
       assert_nothing_raised do
         get :index, params: { url: url, format: format }
         assert !Semaphore.new(url).locked?
-        assert_response 400
-        assert_equal 'error', JSON.parse(response.body)['data']['message']
+        assert_response 200
+        assert_equal url, JSON.parse(response.body)['data']['url']
+        assert_equal 'error', JSON.parse(response.body)['data']['error']['message']
       end
     end
     Pender::Store.any_instance.unstub(:read)
@@ -887,5 +888,27 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: url, format: :json }
     assert_response 200
     assert_equal url, JSON.parse(@response.body)['data']['title']
+  end
+
+  test "should return 200 when raises error parsing" do
+    authenticate_with_token
+    url = 'https://scotthale.net/'
+    Media.stubs(:request_uri).raises(Errno::ECONNRESET.new('SSL_connect'))
+    get :index, params: { url: url, format: :json }
+    assert_response 200
+    assert_equal url, JSON.parse(@response.body)['data']['title']
+    assert_equal LapisConstants::ErrorCodes::const_get('UNKNOWN'), JSON.parse(@response.body)['data']['error']['code']
+    Media.unstub(:request_uri)
+  end
+
+  test "should return 200 when duplicated url" do
+    authenticate_with_token
+    url = 'https://example.com/duplicated'
+    Semaphore.any_instance.stubs(:locked?).returns(true)
+    get :index, params: { url: url, format: :json }
+    assert_response 200
+    assert_equal url, JSON.parse(@response.body)['data']['title']
+    assert_equal LapisConstants::ErrorCodes::const_get('DUPLICATED'), JSON.parse(@response.body)['data']['error']['code']
+    Semaphore.any_instance.unstub(:locked?)
   end
 end

@@ -31,19 +31,21 @@ class MediasIntegrationTest < ActionDispatch::IntegrationTest
   end
 
   test "should handle concurrency" do
-    url = 'http://ca.ios.ba/files/meedan/sleep.php'
+    url = 'https://ca.ios.ba/files/meedan/sleep.php'
     threads = []
 
     threads << Thread.new do
       get "/api/medias.html?url=#{url}", params: {}
       assert_response :success
+      assert_select 'title', url
     end
 
     sleep 1
 
     threads << Thread.new do
       get "/api/medias.html?url=#{url}", params: {}
-      assert_response :conflict
+      assert_response :success
+      assert_select 'title', url
     end
 
     threads.map(&:join)

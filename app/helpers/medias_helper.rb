@@ -121,16 +121,18 @@ module MediasHelper
     end
   end
 
-  def get_error_data(error_data, media, url, id)
+  def get_error_data(error_data, media, url, id = nil)
     data = media.nil? ? Media.minimal_data(OpenStruct.new(url: url)) : media.data
     data['title'] = url if data['title'].blank?
+    code = error_data[:code]
+    error_data[:code] = LapisConstants::ErrorCodes::const_get(code)
     data = data.merge(error: error_data)
-    Pender::Store.current.write(id, :json, data)
+    Pender::Store.current.write(id, :json, data) unless code == 'DUPLICATED'
     data
   end
 
   def get_timeout_data(media, url, id)
-    get_error_data({ message: 'Timeout', code: LapisConstants::ErrorCodes::const_get('TIMEOUT') }, media, url, id)
+    get_error_data({ message: 'Timeout', code: 'TIMEOUT' }, media, url, id)
   end
 
   def cleanup_data_encoding(data)

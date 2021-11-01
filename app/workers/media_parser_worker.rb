@@ -27,7 +27,7 @@ class MediaParserWorker
     rescue Net::ReadTimeout
       data = get_timeout_data(nil, url, id)
     rescue StandardError => e
-      data = get_error_data({ message: e.message, code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }, media, url, id)
+      data = get_error_data({ message: e.message, code: 'UNKNOWN' }, media, url, id)
     end
     return [type, data]
   end

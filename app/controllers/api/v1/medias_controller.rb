@@ -86,7 +86,7 @@ module Api
         rescue Pender::UnsafeUrl
           render_error 'Unsafe URL', 'UNSAFE', 400
         rescue StandardError => e
-          data = get_error_data({ message: e.message, code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }, @media, @url, @id)
+          data = get_error_data({ message: e.message, code: 'UNKNOWN' }, @media, @url, @id)
           notify_airbrake(e, data)
           Rails.logger.warn level: 'WARN', message: '[Rendering] Could not render media JSON data', error_class: e.class, error_message: e.message
           data.merge!(@data) unless @data.blank?
@@ -155,7 +155,6 @@ module Api
       end
 
       def save_cache
-        av = ActionView::Base.new(Rails.root.join('app', 'views'))
         template = locals = nil
         cache = Pender::Store.current.read(@id, :json)
         data = cache && !@refresh ? cache : @media.as_json({ force: @refresh, archivers: @archivers })
@@ -168,12 +167,17 @@ module Api
           template = 'index'
         end
 
-        av.assign(locals.merge({ request: request, id: @id, media: @media }))
-        ActionView::Base.send :include, MediasHelper
-        content = av.render(template: "medias/#{template}.html.erb", layout: 'layouts/application.html.erb')
+        content = generate_media_html(template, locals)
 
         Pender::Store.current.write(@id, :html, content)
         clear_upstream_cache if @refresh
+      end
+
+      def generate_media_html(template, locals)
+        av = ActionView::Base.new(Rails.root.join('app', 'views'))
+        av.assign(locals.merge({ request: request, id: @id, media: @media }))
+        ActionView::Base.send :include, MediasHelper
+        av.render(template: "medias/#{template}.html.erb", layout: 'layouts/application.html.erb')
       end
 
       def should_serve_external_embed?(data)
@@ -204,7 +208,12 @@ module Api
       def lock_url
         unless params[:url].blank?
           if locker.locked?
-            render_error('This URL is already being processed. Please try again in a few seconds.', 'DUPLICATED', 409) and return false
+            error = { message: 'This URL is already being processed. Please try again in a few seconds.', code: 'DUPLICATED'}
+            data = get_error_data(error, nil, params[:url])
+            respond_to do |format|
+              format.html { generate_media_html('index', { data: data }) }
+              format.json { render_media(data) }
+            end
           else
             locker.lock
           end
@@ -240,7 +249,12 @@ module Api
           error_info = { message: e.message }.merge(error_info)
           notify_airbrake(e, error_info)
           Rails.logger.warn level: 'WARN', message: "[Parser] Error on #{caller_locations(2).first.label}", error: error_info
-          rescue_block.call(e)
+          if LapisConstants::ErrorCodes::TEMP_ERRORS.include?(error_info.dig(:code))
+            data = get_error_data(error_info, nil, @url, @id)
+            render_media(data)
+          else
+            rescue_block.call(e)
+          end
         end
       end
     end
