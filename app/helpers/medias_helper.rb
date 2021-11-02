@@ -256,7 +256,16 @@ module MediasHelper
         elsif country
           proxy['user'] = proxy['user_prefix'] + proxy['country_prefix'] + country
         end
-        return format == :array ? ["http://#{proxy['host']}:#{proxy['port']}", proxy['user'], proxy['pass']] : proxy if proxy['user']
+        proxy_format(proxy, format)
+      end
+    end
+
+    def self.proxy_format(proxy, format = :array)
+      return nil unless proxy['user']
+      if format == :array
+        ["http://#{proxy['host']}:#{proxy['port']}", proxy['user'], proxy['pass']]
+      else
+        proxy
       end
     end
 

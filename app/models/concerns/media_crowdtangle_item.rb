@@ -16,7 +16,7 @@ module MediaCrowdtangleItem
     crowdtangle_data = Media.crowdtangle_request(resource, id).with_indifferent_access
     result = crowdtangle_data.dig('result')
     post_info = (crowdtangle_data.dig('result', 'posts') || []).first
-    unless post_info && post_info['platformId'] == id
+    unless post_info&.dig('platformId') == id
       self.data['raw']['crowdtangle'] = { error: { message: "Cannot get data from Crowdtangle. #{crowdtangle_data['notes']}", code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }} and return
     end
     self.data['raw']['crowdtangle'] = result
@@ -43,6 +43,10 @@ module MediaCrowdtangleItem
     self.data[:object_id] = post_info.dig('platformId')
     self.data[:picture] = (post_info.dig('media').select { |m| m['type'] == 'photo'}.first || {}).dig('full') if post_info.dig('media')
     self.data[:published_at] = post_info.dig('date')
+  end
+
+  def has_valid_crowdtangle_data?
+    !self.data.dig('raw', 'crowdtangle').blank? && self.data.dig('raw', 'crowdtangle', 'error').nil?
   end
 
   Media.class_eval do
