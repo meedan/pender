@@ -40,7 +40,7 @@ gem 'ids_please', git: 'https://github.com/meedan/ids_please', branch: 'master',
 gem 'open_uri_redirections', require: false
 gem 'postrank-uri', require: false
 gem 'retryable'
-gem 'puma', '5.3.2'
+gem 'puma', '5.5.1'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'rails-perftest'
 gem 'sidekiq'
