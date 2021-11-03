@@ -11,7 +11,6 @@ class TiktokTest < ActiveSupport::TestCase
     assert !data['title'].blank?
     assert !data['author_name'].blank?
     assert_equal '@scout2015', data['external_id']
-    assert_not_nil data['picture']
     assert_match 'https://www.tiktok.com/@scout2015', m.url
     assert_nil data['error']
   end

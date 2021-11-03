@@ -8,7 +8,7 @@ module MediasHelper
 
   def convert_url_to_format(url, format)
     empty = ''.freeze
-    url.sub!(/medias([^\?]*)/, 'medias.' + format)
+    url = url.sub(/medias([^\?]*)/, 'medias.' + format)
     if url =~ /refresh=1/
       url.sub!(/refresh=1/, empty)
       url.sub!(/medias\.#{format}\?/, "medias.#{format}?refresh=1&")

@@ -177,4 +177,11 @@ class MediasHelperTest < ActionView::TestCase
     assert_equal url, Media.decoded_uri(url)
     URI.unstub(:decode)
   end
+
+  test 'should not convert original url' do
+    original_url = 'http://localhost/api/medias.js?=1&url=https%3A%2F%2Ftwitter.com%2Fsstirling%2Fstatus%2F1453505920865087499'
+    assert_equal 'http://localhost/api/medias.html?=1&url=https%3A%2F%2Ftwitter.com%2Fsstirling%2Fstatus%2F1453505920865087499', convert_url_to_format(original_url, 'html')
+    assert_equal 'http://localhost/api/medias.js?=1&url=https%3A%2F%2Ftwitter.com%2Fsstirling%2Fstatus%2F1453505920865087499', original_url
+  end
+
 end

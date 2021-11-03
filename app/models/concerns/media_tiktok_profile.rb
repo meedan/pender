@@ -16,12 +16,11 @@ module MediaTiktokProfile
       reparse_if_default_tiktok_page
       metatags = { picture: 'og:image', title: 'twitter:creator', description: 'description' }
       data.merge! get_html_metadata(self, metatags)
-
+      self.set_data_field('author_name', data['title'], username)
       self.data.merge!({
         username: username,
         external_id: username,
         author_picture: data['picture'],
-        author_name: data['title'],
         author_url: self.url,
         url: self.url
       })
