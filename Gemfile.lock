@@ -194,7 +194,7 @@ GEM
       nokogiri (>= 1.8.0)
       public_suffix (>= 2.0.0, < 2.1)
     public_suffix (2.0.5)
-    puma (5.6.2)
+    puma (5.6.4)
       nio4r (~> 2.0)
     racc (1.6.0)
     rack (2.2.3)
@@ -366,7 +366,7 @@ DEPENDENCIES
   parallel_tests
   pg (= 0.20)
   postrank-uri
-  puma (= 5.6.2)
+  puma (= 5.6.4)
   rack (>= 1.6.11)
   rack-cors
   rack-protection (= 2.0.1)
