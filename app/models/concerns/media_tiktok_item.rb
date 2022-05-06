@@ -31,7 +31,7 @@ module MediaTiktokItem
     http.use_ssl = uri.scheme == 'https'
     request = Net::HTTP::Get.new(uri.request_uri)
     response = http.request(request)
-    raise "#{response.class}: #{response.message}" unless %(200 301 302).include?(response.code)
+    self.data['raw'] ||= {}
     self.data['raw']['oembed'] = self.data['raw']['api'] = JSON.parse(response.body)
   end
 
@@ -44,5 +44,4 @@ module MediaTiktokItem
   def tiktok_oembed_url
     "https://www.tiktok.com/oembed?url=#{self.url}"
   end
-
 end
