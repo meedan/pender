@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-gem 'rails', '5.2.6'
+gem 'rails', '5.2.7.1'
 gem 'sqlite3', '~> 1.3.6', require: false
 gem 'pg', '0.20'
 group :development, :test do
@@ -40,21 +40,21 @@ gem 'ids_please', git: 'https://github.com/meedan/ids_please', branch: 'master',
 gem 'open_uri_redirections', require: false
 gem 'postrank-uri', require: false
 gem 'retryable'
-gem 'puma', '5.6.2'
+gem 'puma', '5.6.4'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'rails-perftest'
 gem 'sidekiq'
 gem 'redis', '4.3.1'
-gem 'nokogiri', '1.13.2', require: false
+gem 'nokogiri', '1.13.4', require: false
 gem 'mida', require: false
 gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
 gem 'loofah', '2.3.1', require: false
 gem 'rails-html-sanitizer', '1.0.4'
 gem 'sprockets', '3.7.2'
-gem 'activejob', '5.2.6'
-gem 'actionview', '5.2.6'
-gem 'actionpack', '5.2.6'
+gem 'activejob', '5.2.7.1'
+gem 'actionview', '5.2.7.1'
+gem 'actionpack', '5.2.7.1'
 gem 'rack', '>= 1.6.11', require: false
 gem 'aws-sdk-s3', require: false
 gem 'lograge'
