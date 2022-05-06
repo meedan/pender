@@ -11,7 +11,6 @@ module MediaTiktokItem
     handle_exceptions(self, StandardError) do
       self.get_tiktok_api_data
       match = self.url.match(TIKTOK_URL)
-      self.set_data_field('author_picture', self.get_tiktok_author_picture)
       self.data.merge!({
         username: match['username'],
         external_id: match['id'],
@@ -33,12 +32,6 @@ module MediaTiktokItem
     response = http.request(request)
     self.data['raw'] ||= {}
     self.data['raw']['oembed'] = self.data['raw']['api'] = JSON.parse(response.body)
-  end
-
-  def get_tiktok_author_picture
-    return if self.doc.nil?
-    avatar = self.doc.at_css('.user-info .avatar avatar-wrapper')
-    avatar['style'].match(/url\("(.+)"\)/)[1] if avatar && avatar['style']
   end
 
   def tiktok_oembed_url
