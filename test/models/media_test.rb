@@ -357,8 +357,8 @@ class MediaTest < ActiveSupport::TestCase
     url = 'http://www.angra.net/website'
     https_url = 'https://www.angra.net/website'
     response = 'mock'; response.stubs(:code).returns(200)
-    Media.stubs(:request_url).with(url, 'Head').returns(response)
-    Media.stubs(:request_url).with(https_url, 'Head').raises(OpenSSL::SSL::SSLError)
+    Media.stubs(:request_url).with(url, 'Get').returns(response)
+    Media.stubs(:request_url).with(https_url, 'Get').raises(OpenSSL::SSL::SSLError)
     m = create_media url: url
     assert_equal 'http://www.angra.net/website', m.url
     Media.unstub(:request_url)
@@ -676,11 +676,11 @@ class MediaTest < ActiveSupport::TestCase
   test "should request URL with User-Agent on header" do
     url = 'https://globalvoices.org/2019/02/16/nigeria-postpones-2019-general-elections-hours-before-polls-open-citing-logistics-and-operations-concerns'
     uri = Media.parse_url url
-    Net::HTTP::Head.stubs(:new).with(uri, {'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => 'en-US;q=0.6,en;q=0.4'}).once.returns({})
+    Net::HTTP::Get.stubs(:new).with(uri, {'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => 'en-US;q=0.6,en;q=0.4'}).once.returns({})
     Net::HTTP.any_instance.stubs(:request).returns('success')
 
-    assert_equal 'success', Media.request_url(url, 'Head')
-    Net::HTTP::Head.unstub(:new)
+    assert_equal 'success', Media.request_url(url, 'Get')
+    Net::HTTP::Get.unstub(:new)
     Net::HTTP.any_instance.unstub(:request)
   end
 
