@@ -104,7 +104,7 @@ class Media
     begin
       uri = URI.parse(URI.encode(url))
       return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
-      Media.request_url(url, 'Head')
+      Media.request_url(url, 'Get')
     rescue OpenSSL::SSL::SSLError, URI::InvalidURIError, SocketError => e
       PenderAirbrake.notify(e, url: url)
       Rails.logger.warn level: 'WARN', message: '[Parser] Invalid URL', url: url, error_class: e.class, error_message: e.message
@@ -231,7 +231,7 @@ class Media
   def request_media_url
     response = nil
     Retryable.retryable(tries: 3, sleep: 1, :not => [Net::ReadTimeout]) do
-      response = Media.request_url(url, 'Head')
+      response = Media.request_url(url, 'Get')
     end
     response
   end
@@ -332,7 +332,7 @@ class Media
       uri = URI.parse(self.url)
       unless (uri.kind_of?(URI::HTTPS))
         self.url.gsub!(/^http:/i, 'https:')
-        Media.request_url(self.url, 'Head').value
+        Media.request_url(self.url, 'Get').value
       end
     rescue
       self.url.gsub!(/^https:/i, 'http:')
