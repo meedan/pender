@@ -28,6 +28,19 @@ class TiktokTest < ActiveSupport::TestCase
     assert_equal '@scout2015', data['username']
   end
 
+  test "should parse Tiktok link 2" do
+    m = create_media url: 'https://www.tiktok.com/@scout2015/video/7094001694408756526?is_from_webapp=1&sender_device=pc&web_id=7064890017416234497'
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_match /Should we keep/, data['title']
+    assert_match /Scout.+Suki/, data['author_name']
+    assert_equal '7094001694408756526', data['external_id']
+    assert_match 'https://www.tiktok.com/@scout2015', data['author_url']
+    assert_match /^http/, data['picture']
+    assert_nil data['error']
+    assert_equal '@scout2015', data['username']
+  end
+
   test "should parse Tiktok profile with proxy if title is the site name" do
     blank_page = '<html><head><title>TikTok</title></head><body></body></html>'
     page = '<html><head><title>Huxley the Panda Puppy</title><meta property="og:image" content="https://tiktokcdn.com/image.jpeg"><meta property="twitter:creator" content="Huxley the Panda Puppy"><meta property="og:description" content="Here to make ur day"></head><body></body></html>'
@@ -48,5 +61,4 @@ class TiktokTest < ActiveSupport::TestCase
     assert_match 'https://www.tiktok.com/@huxleythepandapuppy', m.url
     Media.any_instance.unstub(:get_html)
   end
-
 end
