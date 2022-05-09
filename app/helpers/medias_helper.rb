@@ -251,7 +251,7 @@ module MediasHelper
       proxy = Media.valid_proxy
       if proxy || force
         country = force ? 'us' : PenderConfig.get('hosts', {}, :json).dig(uri.host, 'country')
-        if uri.host.match?(/facebook\.com/)
+        if uri.host.match?(/(facebook|tiktok)\.com/)
           proxy['user'] = proxy['user_prefix'] + proxy['country_prefix'] + 'us' + proxy['session_prefix'] + Random.rand(100000).to_s
         elsif country
           proxy['user'] = proxy['user_prefix'] + proxy['country_prefix'] + country
