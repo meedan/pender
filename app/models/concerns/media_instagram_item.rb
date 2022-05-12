@@ -63,5 +63,4 @@ module MediaInstagramItem
     location = response.header['location']
     self.ignore_url?(location) ? (raise StandardError.new('Login required')) : self.get_instagram_graphql_data(location)
   end
-
 end 
