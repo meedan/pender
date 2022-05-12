@@ -61,4 +61,16 @@ class TiktokTest < ActiveSupport::TestCase
     assert_match 'https://www.tiktok.com/@huxleythepandapuppy', m.url
     Media.any_instance.unstub(:get_html)
   end
+
+  test "should parse short TikTok link" do
+    m = create_media url: 'https://vt.tiktok.com/ZSduCHt6g/?k=1'
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_match /Sabotage/, data['title']
+    assert_match /Michael/, data['author_name']
+    assert_equal '7090122043793984795', data['external_id']
+    assert_match 'https://www.tiktok.com/@ken28gallardo', data['author_url']
+    assert_nil data['error']
+    assert_equal '@ken28gallardo', data['username']
+  end
 end
