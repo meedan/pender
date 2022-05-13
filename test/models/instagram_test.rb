@@ -114,10 +114,18 @@ class InstagramTest < ActiveSupport::TestCase
 
   test "should parse when only graphql returns data" do
     Media.stubs(:get_crowdtangle_data).with(:instagram).returns(nil)
-    graphql_response = { 'graphql' => {
-      "shortcode_media"=>{"display_url"=>"https://instagram.net/v/29_n.jpg",
-      "edge_media_to_caption"=>{"edges"=>[{"node"=>{"text"=>"Verify misinformation on WhatsApp"}}]},
-      "owner"=>{"profile_pic_url"=>"https://instagram.net/v/56_n.jpg", "username"=>"c.afpfact", "full_name"=>"AFP Fact Check"}}}}
+    graphql_response = {
+      'graphql' => {
+        'user' => {
+          'profile_pic_url' => 'https://instagram.net/v/29_n.jpg',
+          'username' => 'c.afpfact',
+          'full_name' => 'AFP Fact Check' 
+        },
+        'caption' => {
+          'text' => 'Verify misinformation on WhatsApp'
+        }
+      }
+    }
     Media.any_instance.stubs(:get_instagram_graphql_data).returns(graphql_response['graphql'])
     m = create_media url: 'https://www.instagram.com/p/B6_wqMHgQ12/'
     data = m.as_json
@@ -149,14 +157,12 @@ class InstagramTest < ActiveSupport::TestCase
   end
 
   test "should parse Instagram link for real" do
-    # if PenderConfig.get('crowdtangle_instagram_token')
-    #   url = 'https://www.instagram.com/p/CdOk-lLKmyH/'
-    #   m = Media.new url: url
-    #   data = m.as_json
-    #   assert_equal 'item', data['type']
-    #   assert_equal '@ironmaiden', data['username']
-    #   assert_match 'Iron Maiden', data['author_name']
-    #   assert_match 'When and where was your last Maiden show?', data['title']
-    # end
+    # url = 'https://www.instagram.com/p/CdOk-lLKmyH/'
+    # m = Media.new url: url
+    # data = m.as_json
+    # assert_equal 'item', data['type']
+    # assert_equal '@ironmaiden', data['username']
+    # assert_match 'Iron Maiden', data['author_name']
+    # assert_match 'When and where was your last Maiden show?', data['title']
   end
 end 

@@ -2,5 +2,5 @@
 # This file will be used to parse pages that have limit of access
 # To include new cookies, append the cookies data to the end of file
 # The format must be compatible with wget, curl, aria2 and similar
-
+# Please set cookies for at least TikTok and Instagram
 .example.com	TRUE	/	FALSE	1538248063	wp_devicetype	0
