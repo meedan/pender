@@ -1,7 +1,8 @@
 module MediaCrowdtangleItem
   extend ActiveSupport::Concern
 
-  def get_crowdtangle_id(resource)
+  # "resource" is currently only Facebook
+  def get_crowdtangle_id(_resource)
     self.data.dig('uuid')
   end
 
