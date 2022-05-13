@@ -14,20 +14,22 @@ module MediaInstagramItem
       self.get_instagram_data(id.to_s)
       self.data.merge!(external_id: id)
       data = self.data
-      return if data.dig('raw', 'graphql', 'error') && data.dig('raw', 'crowdtangle', 'error')
-      self.set_data_field('username', self.get_instagram_username_from_data)
+      return if data.dig('raw', 'graphql', 'error')
+      username = self.get_instagram_username_from_data
+      self.set_data_field('username', username)
       self.set_data_field('description', self.get_instagram_text_from_data)
       self.set_data_field('title', self.get_instagram_text_from_data)
       self.set_data_field('picture', self.get_instagram_picture_from_data)
       self.set_data_field('author_name', data.dig('raw', 'graphql', 'user', 'full_name'))
+      self.set_data_field('author_url', username.gsub(/^@/, 'https://instagram.com/'))
       self.set_data_field('author_picture', data.dig('raw', 'graphql', 'user', 'profile_pic_url'))
+      self.set_data_field('published_at', data.dig('raw', 'graphql', 'taken_at'))
       self.data.merge!({ external_id: id })
     end
   end
 
   def get_instagram_username_from_data
-    username = get_info_from_data('crowdtangle', self.data, 'handle')
-    username = username.blank? ? data.dig('raw', 'graphql', 'user', 'username').to_s : username
+    username = data.dig('raw', 'graphql', 'user', 'username').to_s
     username.prepend('@') unless username.blank?
   end
 
@@ -36,8 +38,7 @@ module MediaInstagramItem
   end
 
   def get_instagram_picture_from_data
-    picture = get_info_from_data('api', self.data, 'thumbnail_url')
-    picture.blank? ? self.data.dig('raw', 'graphql', 'user', 'profile_pic_url') : picture
+    self.data.dig('raw', 'graphql', 'image_versions2', 'candidates', 0, 'url')
   end
 
   def get_instagram_data(id)
@@ -47,7 +48,6 @@ module MediaInstagramItem
       Rails.logger.warn level: 'WARN', message: '[Parser] Cannot get data from Instagram URL', error_class: error.class, error_message: error.message
       self.data['raw']['graphql'] = { error: { message: error.message, code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }}
     end
-    self.get_crowdtangle_data(:instagram)
   end
 
   def get_instagram_graphql_data(url)
