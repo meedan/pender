@@ -28,7 +28,8 @@ module MediaTiktokItem
     uri = URI.parse(self.tiktok_oembed_url)
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = uri.scheme == 'https'
-    request = Net::HTTP::Get.new(uri.request_uri)
+    headers = Media.extended_headers(uri)
+    request = Net::HTTP::Get.new(uri.request_uri, headers)
     response = http.request(request)
     self.data['raw'] ||= {}
     self.data['raw']['oembed'] = self.data['raw']['api'] = JSON.parse(response.body)
