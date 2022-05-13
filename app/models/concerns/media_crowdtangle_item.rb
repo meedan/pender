@@ -1,13 +1,9 @@
 module MediaCrowdtangleItem
   extend ActiveSupport::Concern
 
-  def get_crowdtangle_id(resource)
-    if resource == :instagram
-      media_info = self.data.dig('raw', 'graphql', 'shortcode_media')
-      media_info.nil? ? nil : "#{media_info['id']}_#{media_info['owner']['id']}"
-    else
-      self.data.dig('uuid')
-    end
+  # "resource" is currently only Facebook
+  def get_crowdtangle_id(_resource)
+    self.data.dig('uuid')
   end
 
   def get_crowdtangle_data(resource)
@@ -21,15 +17,6 @@ module MediaCrowdtangleItem
     end
     self.data['raw']['crowdtangle'] = result
     self.send("get_crowdtangle_#{resource}_result", post_info)
-  end
-
-  def get_crowdtangle_instagram_result(post_info)
-    self.data[:author_name] = post_info.dig('account', 'name')
-    self.data[:username] = '@' + post_info.dig('account', 'handle')
-    self.data[:author_url] = post_info.dig('account', 'url')
-    self.data[:description] = self.data[:title] = post_info.dig('description')
-    self.data[:picture] = post_info.dig('media').first['url'] if post_info.dig('media')
-    self.data[:published_at] = post_info.dig('date')
   end
 
   def get_crowdtangle_facebook_result(post_info)
