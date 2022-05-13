@@ -166,9 +166,6 @@ class MediasHelperTest < ActionView::TestCase
 
     m.stubs(:data).returns(data[:facebook])
     assert_equal 'facebook_id', m.get_crowdtangle_id(:facebook)
-
-    m.stubs(:data).returns(data[:instagram])
-    assert_equal '111111_222222', m.get_crowdtangle_id(:instagram)
   end
 
   test 'should decode url' do

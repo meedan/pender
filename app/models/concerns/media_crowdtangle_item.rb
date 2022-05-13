@@ -8,7 +8,6 @@ module MediaCrowdtangleItem
 
   def get_crowdtangle_data(resource)
     id = self.get_crowdtangle_id(resource)
-    puts "ID: #{id}"
     self.data['raw']['crowdtangle'] = { error: { message: 'Unknown ID', code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }} and return if id.blank?
     crowdtangle_data = Media.crowdtangle_request(resource, id).with_indifferent_access
     result = crowdtangle_data.dig('result')
