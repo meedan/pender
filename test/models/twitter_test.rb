@@ -141,12 +141,6 @@ class TwitterTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:twitter_client)
   end
 
-  test "should get canonical URL parsed from html tags" do
-    media1 = create_media url: 'https://twitter.com/meedan/status/1262644257996898305?ref_src=twsrc%5Etfw'
-    media2 = create_media url: 'https://twitter.com/meedan/status/1262644257996898305'
-    assert_equal media1.url, media2.url
-  end
-
   test "should parse tweet url with special chars" do
     twitter_client, status, user = "" , "", ""
     api = {"created_at"=>"2016", "full_text"=>"وعشان نبقى على بياض أنا مش موافقة على فكرة الاعتصام اللي في التحرير، بس دة حقهم وأنا بدافع عن حقهم الشرعي، بغض النظر عن اختلافي معهم", "user"=>{"name"=>"Salma el Daly", "screen_name"=>"salmaeldaly", "description"=>"a @NewhouseSU master's degree",  "profile_image_url_https"=>"image"}}

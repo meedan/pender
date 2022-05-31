@@ -31,6 +31,7 @@ module MediaTwitterProfile
       self.set_data_field('picture', self.data[:pictures][:original])
       self.set_data_field('author_picture', self.data[:pictures][:original])
     end
+    self.data[:error] = self.data.dig(:raw, :api, :error)
     self.set_data_field('title', get_info_from_data('api', data, 'name'), username)
     self.data.merge!({
       external_id: username,
