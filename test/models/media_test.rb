@@ -947,23 +947,6 @@ class MediaTest < ActiveSupport::TestCase
     assert !data['error']
   end
 
-  test "should not reach an infinite loop when parsing Twitter URL" do
-    class HttpRedirectionLoop < StandardError
-    end
-    Airbrake.stubs(:configured?).raises(HttpRedirectionLoop.new('Test'))
-    errors = 0
-    urls = ['https://twitter.com/com', 'https://twitter.com/hadialabdallah/status/846103320880201729', 'https://twitter.com/syriacivildefe/status/845714970147012608', 'https://twitter.com/SyriaCivilDefe/status/845714970147012608', 'https://twitter.com/Lachybe', 'https://twitter.com/ideas', 'https://twitter.com/psicojen', 'https://twitter.com/account/suspended', 'https://twitter.com/g9wuortn6sve9fn/status/940956917010259970']
-    urls.each do |url|
-      begin
-        Media.new url: url
-      rescue HttpRedirectionLoop
-        errors += 1
-      end
-    end
-    Airbrake.unstub(:configured?)
-    assert_equal 0, errors
-  end
-
   test "should not reach the end of file caused by User-Agent" do
     m = create_media url: 'https://www.nbcnews.com/'
     parsed_url = Media.parse_url m.url

@@ -31,6 +31,7 @@ module MediaTwitterItem
     handle_twitter_exceptions do
       self.data['raw']['api'] = self.twitter_client.status(id, tweet_mode: 'extended').as_json
     end
+    self.data[:error] = self.data.dig(:raw, :api, :error)
     self.data.merge!({
       external_id: id,
       username: '@' + user,
