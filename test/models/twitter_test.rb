@@ -356,7 +356,6 @@ class TwitterTest < ActiveSupport::TestCase
     m = create_media url: url
     data = m.as_json
     assert_match /twitter-tweet.*#{url}/, data[:html]
-    assert_match(/URL Not Found/, data['error']['message'])
     OpenURI.unstub(:open_uri)
   end
 
