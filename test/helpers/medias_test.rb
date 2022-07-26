@@ -105,7 +105,6 @@ class MediasHelperTest < ActionView::TestCase
 
   test 'should upload images to s3 and update media data' do
     urls = %w(
-      https://meedan.com
       https://opensource.globo.com/hacktoberfest/
       https://hacktoberfest.digitalocean.com/
     )

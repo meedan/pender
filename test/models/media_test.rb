@@ -86,12 +86,12 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse opengraph metatags" do
-    m = create_media url: 'https://meedan.com/en/check/'
+    m = create_media url: 'https://hacktoberfest.digitalocean.com/'
     m.as_json
     data = m.get_opengraph_metadata
-    assert_match 'Product', data['title']
-    assert_match(/Engage your audience/, data['description'])
-    assert_match 'Meedan', data['author_name']
+    assert_match "Hacktoberfest '21", data['title']
+    assert_match(/Open source/, data['description'])
+    assert_match 'Hacktoberfest presented by DigitalOcean', data['author_name']
     assert_not_nil data['picture']
   end
   
