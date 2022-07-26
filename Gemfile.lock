@@ -225,8 +225,8 @@ GEM
     rails-dom-testing (2.0.3)
       activesupport (>= 4.2.0)
       nokogiri (>= 1.6)
-    rails-html-sanitizer (1.0.4)
-      loofah (~> 2.2, >= 2.2.2)
+    rails-html-sanitizer (1.4.3)
+      loofah (~> 2.3)
     rails-perftest (0.0.7)
     railties (5.2.7.1)
       actionpack (= 5.2.7.1)
@@ -373,7 +373,7 @@ DEPENDENCIES
   railroady
   rails (= 5.2.7.1)
   rails-controller-testing
-  rails-html-sanitizer (= 1.0.4)
+  rails-html-sanitizer (= 1.4.3)
   rails-perftest
   redis (= 4.3.1)
   request_store

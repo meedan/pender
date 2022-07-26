@@ -50,7 +50,7 @@ gem 'mida', require: false
 gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
 gem 'loofah', '2.3.1', require: false
-gem 'rails-html-sanitizer', '1.0.4'
+gem 'rails-html-sanitizer', '1.4.3'
 gem 'sprockets', '3.7.2'
 gem 'activejob', '5.2.7.1'
 gem 'actionview', '5.2.7.1'
