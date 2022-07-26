@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-gem 'rails', '5.2.7.1'
+gem 'rails', '~> 5.2.8'
 gem 'sqlite3', '~> 1.3.6', require: false
 gem 'pg', '0.20'
 group :development, :test do
@@ -52,9 +52,6 @@ gem 'rack-protection', '2.0.1'
 gem 'loofah', '2.3.1', require: false
 gem 'rails-html-sanitizer', '1.4.3'
 gem 'sprockets', '3.7.2'
-gem 'activejob', '5.2.7.1'
-gem 'actionview', '5.2.7.1'
-gem 'actionpack', '5.2.7.1'
 gem 'rack', '>= 1.6.11', require: false
 gem 'aws-sdk-s3', require: false
 gem 'lograge'
