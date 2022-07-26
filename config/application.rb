@@ -35,6 +35,7 @@ module Pender
     })
 
     config.active_record.sqlite3.represent_boolean_as_integer = true
+    config.active_record.yaml_column_permitted_classes = [Symbol]
   end
 end
 
