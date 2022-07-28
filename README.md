@@ -53,6 +53,18 @@ $ docker-compose up --abort-on-container-exit
 ```
 Open http://localhost:3200/api-docs/index.html to access Pender API directly.
 
+### Setting Cookies
+
+We send cookies with certain requests that require logged-in users (e.g. Instagram, TikTok). To provide these for development and tests, log in on your browser and copy the cookie information to `config/cookies.txt`.
+
+To do this easily in Chrome:
+1. Install the [Get cookies.txt](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid) browser extension
+1. Log into the website (e.g. instagram.com)
+1. Using the browser extension, export cookies on the page you want to view
+1. Replace the entries in `config/cookies.txt` with the downloaded `cookies.txt`
+
+**Note**: If you do install this extension, consider doing it on a limited Chrome profile since it requires read and write permission for all websites.
+
 ## API
 
 To make requests to the API, you must set a request header with the value of the configuration option `authorization_header` - by default, this is `X-Pender-Token`. The value of that header should be the API key that you have generated using `bundle exec rake lapis:api_keys:create`, or any API key that was given to you.
