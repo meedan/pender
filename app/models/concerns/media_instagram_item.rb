@@ -43,7 +43,10 @@ module MediaInstagramItem
 
   def get_instagram_data(id)
     begin
-      self.data['raw']['graphql'] = self.get_instagram_graphql_data("https://www.instagram.com/p/#{id}/?__a=1")
+      # We're using an undocumented API / approach for fetching GraphQL data from Instagram,
+      # since we just start with the URL. Here's the StackOverflow post suggesting this most recent approach:
+      # https://stackoverflow.com/a/72582413
+      self.data['raw']['graphql'] = self.get_instagram_graphql_data("https://www.instagram.com/p/#{id}/?__a=1&__d=a")
     rescue StandardError => error
       Rails.logger.warn level: 'WARN', message: '[Parser] Cannot get data from Instagram URL', error_class: error.class, error_message: error.message
       self.data['raw']['graphql'] = { error: { message: error.message, code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }}

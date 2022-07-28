@@ -98,13 +98,13 @@ class InstagramTest < ActiveSupport::TestCase
   end
 
   test "should parse Instagram link for real" do
-    # url = 'https://www.instagram.com/p/CdOk-lLKmyH/'
-    # m = Media.new url: url
-    # data = m.as_json
-    # assert_equal 'item', data['type']
-    # assert_equal '@ironmaiden', data['username']
-    # assert_match 'Iron Maiden', data['author_name']
-    # assert_match 'When and where was your last Maiden show?', data['title']
-    # assert_equal 'https://instagram.com/ironmaiden', data['author_url']
+    url = 'https://www.instagram.com/p/CdOk-lLKmyH/'
+    m = Media.new url: url
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal '@ironmaiden', data['username']
+    assert_match 'Iron Maiden', data['author_name']
+    assert_match 'When and where was your last Maiden show?', data['title']
+    assert_equal 'https://instagram.com/ironmaiden', data['author_url']
   end
 end 
