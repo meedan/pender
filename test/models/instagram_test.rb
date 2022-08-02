@@ -2,16 +2,36 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 require 'cc_deville'
 
 class InstagramTest < ActiveSupport::TestCase
-  test "should parse Instagram profile" do
-    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:title' content='megadeth'><meta property='og:image' content='https://www.instagram.com/megadeth.png'>"))
-    m = create_media url: 'https://www.instagram.com/megadeth'
+  INSTAGRAM_PROFILE_API_REGEX = /i.instagram.com\/api\/v1\/users\/web_profile_info\//
+  INSTAGRAM_ITEM_API_REGEX = /instagram.com\/p\//
+
+  test "should parse Instagram item link for real" do
+    m = Media.new url: 'https://www.instagram.com/p/CdOk-lLKmyH/'
     data = m.as_json
-    assert_equal '@megadeth',data['username']
-    assert_equal 'profile',data['type']
-    assert_match 'megadeth',data['title']
-    assert_match 'megadeth',data['author_name']
-    assert_match /^http/,data['picture']
-    Media.any_instance.unstub(:doc)
+    assert_equal 'item', data['type']
+    assert_equal 'CdOk-lLKmyH', data['external_id']
+    assert_equal '@ironmaiden', data['username']
+    assert_match 'When and where was your last Maiden show?', data['description']
+    assert_match 'When and where was your last Maiden show?', data['title']
+    assert_match 'Iron Maiden', data['author_name']
+    assert_equal 'https://instagram.com/ironmaiden', data['author_url']
+    assert_match /^http/, data['picture']
+    assert_match /^http/, data['author_picture']
+    assert_equal 1651864107, data['published_at']
+  end
+
+  test "should parse Instagram profile link for real" do
+    m = Media.new url: 'https://www.instagram.com/ironmaiden'
+    data = m.as_json
+    assert_equal 'profile', data['type']
+    assert_equal 'ironmaiden', data['external_id']
+    assert_equal '@ironmaiden', data['username']
+    assert_match 'ironmaiden', data['title']
+    assert_match 'Iron Maiden', data['author_name']
+    assert !data['description'].blank?
+    assert_match /^http/, data['picture']
+    assert_match /^http/, data['author_picture']
+    assert data['published_at'].blank?
   end
 
   test "should get canonical URL parsed from html tags 2" do
@@ -21,90 +41,166 @@ class InstagramTest < ActiveSupport::TestCase
     assert_match /https:\/\/www.instagram.com\/p\/CAdW7PMlTWc/, media2.url
   end
 
-  test "should have external id for post" do
-    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:url' content='https://www.instagram.com/p/BxxBzJmiR00/'>"))
-    m = create_media url: 'https://www.instagram.com/p/BxxBzJmiR00/'
+  test "should set profile defaults and error message when request fails" do
+    Media.any_instance.stubs(:get_instagram_profile_api_data).raises('Net::HTTPNotFound: Not Found')
+
+    m = create_media url: 'https://www.instagram.com/megadeth'
     data = m.as_json
-    assert_equal 'BxxBzJmiR00', data['external_id']
-    Media.any_instance.unstub(:doc)
+    assert_equal 'megadeth', data['external_id']
+    assert_equal '@megadeth', data['username']
+    assert_equal 'profile', data['type']
+    assert_match 'megadeth', data['title']
+    assert_match /Not Found/, data['raw']['api']['error']['message']
+
+    Media.any_instance.unstub(:get_instagram_profile_api_data)
   end
 
-  test "should have external id for profile" do
-    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:url' content='https://www.instagram.com/ironmaiden/'>"))
-    m = create_media url: 'https://www.instagram.com/ironmaiden/'
+  test "should set profile defaults and error message when parsing fails" do
+    WebMock.enable!
+    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: 'asdf', status: 200)
+
+    url = 'https://www.instagram.com/megadeth'
+    m = create_media url: url
     data = m.as_json
-    assert_equal 'ironmaiden', data['external_id']
-    Media.any_instance.unstub(:doc)
+    assert_equal 'megadeth', data['external_id']
+    assert_equal '@megadeth', data['username']
+    assert_equal 'profile', data['type']
+    assert_match 'megadeth', data['title']
+    assert_match /unexpected token/, data['raw']['api']['error']['message']
+
+    WebMock.disable!
   end
 
-  test "should return error on data when can't get info from graphql" do
-    id = 'B6_wqMHgQ12'
+  test "should set item defaults and error message when request fails" do
     Media.any_instance.stubs(:get_instagram_graphql_data).raises('Net::HTTPNotFound: Not Found')
-    m = create_media url: "https://www.instagram.com/p/#{id}/"
+    id = "B6_wqMHgQ12"
+    url = "https://www.instagram.com/p/#{id}/"
+    m = create_media url: url
     data = m.as_json
+
     assert_equal id, data['external_id']
     assert_equal 'item', data['type']
     assert_equal '', data['username']
     assert_equal '', data['author_name']
     assert_match /Not Found/, data['raw']['graphql']['error']['message']
+
     Media.any_instance.unstub(:get_instagram_graphql_data)
   end
 
-  test "should parse when only graphql returns data" do
-    graphql_response = {
-      'graphql' => {
-        'user' => {
-          'profile_pic_url' => 'https://instagram.net/v/29_n.jpg',
-          'username' => 'c.afpfact',
-          'full_name' => 'AFP Fact Check' 
-        },
-        'image_versions2' => {
-          'candidates' => [
-            { 'url' => 'https://instagram.net/v/28_n.jpg' } 
-          ],
-        },
-        'caption' => {
-          'text' => 'Verify misinformation on WhatsApp'
+  test "should set item defaults and error message when parsing fails" do
+    WebMock.enable!
+    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: 'asdf', status: 200)
+
+    id = "B6_wqMHgQ12"
+    m = create_media url: "https://www.instagram.com/p/#{id}/"
+    data = m.as_json
+
+    assert_equal id, data['external_id']
+    assert_equal 'item', data['type']
+    assert_equal '', data['username']
+    assert_equal '', data['author_name']
+    assert_match /unexpected token/, data['raw']['graphql']['error']['message']
+
+    WebMock.disable!
+  end
+
+  test "should raise error notification when redirected to login page" do
+    WebMock.enable!
+    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/accounts/login' })
+
+    PenderAirbrake.stubs(:notify).once
+    m = create_media url: "https://www.instagram.com/p/CFld5x6B6Bw/"
+
+    data = m.as_json
+    assert_equal 'CFld5x6B6Bw', data['external_id']
+    assert_equal 'item', data['type']
+    assert_match /Page unavailable, encountered login_page/, data['raw']['graphql']['error']['message']
+    PenderAirbrake.unstub(:notify)
+    
+    WebMock.disable!
+  end
+
+  test "should raise error notification when redirected to challenge page" do
+    WebMock.enable!
+    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/challenge?' })
+
+    PenderAirbrake.stubs(:notify).once
+    m = create_media url: "https://www.instagram.com/megadeth/"
+
+    data = m.as_json
+    assert_equal 'megadeth', data['external_id']
+    assert_equal 'profile', data['type']
+    assert_match /Page unavailable, encountered account_challenge_page/, data['raw']['api']['error']['message']
+    PenderAirbrake.unstub(:notify)
+    
+    WebMock.disable!
+  end
+
+  test 'should set item fields from successful api response' do
+    response_body = {
+      items: [
+        {
+          user: {
+            profile_pic_url: 'https://instagram.net/v/29_n.jpg',
+            username: 'c.afpfact',
+            full_name: 'AFP Fact Check' 
+          },
+          image_versions2: {
+            candidates: [
+              { url: 'https://instagram.net/v/28_n.jpg' } 
+            ],
+          },
+          caption: {
+            text: 'Verify misinformation on WhatsApp'
+          },
+          taken_at: 123456789
         }
-      }
+      ]
     }
-    Media.any_instance.stubs(:get_instagram_graphql_data).returns(graphql_response['graphql'])
+
+    WebMock.enable!
+    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: response_body.to_json, status: 200)
+    
     m = create_media url: 'https://www.instagram.com/p/B6_wqMHgQ12/'
     data = m.as_json
     assert_equal 'B6_wqMHgQ12', data['external_id']
     assert_equal 'item', data['type']
     assert_equal '@c.afpfact', data['username']
-    assert_match 'AFP Fact Check', data['author_name']
-    assert_match /misinformation/, data['title']
-    assert !data['picture'].blank?
-    assert !data['author_picture'].blank?
-    Media.any_instance.unstub(:get_instagram_graphql_data)
-  end
-
-  test "should not raise error notification when redirected to login page" do
-    PenderAirbrake.stubs(:notify).never
-    id = 'CFld5x6B6Bw'
-    m = create_media url: "https://www.instagram.com/p/#{id}/"
-    WebMock.enable!
-    WebMock.stub_request(:any, /instagram.com\/p\/#{id}\/\?__a=1/).to_return(body: '', headers: { location: 'https://www.instagram.com/accounts/login/' }, status: 302)
-
-    data = m.as_json
-    assert_equal 'CFld5x6B6Bw', data['external_id']
-    assert_equal 'item', data['type']
-    assert_equal '', data['html']
-    assert_match /Login required/, data['raw']['graphql']['error']['message']
-    PenderAirbrake.unstub(:notify)
+    assert_equal 'Verify misinformation on WhatsApp', data['description']
+    assert_equal 'Verify misinformation on WhatsApp', data['title']
+    assert_equal 'https://instagram.net/v/28_n.jpg', data['picture']
+    assert_equal 'AFP Fact Check', data['author_name']
+    assert_equal 'https://instagram.com/c.afpfact', data['author_url']
+    assert_equal 'https://instagram.net/v/29_n.jpg', data['author_picture']
+    assert_equal 123456789, data['published_at']
     WebMock.disable!
-  end
-
-  test "should parse Instagram link for real" do
-    url = 'https://www.instagram.com/p/CdOk-lLKmyH/'
-    m = Media.new url: url
+  end  
+  
+  test 'should set profile fields from successful api response' do
+    response_body = {
+      data: {
+        user: {
+          biography: "Conserving America’s Great Outdoors and Powering Our Future.",
+          full_name: "Department of the Interior",
+          profile_pic_url: 'https://instagram.net/v/30_n.jpg',
+          username: 'usinterior',
+        },
+      }
+    }
+    
+    WebMock.enable!
+    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: response_body.to_json, status: 200)
+  
+    m = create_media url: 'https://www.instagram.com/usinterior/'
     data = m.as_json
-    assert_equal 'item', data['type']
-    assert_equal '@ironmaiden', data['username']
-    assert_match 'Iron Maiden', data['author_name']
-    assert_match 'When and where was your last Maiden show?', data['title']
-    assert_equal 'https://instagram.com/ironmaiden', data['author_url']
+    assert_equal 'usinterior', data['external_id']
+    assert_equal 'profile', data['type']
+    assert_equal '@usinterior', data['username']
+    assert_equal "Conserving America’s Great Outdoors and Powering Our Future.", data['description']
+    assert_equal 'usinterior', data['title']
+    assert_equal 'Department of the Interior', data['author_name']
+    assert_equal 'https://instagram.net/v/30_n.jpg', data['picture']
+    assert_equal 'https://instagram.net/v/30_n.jpg', data['author_picture']
+    WebMock.disable!
   end
 end 
