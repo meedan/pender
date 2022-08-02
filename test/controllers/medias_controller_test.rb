@@ -74,18 +74,16 @@ class MediasControllerTest < ActionController::TestCase
     assert_not_nil data['embed_tag']
   end
 
-  test "should return error message on hash if url does not exist and page returns empty doc" do
-    Media.any_instance.stubs(:doc).returns(nil)
+  test "should return error message on hash if url does not exist" do
     authenticate_with_token
     get :index, params: { url: 'https://www.instagram.com/kjdahsjkdhasjdkhasjk/', format: :json }
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_equal 'RuntimeError: Could not parse this media', data['error']['message']
-    assert_equal 5, data['error']['code']
+    assert_match /Net::HTTPNotFound/, data['raw']['api']['error']['message']
+    assert_equal LapisConstants::ErrorCodes::const_get('UNKNOWN'), data['raw']['api']['error']['code']
     assert_equal 'instagram', data['provider']
     assert_equal 'profile', data['type']
     assert_not_nil data['embed_tag']
-    Media.any_instance.unstub(:doc)
   end
 
   # TODO Must be fixed on #8794
