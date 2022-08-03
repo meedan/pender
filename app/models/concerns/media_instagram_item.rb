@@ -23,7 +23,7 @@ module MediaInstagramItem
       self.set_data_field('author_name', data.dig('raw', 'graphql', 'user', 'full_name'))
       self.set_data_field('author_url', username.gsub(/^@/, 'https://instagram.com/'))
       self.set_data_field('author_picture', data.dig('raw', 'graphql', 'user', 'profile_pic_url'))
-      self.set_data_field('published_at', data.dig('raw', 'graphql', 'taken_at'))
+      self.set_data_field('published_at', verify_published_time(data.dig('raw', 'graphql', 'taken_at').to_s))
     end
   end
 
