@@ -17,7 +17,7 @@ class InstagramTest < ActiveSupport::TestCase
     assert_equal 'https://instagram.com/ironmaiden', data['author_url']
     assert_match /^http/, data['picture']
     assert_match /^http/, data['author_picture']
-    assert_equal 1651864107, data['published_at']
+    assert_equal '2022-05-06T19:08:27.000+00:00', data['published_at']
   end
 
   test "should parse Instagram profile link for real" do
@@ -153,7 +153,7 @@ class InstagramTest < ActiveSupport::TestCase
           caption: {
             text: 'Verify misinformation on WhatsApp'
           },
-          taken_at: 123456789
+          taken_at: '1659551604'
         }
       ]
     }
@@ -172,7 +172,7 @@ class InstagramTest < ActiveSupport::TestCase
     assert_equal 'AFP Fact Check', data['author_name']
     assert_equal 'https://instagram.com/c.afpfact', data['author_url']
     assert_equal 'https://instagram.net/v/29_n.jpg', data['author_picture']
-    assert_equal 123456789, data['published_at']
+    assert_equal '2022-08-03T18:33:24.000+00:00', data['published_at']
     WebMock.disable!
   end  
   
