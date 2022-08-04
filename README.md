@@ -65,6 +65,13 @@ To do this easily in Chrome:
 
 **Note**: If you do install this extension, consider doing it on a limited Chrome profile since it requires read and write permission for all websites.
 
+#### Rotating cookies in CI
+1. Follow steps for Setting Cookies above
+1. Re-encrypt the new cookies file: `travis encrypt-file config/cookies.txt -o config/cookies.txt.enc --pro`
+1. Copy the resulting decrypt command and replace the corresponding line in `.travis.yml`
+
+**Note**: Deployed environment cookies should be set in [configurator](https://github.com/meedan/configurator).
+
 ## API
 
 To make requests to the API, you must set a request header with the value of the configuration option `authorization_header` - by default, this is `X-Pender-Token`. The value of that header should be the API key that you have generated using `bundle exec rake lapis:api_keys:create`, or any API key that was given to you.
