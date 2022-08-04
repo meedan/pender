@@ -158,7 +158,6 @@ class MediasHelperTest < ActionView::TestCase
   test 'should get crowdtandgle id from data' do
     data = {
       facebook: { uuid: 'facebook_id' }.with_indifferent_access,
-      instagram: { raw: { graphql: { shortcode_media: { id: '111111', owner: { id: '222222'}}}}}.with_indifferent_access
     }
     url = 'https://example.com'
     m = Media.new url: url

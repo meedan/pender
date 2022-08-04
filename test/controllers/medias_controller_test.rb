@@ -79,8 +79,8 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'https://www.instagram.com/kjdahsjkdhasjdkhasjk/', format: :json }
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_match /Net::HTTPNotFound/, data['raw']['api']['error']['message']
-    assert_equal LapisConstants::ErrorCodes::const_get('UNKNOWN'), data['raw']['api']['error']['code']
+    assert_match /Net::HTTPNotFound/, data['error']['message']
+    assert_equal LapisConstants::ErrorCodes::const_get('UNKNOWN'), data['error']['code']
     assert_equal 'instagram', data['provider']
     assert_equal 'profile', data['type']
     assert_not_nil data['embed_tag']
