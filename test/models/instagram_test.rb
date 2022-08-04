@@ -41,8 +41,9 @@ class InstagramTest < ActiveSupport::TestCase
     assert_match /https:\/\/www.instagram.com\/p\/CAdW7PMlTWc/, media2.url
   end
 
-  test "should set profile defaults and error message when request fails" do
-    Media.any_instance.stubs(:get_instagram_profile_api_data).raises('Net::HTTPNotFound: Not Found')
+  test "should set profile defaults upon error" do
+    WebMock.enable!
+    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: 'asdf', status: 200)
 
     m = create_media url: 'https://www.instagram.com/megadeth'
     data = m.as_json
@@ -50,89 +51,93 @@ class InstagramTest < ActiveSupport::TestCase
     assert_equal '@megadeth', data['username']
     assert_equal 'profile', data['type']
     assert_match 'megadeth', data['title']
-    assert_match /Not Found/, data['raw']['api']['error']['message']
-
-    Media.any_instance.unstub(:get_instagram_profile_api_data)
-  end
-
-  test "should set profile defaults and error message when parsing fails" do
-    WebMock.enable!
-    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: 'asdf', status: 200)
-
-    url = 'https://www.instagram.com/megadeth'
-    m = create_media url: url
-    data = m.as_json
-    assert_equal 'megadeth', data['external_id']
-    assert_equal '@megadeth', data['username']
-    assert_equal 'profile', data['type']
-    assert_match 'megadeth', data['title']
-    assert_match /unexpected token/, data['raw']['api']['error']['message']
 
     WebMock.disable!
   end
 
-  test "should set item defaults and error message when request fails" do
-    Media.any_instance.stubs(:get_instagram_graphql_data).raises('Net::HTTPNotFound: Not Found')
-    id = "B6_wqMHgQ12"
-    url = "https://www.instagram.com/p/#{id}/"
-    m = create_media url: url
-    data = m.as_json
-
-    assert_equal id, data['external_id']
-    assert_equal 'item', data['type']
-    assert_equal '', data['username']
-    assert_equal '', data['author_name']
-    assert_match /Not Found/, data['raw']['graphql']['error']['message']
-
-    Media.any_instance.unstub(:get_instagram_graphql_data)
-  end
-
-  test "should set item defaults and error message when parsing fails" do
+  test "should set item defaults upon error" do
     WebMock.enable!
     WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: 'asdf', status: 200)
 
-    id = "B6_wqMHgQ12"
-    m = create_media url: "https://www.instagram.com/p/#{id}/"
+    url = 'https://www.instagram.com/p/B6_wqMHgQ12/'
+    m = create_media url: url
     data = m.as_json
-
-    assert_equal id, data['external_id']
+    assert_equal 'B6_wqMHgQ12', data['external_id']
     assert_equal 'item', data['type']
-    assert_equal '', data['username']
-    assert_equal '', data['author_name']
-    assert_match /unexpected token/, data['raw']['graphql']['error']['message']
 
     WebMock.disable!
   end
 
-  test "should raise error notification when redirected to login page" do
+  test "should return error on item data when link can't be found" do
     WebMock.enable!
-    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/accounts/login' })
+    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(status: 404)
 
-    PenderAirbrake.stubs(:notify).once
-    m = create_media url: "https://www.instagram.com/p/CFld5x6B6Bw/"
-
+    m = create_media url: "https://www.instagram.com/p/asdflkasjdflasdkfj/"
     data = m.as_json
-    assert_equal 'CFld5x6B6Bw', data['external_id']
-    assert_equal 'item', data['type']
-    assert_match /Page unavailable, encountered login_page/, data['raw']['graphql']['error']['message']
-    PenderAirbrake.unstub(:notify)
-    
+    assert_match /Net::HTTPNotFound/, data['error']['message']
+
     WebMock.disable!
   end
 
-  test "should raise error notification when redirected to challenge page" do
+  test "should return error on profile data when link can't be found" do
+    WebMock.enable!
+    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(status: 404)
+
+    m = create_media url: "https://www.instagram.com/asdflkajsdflkajsdf/"
+    data = m.as_json
+    assert_match /Net::HTTPNotFound/, data['error']['message']
+
+    WebMock.disable!
+  end
+
+  test "should re-raise a wrapped error when parsing fails" do
+    WebMock.enable!
+    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: 'asdf', status: 200)
+
+    airbrake_call_count = 0
+    arguments_checker = Proc.new do |e|
+      airbrake_call_count += 1
+      assert_equal Instagram::ApiError, e.class
+    end
+    PenderAirbrake.stub(:notify, arguments_checker) do
+      m = create_media url: "https://www.instagram.com/megadeth"
+      data = m.as_json
+      assert_equal 1, airbrake_call_count
+    end
+    WebMock.disable!
+  end
+
+  test "should re-raise a wrapped error when redirected to login page" do
+    WebMock.enable!
+    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/accounts/login/' })
+
+    airbrake_call_count = 0
+    arguments_checker = Proc.new do |e|
+      airbrake_call_count += 1
+      assert_equal Instagram::ApiError, e.class
+    end
+    PenderAirbrake.stub(:notify, arguments_checker) do
+      m = create_media url: "https://www.instagram.com/p/B6_wqMHgQ12/"
+      data = m.as_json
+      assert_equal 1, airbrake_call_count
+    end
+    WebMock.disable!
+  end
+
+  test "should re-raise a wrapped error when redirected to challenge page" do
     WebMock.enable!
     WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/challenge?' })
 
-    PenderAirbrake.stubs(:notify).once
-    m = create_media url: "https://www.instagram.com/megadeth/"
-
-    data = m.as_json
-    assert_equal 'megadeth', data['external_id']
-    assert_equal 'profile', data['type']
-    assert_match /Page unavailable, encountered account_challenge_page/, data['raw']['api']['error']['message']
-    PenderAirbrake.unstub(:notify)
-    
+    airbrake_call_count = 0
+    arguments_checker = Proc.new do |e|
+      airbrake_call_count += 1
+      assert_equal Instagram::ApiError, e.class
+    end
+    PenderAirbrake.stub(:notify, arguments_checker) do
+      m = create_media url: "https://www.instagram.com/megadeth/"
+      data = m.as_json
+      assert_equal 1, airbrake_call_count
+    end
     WebMock.disable!
   end
 
