@@ -51,6 +51,7 @@ class InstagramTest < ActiveSupport::TestCase
     assert_equal '@megadeth', data['username']
     assert_equal 'profile', data['type']
     assert_match 'megadeth', data['title']
+    assert_equal 'https://www.instagram.com/megadeth', data['description']
 
     WebMock.disable!
   end
@@ -64,6 +65,8 @@ class InstagramTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'B6_wqMHgQ12', data['external_id']
     assert_equal 'item', data['type']
+    assert_equal 'https://www.instagram.com/p/B6_wqMHgQ12', data['title']
+    assert_equal 'https://www.instagram.com/p/B6_wqMHgQ12', data['description']
 
     WebMock.disable!
   end
