@@ -83,6 +83,7 @@ module MediaInstagramItem
     [
       { pattern: /^https:\/\/www\.instagram\.com\/accounts\/login/, reason: :login_page },
       { pattern: /^https:\/\/www\.instagram\.com\/challenge\?/, reason: :account_challenge_page },
+      { pattern: /^https:\/\/www\.instagram\.com\/privacy\/checks/, reason: :privacy_check_page },
     ]
   end
 end 
