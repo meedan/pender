@@ -10,14 +10,8 @@ class InstagramTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'CdOk-lLKmyH', data['external_id']
-    assert_equal '@ironmaiden', data['username']
-    assert_match 'When and where was your last Maiden show?', data['description']
-    assert_match 'When and where was your last Maiden show?', data['title']
-    assert_match 'Iron Maiden', data['author_name']
-    assert_equal 'https://instagram.com/ironmaiden', data['author_url']
-    assert_match /^http/, data['picture']
-    assert_match /^http/, data['author_picture']
-    assert_equal '2022-05-06T19:08:27.000+00:00', data['published_at']
+    assert !data['description'].blank?
+    assert !data['title'].blank?
   end
 
   test "should parse Instagram profile link for real" do
@@ -27,11 +21,7 @@ class InstagramTest < ActiveSupport::TestCase
     assert_equal 'ironmaiden', data['external_id']
     assert_equal '@ironmaiden', data['username']
     assert_match 'ironmaiden', data['title']
-    assert_match 'Iron Maiden', data['author_name']
     assert !data['description'].blank?
-    assert_match /^http/, data['picture']
-    assert_match /^http/, data['author_picture']
-    assert data['published_at'].blank?
   end
 
   test "should get canonical URL parsed from html tags 2" do
@@ -64,7 +54,7 @@ class InstagramTest < ActiveSupport::TestCase
     assert_equal '@megadeth', data['username']
     assert_equal 'profile', data['type']
     assert_match 'megadeth', data['title']
-    assert_equal 'https://www.instagram.com/megadeth', data['description']
+    assert_match 'https://www.instagram.com/megadeth', data['description']
 
     WebMock.disable!
   end
