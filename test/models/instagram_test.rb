@@ -41,6 +41,19 @@ class InstagramTest < ActiveSupport::TestCase
     assert_match /https:\/\/www.instagram.com\/p\/CAdW7PMlTWc/, media2.url
   end
 
+  test "should match different item url patterns" do
+    post_1 = create_media(url: 'https://www.instagram.com/p/CAdW7PMlTWc').as_json
+    post_2 = create_media(url: 'https://www.instagram.com/tv/CAdW7PMlTWc').as_json
+    post_3 = create_media(url: 'https://www.instagram.com/reel/CAdW7PMlTWc').as_json
+
+    assert_equal 'item', post_1['type']
+    assert_equal 'instagram', post_1['provider']
+    assert_equal 'item', post_2['type']
+    assert_equal 'instagram', post_2['provider']
+    assert_equal 'item', post_3['type']
+    assert_equal 'instagram', post_3['provider']
+  end
+
   test "should set profile defaults upon error" do
     WebMock.enable!
     WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: 'asdf', status: 200)

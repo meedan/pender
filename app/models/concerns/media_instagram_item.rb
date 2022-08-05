@@ -3,7 +3,7 @@ require 'instagram_exceptions'
 module MediaInstagramItem
   extend ActiveSupport::Concern
 
-  INSTAGRAM_URL = /^https?:\/\/(www\.)?instagram\.com\/(p|tv)\/([^\/]+)/
+  INSTAGRAM_URL = /^https?:\/\/(www\.)?instagram\.com\/(p|tv|reel)\/([^\/]+)/
 
   included do
     Media.declare('instagram_item', [INSTAGRAM_URL])
