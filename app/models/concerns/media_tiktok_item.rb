@@ -1,16 +1,16 @@
 module MediaTiktokItem
   extend ActiveSupport::Concern
 
-  TIKTOK_URL = /^https?:\/\/(www\.)?tiktok\.com\/(?<username>[^\/]+)\/video\/(?<id>[^\/|?]+)/
+  TIKTOK_ITEM_URL = /^https?:\/\/(www\.)?tiktok\.com\/(?<username>[^\/]+)\/video\/(?<id>[^\/|?]+)/
 
   included do
-    Media.declare('tiktok_item', [TIKTOK_URL])
+    Media.declare('tiktok_item', [TIKTOK_ITEM_URL])
   end
 
   def data_from_tiktok_item
     handle_exceptions(self, StandardError) do
       self.get_tiktok_api_data
-      match = self.url.match(TIKTOK_URL)
+      match = self.url.match(TIKTOK_ITEM_URL)
       self.data.merge!({
         username: match['username'],
         external_id: match['id'],

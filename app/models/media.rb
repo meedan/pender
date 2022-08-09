@@ -75,6 +75,7 @@ class Media
     if options.delete(:force) || Pender::Store.current.read(Media.get_id(self.original_url), :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
       self.data['title'] = self.url if self.data['title'].blank?
+      self.data['description'] = self.url if self.data['description'].blank?
       data = self.data.merge(Media.required_fields(self)).with_indifferent_access
       Pender::Store.current.write(Media.get_id(self.original_url), :json, cleanup_data_encoding(data))
       self.upload_images
