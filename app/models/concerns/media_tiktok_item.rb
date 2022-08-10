@@ -9,6 +9,8 @@ module MediaTiktokItem
 
   def data_from_tiktok_item
     handle_exceptions(self, StandardError) do
+      self.set_data_field('description', self.url)
+
       self.get_tiktok_api_data
       match = self.url.match(TIKTOK_ITEM_URL)
       self.data.merge!({

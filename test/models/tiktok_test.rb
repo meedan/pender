@@ -86,7 +86,7 @@ class TikTokUnitTest < ActiveSupport::TestCase
     assert_equal 'Huxley the Panda Puppy', data['title']
     assert_equal 'Huxley the Panda Puppy', data['author_name']
     assert_equal '@huxleythepandapuppy', data['external_id']
-    assert_match 'https://assets.path/medias/', data['picture']
+    assert_not_nil data['picture']
     assert_match 'https://www.tiktok.com/@huxleythepandapuppy', m.url
   end
 

@@ -14,13 +14,15 @@ module MediaInstagramItem
 
     handle_exceptions(self, StandardError) do
       self.data.merge!(external_id: id)
+      self.set_data_field('description', self.url)
 
       response_data = self.get_instagram_api_data("https://www.instagram.com/p/#{id}/?__a=1&__d=a")
       return if self.data['error']
       self.data['raw']['api'] = response_data.dig('items', 0)
 
       username = self.get_instagram_username_from_data
-      self.set_data_field('description', self.get_instagram_item_text_from_data)
+      # If we use set_data_field, it won't override the default value above
+      self.data['description'] = self.get_instagram_item_text_from_data
       self.set_data_field('username', username)
       self.set_data_field('title', self.get_instagram_item_text_from_data)
       self.set_data_field('picture', self.get_instagram_item_picture_from_data)

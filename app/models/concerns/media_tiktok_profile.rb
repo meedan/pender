@@ -16,6 +16,7 @@ module MediaTiktokProfile
     self.set_data_field('external_id', username)
     self.set_data_field('username', username)
     self.set_data_field('title', username)
+    self.set_data_field('description', self.url)
 
     handle_exceptions(self, StandardError) do
       reparse_if_default_tiktok_page

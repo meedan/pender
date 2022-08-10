@@ -13,6 +13,7 @@ module MediaInstagramProfile
     handle_exceptions(self, StandardError) do
       self.set_data_field('username', '@' + username)
       self.set_data_field('title', username)
+      self.set_data_field('description', self.url)
       self.data.merge!({ external_id: username })
 
       response_data = self.get_instagram_api_data(
@@ -21,7 +22,8 @@ module MediaInstagramProfile
       )
       return if self.data['error']
       self.data['raw']['api'] = response_data['data']
-      self.set_data_field('description', self.data.dig('raw', 'api', 'user', 'biography'))
+      # If we use set_data_field, it won't override the default value above
+      self.data['description'] = self.data.dig('raw', 'api', 'user', 'biography')
       self.set_data_field('picture', self.data.dig('raw', 'api', 'user', 'profile_pic_url'))
       self.set_data_field('author_name', self.data.dig('raw', 'api', 'user', 'full_name'))
       self.set_data_field('author_picture', self.data.dig('raw', 'api', 'user', 'profile_pic_url'))
