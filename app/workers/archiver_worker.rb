@@ -11,4 +11,3 @@ class ArchiverWorker
     Media.send("send_to_#{archiver}", url, key_id, supported)
   end
 end
-

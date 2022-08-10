@@ -9,7 +9,7 @@ module MediaFacebookEngagementMetrics
 
   def get_metrics_from_facebook
     facebook_id = self.data['uuid'] if is_a_facebook_post?
-    self.class.get_metrics_from_facebook(self.original_url, ApiKey.current&.id, 0, facebook_id)
+    MetricsWorker.perform_async(self.original_url, ApiKey.current&.id, 0, facebook_id)
   end
 
   def is_a_facebook_post?
@@ -17,6 +17,20 @@ module MediaFacebookEngagementMetrics
   end
 
   module ClassMethods
+    def get_metrics_from_facebook(url, key_id, count = 0, facebook_id = nil)
+      ApiKey.current = ApiKey.find_by(id: key_id)
+      begin
+        value = facebook_id ? self.crowdtangle_metrics(facebook_id) : self.request_metrics_from_facebook(url)
+        MetricsWorker.perform_in(24.hours, url, key_id, count + 1, facebook_id) if count < 10
+      rescue Pender::RetryLater
+        raise Pender::RetryLater, 'Metrics request failed'
+      rescue StandardError => e
+        value = {}
+        PenderAirbrake.notify("Facebook metrics: #{e.message}", url: url, key_id: ApiKey.current&.id)
+      end
+      Media.notify_webhook_and_update_metrics_cache(url, 'facebook', value, key_id)
+    end
+
     def request_metrics_from_facebook(url)
       engagement = {}
       PenderConfig.get('facebook_app', '').split(';').each do |fb_app|
@@ -35,20 +49,6 @@ module MediaFacebookEngagementMetrics
         end
       end
       engagement
-    end
-
-    def get_metrics_from_facebook(url, key_id, count = 0, facebook_id = nil)
-      ApiKey.current = ApiKey.find_by(id: key_id)
-      begin
-        value = facebook_id ? self.crowdtangle_metrics(facebook_id) : self.request_metrics_from_facebook(url)
-        MetricsWorker.perform_in(24.hours, url, key_id, count + 1, facebook_id) if count < 10
-      rescue Pender::RetryLater
-        raise Pender::RetryLater, 'Metrics request failed'
-      rescue StandardError => e
-        value = {}
-        PenderAirbrake.notify("Facebook metrics: #{e.message}", url: url, key_id: ApiKey.current&.id)
-      end
-      Media.notify_webhook_and_update_metrics_cache(url, 'facebook', value, key_id)
     end
 
     def verify_facebook_metrics_response(url, response)
