@@ -12,14 +12,18 @@ module MediaTiktokProfile
     self.url = match[0]
     username = match['username']
 
+    # Set defaults
+    self.set_data_field('external_id', username)
+    self.set_data_field('username', username)
+    self.set_data_field('title', username)
+    self.set_data_field('description', self.url)
+
     handle_exceptions(self, StandardError) do
       reparse_if_default_tiktok_page
       metatags = { picture: 'og:image', title: 'twitter:creator', description: 'description' }
       data.merge! get_html_metadata(self, metatags)
       self.set_data_field('author_name', data['title'], username)
       self.data.merge!({
-        username: username,
-        external_id: username,
         author_picture: data['picture'],
         author_url: self.url,
         url: self.url
