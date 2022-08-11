@@ -10,7 +10,7 @@ class MetricsTest < ActiveSupport::TestCase
     Sidekiq::Testing.fake! do
       m = create_media url: 'http://example.com'
       assert_difference 'MetricsWorker.jobs.size', 1 do
-        m.get_metrics
+        m.get_metrics_from_facebook_in_background
       end
       scheduled_job = MetricsWorker.jobs.first
       assert Time.at(scheduled_job['at']) > current_time
@@ -27,7 +27,7 @@ class MetricsTest < ActiveSupport::TestCase
     
     Sidekiq::Testing.fake! do
       m = create_media url: 'http://example.com'
-      m.get_metrics
+      m.get_metrics_from_facebook_in_background
       MetricsWorker.perform_one
 
       # Perform one removes the first, immediately enqueued background job

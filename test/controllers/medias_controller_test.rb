@@ -614,7 +614,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should enqueue, parse and notify with error when timeout" do
     Sidekiq::Testing.fake!
-    Media.any_instance.stubs(:get_metrics)
+    Media.any_instance.stubs(:get_metrics_from_facebook_in_background)
     webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
     a = create_api_key application_settings: webhook_info.merge(config: { timeout: '0.001' })
     authenticate_with_token(a)
@@ -633,7 +633,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_nil Pender::Store.current.read(id, :json)
     MediaParserWorker.drain
     assert_equal timeout_error, Pender::Store.current.read(id, :json)['error']
-    Media.any_instance.unstub(:get_metrics)
+    Media.any_instance.unstub(:get_metrics_from_facebook_in_background)
   end
 
   test "should return data with error message if can't parse" do
