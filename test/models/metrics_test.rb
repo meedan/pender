@@ -1,26 +1,29 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 
 class MetricsTest < ActiveSupport::TestCase
-  test 'should queue immediate background job to reqeust initial metrics from facebook' do
+  test 'should queue a near-term background job to reqeust initial metrics from facebook' do
     WebMock.enable!
-    WebMock.disable_net_connect!
+    WebMock.disable_net_connect!(allow: [/minio/])
     WebMock.stub_request(:get, /example.com/).to_return(status: 200, body: '')
+    current_time = Time.now
     
     Sidekiq::Testing.fake! do
       m = create_media url: 'http://example.com'
       assert_difference 'MetricsWorker.jobs.size', 1 do
         m.get_metrics
       end
-      enqueued_job = MetricsWorker.jobs.first
-      assert !enqueued_job['enqueued_at'].nil?
-      assert_nil enqueued_job['at']
+      scheduled_job = MetricsWorker.jobs.first
+      assert Time.at(scheduled_job['at']) > current_time
+      assert Time.at(scheduled_job['at']) < current_time + 1.minute
+      assert_nil scheduled_job['enqueued_at']
     end
   end
 
   test 'should queue follow-up background jobs to request metrics on following days' do
     WebMock.enable!
-    WebMock.disable_net_connect!
+    WebMock.disable_net_connect!(allow: [/minio/])
     WebMock.stub_request(:get, /example.com/).to_return(status: 200, body: '')
+    current_time = Time.now
     
     Sidekiq::Testing.fake! do
       m = create_media url: 'http://example.com'
@@ -29,8 +32,8 @@ class MetricsTest < ActiveSupport::TestCase
 
       # Perform one removes the first, immediately enqueued background job
       scheduled_job = MetricsWorker.jobs.first
-      assert Time.at(scheduled_job['at']) > Time.now + 12.hours
-      assert Time.at(scheduled_job['at']) < Time.now + 36.hours
+      assert Time.at(scheduled_job['at']) > current_time + 12.hours
+      assert Time.at(scheduled_job['at']) < current_time + 36.hours
       assert_nil scheduled_job['enqueued_at']
     end
   end

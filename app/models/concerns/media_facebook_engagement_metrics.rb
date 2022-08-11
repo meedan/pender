@@ -9,7 +9,9 @@ module MediaFacebookEngagementMetrics
 
   def get_metrics_from_facebook
     facebook_id = self.data['uuid'] if is_a_facebook_post?
-    MetricsWorker.perform_async(self.original_url, ApiKey.current&.id, 0, facebook_id)
+    # Delaying a bit to prevent race condition where initial request that creates
+    # record on Check API beats our metrics reporting
+    MetricsWorker.perform_in(10.seconds, self.original_url, ApiKey.current&.id, 0, facebook_id)
   end
 
   def is_a_facebook_post?
