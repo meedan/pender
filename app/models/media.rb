@@ -80,7 +80,7 @@ class Media
       self.upload_images
     end
     self.archive(options.delete(:archivers))
-    self.get_metrics
+    self.get_metrics_from_facebook_in_background
     Pender::Store.current.read(Media.get_id(self.original_url), :json)
   end
 

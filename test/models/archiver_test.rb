@@ -490,7 +490,7 @@ class ArchiverTest < ActiveSupport::TestCase
   test "should return false and add error to data when video archiving is not supported" do
     Media.unstub(:supported_video?)
     Media.any_instance.stubs(:parse)
-    Media.any_instance.stubs(:get_metrics)
+    Media.any_instance.stubs(:get_metrics_from_facebook_in_background)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
 
     Media.stubs(:system).returns(`(exit 0)`)
@@ -512,7 +512,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal '1 Unsupported URL', media_data.dig('archives', 'video_archiver', 'error', 'message')
 
     Media.any_instance.unstub(:parse)
-    Media.any_instance.unstub(:get_metrics)
+    Media.any_instance.unstub(:get_metrics_from_facebook_in_background)
     Media.any_instance.unstub(:system)
   end
 

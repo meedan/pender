@@ -3,11 +3,7 @@ require 'pender_exceptions'
 module MediaFacebookEngagementMetrics
   extend ActiveSupport::Concern
 
-  included do
-    Media.declare_metrics('facebook')
-  end
-
-  def get_metrics_from_facebook
+  def get_metrics_from_facebook_in_background
     facebook_id = self.data['uuid'] if is_a_facebook_post?
     # Delaying a bit to prevent race condition where initial request that creates
     # record on Check API beats our metrics reporting
