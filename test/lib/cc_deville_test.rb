@@ -48,7 +48,9 @@ class CcDevilleTest < ActiveSupport::TestCase
   end
 
   test "should handle connection errors to Cloudflare" do
-    WebMock.stub_request(:post, /api\.cloudflare\.com/).to_raise(Exception)
+    WebMock.enable!
+    WebMock.disable_net_connect!(allow: [/minio/])
+    WebMock.stub_request(:post, /api\.cloudflare\.com/).to_raise(Net::ReadTimeout.new('Exception from WebMock'))
     stub_configs({ 'cloudflare_auth_email' => 'foo', 'cloudflare_auth_key' => 'bar', 'cloudflare_zone' => 'baz' })
     mocked_method = MiniTest::Mock.new
     mocked_method.expect :call, :return_value, [String]
@@ -58,5 +60,6 @@ class CcDevilleTest < ActiveSupport::TestCase
     assert_nothing_raised do
       mocked_method.verify
     end
+    WebMock.disable!
   end
 end
