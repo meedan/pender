@@ -14,7 +14,7 @@ class MetricsTest < ActiveSupport::TestCase
       end
       scheduled_job = MetricsWorker.jobs.first
       assert Time.at(scheduled_job['at']) > current_time
-      assert Time.at(scheduled_job['at']) < current_time + 1.minute
+      assert Time.at(scheduled_job['at']) < current_time + 10.minutes
       assert_nil scheduled_job['enqueued_at']
     end
   end
