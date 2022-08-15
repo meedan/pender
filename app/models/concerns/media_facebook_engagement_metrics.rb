@@ -16,6 +16,7 @@ module MediaFacebookEngagementMetrics
 
   module ClassMethods
     def get_metrics_from_facebook(url, key_id, count = 0, facebook_id = nil)
+      Rails.logger.info level: 'INFO', message: "Requesting metrics from Facebook", url: url, key_id: ApiKey.current&.id, count: count, facebook_id: facebook_id
       ApiKey.current = ApiKey.find_by(id: key_id)
       begin
         value = facebook_id ? self.crowdtangle_metrics(facebook_id) : self.request_metrics_from_facebook(url)
@@ -24,6 +25,7 @@ module MediaFacebookEngagementMetrics
         raise Pender::RetryLater, 'Metrics request failed'
       rescue StandardError => e
         value = {}
+        Rails.logger.warn level: 'WARN', message: "Metrics request failed: #{e.message}", url: url, key_id: ApiKey.current&.id
         PenderAirbrake.notify("Facebook metrics: #{e.message}", url: url, key_id: ApiKey.current&.id)
       end
       Media.notify_webhook_and_update_metrics_cache(url, 'facebook', value, key_id)
@@ -34,7 +36,10 @@ module MediaFacebookEngagementMetrics
       PenderConfig.get('facebook_app', '').split(';').each do |fb_app|
         app_id, app_secret = fb_app.split(':')
         @locker = Semaphore.new(app_id)
-        next if @locker.locked?
+        if @locker.locked?
+          Rails.logger.warn level: 'WARN', message: "Skipping metrics request, app_id locked: #{app_id}", url: url, key_id: ApiKey.current&.id
+          next
+        end
         api = "https://graph.facebook.com/oauth/access_token?client_id=#{app_id}&client_secret=#{app_secret}&grant_type=client_credentials"
         response = Net::HTTP.get_response(URI(api))
         next unless verify_facebook_metrics_response(url, response)

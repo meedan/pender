@@ -124,6 +124,7 @@ class Media
       data['webhook_called'] = @webhook_called ? 1 : 0
       Pender::Store.current.write(id, :json, data)
     end
+    data
   end
 
   def self.notify_webhook(type, url, data, settings)
@@ -144,6 +145,8 @@ class Media
         Rails.logger.warn level: 'WARN', message: 'Failed to notify webhook', url: url, type: type, error_class: e.class, error_message: e.message, webhook_url: settings['webhook_url']
         return false
       end
+    else
+      Rails.logger.warn level: 'WARN', message: 'Webhook settings not configured for API key', url: url, type: type, api_key: ApiKey.current&.id
     end
     true
   end
