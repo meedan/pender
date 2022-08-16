@@ -18,6 +18,10 @@ echo "Starting application configuration. Processing ENV settings."
   if [ ! -f sidekiq.yml ]; then
     cp sidekiq.yml.example sidekiq.yml
   fi
+  if [ ! -f cookies.txt ]; then
+    # Copy a default cookie file into place, even if using S3 storage for cookies.
+    cp cookies.txt.example config/cookies.txt
+  fi
 
   # Generate sidekiq config from SSM:
   WORKTMP=$(mktemp)
