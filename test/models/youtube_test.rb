@@ -263,16 +263,16 @@ class YoutubeTest < ActiveSupport::TestCase
     response.stubs(:code).returns('302')
     response.stubs(:header).returns({ 'location' => consent_page })
     Media.any_instance.stubs(:request_media_url).returns(response)
-    url = 'https://www.youtube.com/watch?app=desktop&v=p8y8IzeF9u8&feature=youtu.be&ab_channel=Dra.RobertaLacerda'
+    url = 'https://www.youtube.com/watch?v=bEAdvXRJ9mU'
     m = create_media url: url
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'youtube', data['provider']
-    assert_match /desconstruir a eficácia da hidroxicloroquina/, data['title']
-    assert_match /desconstruir a eficácia da hidroxicloroquina/, data['description']
-    assert_equal 'https://www.youtube.com/channel/UCAw-vsuGe530nLru8vSYUcw', data['author_url']
+    assert_match /Co·Insights: Fostering community collaboration/, data['title']
+    assert_match /Co·Insights is a NSF-proposal to create/, data['description']
+    assert_equal 'https://www.youtube.com/channel/UCKyn6nCR9fXFhDL-WeeyOzQ', data['author_url']
     assert !data['html'].blank?
-    assert_equal 'https://www.youtube.com/watch?v=p8y8IzeF9u8', m.url
+    assert_equal 'https://www.youtube.com/watch?v=bEAdvXRJ9mU', m.url
     Media.any_instance.unstub(:request_media_url)
   end
 end
