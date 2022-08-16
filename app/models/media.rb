@@ -47,7 +47,7 @@ require 'postrank-uri'
 require 'nokogiri'
 
 class Media
-  [ActiveModel::Validations, ActiveModel::Conversion, MediasHelper, MediaOembed, MediaArchiver, MediaMetrics].each { |concern| include concern }
+  [ActiveModel::Validations, ActiveModel::Conversion, MediasHelper, MediaOembed, MediaArchiver].each { |concern| include concern }
   extend ActiveModel::Naming
 
   attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :unavailable_page
@@ -80,12 +80,34 @@ class Media
       self.upload_images
     end
     self.archive(options.delete(:archivers))
-    self.get_metrics_from_facebook_in_background
+    Metrics.get_metrics_from_facebook_in_background(self.data, self.original_url, ApiKey.current&.id)
     Pender::Store.current.read(Media.get_id(self.original_url), :json)
   end
 
   # Parsers and archivers
-  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaDropboxItem, MediaTiktokItem, MediaTiktokProfile, MediaKwaiItem, MediaPageItem, MediaOembedItem, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg, MediaPermaCcArchiver, MediaVideoArchiver, MediaFacebookEngagementMetrics, MediaCrowdtangleItem].each { |concern| include concern }
+  [
+    MediaYoutubeProfile,
+    MediaYoutubeItem,
+    MediaTwitterProfile,
+    MediaTwitterItem,
+    MediaFacebookProfile,
+    MediaFacebookItem,
+    MediaInstagramItem,
+    MediaInstagramProfile,
+    MediaDropboxItem, 
+    MediaTiktokItem, 
+    MediaTiktokProfile, 
+    MediaKwaiItem, 
+    MediaPageItem, 
+    MediaOembedItem, 
+    MediaArchiveIsArchiver, 
+    MediaArchiveOrgArchiver, 
+    MediaHtmlPreprocessor, 
+    MediaSchemaOrg, 
+    MediaPermaCcArchiver, 
+    MediaVideoArchiver, 
+    MediaCrowdtangleItem
+  ].each { |concern| include concern }
 
   def self.minimal_data(instance)
     data = {}
