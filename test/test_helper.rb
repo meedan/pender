@@ -52,7 +52,7 @@ class ActiveSupport::TestCase
     Media::ARCHIVERS['archive_org'][:enabled] = true
     ApiKey.current = Pender::Store.current = PenderConfig.current = nil
     clear_bucket
-    Media.stubs(:request_metrics_from_facebook).returns({ 'share_count' => 123 })
+    Metrics.stubs(:request_metrics_from_facebook).returns({ 'share_count' => 123 })
     Media.stubs(:supported_video?).returns(false)
   end
 

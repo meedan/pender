@@ -1068,7 +1068,6 @@ class MediaTest < ActiveSupport::TestCase
   # (crowdtangle_request and PenderConfig behavior)
   test "should not store crowdtangle data when id on response is different from request" do
     crowdtangle_data = {"result"=>{"posts"=>[{"platformId"=>"537326876328007_4451640454896610","platform"=>"Facebook","type"=>"native_video","message"=>"Attention‼️ ","account"=>{"id"=>1852061,"platform"=>"Facebook","platformId"=>"537326876328007"}}]}}
-    Media.unstub(:request_metrics_from_facebook)
     Media.any_instance.stubs(:get_crowdtangle_id).returns('563555033699775_1866497603524209')
     Media.stubs(:crowdtangle_request).returns(crowdtangle_data)
     url = 'https://www.facebook.com/watch/?v=1866497603524209'
@@ -1079,24 +1078,5 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /Cannot get data/, data['raw']['crowdtangle']['error']['message']
     Media.any_instance.unstub(:get_crowdtangle_id)
     Media.unstub(:crowdtangle_request)
-  end
-
-  test "should use api key config to get metrics and storage config if present" do
-    Media.unstub(:request_metrics_from_facebook)
-
-    url = 'https://www.google.com/'
-
-    ApiKey.current = PenderConfig.current = Pender::Store.current = nil
-    key_config = { facebook_app: 'fb-app-id:fb-app-secret', storage_endpoint: PenderConfig.get('storage_endpoint'), storage_access_key: PenderConfig.get('storage_access_key'), storage_secret_key: PenderConfig.get('storage_secret_key'), storage_bucket: 'my-bucket', storage_bucket_region: PenderConfig.get('storage_bucket_region'), storage_video_bucket: 'video-bucket', storage_video_asset_path: 'http://video.path', storage_medias_asset_path: 'http://medias.path'}
-    api_key = create_api_key application_settings: { config: key_config }
-    assert_raises Pender::RetryLater do
-      Media.get_metrics_from_facebook(url, api_key.id, 10)
-    end
-    assert_equal api_key, ApiKey.current
-    assert_equal api_key.settings[:config][:facebook_app], PenderConfig.current(:facebook_app)
-    %w(endpoint access_key secret_key bucket bucket_region video_bucket video_asset_path medias_asset_path).each do |key|
-      assert_equal api_key.settings[:config]["storage_#{key}"], PenderConfig.current("storage_#{key}"), "Expected #{key}"
-      assert_equal api_key.settings[:config]["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
-    end
   end
 end
