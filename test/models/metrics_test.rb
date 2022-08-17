@@ -1,26 +1,50 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 
 class MetricsIntegrationTest < ActiveSupport::TestCase
+  class AllTestFacebookAppsRateLimited < StandardError; end
+
   test "should get metrics from Facebook" do
-    fb_config = PenderConfig.get('facebook_test_app') || PenderConfig.get('facebook_app')
-    PenderConfig.current = nil
-    key = create_api_key application_settings: { config: { facebook_app: fb_config }}
-
-    url = 'https://www.google.com/'
-
-    # Make sure we don't send 10 requests to Facebook at once and get rate limited,
-    # since Sidekiq otherwise would perform the ten days of updates at once
-    Sidekiq::Worker.clear_all
-    Sidekiq::Testing.fake! do
-      m = create_media url: url, key: key
-      m.as_json
-
-      MetricsWorker.perform_one
-
-      id = Media.get_id(url)
-      data = Pender::Store.current.read(id, :json)
-      
-      assert data['metrics']['facebook']['share_count'] > 0
+    begin
+      fb_config = PenderConfig.get('facebook_test_app') || PenderConfig.get('facebook_app')
+      PenderConfig.current = nil
+      key = create_api_key application_settings: { config: { facebook_app: fb_config }}
+  
+      url = 'https://www.google.com/'
+  
+      # Make sure we don't send 10 requests to Facebook at once and get rate limited,
+      # since Sidekiq otherwise would perform the ten days of updates at once
+      Sidekiq::Worker.clear_all
+      Sidekiq::Testing.fake! do
+        m = create_media url: url, key: key
+        m.as_json
+  
+        # Perform once for each Facebook app we have in the configuration -
+        # in case we get rate limited on the first app id but not second
+        allowed_attempts = fb_config.split(";").count
+        attempts = 0
+        while attempts < allowed_attempts
+          begin
+            metrics = MetricsWorker.perform_one
+            if metrics.blank?
+              attempts += 1
+              next
+            else
+              break
+            end
+          rescue Pender::RetryLater => e
+            attempts += 1
+            next
+          end
+        end
+        raise AllTestFacebookAppsRateLimited if attempts == allowed_attempts
+  
+        id = Media.get_id(url)
+        data = Pender::Store.current.read(id, :json)
+        
+        assert data['metrics']['facebook']['share_count'] > 0
+      end
+    rescue AllTestFacebookAppsRateLimited => e
+      skip "All Facebook apps are being rate limited, skipping..."
     end
   end
 end
