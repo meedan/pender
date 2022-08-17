@@ -7,12 +7,21 @@ class MetricsIntegrationTest < ActiveSupport::TestCase
     key = create_api_key application_settings: { config: { facebook_app: fb_config }}
 
     url = 'https://www.google.com/'
-    m = create_media url: url, key: key
-    m.as_json
-    id = Media.get_id(url)
-    data = Pender::Store.current.read(id, :json)
-    
-    assert data['metrics']['facebook']['share_count'] > 0
+
+    # Make sure we don't send 10 requests to Facebook at once and get rate limited,
+    # since Sidekiq otherwise would perform the ten days of updates at once
+    Sidekiq::Worker.clear_all
+    Sidekiq::Testing.fake! do
+      m = create_media url: url, key: key
+      m.as_json
+
+      MetricsWorker.perform_one
+
+      id = Media.get_id(url)
+      data = Pender::Store.current.read(id, :json)
+      
+      assert data['metrics']['facebook']['share_count'] > 0
+    end
   end
 end
 
@@ -38,12 +47,11 @@ class MetricsUnitTest < ActiveSupport::TestCase
   def setup
     WebMock.enable!
     WebMock.disable_net_connect!(allow: [/minio/])
-    PenderConfig.current = nil
+    ApiKey.current = PenderConfig.current = Pender::Store.current = nil
     Semaphore.new(facebook_app_id).unlock
   end
   
   def teardown
-    PenderConfig.current = nil
     Semaphore.new(facebook_app_id).unlock
     Sidekiq::Worker.clear_all
     WebMock.reset!
@@ -226,5 +234,35 @@ class MetricsUnitTest < ActiveSupport::TestCase
     app_2_locker.unlock
     assert_equal false, app_2_locked_status
     assert_equal({"shares"=>"123"}, metrics)
+  end
+
+  test "should use api key config to get metrics and storage config if present" do
+    stub_facebook_oauth_request
+    stub_facebook_metrics_request
+    WebMock.stub_request(:any, /example.com\/storage-endpoint/).to_return(status: 200, body: {}.to_json)
+
+    ApiKey.current = PenderConfig.current = Pender::Store.current = nil
+    api_key = create_api_key application_settings: {
+      config: {
+        facebook_app: '1111:2222',
+        storage_endpoint: 'https://example.com/storage-endpoint',
+        storage_access_key: 'storage-access-key',
+        storage_secret_key: 'storage-secret-key',
+        storage_bucket: 'my-bucket',
+        storage_bucket_region: 'storage-bucket-region',
+        storage_video_bucket: 'video-bucket',
+        storage_video_asset_path: 'http://video.path',
+        storage_medias_asset_path: 'http://medias.path'
+      }
+    }
+
+    Metrics.get_metrics_from_facebook('http://example.com/trending-article', api_key.id)
+    
+    assert_equal api_key, ApiKey.current
+    assert_equal api_key.settings[:config][:facebook_app], PenderConfig.current(:facebook_app)
+    %w(endpoint access_key secret_key bucket bucket_region video_bucket video_asset_path medias_asset_path).each do |key|
+      assert_equal api_key.settings[:config]["storage_#{key}"], PenderConfig.current("storage_#{key}"), "Expected #{key}"
+      assert_equal api_key.settings[:config]["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
+    end
   end
 end

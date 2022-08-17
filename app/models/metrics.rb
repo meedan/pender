@@ -1,6 +1,13 @@
 module Metrics
   class << self
-    RETRYABLE_FACEBOOK_ERROR_CODES = [1, 4, 101]
+    RETRYABLE_FACEBOOK_ERROR_CODES = [
+      1, # Error validating client secret
+      101, # Missing client_id parameter
+    ]
+    FACEBOOK_RATE_LIMIT_CODES = [
+      4, # Application request limit reached
+      613, # Calls to graph_url_engagement_count have exceeded the rate of 10 calls per 3600 seconds
+    ]
 
     def get_metrics_from_facebook_in_background(data, original_url, key_id)
       facebook_id = data['uuid'] if is_a_facebook_post?(data)
@@ -76,13 +83,13 @@ module Metrics
       return true if response.code.to_i == 200
 
       error = JSON.parse(response.body)['error']
-      is_retryable = RETRYABLE_FACEBOOK_ERROR_CODES.include?(error['code'].to_i)
+      is_retryable = (RETRYABLE_FACEBOOK_ERROR_CODES + FACEBOOK_RATE_LIMIT_CODES).include?(error['code'].to_i)
 
       Rails.logger.warn level: 'WARN', message: "Facebook metrics error: #{error['code']} - #{error['message']}", url: url, key_id: ApiKey.current&.id, error: error, retryable: is_retryable
       PenderAirbrake.notify("Facebook metrics error: #{error['code']} - #{error['message']}", url: url, key_id: ApiKey.current&.id, error: error, retryable: is_retryable)
       return unless is_retryable
 
-      @locker.lock(3600) if error['code'].to_i == 4
+      @locker.lock(3600) if FACEBOOK_RATE_LIMIT_CODES.include?(error['code'].to_i)
       raise Pender::RetryLater, 'Metrics request failed'
     end
 
