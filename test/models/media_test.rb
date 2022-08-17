@@ -1069,7 +1069,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should not store crowdtangle data when id on response is different from request" do
     crowdtangle_data = {"result"=>{"posts"=>[{"platformId"=>"537326876328007_4451640454896610","platform"=>"Facebook","type"=>"native_video","message"=>"Attention‼️ ","account"=>{"id"=>1852061,"platform"=>"Facebook","platformId"=>"537326876328007"}}]}}
     Media.any_instance.stubs(:get_crowdtangle_id).returns('563555033699775_1866497603524209')
-    Media.stubs(:crowdtangle_request).returns(crowdtangle_data)
+    Metrics.stubs(:crowdtangle_request).returns(crowdtangle_data)
     url = 'https://www.facebook.com/watch/?v=1866497603524209'
     m = create_media url: url
     m.as_json

@@ -3,7 +3,7 @@ require_relative '../test_helper'
 class ArchiverWorkerTest < ActiveSupport::TestCase
 
   test "should update cache when video archiving fails the max retries" do
-    Media.any_instance.stubs(:get_metrics_from_facebook_in_background)
+    Metrics.stubs(:get_metrics_from_facebook_in_background)
     url = 'https://twitter.com/meedan/status/1202732707597307905'
     m = create_media url: url
     data = m.as_json
@@ -13,7 +13,7 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), data.dig('archives', 'video_archiver', 'error', 'code')
     assert_equal 'Test Archiver', data.dig('archives', 'video_archiver', 'error', 'message')
-    Media.any_instance.unstub(:get_metrics_from_facebook_in_background)
+    Metrics.unstub(:get_metrics_from_facebook_in_background)
   end
 
   test "should update cache when Archive.org fails the max retries" do
