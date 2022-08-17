@@ -83,7 +83,7 @@ class FacebookProfileTest < ActiveSupport::TestCase
   end
 
   test "should not get metrics from Facebook page" do
-    Media.unstub(:request_metrics_from_facebook)
+    Metrics.unstub(:request_metrics_from_facebook)
     Media.any_instance.stubs(:get_oembed_data)
     url = 'https://www.facebook.com/ironmaiden/'
     m = Media.new url: url
