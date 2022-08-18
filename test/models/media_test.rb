@@ -529,7 +529,9 @@ class MediaTest < ActiveSupport::TestCase
     m.data[:raw] = {}
     fields = %w(username description title picture html author_url)
     fields.each { |f| m.data[f] = f }
-    response = 'mock';response.expects(:code).returns('200');response.expects(:body).returns('{"type":"rich"}').twice;response.expects(:header).returns({})
+    response = 'mock'
+    response.expects(:body).returns('{"type":"rich"}').twice
+    
     m.stubs(:oembed_get_data_from_url).returns(response)
 
     oembed_data = m.data_from_oembed_item
@@ -537,7 +539,6 @@ class MediaTest < ActiveSupport::TestCase
     fields.each do |f|
       assert_equal f, m.data[f]
     end
-    m.unstub(:oembed_get_data_from_url)
   end
 
   test "should store json+ld data as a json string" do
@@ -550,21 +551,21 @@ class MediaTest < ActiveSupport::TestCase
 
     assert !m.data['raw']['json+ld'].empty?
     assert m.data['raw']['json+ld'].is_a? Hash
-    Media.any_instance.unstub(:doc)
   end
 
   test "should return empty html on oembed when script has http src" do
     Media.any_instance.stubs(:get_oembed_url).returns('https://www.politico.com/story/2017/09/07/facebook-fake-news-social-media-242407?_embed=true&_format=oembed')
     m = create_media url: 'https://politi.co/2j7qyT0'
     oembed = '{"version":"1.0","type":"rich","html":"<script type=\"text/javascript\" src=\"http://www.politico.com/story/2017/09/07/facebook-fake-news-social-media-242407?_embed=true&amp;_format=js\"></script>"}'
-    response = 'mock';response.expects(:code).returns('200');response.stubs(:body).returns(oembed)
-    Media.any_instance.stubs(:oembed_get_data_from_url).with(m.get_oembed_url).returns(response);response.expects(:header).returns({})
+    response = 'mock'
+    response.stubs(:body).returns(oembed)
+
+    Media.any_instance.stubs(:oembed_get_data_from_url).with(m.get_oembed_url).returns(response)
+    
     data = m.as_json
-    response = m.oembed_get_data_from_url(m.get_oembed_url)
-    assert_match /script.*src="http:\/\//, JSON.parse(response.body)['html']
+    oembed_response = m.oembed_get_data_from_url(m.get_oembed_url)
+    assert_match /script.*src="http:\/\//, JSON.parse(oembed_response.body)['html']
     assert_equal '', data['html']
-    Media.any_instance.unstub(:oembed_get_data_from_url)
-    Media.any_instance.unstub(:get_oembed_url)
   end
 
   test "should store ClaimReview schema" do

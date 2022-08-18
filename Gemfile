@@ -18,7 +18,7 @@ group :development do
 end
 group :test do
   gem 'parallel_tests'
-  gem "mocha", "~> 1.3.0", require: false
+  gem "mocha", "~> 1.14.0", require: false
   gem 'simplecov', '0.13.0', require: false
   gem 'simplecov-console', require: false
   gem 'codeclimate-test-reporter', '1.0.8', group: :test, require: nil
