@@ -73,11 +73,13 @@ class MetricsUnitTest < ActiveSupport::TestCase
     WebMock.disable_net_connect!(allow: [/minio/])
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
     Semaphore.new(facebook_app_id).unlock
+    Sidekiq::Testing.fake!
   end
   
   def teardown
     Semaphore.new(facebook_app_id).unlock
     Sidekiq::Worker.clear_all
+    Sidekiq::Testing.inline! # reset, to match current test_helper teardown
     WebMock.reset!
     WebMock.allow_net_connect!
     WebMock.disable!
@@ -89,15 +91,13 @@ class MetricsUnitTest < ActiveSupport::TestCase
 
     current_time = Time.now
     
-    Sidekiq::Testing.fake! do
-      assert_difference 'MetricsWorker.jobs.size', 1 do
-        Metrics.get_metrics_from_facebook_in_background({}, 'https://example.com/trending-article', key.id)
-      end
-      scheduled_job = MetricsWorker.jobs.first
-      assert Time.at(scheduled_job['at']) > current_time
-      assert Time.at(scheduled_job['at']) < current_time + 10.minutes
-      assert_nil scheduled_job['enqueued_at']
+    assert_difference 'MetricsWorker.jobs.size', 1 do
+      Metrics.get_metrics_from_facebook_in_background({}, 'https://example.com/trending-article', key.id)
     end
+    scheduled_job = MetricsWorker.jobs.first
+    assert Time.at(scheduled_job['at']) > current_time
+    assert Time.at(scheduled_job['at']) < current_time + 10.minutes
+    assert_nil scheduled_job['enqueued_at']
   end
 
   test 'should queue follow-up background jobs to request metrics on following days' do
@@ -106,18 +106,16 @@ class MetricsUnitTest < ActiveSupport::TestCase
 
     current_time = Time.now
     
-    Sidekiq::Testing.fake! do
-      Metrics.get_metrics_from_facebook_in_background({}, 'http://example.com/trending-article', key.id)
-      # Perform one removes the first, immediately enqueued background job
-      # and schedules the subsequent one
-      MetricsWorker.perform_one
+    Metrics.get_metrics_from_facebook_in_background({}, 'http://example.com/trending-article', key.id)
+    # Perform one removes the first, immediately enqueued background job
+    # and schedules the subsequent one
+    MetricsWorker.perform_one
 
-      assert MetricsWorker.jobs.count, 1
-      scheduled_job = MetricsWorker.jobs.first
-      assert Time.at(scheduled_job['at']) > current_time + 12.hours
-      assert Time.at(scheduled_job['at']) < current_time + 36.hours
-      assert_nil scheduled_job['enqueued_at']
-    end
+    assert MetricsWorker.jobs.count, 1
+    scheduled_job = MetricsWorker.jobs.first
+    assert Time.at(scheduled_job['at']) > current_time + 12.hours
+    assert Time.at(scheduled_job['at']) < current_time + 36.hours
+    assert_nil scheduled_job['enqueued_at']
   end
 
   test "should get metrics from Facebook when URL has non-ascii" do
@@ -150,12 +148,10 @@ class MetricsUnitTest < ActiveSupport::TestCase
       Hash
     ]
 
-    Sidekiq::Testing.fake! do
-      Media.stub(:crowdtangle_request, mock_crowdtangle_request) do
-        Media.stub(:notify_webhook, mock_notify_webhook) do
-          Metrics.get_metrics_from_facebook_in_background({ 'uuid' => 'uuid-1234', 'provider' => 'facebook', 'type' => 'item' }, 'http://example.com/facebook-trending-article', key)
-          MetricsWorker.perform_one
-        end
+    Media.stub(:crowdtangle_request, mock_crowdtangle_request) do
+      Media.stub(:notify_webhook, mock_notify_webhook) do
+        Metrics.get_metrics_from_facebook_in_background({ 'uuid' => 'uuid-1234', 'provider' => 'facebook', 'type' => 'item' }, 'http://example.com/facebook-trending-article', key)
+        MetricsWorker.perform_one
       end
     end
     mock_crowdtangle_request.verify
@@ -193,7 +189,7 @@ class MetricsUnitTest < ActiveSupport::TestCase
     end
 
     PenderAirbrake.stub(:notify, mocked_airbrake) do
-      Metrics.get_metrics_from_facebook('http://example.com/trending-article', key.id)
+      Metrics.get_metrics_from_facebook('http://example.com/trending-article-123', key.id)
     end
     mocked_airbrake.verify
   end
