@@ -53,29 +53,6 @@ class MediasHelperTest < ActionView::TestCase
     assert_equal '2018-08-20 22:05:01 +0000', verify_published_time('1534810765', '1534802701').to_s
   end
 
-  test "should get config from api key or default config" do
-    url = 'http://example.com'
-
-    key_with_timeout = create_api_key application_settings: { config: { timeout: 10 }}
-    key_without_config = create_api_key application_settings: {}
-    key_without_settings = create_api_key
-
-    m = Media.new url: url
-    assert_equal PenderConfig.get('timeout').to_i, m.timeout_value
-
-    PenderConfig.current = nil
-    m = Media.new url: url, key: key_with_timeout
-    assert_equal key_with_timeout.application_settings[:config][:timeout], m.timeout_value
-
-    PenderConfig.current = nil
-    m = Media.new url: url, key: key_without_config
-    assert_equal PenderConfig.get('timeout').to_i, m.timeout_value
-
-    PenderConfig.current = nil
-    m = Media.new url: url, key: key_without_settings
-    assert_equal PenderConfig.get('timeout').to_i, m.timeout_value
-  end
-
   test 'should validate proxies subkeys' do
     proxy_keys = [ 'host', 'port', 'user_prefix', 'pass', 'country_prefix', 'session_prefix' ]
     video_proxy_keys = [ 'host', 'port', 'user_prefix', 'pass' ]
