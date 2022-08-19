@@ -23,6 +23,23 @@ class ActiveSupport::TestCase
 
   include SampleData
 
+  # Shared setup/teardown for tests as we make
+  # the unit tests isolated
+  def isolated_setup
+    WebMock.enable!
+    WebMock.disable_net_connect!(allow: [/minio/])
+    Sidekiq::Testing.fake!
+    ApiKey.current = PenderConfig.current = Pender::Store.current = nil
+  end
+
+  def isolated_teardown
+    Sidekiq::Worker.clear_all
+    Sidekiq::Testing.inline! # reset, to match current test_helper teardown
+    WebMock.reset!
+    WebMock.allow_net_connect!
+    WebMock.disable!
+  end
+
   # This will run before any test
 
   def setup
