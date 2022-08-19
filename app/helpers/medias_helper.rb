@@ -17,10 +17,6 @@ module MediasHelper
     url
   end
 
-  def timeout_value
-    PenderConfig.get('timeout', 20).to_i
-  end
-
   def handle_exceptions(media, exception)
     begin
       yield
