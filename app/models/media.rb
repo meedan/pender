@@ -238,8 +238,7 @@ class Media
   end
 
   def add_scheme(url)
-    return url if url =~ /^https?:/
-    'http://' + url
+    RequestHelper.add_scheme(url)
   end
 
   def set_url_from_location(response, path)
@@ -261,32 +260,34 @@ class Media
     response
   end
 
-  def self.request_url(url, verb = 'Get')
-    uri = Media.parse_url(decoded_uri(url))
-    Media.request_uri(uri, verb)
-  end
+  ##
+  # Try to access the media `url` with HTTPS and it it succeeds, the media `url` is updated with the HTTPS version
 
-  def self.request_uri(uri, verb = 'Get')
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.read_timeout = PenderConfig.get('timeout', 30).to_i
-    http.use_ssl = uri.scheme == 'https'.freeze
-    headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }.merge(Media.get_cf_credentials(uri))
-    request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
-    request['Cookie'] = Media.set_cookies(uri)
-    proxy_config = Media.get_proxy(uri, :hash)
-    if proxy_config
-      proxy = Net::HTTP::Proxy(proxy_config['host'], proxy_config['port'], proxy_config['user'], proxy_config['pass'])
-      proxy.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http2|
-        http2.request(request)
+  def try_https
+    # Makes modifications to URL behavior
+    begin
+      uri = URI.parse(self.url)
+      unless (uri.kind_of?(URI::HTTPS))
+        self.url.gsub!(/^http:/i, 'https:')
+        Media.request_url(self.url, 'Get').value
       end
-    else
-      http.request(request)
+    rescue
+      self.url.gsub!(/^https:/i, 'http:')
     end
   end
 
+  def self.request_url(url, verb = 'Get')
+    RequestHelper.request_url(url, verb)
+  end
+
+  def self.request_uri(uri, verb = 'Get')
+    RequestHelper.request_uri(uri, verb)
+  end
+
+  # Request concern
   def get_html(header_options = {}, force_proxy = false)
     begin
-      uri = Media.parse_url(decoded_uri(self.url))
+      uri = Media.parse_url(Media.decoded_uri(self.url))
       proxy = Media.get_proxy(uri, :array, force_proxy)
       options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
       html = ''.freeze
@@ -313,73 +314,30 @@ class Media
   end
 
   def self.html_options(url)
-    uri = url.is_a?(String) ? Media.parse_url(url) : url
-    uri.host.match?(/twitter\.com/) ? Media.extended_headers(url) : { allow_redirections: :safe, proxy: nil, 'User-Agent' => 'Mozilla/5.0 (X11)', 'Accept' => '*/*', 'Accept-Language' => LANG, 'Cookie' => Media.set_cookies(uri) }.merge(Media.get_cf_credentials(uri))
+    RequestHelper.html_options(url)
   end
 
   def self.get_cf_credentials(uri)
-    hosts = PenderConfig.get('hosts', {}, :json)
-    config = hosts[uri.host]
-    if config && config.has_key?('cf_credentials')
-      id, secret = config['cf_credentials'].split(':')
-      credentials = { 'CF-Access-Client-Id' => id, 'CF-Access-Client-Secret' => secret }
-    end
-    credentials || {}
+    RequestHelper.get_cf_credentials(uri)
   end
 
   def top_url(url)
-    uri = Media.parse_url(url)
-    (uri.port == 80 || uri.port == 443) ? "#{uri.scheme}://#{uri.host}" : "#{uri.scheme}://#{uri.host}:#{uri.port}"
+    RequestHelper.top_url(url)
   end
 
   def absolute_url(path = '')
-    return self.url if path.blank?
-    if path =~ /^https?:/
-      path
-    elsif path =~ /^\/\//
-      Media.parse_url(self.url).scheme + ':' + path
-    elsif path =~ /^www\./
-      self.add_scheme(path)
-    else
-      self.top_url(self.url) + path
-    end
+    RequestHelper.absolute_url(self.url, path)
   end
 
   def self.parse_url(url)
-    URI.parse(URI.encode(url))
-  end
-
-  ##
-  # Try to access the media `url` with HTTPS and it it succeeds, the media `url` is updated with the HTTPS version
-
-  def try_https
-    begin
-      uri = URI.parse(self.url)
-      unless (uri.kind_of?(URI::HTTPS))
-        self.url.gsub!(/^http:/i, 'https:')
-        Media.request_url(self.url, 'Get').value
-      end
-    rescue
-      self.url.gsub!(/^https:/i, 'http:')
-    end
+    RequestHelper.parse_url(url)
   end
 
   def redirect_https_to_http?(header_options, message)
-    message.match?('redirection forbidden') && header_options[:allow_redirections] != :all
+    RequestHelper.redirect_https_to_http?(header_options, message)
   end
 
   def self.set_cookies(uri)
-    empty = ''.freeze
-    begin
-      host = PublicSuffix.parse(uri.host).domain
-      cookies = []
-      PenderConfig.get('cookies', {}).each do |domain, content|
-        next unless domain.match?(host)
-        content.each { |k, v| cookies << "#{k}=#{v}" }
-      end
-      cookies.empty? ? empty : cookies.join('; '.freeze)
-    rescue
-      empty
-    end
+    RequestHelper.set_cookies(uri)
   end
 end
