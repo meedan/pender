@@ -123,15 +123,7 @@ class Media
   end
 
   def self.validate_url(url)
-    begin
-      uri = URI.parse(URI.encode(url))
-      return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
-      Media.request_url(url, 'Get')
-    rescue OpenSSL::SSL::SSLError, URI::InvalidURIError, SocketError => e
-      PenderAirbrake.notify(e, url: url)
-      Rails.logger.warn level: 'WARN', message: '[Parser] Invalid URL', url: url, error_class: e.class, error_message: e.message
-      return false
-    end
+    RequestHelper.validate_url(url)
   end
 
   def self.get_id(url)
@@ -216,7 +208,7 @@ class Media
   end
 
   def self.normalize_url(url)
-    PostRank::URI.normalize(url).to_s
+    RequestHelper.normalize_url(url)
   end
 
   ##

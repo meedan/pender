@@ -1,7 +1,11 @@
 class RequestHelper
   class << self
     LANG = 'en-US;q=0.6,en;q=0.4'
-    
+
+    def normalize_url(url)
+      PostRank::URI.normalize(url).to_s
+    end
+
     def html_options(url)
       uri = url.is_a?(String) ? self.parse_url(url) : url
       uri.host.match?(/twitter\.com/) ? self.extended_headers(url) : { allow_redirections: :safe, proxy: nil, 'User-Agent' => 'Mozilla/5.0 (X11)', 'Accept' => '*/*', 'Accept-Language' => LANG, 'Cookie' => self.set_cookies(uri) }.merge(self.get_cf_credentials(uri))
