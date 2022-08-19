@@ -69,20 +69,13 @@ class MetricsUnitTest < ActiveSupport::TestCase
   end
 
   def setup
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    ApiKey.current = PenderConfig.current = Pender::Store.current = nil
+    isolated_setup
     Semaphore.new(facebook_app_id).unlock
-    Sidekiq::Testing.fake!
   end
   
   def teardown
+    isolated_teardown
     Semaphore.new(facebook_app_id).unlock
-    Sidekiq::Worker.clear_all
-    Sidekiq::Testing.inline! # reset, to match current test_helper teardown
-    WebMock.reset!
-    WebMock.allow_net_connect!
-    WebMock.disable!
   end
 
   test 'should queue a near-term background job to request initial metrics from facebook' do

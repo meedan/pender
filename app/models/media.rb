@@ -85,6 +85,10 @@ class Media
   end
 
   # Parsers and archivers
+  PARSERS = [
+    MediaKwaiItem, 
+  ]
+
   [
     MediaYoutubeProfile,
     MediaYoutubeItem,
@@ -97,7 +101,6 @@ class Media
     MediaDropboxItem, 
     MediaTiktokItem, 
     MediaTiktokProfile, 
-    MediaKwaiItem, 
     MediaPageItem, 
     MediaOembedItem, 
     MediaArchiveIsArchiver, 
@@ -173,17 +176,30 @@ class Media
     get_jsonld_data(self)
     get_schema_data unless self.doc.nil?
     parsed = false
-    TYPES.each do |type, patterns|
-      patterns.each do |pattern|
-        if pattern.match?(self.url)
-          self.provider, self.type = type.split('_')
-          self.send("data_from_#{type}")
-          self.get_oembed_data
-          parsed = true
-          break
-        end
+
+    PARSERS.each do |parser|
+      if parseable = parser.match?(self.url)
+        self.provider, self.type = parseable.type.split('_')
+        self.data.merge!(parseable.parse_data(self.doc))
+        self.get_oembed_data
+        parsed = true
       end
       break if parsed
+    end
+
+    unless parsed
+      TYPES.each do |type, patterns|
+        patterns.each do |pattern|
+          if pattern.match?(self.url)
+            self.provider, self.type = type.split('_')
+            self.send("data_from_#{type}")
+            self.get_oembed_data
+            parsed = true
+            break
+          end
+        end
+        break if parsed
+      end
     end
     cleanup_html_entities(self)
   end
