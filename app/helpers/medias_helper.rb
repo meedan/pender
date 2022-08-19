@@ -100,7 +100,7 @@ module MediasHelper
   end
 
   def decoded_uri(url)
-    Media.decoded_uri(url)
+    RequestHelper.decoded_uri(url)
   end
 
   def verify_published_time(time1, time2 = nil)
@@ -205,6 +205,8 @@ module MediasHelper
     end
   end
 
+  # This will be replaced once parsers migrated, but 
+  # we need different behavior here for now
   def ignore_url?(url)
     ignore_url = false
     Media::TYPES.keys.map { |type| type[/(.+)_(item|profile)$/, 1] }.uniq.each do |provider|
@@ -223,11 +225,7 @@ module MediasHelper
 
   Media.class_eval do
     def self.decoded_uri(url)
-      begin
-        URI.decode(url)
-      rescue Encoding::CompatibilityError
-        url
-      end
+      RequestHelper.decoded_uri(url)
     end
 
     def self.api_key_settings(key_id)
@@ -236,47 +234,19 @@ module MediasHelper
     end
 
     def self.valid_proxy(config_key = 'proxy')
-      subkeys = [:host, :port, :pass, :user_prefix]
-      subkeys += [:country_prefix, :session_prefix] if config_key == 'proxy'.freeze
-      proxy = {}.with_indifferent_access
-      subkeys.each do |config|
-        value = PenderConfig.get("#{config_key}_#{config}")
-        return nil if value.blank?
-        proxy[config] = value
-      end
-      proxy
+      RequestHelper.valid_proxy(config_key)
     end
 
     def self.get_proxy(uri, format = :array, force = false)
-      proxy = Media.valid_proxy
-      if proxy || force
-        country = force ? 'us' : PenderConfig.get('hosts', {}, :json).dig(uri.host, 'country')
-        if uri.host.match?(/(facebook|tiktok|instagram)\.com/)
-          proxy['user'] = proxy['user_prefix'] + proxy['country_prefix'] + 'us' + proxy['session_prefix'] + Random.rand(100000).to_s
-        elsif country
-          proxy['user'] = proxy['user_prefix'] + proxy['country_prefix'] + country
-        end
-        proxy_format(proxy, format)
-      end
+      RequestHelper.get_proxy(uri, format, force)
     end
 
     def self.proxy_format(proxy, format = :array)
-      return nil unless proxy['user']
-      if format == :array
-        ["http://#{proxy['host']}:#{proxy['port']}", proxy['user'], proxy['pass']]
-      else
-        proxy
-      end
+      RequestHelper.valid_proxy(proxy, format)
     end
 
     def self.extended_headers(uri = nil)
-      uri = Media.parse_url(decoded_uri(uri)) if uri.is_a?(String)
-      ({
-        'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
-        'Accept' =>  'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-        'Accept-Language' => 'en-US',
-        'Cookie' => Media.set_cookies(uri)
-      })
+      RequestHelper.extended_headers(uri)
     end
   end
 end

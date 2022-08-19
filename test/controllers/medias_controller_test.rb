@@ -887,14 +887,16 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return 200 when raises error parsing" do
+    WebMock.enable!
+    WebMock.disable_net_connect!(allow: [/minio/])
+    WebMock.stub_request(:any, /example.com/).to_raise(Errno::ECONNRESET.new('Exception from WebMock'))
+    
     authenticate_with_token
-    url = 'https://scotthale.net/'
-    Media.stubs(:request_uri).raises(Errno::ECONNRESET.new('SSL_connect'))
+    url = 'https://example.com/fail-to-parse'
     get :index, params: { url: url, format: :json }
     assert_response 200
     assert_equal url, JSON.parse(@response.body)['data']['title']
     assert_equal LapisConstants::ErrorCodes::const_get('UNKNOWN'), JSON.parse(@response.body)['data']['error']['code']
-    Media.unstub(:request_uri)
   end
 
   test "should return 200 when duplicated url" do
