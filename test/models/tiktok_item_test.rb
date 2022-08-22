@@ -1,20 +1,7 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 require 'cc_deville'
 
-class TiktokIntegrationTest < ActiveSupport::TestCase
-  test "should parse Tiktok profile for real" do
-    m = create_media url: 'https://www.tiktok.com/@scout2015'
-    data = m.as_json
-    assert_equal '@scout2015', data['username']
-    assert_equal 'profile', data['type']
-    assert_equal 'tiktok', data['provider']
-    assert !data['title'].blank?
-    assert !data['author_name'].blank?
-    assert_equal '@scout2015', data['external_id']
-    assert_match 'https://www.tiktok.com/@scout2015', m.url
-    assert_nil data['error']
-  end
-
+class TiktokItemIntegrationTest < ActiveSupport::TestCase
   test "should parse Tiktok item for real" do
     m = create_media url: 'https://www.tiktok.com/@scout2015/video/6771039287917038854'
     data = m.as_json
@@ -54,15 +41,23 @@ class TiktokIntegrationTest < ActiveSupport::TestCase
   end
 end
 
-class TikTokUnitTest < ActiveSupport::TestCase
+class TiktokItemUnittTest < ActiveSupport::TestCase
   def setup
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow_localhost: true, allow: [/minio/])
+    isolated_setup
+
     WebMock.stub_request(:post, /safebrowsing.googleapis.com/).to_return(status: 200, body: { matches: [] }.to_json )
     WebMock.stub_request(:get, /graph.facebook.com/).to_return(status: 200, body: '' )
     WebMock.stub_request(:get, /tiktokcdn.com/).to_return(status: 200, body: '' )
 
     WebMock.stub_request(:any, /www.tiktok.com/).to_return(body: '', status: 200)
+  end
+
+  def teardown
+    isolated_teardown
+  end
+
+  test "returns provider and type" do
+    assert_equal Parser::DropboxItem.type, 'dropbox_item'
   end
 
   test "should parse Tiktok profile with proxy if title is the site name" do

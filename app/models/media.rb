@@ -10,7 +10,7 @@
 # canonical url and normalize it before parsing.
 #
 # There are specific parsers for +Youtube+, +Twitter+, +Facebook+, +Instagram+,
-# +Dropbox+ and +oEmbed+.
+# +Dropbox+, +TikTok+, and +oEmbed+.
 # When the url cannot be parsed by a specific parser, it is parsed as a
 # generic page.
 #
@@ -87,6 +87,7 @@ class Media
   # Parsers and archivers
   PARSERS = [
     Parser::DropboxItem,
+    Parser::TiktokProfile,
     Parser::KwaiItem, 
   ]
 
@@ -99,13 +100,14 @@ class Media
     MediaFacebookItem,
     MediaInstagramItem,
     MediaInstagramProfile,
+    # MediaDropboxItem,
     MediaTiktokItem, 
-    MediaTiktokProfile, 
+    # MediaTiktokProfile, 
+    # MediaKwaiItem,
     MediaPageItem, 
     MediaOembedItem, 
     MediaArchiveIsArchiver, 
     MediaArchiveOrgArchiver, 
-    MediaHtmlPreprocessor, 
     MediaSchemaOrg, 
     MediaPermaCcArchiver, 
     MediaVideoArchiver, 
@@ -292,33 +294,13 @@ class Media
     RequestHelper.request_uri(uri, verb)
   end
 
-  # Request concern
   def get_html(header_options = {}, force_proxy = false)
-    begin
-      uri = Media.parse_url(Media.decoded_uri(self.url))
-      proxy = Media.get_proxy(uri, :array, force_proxy)
-      options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
-      html = ''.freeze
-      OpenURI.open_uri(uri, options.merge(read_timeout: PenderConfig.get('timeout', 30).to_i)) do |f|
-        f.binmode
-        html = f.read
-      end
-      Nokogiri::HTML preprocess_html(html)
-    rescue OpenURI::HTTPError, Errno::ECONNRESET => e
-      if force_proxy
-        PenderAirbrake.notify(e, url: self.url)
-        Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: self.url, error_class: e.class, error_message: e.message
-        self.data[:error] = { message: 'URL Not Found', code: LapisConstants::ErrorCodes::const_get('NOT_FOUND')}
-        return nil
-      end
-      self.get_html(header_options, true)
-    rescue Zlib::DataError, Zlib::BufError
-      self.get_html(Media.html_options(self.url).merge('Accept-Encoding' => 'identity'))
-    rescue RuntimeError => e
-      PenderAirbrake.notify(e, url: self.url) if !redirect_https_to_http?(header_options, e.message)
-      Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: self.url, error_class: e.class, error_message: e.message
-      return nil
-    end
+    RequestHelper.get_html(self.url, set_error, header_options, force_proxy)
+  end
+
+  def set_error(**error_hash)
+    return if error_hash.empty?
+    self.data[:error] = error_hash
   end
 
   def self.html_options(url)

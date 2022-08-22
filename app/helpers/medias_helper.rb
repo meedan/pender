@@ -82,10 +82,6 @@ module MediasHelper
     empty
   end
 
-  def list_formats
-    %w(html js json oembed)
-  end
-
   ##
   # Remove HTML entities from standard text fields
 

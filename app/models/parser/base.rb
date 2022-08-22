@@ -28,16 +28,28 @@ module Parser
       @parsed_data = {}.with_indifferent_access
     end
   
-    # We may want to change signature of this, and move metatag
-    # parsing into this function (from where it currently resides in Media).
-    # Then we'd only have to pass the HTML doc
-    def parse_data(doc, data)
+    def parse_data(doc)
       raise NotImplementedError.new("Parser subclasses must implement parse_data")
     end
   
     attr_reader :url, :parsed_data
     
     protected
+
+    # Error-setting callback for RequestHelper.get_html
+    def set_error(**error_hash)
+      return if error_hash.empty?
+      @parsed_data[:error] = error_hash
+    end
+
+    def set_data_field(field, *values)
+      return parsed_data[field] unless parsed_data[field].blank?
+      values.each do |value|
+        next if value.blank?
+        @parsed_data[field] = value
+        break
+      end
+    end
     
     def get_html_metadata(doc, metatags)
       raw_metatags = []

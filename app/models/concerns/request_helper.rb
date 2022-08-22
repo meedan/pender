@@ -2,6 +2,34 @@ class RequestHelper
   class << self
     LANG = 'en-US;q=0.6,en;q=0.4'
 
+    def get_html(url, set_error_callback, header_options = {}, force_proxy = false)
+      begin
+        uri = RequestHelper.parse_url(RequestHelper.decoded_uri(url))
+        proxy = Media.get_proxy(uri, :array, force_proxy)
+        options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
+        html = ''.freeze
+        OpenURI.open_uri(uri, options.merge(read_timeout: PenderConfig.get('timeout', 30).to_i)) do |f|
+          f.binmode
+          html = f.read
+        end
+        Nokogiri::HTML HtmlPreprocessor.preprocess_html(html)
+      rescue OpenURI::HTTPError, Errno::ECONNRESET => e
+        if force_proxy
+          PenderAirbrake.notify(e, url: url)
+          Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
+          set_error_callback(message: 'URL Not Found', code: LapisConstants::ErrorCodes::const_get('NOT_FOUND'))
+          return nil
+        end
+        get_html(url, header_options, true)
+      rescue Zlib::DataError, Zlib::BufError
+        get_html(url, Media.html_options(url).merge('Accept-Encoding' => 'identity'))
+      rescue RuntimeError => e
+        PenderAirbrake.notify(e, url: url) if !redirect_https_to_http?(header_options, e.message)
+        Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
+        return nil
+      end
+    end
+
     def normalize_url(url)
       PostRank::URI.normalize(url).to_s
     end
@@ -63,13 +91,14 @@ class RequestHelper
     # NEED TO REFACTOR TO INCLUDE LOGIC IN PARSER
     # In MediasHelper
     # Seems like something we need to have in Parser
+    # Data currently used in FBProfile and Instagram
     def ignore_url?(url)
       # Data needed:
         # Media::Types (ok)
       # Methods needed:
         # ignore_#{provider}_urls
       # Data set:
-        # None
+        # self.unavailable_page
       # Data returned:
         # Boolean (do I ignore this URL or not?)
       ignore_url = false

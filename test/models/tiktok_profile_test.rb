@@ -1,0 +1,96 @@
+require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
+require 'cc_deville'
+
+class TiktokProfileIntegrationTest < ActiveSupport::TestCase
+  test "should parse Tiktok profile for real" do
+    m = create_media url: 'https://www.tiktok.com/@scout2015?is_from_webapp=1&sender_device=pc&web_id=7064890017416234497'
+    data = m.as_json
+    assert_equal '@scout2015', data['username']
+    assert_equal 'profile', data['type']
+    assert_equal 'tiktok', data['provider']
+    assert !data['title'].blank?
+    assert !data['author_name'].blank?
+    assert_equal '@scout2015', data['external_id']
+    assert_match 'https://www.tiktok.com/@scout2015', m.url
+    assert_nil data['error']
+  end
+end
+
+class TikToProfileUnitTest < ActiveSupport::TestCase
+  def setup
+    isolated_setup
+  end
+
+  def teardown
+    isolated_teardown
+  end
+
+  def doc
+    @doc ||= html_doc_from_file('page-tiktok-profile')
+  end
+
+  test "returns provider and type" do
+    assert_equal Parser::TiktokProfile.type, 'tiktok_profile'
+  end
+
+  test "matches known URL patterns, and returns instance on success" do
+    assert_nil Parser::TiktokProfile.match?('https://example.com')
+    
+    match_one = Parser::TiktokProfile.match?('https://www.tiktok.com/@fakeaccount')
+    assert_equal true, match_one.is_a?(Parser::TiktokProfile)
+  end
+  
+  test "assigns values to hash from the HTML doc" do
+    data = Parser::TiktokProfile.new('https://www.tiktok.com/@fakeaccount').parse_data(doc)
+
+    assert_equal '@fakeaccount', data['external_id']
+    assert_equal '@fakeaccount', data['username']
+    assert_match /Huxley the Panda Puppy🐼🐶\(pandaloon \(@huxleythepandapuppy\) on TikTok/, data['description']
+    assert_match 'https://www.tiktok.com/@fakeaccount', data['author_url']
+    assert_match 'https://www.tiktok.com/@fakeaccount', data['url']
+    assert_not_nil data['picture']
+    assert_not_nil data['author_picture']
+    # Data doesn't seem to actually be assigned to twitter:creator, where we look
+    # for it for title and author_name, but is included with the json+ld, which is 
+    # set outside of this object before parsing
+    assert_not_nil data['title']
+    assert_not_nil data['author_name']
+  end
+
+  test "should set profile defaults upon error" do
+    Parser::TiktokProfile.any_instance.stubs(:reparse_if_default_tiktok_page).raises(NoMethodError.new("Fake error raised for tests"))
+
+    data = Parser::TiktokProfile.new('https://www.tiktok.com/@fakeaccount?is_from_webapp=1&sender_device=pc').parse_data(doc)
+
+    assert_equal '@fakeaccount', data['external_id']
+    assert_equal '@fakeaccount', data['username']
+    assert_match '@fakeaccount', data['title']
+    assert_match '@fakeaccount', data['author_name']
+    assert_match 'https://www.tiktok.com/@fakeaccount', data['description']
+  end
+
+  test "should parse Tiktok profile with proxy if title is the site name" do
+    blank_page = '<html><head><title>TikTok</title></head><body></body></html>'
+    url = 'https://www.tiktok.com/@fakeaccount'
+
+    header_options = RequestHelper.html_options(url)
+    RequestHelper.stubs(:get_html).with(url, header_options, false).returns(Nokogiri::HTML(blank_page))
+    RequestHelper.stubs(:get_html).with(url, header_options, true).returns(doc)
+    
+    parser = Parser::TiktokProfile.new(url)
+    data = parser.parse_data(Nokogiri::HTML(blank_page))
+
+    assert_equal '@fakeaccount', data['external_id']
+    assert_equal '@fakeaccount', data['username']
+    assert_match /Huxley the Panda Puppy🐼🐶\(pandaloon \(@huxleythepandapuppy\) on TikTok/, data['description']
+    assert_match 'https://www.tiktok.com/@fakeaccount', data['author_url']
+    assert_match 'https://www.tiktok.com/@fakeaccount', data['url']
+    assert_not_nil data['picture']
+    assert_not_nil data['author_picture']
+    # Data doesn't seem to actually be assigned to twitter:creator, where we look
+    # for it for title and author_name, but is included with the json+ld, which is 
+    # set outside of this object before parsing
+    assert_not_nil data['title']
+    assert_not_nil data['author_name']
+  end
+end
