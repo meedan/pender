@@ -86,7 +86,8 @@ class Media
 
   # Parsers and archivers
   PARSERS = [
-    MediaKwaiItem, 
+    ParserDropboxItem,
+    ParserKwaiItem, 
   ]
 
   [
@@ -98,7 +99,6 @@ class Media
     MediaFacebookItem,
     MediaInstagramItem,
     MediaInstagramProfile,
-    MediaDropboxItem, 
     MediaTiktokItem, 
     MediaTiktokProfile, 
     MediaPageItem, 
@@ -172,7 +172,6 @@ class Media
 
   def parse
     self.data.merge!(Media.minimal_data(self))
-    get_metatags(self)
     get_jsonld_data(self)
     get_schema_data unless self.doc.nil?
     parsed = false
@@ -191,6 +190,7 @@ class Media
       TYPES.each do |type, patterns|
         patterns.each do |pattern|
           if pattern.match?(self.url)
+            get_metatags(self)
             self.provider, self.type = type.split('_')
             self.send("data_from_#{type}")
             self.get_oembed_data
