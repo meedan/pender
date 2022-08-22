@@ -86,8 +86,8 @@ class Media
 
   # Parsers and archivers
   PARSERS = [
-    ParserDropboxItem,
-    ParserKwaiItem, 
+    Parser::DropboxItem,
+    Parser::KwaiItem, 
   ]
 
   [

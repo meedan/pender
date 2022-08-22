@@ -23,22 +23,22 @@ class KwaiUnitTest <  ActiveSupport::TestCase
   end
 
   test "returns provider and type" do
-    assert_equal ParserKwaiItem.type, 'kwai_item'
+    assert_equal Parser::KwaiItem.type, 'kwai_item'
   end
 
   test "matches known kwai URL patterns, and returns instance on success" do
-    assert_nil ParserKwaiItem.match?('https://example.com')
+    assert_nil Parser::KwaiItem.match?('https://example.com')
     
-    match_one = ParserKwaiItem.match?('https://s.kw.ai/p/1mCb9SSh')
-    assert_equal true, match_one.is_a?(ParserKwaiItem)
-    match_two = ParserKwaiItem.match?('https://m.kwai.com/photo/150000228494834/5222636779124848117')
-    assert_equal true, match_two.is_a?(ParserKwaiItem)
+    match_one = Parser::KwaiItem.match?('https://s.kw.ai/p/1mCb9SSh')
+    assert_equal true, match_one.is_a?(Parser::KwaiItem)
+    match_two = Parser::KwaiItem.match?('https://m.kwai.com/photo/150000228494834/5222636779124848117')
+    assert_equal true, match_two.is_a?(Parser::KwaiItem)
   end
 
   test "assigns values to hash from the HTML doc" do
     doc = html_doc_from_file('page-kwai')
 
-    data = ParserKwaiItem.new('https://s.kw.ai/p/example').parse_data(doc)
+    data = Parser::KwaiItem.new('https://s.kw.ai/p/example').parse_data(doc)
     assert_equal 'A special video', data[:title]
     assert_equal 'A special video', data[:description]
     assert_equal 'Reginaldo Silva2871', data[:author_name]
@@ -52,7 +52,7 @@ class KwaiUnitTest <  ActiveSupport::TestCase
     data = nil
     empty_doc = Nokogiri::HTML('')
     PenderAirbrake.stub(:notify, mocked_airbrake) do
-      data = ParserKwaiItem.new('https://s.kw.ai/p/example').parse_data(empty_doc)
+      data = Parser::KwaiItem.new('https://s.kw.ai/p/example').parse_data(empty_doc)
     end
     mocked_airbrake.verify
     assert_equal 1, data.keys.count
