@@ -104,4 +104,10 @@ class ActiveSupport::TestCase
     results.puts(data.join(';'))
     results.close
   end
+
+  def html_doc_from_file(fixture_name)
+    doc = ''
+    open("test/data/#{fixture_name}.html") { |f| doc = f.read }
+    Nokogiri::HTML(doc)
+  end
 end
