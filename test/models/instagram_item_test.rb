@@ -1,5 +1,4 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
-require 'instagram_exceptions'
 class InstagramItemIntegrationTest < ActiveSupport::TestCase
   test "should parse Instagram item link for real" do
     m = Media.new url: 'https://www.instagram.com/p/CdOk-lLKmyH/'
@@ -8,6 +7,12 @@ class InstagramItemIntegrationTest < ActiveSupport::TestCase
     assert_equal 'CdOk-lLKmyH', data['external_id']
     assert !data['description'].blank?
     assert !data['title'].blank?
+  end
+
+  # TODO: Move this to unit test for canonical URL parsing
+  test "should get canonical URL parsed from html tags" do
+    media1 = create_media url: 'https://www.instagram.com/p/CAdW7PMlTWc/?taken-by=kikoloureiro'
+    assert_match /https:\/\/www.instagram.com\/p\/CAdW7PMlTWc/, media1.url
   end
 end
 
@@ -64,14 +69,14 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     airbrake_call_count = 0
     arguments_checker = Proc.new do |e|
       airbrake_call_count += 1
-      assert_equal Instagram::ApiError, e.class
+      assert_equal ProviderInstagram::ApiError, e.class
     end
 
     PenderAirbrake.stub(:notify, arguments_checker) do
       data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
       assert_equal 1, airbrake_call_count
     end
-    assert_match /Instagram::ApiResponseCodeError/, data['error']['message']
+    assert_match /ProviderInstagram::ApiResponseCodeError/, data['error']['message']
   end
 
   test "should re-raise a wrapped error when parsing fails" do
@@ -81,13 +86,13 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     airbrake_call_count = 0
     arguments_checker = Proc.new do |e|
       airbrake_call_count += 1
-      assert_equal Instagram::ApiError, e.class
+      assert_equal ProviderInstagram::ApiError, e.class
     end
     PenderAirbrake.stub(:notify, arguments_checker) do
       data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
       assert_equal 1, airbrake_call_count
     end
-    assert_match /Instagram::ApiError/, data['error']['message']
+    assert_match /ProviderInstagram::ApiError/, data['error']['message']
   end
 
   test "should re-raise a wrapped error when redirected to a page that requires authentication" do
@@ -97,13 +102,13 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     airbrake_call_count = 0
     arguments_checker = Proc.new do |e|
       airbrake_call_count += 1
-      assert_equal Instagram::ApiError, e.class
+      assert_equal ProviderInstagram::ApiError, e.class
     end
     PenderAirbrake.stub(:notify, arguments_checker) do
       data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
       assert_equal 1, airbrake_call_count
     end
-    assert_match /Instagram::ApiAuthenticationError/, data['error']['message']
+    assert_match /ProviderInstagram::ApiAuthenticationError/, data['error']['message']
   end
 
   test 'should set item fields from successful api response' do

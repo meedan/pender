@@ -201,6 +201,7 @@ module MediasHelper
   # we need different behavior here for now
   def ignore_url?(url)
     ignore_url = false
+    # Media ignored URLs
     Media::TYPES.keys.map { |type| type[/(.+)_(item|profile)$/, 1] }.uniq.each do |provider|
       if self.respond_to?("ignore_#{provider}_urls")
         self.send("ignore_#{provider}_urls").each do |item|
@@ -209,6 +210,13 @@ module MediasHelper
             self.unavailable_page = item[:reason]
           end
         end
+      end
+    end
+    # Parser ignored URLs
+    Media::PARSERS.flat_map(&:ignored_urls).uniq.each do |item|
+      if url.match?(item[:pattern])
+        ignore_url = true
+        self.unavailable_page = item[:reason]
       end
     end
     self.unavailable_page = nil unless ignore_url
