@@ -17,12 +17,12 @@ class RequestHelper
         if force_proxy
           PenderAirbrake.notify(e, url: url)
           Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
-          set_error_callback(message: 'URL Not Found', code: LapisConstants::ErrorCodes::const_get('NOT_FOUND'))
+          set_error_callback.call(message: 'URL Not Found', code: LapisConstants::ErrorCodes::const_get('NOT_FOUND'))
           return nil
         end
-        get_html(url, header_options, true)
+        get_html(url, set_error_callback, header_options, true)
       rescue Zlib::DataError, Zlib::BufError
-        get_html(url, Media.html_options(url).merge('Accept-Encoding' => 'identity'))
+        get_html(url, set_error_callback, Media.html_options(url).merge('Accept-Encoding' => 'identity'))
       rescue RuntimeError => e
         PenderAirbrake.notify(e, url: url) if !redirect_https_to_http?(header_options, e.message)
         Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message

@@ -105,9 +105,9 @@ class ActiveSupport::TestCase
     results.close
   end
 
-  def html_doc_from_file(fixture_name)
-    doc = ''
-    open("test/data/#{fixture_name}.html") { |f| doc = f.read }
-    Nokogiri::HTML(doc)
+  def response_fixture_from_file(filename, parse_as_html: true)
+    fixture_body = ''
+    open("test/data/#{filename}") { |f| fixture_body = f.read }
+    parse_as_html ? Nokogiri::HTML(fixture_body) : fixture_body
   end
 end
