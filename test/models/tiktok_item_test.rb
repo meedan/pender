@@ -3,19 +3,6 @@ require 'cc_deville'
 
 class TiktokItemIntegrationTest < ActiveSupport::TestCase
   test "should parse Tiktok item for real" do
-    m = create_media url: 'https://www.tiktok.com/@scout2015/video/6771039287917038854'
-    data = m.as_json
-    assert_equal 'item', data['type']
-    assert_match /Who agrees/, data['title']
-    assert_match /Scout.+Suki/, data['author_name']
-    assert_equal '6771039287917038854', data['external_id']
-    assert_match 'https://www.tiktok.com/@scout2015', data['author_url']
-    assert_match /^http/, data['picture']
-    assert_nil data['error']
-    assert_equal '@scout2015', data['username']
-  end
-
-  test "should parse Tiktok link 2" do
     m = create_media url: 'https://www.tiktok.com/@scout2015/video/7094001694408756526?is_from_webapp=1&sender_device=pc&web_id=7064890017416234497'
     data = m.as_json
     assert_equal 'item', data['type']
@@ -41,65 +28,64 @@ class TiktokItemIntegrationTest < ActiveSupport::TestCase
   end
 end
 
-class TiktokItemUnittTest < ActiveSupport::TestCase
+class TiktokItemUnitTest < ActiveSupport::TestCase
   def setup
     isolated_setup
-
-    WebMock.stub_request(:post, /safebrowsing.googleapis.com/).to_return(status: 200, body: { matches: [] }.to_json )
-    WebMock.stub_request(:get, /graph.facebook.com/).to_return(status: 200, body: '' )
-    WebMock.stub_request(:get, /tiktokcdn.com/).to_return(status: 200, body: '' )
-
-    WebMock.stub_request(:any, /www.tiktok.com/).to_return(body: '', status: 200)
   end
 
   def teardown
     isolated_teardown
   end
 
-  test "returns provider and type" do
-    assert_equal Parser::DropboxItem.type, 'dropbox_item'
+  def oembed
+    @oembed ||= response_fixture_from_file('oembed-tiktok-item.json', parse_as_html: false)
   end
 
-  test "should parse Tiktok profile with proxy if title is the site name" do
-    blank_page = '<html><head><title>TikTok</title></head><body></body></html>'
-    page = '<html><head><title>Huxley the Panda Puppy</title><meta property="og:image" content="https://tiktokcdn.com/image.jpeg"><meta property="twitter:creator" content="Huxley the Panda Puppy"><meta property="og:description" content="Here to make ur day"></head><body></body></html>'
-    url = 'https://www.tiktok.com/@huxleythepandapuppy'
-    header_options = Media.send(:html_options, url)
-    Media.any_instance.stubs(:get_html).with(header_options, true).returns(Nokogiri::HTML(page))
-    Media.any_instance.stubs(:get_html).with(header_options, false).returns(Nokogiri::HTML(blank_page))
-    Media.any_instance.stubs(:get_html).with(header_options).returns(Nokogiri::HTML(blank_page))
-    m = create_media url: url
-    data = m.as_json
+  def doc
+    @doc ||= response_fixture_from_file('page-tiktok-item.html')
+  end
 
-    # Make sure to remove stubs before we do test assertions,
-    # otherwise if the tests fail the stubs will remain for other tests
-    Media.any_instance.unstub(:get_html)
+  test "returns provider and type" do
+    assert_equal Parser::TiktokItem.type, 'tiktok_item'
+  end
 
-    assert_equal '@huxleythepandapuppy', data['username']
-    assert_equal 'profile', data['type']
-    assert_equal 'tiktok', data['provider']
-    assert_equal 'Huxley the Panda Puppy', data['title']
-    assert_equal 'Huxley the Panda Puppy', data['author_name']
-    assert_equal '@huxleythepandapuppy', data['external_id']
-    assert_not_nil data['picture']
-    assert_match 'https://www.tiktok.com/@huxleythepandapuppy', m.url
+  test "matches known URL patterns, and returns instance on success" do
+    assert_nil Parser::TiktokItem.match?('https://example.com')
+    assert_nil = Parser::TiktokItem.match?('https://www.tiktok.com/@fakeaccount')
+    
+    match_one = Parser::TiktokItem.match?('https://www.tiktok.com/@fakeaccount/video/abcdef?a=1')
+    assert_equal true, match_one.is_a?(Parser::TiktokItem)
   end
 
   test "should set profile defaults upon error" do
-    m = create_media url: 'https://www.tiktok.com/@fakeaccount'
-    data = m.as_json
-    assert_equal '@fakeaccount', data['external_id']
-    assert_equal '@fakeaccount', data['username']
-    assert_equal 'profile', data['type']
-    assert_match '@fakeaccount', data['title']
-    assert_match 'https://www.tiktok.com/@fakeaccount', data['description']
+    WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_raise(Net::ReadTimeout.new("Raised in test"))
+
+    data = Parser::TiktokItem.new('https://www.tiktok.com/@fakeaccount/video/abcdef').parse_data(doc)
+
+    assert_match 'https://www.tiktok.com/@fakeaccount/video/abcdef', data['description']
   end
 
-  test "should set item defaults upon error" do
-    m = create_media url: 'https://www.tiktok.com/user/video/abcdef/?k=1'
-    data = m.as_json
-    assert_equal 'item', data['type']
-    assert_match 'https://www.tiktok.com/user/video/abcdef', data['title']
-    assert_match 'https://www.tiktok.com/user/video/abcdef', data['description']
+  test "assigns values to hash from the HTML doc" do
+    WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_return(status: 200, body: oembed.as_json)
+
+    data = Parser::TiktokItem.new('https://www.tiktok.com/@fakeaccount/video/abcdef').parse_data(doc)
+
+    assert_equal '@fakeaccount', data['username']
+    assert_equal 'abcdef', data['external_id']
+    assert_match "I've had this corn interview stuck in my head for days 😂🌽🌽🌽🌽", data['description']
+    assert_match "I've had this corn interview stuck in my head for days 😂🌽🌽🌽🌽", data['title']
+    assert_match "https://p19-sign.tiktokcdn-us.com/obj/useast5/fake-image", data['picture']
+    assert_match "https://www.tiktok.com/@rebelunicorncrafts", data['author_url']
+    assert_not_nil data['html']
+    assert_equal "Lacey - Curious Watercolor&Art", data['author_name']
+  end
+
+  test "stores the raw response data under oembed & api keys" do
+    WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_return(status: 200, body: oembed.as_json)
+
+    data = Parser::TiktokItem.new('https://www.tiktok.com/@fakeaccount/video/abcdef').parse_data(doc)
+
+    assert_not_nil data['raw']['oembed']
+    assert_not_nil data['raw']['api']
   end
 end

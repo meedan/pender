@@ -16,7 +16,7 @@ class TiktokProfileIntegrationTest < ActiveSupport::TestCase
   end
 end
 
-class TikToProfileUnitTest < ActiveSupport::TestCase
+class TiktokProfileUnitTest < ActiveSupport::TestCase
   def setup
     isolated_setup
   end
@@ -26,7 +26,7 @@ class TikToProfileUnitTest < ActiveSupport::TestCase
   end
 
   def doc
-    @doc ||= html_doc_from_file('page-tiktok-profile')
+    @doc ||= response_fixture_from_file('page-tiktok-profile.html')
   end
 
   test "returns provider and type" do
@@ -74,8 +74,8 @@ class TikToProfileUnitTest < ActiveSupport::TestCase
     url = 'https://www.tiktok.com/@fakeaccount'
 
     header_options = RequestHelper.html_options(url)
-    RequestHelper.stubs(:get_html).with(url, header_options, false).returns(Nokogiri::HTML(blank_page))
-    RequestHelper.stubs(:get_html).with(url, header_options, true).returns(doc)
+    RequestHelper.stubs(:get_html).with(url, kind_of(Method), header_options, false).returns(Nokogiri::HTML(blank_page))
+    RequestHelper.stubs(:get_html).with(url, kind_of(Method), header_options, true).returns(doc)
     
     parser = Parser::TiktokProfile.new(url)
     data = parser.parse_data(Nokogiri::HTML(blank_page))
@@ -92,5 +92,6 @@ class TikToProfileUnitTest < ActiveSupport::TestCase
     # set outside of this object before parsing
     assert_not_nil data['title']
     assert_not_nil data['author_name']
+    assert_nil data['error']
   end
 end

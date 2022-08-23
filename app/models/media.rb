@@ -87,6 +87,7 @@ class Media
   # Parsers and archivers
   PARSERS = [
     Parser::DropboxItem,
+    Parser::TiktokItem,
     Parser::TiktokProfile,
     Parser::KwaiItem, 
   ]
@@ -101,7 +102,7 @@ class Media
     MediaInstagramItem,
     MediaInstagramProfile,
     # MediaDropboxItem,
-    MediaTiktokItem, 
+    # MediaTiktokItem, 
     # MediaTiktokProfile, 
     # MediaKwaiItem,
     MediaPageItem, 
@@ -295,9 +296,10 @@ class Media
   end
 
   def get_html(header_options = {}, force_proxy = false)
-    RequestHelper.get_html(self.url, set_error, header_options, force_proxy)
+    RequestHelper.get_html(self.url, self.method(:set_error), header_options, force_proxy)
   end
 
+  # Error callback
   def set_error(**error_hash)
     return if error_hash.empty?
     self.data[:error] = error_hash
