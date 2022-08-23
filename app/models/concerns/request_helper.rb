@@ -87,34 +87,6 @@ class RequestHelper
         'Cookie' => self.set_cookies(uri)
       })
     end
-    
-    # NEED TO REFACTOR TO INCLUDE LOGIC IN PARSER
-    # In MediasHelper
-    # Seems like something we need to have in Parser
-    # Data currently used in FBProfile and Instagram
-    def ignore_url?(url)
-      # Data needed:
-        # Media::Types (ok)
-      # Methods needed:
-        # ignore_#{provider}_urls
-      # Data set:
-        # self.unavailable_page
-      # Data returned:
-        # Boolean (do I ignore this URL or not?)
-      ignore_url = false
-      Media::TYPES.keys.map { |type| type[/(.+)_(item|profile)$/, 1] }.uniq.each do |provider|
-        if self.respond_to?("ignore_#{provider}_urls")
-          self.send("ignore_#{provider}_urls").each do |item|
-            if url.match?(item[:pattern])
-              ignore_url = true
-              self.unavailable_page = item[:reason]
-            end
-          end
-        end
-      end
-      self.unavailable_page = nil unless ignore_url
-      ignore_url
-    end
 
     def get_proxy(uri, format = :array, force = false)
       proxy = self.valid_proxy

@@ -1,5 +1,4 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
-require 'cc_deville'
 
 class TiktokItemIntegrationTest < ActiveSupport::TestCase
   test "should parse Tiktok item for real" do
@@ -38,11 +37,11 @@ class TiktokItemUnitTest < ActiveSupport::TestCase
   end
 
   def oembed
-    @oembed ||= response_fixture_from_file('oembed-tiktok-item.json', parse_as_html: false)
+    @oembed ||= response_fixture_from_file('tiktok-item-oembed.json', parse_as_html: false)
   end
 
   def doc
-    @doc ||= response_fixture_from_file('page-tiktok-item.html')
+    @doc ||= response_fixture_from_file('tiktok-item-page.html')
   end
 
   test "returns provider and type" do
