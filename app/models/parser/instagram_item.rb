@@ -1,8 +1,9 @@
-require 'instagram_exceptions'
-
 module Parser
   class InstagramItem < Base
+    include ProviderInstagram
+
     INSTAGRAM_ITEM_URL = /^https?:\/\/(www\.)?instagram\.com\/(p|tv|reel)\/([^\/]+)/
+    
     class << self
       def type
         'instagram_item'.freeze
@@ -11,27 +12,10 @@ module Parser
       def patterns
         [INSTAGRAM_ITEM_URL]
       end
-
-      def ignored_urls
-        [
-          {
-            pattern: /^https:\/\/www\.instagram\.com\/accounts\/login/,
-            reason: :login_page
-          },
-          {
-            pattern: /^https:\/\/www\.instagram\.com\/challenge\?/,
-            reason: :account_challenge_page
-          },
-          {
-            pattern: /^https:\/\/www\.instagram\.com\/privacy\/checks/, 
-            eason: :privacy_check_page
-          },
-        ]
-      end
     end
 
     def parse_data(doc)
-      id = self.url.match(INSTAGRAM_ITEM_URL)[3]
+      id = url.match(INSTAGRAM_ITEM_URL)[3]
 
       @parsed_data.merge!(external_id: id)
       set_data_field('description', url)
@@ -68,33 +52,6 @@ module Parser
     def get_instagram_item_picture_from_data
       parsed_data.dig('raw', 'api', 'image_versions2', 'candidates', 0, 'url') ||
         parsed_data.dig('raw', 'api', 'carousel_media', 0, 'image_versions2', 'candidates', 0, 'url')
-    end
-
-    def get_instagram_api_data(api_url, additional_headers: {})
-      begin
-        uri = URI.parse(api_url)
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = uri.scheme == 'https'
-        
-        headers = Media.extended_headers(uri)
-        headers.merge!(additional_headers)
-
-        request = Net::HTTP::Get.new(uri.request_uri, headers)
-        response = http.request(request)
-        raise Instagram::ApiResponseCodeError.new("#{response.class}: #{response.message}") unless %(200 301 302).include?(response.code)
-        return JSON.parse(response.body) if response.code == '200'
-
-        location = response.header['location']
-        if unavailable_reason = ignore_url?(location)
-          raise Instagram::ApiAuthenticationError.new("Page unreachable, received redirect for #{unavailable_reason} to #{location}")
-        else
-          get_instagram_api_data(location)
-        end
-      # Deliberately catch and re-wrap any errors we think are related
-      # to the API not working as expected, so that we can monitor them
-      rescue JSON::ParserError, Instagram::ApiResponseCodeError, Instagram::ApiAuthenticationError => e
-        raise Instagram::ApiError.new("#{e.class}: #{e.message}")
-      end
     end
   end
 end
