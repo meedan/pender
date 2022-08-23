@@ -10,6 +10,10 @@ module Parser
       def patterns
         []
       end
+      
+      def ignored_urls
+        []
+      end
   
       def match?(url)
         matched_pattern = false
@@ -22,6 +26,7 @@ module Parser
     end
     delegate :type, to: :class
     delegate :patterns, to: :class
+    delegate :ignored_urls, to: :class
   
     def initialize(url)
       @url = url
@@ -34,7 +39,15 @@ module Parser
   
     attr_reader :url, :parsed_data
     
-    protected
+    private
+
+    def ignore_url?(url)
+      self.ignored_urls.each do |item|
+        if url.match?(item[:pattern])
+          return item[:reason]
+        end
+      end
+    end
 
     # Error-setting callback for RequestHelper.get_html
     def set_error(**error_hash)

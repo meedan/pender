@@ -26,7 +26,7 @@ class TiktokProfileUnitTest < ActiveSupport::TestCase
   end
 
   def doc
-    @doc ||= response_fixture_from_file('page-tiktok-profile.html')
+    @doc ||= response_fixture_from_file('tiktok-profile-page.html')
   end
 
   test "returns provider and type" do
