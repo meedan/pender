@@ -1,6 +1,6 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 
-class TwitterIntegrationTest < ActiveSupport::TestCase
+class TwitterProfileIntegrationTest < ActiveSupport::TestCase
   test "should parse shortened URL" do
     m = create_media url: 'http://bit.ly/23qFxCn'
     data = m.as_json
@@ -14,6 +14,7 @@ class TwitterIntegrationTest < ActiveSupport::TestCase
   end
 
   test "should store oembed data of a twitter profile" do
+    skip "need to implement oembed parser"
     m = create_media url: 'https://twitter.com/meedan'
     data = m.as_json
 
@@ -104,7 +105,15 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
 
     assert_nil data['error']
+  end
+
+  test "should store raw data of profile returned by Twitter API" do
+    Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
+
+    data = Parser::TwitterProfile.new('https://www.twitter.com/fakeaccount').parse_data('')
+
     assert_not_nil data['raw']['api']
+    assert !data['raw']['api'].empty?
   end
 
   test "should throw Pender::ApiLimitReached when Twitter::Error::TooManyRequests is thrown" do

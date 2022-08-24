@@ -55,7 +55,6 @@ class KwaiUnitTest <  ActiveSupport::TestCase
       data = Parser::KwaiItem.new('https://s.kw.ai/p/example').parse_data(empty_doc)
     end
     mocked_airbrake.verify
-    assert_equal 1, data.keys.count
     assert_equal 5, data[:error][:code]
     assert_match /NoMethodError/, data[:error][:message]
   end
