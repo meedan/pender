@@ -79,12 +79,30 @@ module MediaPageItem
     metatags = { title: 'twitter:title', picture: 'twitter:image', description: 'twitter:description', username: 'twitter:creator', author_name: 'twitter:site' }
     data = get_html_metadata(self, metatags).with_indifferent_access
     data['author_url'] = twitter_author_url(data['username'])
-    data.delete('author_name') if ignore_twitter_metatag(data['author_name'])
+    data.delete('author_name') if Parser::TwitterItem.ignore_metatag(data['author_name'])
     unless data['author_url']
       data.delete('author_url')
       data.delete('username')
     end
     data
+  end
+
+  # This lives here until we refactor MediaPageItem
+  def twitter_author_url(username)
+    return if Parser::TwitterItem.ignore_metatag(username)
+    begin
+      @twitter_client = Twitter::REST::Client.new do |config|
+        config.consumer_key        = PenderConfig.get('twitter_consumer_key')
+        config.consumer_secret     = PenderConfig.get('twitter_consumer_secret')
+        config.access_token        = PenderConfig.get('twitter_access_token')
+        config.access_token_secret = PenderConfig.get('twitter_access_token_secret')
+      end
+      @twitter_client.user(username).url.to_s
+    rescue Twitter::Error => e
+      PenderAirbrake.notify(e, url: self.url, username: username )
+      Rails.logger.warn level: 'WARN', message: "[Parser] #{e.message}", username: username, error_class: e.class
+      nil
+    end
   end
 
   def get_opengraph_metadata

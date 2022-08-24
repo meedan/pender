@@ -67,7 +67,6 @@ class DropboxUnitTest <  ActiveSupport::TestCase
       data = Parser::DropboxItem.new('https://www.dropbox.com/sh/fake-url/example.txt').parse_data(doc)
     end
     mocked_airbrake.verify
-    assert_equal 1, data.keys.count
     assert_equal 5, data[:error][:code]
     assert_match /NoMethodError/, data[:error][:message]
   end
