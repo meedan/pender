@@ -105,9 +105,17 @@ class ActiveSupport::TestCase
     results.close
   end
 
-  def response_fixture_from_file(filename, parse_as_html: true)
+  def response_fixture_from_file(filename, parse_as: nil)
     fixture_body = ''
     open("test/data/#{filename}") { |f| fixture_body = f.read }
-    parse_as_html ? Nokogiri::HTML(fixture_body) : fixture_body
+
+    case parse_as
+    when :html
+      Nokogiri::HTML(fixture_body)
+    when :json
+      JSON.parse(fixture_body)
+    else
+      fixture_body
+    end
   end
 end

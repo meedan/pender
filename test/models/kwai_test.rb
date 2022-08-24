@@ -36,7 +36,7 @@ class KwaiUnitTest <  ActiveSupport::TestCase
   end
 
   test "assigns values to hash from the HTML doc" do
-    doc = response_fixture_from_file('kwai-page.html')
+    doc = response_fixture_from_file('kwai-page.html', parse_as: :html)
 
     data = Parser::KwaiItem.new('https://s.kw.ai/p/example').parse_data(doc)
     assert_equal 'A special video', data[:title]

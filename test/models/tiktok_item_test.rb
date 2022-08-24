@@ -37,11 +37,11 @@ class TiktokItemUnitTest < ActiveSupport::TestCase
   end
 
   def oembed
-    @oembed ||= response_fixture_from_file('tiktok-item-oembed.json', parse_as_html: false)
+    @oembed ||= response_fixture_from_file('tiktok-item-oembed.json')
   end
 
   def doc
-    @doc ||= response_fixture_from_file('tiktok-item-page.html')
+    @doc ||= response_fixture_from_file('tiktok-item-page.html', parse_as: :html)
   end
 
   test "returns provider and type" do
@@ -65,7 +65,7 @@ class TiktokItemUnitTest < ActiveSupport::TestCase
   end
 
   test "assigns values to hash from the HTML doc" do
-    WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_return(status: 200, body: oembed.as_json)
+    WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_return(status: 200, body: oembed)
 
     data = Parser::TiktokItem.new('https://www.tiktok.com/@fakeaccount/video/abcdef').parse_data(doc)
 
@@ -80,7 +80,7 @@ class TiktokItemUnitTest < ActiveSupport::TestCase
   end
 
   test "stores the raw response data under oembed & api keys" do
-    WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_return(status: 200, body: oembed.as_json)
+    WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_return(status: 200, body: oembed)
 
     data = Parser::TiktokItem.new('https://www.tiktok.com/@fakeaccount/video/abcdef').parse_data(doc)
 
