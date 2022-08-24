@@ -8,6 +8,15 @@ module MediaTwitterItem
   included do
     Media.declare('twitter_item', [URL])
   end
+  
+  def twitter_client
+    Twitter::REST::Client.new do |config|
+      config.consumer_key        = PenderConfig.get('twitter_consumer_key')
+      config.consumer_secret     = PenderConfig.get('twitter_consumer_secret')
+      config.access_token        = PenderConfig.get('twitter_access_token')
+      config.access_token_secret = PenderConfig.get('twitter_access_token_secret')
+    end
+  end
 
   def handle_twitter_exceptions
     begin

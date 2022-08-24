@@ -72,12 +72,12 @@ module MediasHelper
     data
   end
 
-  def get_info_from_data(source, data, *args)
+  def get_info_from_data(source, data, *fields)
     empty = ''.freeze
     hash = data['raw'][source]
     return empty if hash.nil?
-    args.each do |i|
-      return hash[i] if !hash[i].nil?
+    fields.each do |field|
+      return hash[field] if !hash[field].nil?
     end
     empty
   end

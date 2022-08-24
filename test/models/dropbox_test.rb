@@ -23,7 +23,7 @@ class DropboxUnitTest <  ActiveSupport::TestCase
   end
 
   def doc
-    @doc ||= response_fixture_from_file('dropbox-page.html')
+    @doc ||= response_fixture_from_file('dropbox-page.html', parse_as: :html)
   end
 
   test "returns provider and type" do

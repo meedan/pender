@@ -156,4 +156,29 @@ class MediasHelperTest < ActionView::TestCase
     assert_equal 'http://localhost/api/medias.js?=1&url=https%3A%2F%2Ftwitter.com%2Fsstirling%2Fstatus%2F1453505920865087499', original_url
   end
 
+  test "should parse twitter metatags on regular page" do
+    doc = nil
+    open('test/data/flickr.html') { |f| doc = f.read }
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(doc))
+    m = create_media url: 'https://www.flickr.com/photos/bees/2341623661'
+    data = m.as_json
+    assert_match 'ZB8T0193', data['title']
+    assert_match /Explore .* photos on Flickr!/, data['description']
+    assert_equal '', data['published_at']
+    assert_match /https:\/\/.*staticflickr.com\/.*3123\/2341623661_7c99f48bbf_b.jpg/, data['picture']
+    assert_match /www.flickr.com/, data['author_url']
+    Media.any_instance.unstub(:get_html)
+  end
+
+    test "should parse twitter metatags on regular page 2" do
+    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta name='twitter:title' content='Hong Kong Free Press'><br/><meta name='twitter:creator' content='@krislc'><meta name='twitter:description' content='Chief executive'><meta name='twitter:image' content='http://example.com/image.png'>"))
+    m = create_media url: 'https://www.hongkongfp.com/2017/03/08/top-officials-suing-defamation-may-give-perception-bullying-says-chief-exec-candidate-woo/'
+    data = m.as_json
+    assert_match 'Hong Kong Free Press', data['title']
+    assert_match 'http://example.com/image.png', data['picture']
+    assert_match 'Chief executive', data['description']
+    assert_not_nil data['username']
+    assert_not_nil data['author_url']
+    Media.any_instance.unstub(:doc)
+  end
 end

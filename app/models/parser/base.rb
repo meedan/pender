@@ -31,6 +31,7 @@ module Parser
     def initialize(url)
       @url = url
       @parsed_data = {}.with_indifferent_access
+      @parsed_data[:raw] = {}
     end
   
     def parse_data(doc)

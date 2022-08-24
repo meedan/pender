@@ -28,11 +28,11 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
   end
 
   def graphql
-    @graphql ||= response_fixture_from_file('instagram-item-graphql.json', parse_as_html: false)
+    @graphql ||= response_fixture_from_file('instagram-item-graphql.json')
   end
 
   def doc
-    @doc ||= response_fixture_from_file('instagram-item-page.html')
+    @doc ||= response_fixture_from_file('instagram-item-page.html', parse_as: :html)
   end
 
   test "returns provider and type" do

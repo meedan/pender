@@ -1,5 +1,4 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
-require 'cc_deville'
 
 class TiktokProfileIntegrationTest < ActiveSupport::TestCase
   test "should parse Tiktok profile for real" do
@@ -26,7 +25,7 @@ class TiktokProfileUnitTest < ActiveSupport::TestCase
   end
 
   def doc
-    @doc ||= response_fixture_from_file('tiktok-profile-page.html')
+    @doc ||= response_fixture_from_file('tiktok-profile-page.html', parse_as: :html)
   end
 
   test "returns provider and type" do
