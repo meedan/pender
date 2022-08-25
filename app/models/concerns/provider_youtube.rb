@@ -7,9 +7,19 @@ module ProviderYoutube
     end
   end
 
+  # def oembed_url
+  #   "https://www.youtube.com/oembed?format=json&url=#{url}"
+  # end
+
+  def initialize(doc)
+    super(doc)
+
+    Yt.configuration.api_key = PenderConfig.get(:google_api_key)
+  end
+
   private
 
-  def get_youtube_thumbnail(data)
+  def get_thumbnail(data)
     thumbnails = data.dig('raw','api','thumbnails')
     return '' unless thumbnails.is_a?(Hash)
     ['maxres', 'standard', 'high', 'medium', 'default'].each do |size|
@@ -20,12 +30,20 @@ module ProviderYoutube
   def handle_youtube_exceptions
     begin
       yield
-    # rescue Yt::Errors::NoItems => e
-    #   self.set_youtube_item_deleted_info(e)
+    rescue Yt::Errors::NoItems => error
+      set_deleted_info(error)
+      Rails.logger.warn level: 'WARN', message: "[Parser] #{error.message}", url: url, error_class: error.class
     rescue Yt::Errors::Forbidden => error
       PenderAirbrake.notify(error, url: url )
       @parsed_data[:raw][:api] = { error: { url: url, message: "#{error.class}: #{error.message}", code: LapisConstants::ErrorCodes::const_get('UNAUTHORIZED') }}
       Rails.logger.warn level: 'WARN', message: "[Parser] #{error.message}", url: url, error_class: error.class
     end
+  end
+
+  def set_deleted_info(error)
+    @parsed_data['username'] = @parsed_data['author_name'] = 'YouTube'
+    @parsed_data['title'] = 'Deleted video'
+    @parsed_data['description'] = 'This video is unavailable.'
+    @parsed_data[:raw][:api] = { error: { message: error.message, code: LapisConstants::ErrorCodes::const_get('NOT_FOUND') }}
   end
 end
