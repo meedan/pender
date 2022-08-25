@@ -77,6 +77,17 @@ module Parser
       metadata['raw'] = { 'metatags' => raw_metatags }
       metadata
     end
+
+    def get_opengraph_metadata(doc)
+      metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time', author_name: 'og:site_name' }
+      data = get_html_metadata(doc, metatags)
+      if (data['username'] =~ /\A#{URI::regexp}\z/)
+        data['author_url'] = data['username']
+        data.delete('username')
+      end
+      data['published_at'] = verify_published_time(data['published_at']) unless data['published_at'].blank?
+      data
+    end
   
     def get_raw_metatags(doc)
       metatag_data = []

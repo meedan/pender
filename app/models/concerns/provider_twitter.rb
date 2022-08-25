@@ -3,16 +3,6 @@ require 'pender_exceptions'
 module ProviderTwitter
   extend ActiveSupport::Concern
 
-  # class ApiError < StandardError; end
-  # class ApiResponseCodeError < StandardError; end
-  # class ApiAuthenticationError < StandardError; end
-
-  # class_methods do
-  #   def ignored_urls
-  #     []
-  #   end
-  # end
-
   def initialize(url)
     super(url)
 
@@ -28,9 +18,9 @@ module ProviderTwitter
   #   "https://publish.twitter.com/oembed?url=#{url}"
   # end
 
-  attr_reader :twitter_client
-
   private
+
+  attr_reader :twitter_client
 
   def handle_twitter_exceptions
     begin

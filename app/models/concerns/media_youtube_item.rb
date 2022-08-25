@@ -84,4 +84,14 @@ module MediaYoutubeItem
     self.data['description'] = 'This video is unavailable.'
     self.data[:raw][:api] = { error: { message: e.message, code: LapisConstants::ErrorCodes::const_get('NOT_FOUND') }}
   end
+
+  def handle_youtube_exceptions
+    begin
+      yield
+    rescue Yt::Errors::NoItems => e
+      self.set_youtube_item_deleted_info(e)
+    rescue Yt::Errors::Forbidden => e
+      self.data[:raw][:api] = { error: { message: e.message, code: LapisConstants::ErrorCodes::const_get('UNAUTHORIZED') }}
+    end
+  end
 end
