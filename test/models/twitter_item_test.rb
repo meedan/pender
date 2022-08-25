@@ -12,44 +12,43 @@ class TwitterItemIntegrationTest < ActiveSupport::TestCase
     assert_not_nil data['author_picture']
   end
 
-  # Candidates for removal:
+  # Candidates for removal below:
+  test "should parse valid link with spaces" do
+    m = create_media url: ' https://twitter.com/caiosba/status/742779467521773568 '
+    data = m.as_json
+    assert_match 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
+    assert_match 'Caio Almeida', data['author_name']
+    assert_match '@caiosba', data['username']
+    assert_nil data['picture']
+    assert_not_nil data['author_picture']
+  end
 
-  # test "should parse valid link with spaces" do
-  #   m = create_media url: ' https://twitter.com/caiosba/status/742779467521773568 '
-  #   data = m.as_json
-  #   assert_match 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
-  #   assert_match 'Caio Almeida', data['author_name']
-  #   assert_match '@caiosba', data['username']
-  #   assert_nil data['picture']
-  #   assert_not_nil data['author_picture']
-  # end
-
-  # test "should fill in html when html parsing fails but API works" do
-  #   url = 'https://twitter.com/codinghorror/status/1276934067015974912'
-  #   OpenURI.stubs(:open_uri).raises(OpenURI::HTTPError.new('','429 Too Many Requests'))
-  #   m = create_media url: url
-  #   data = m.as_json
-  #   assert_match /twitter-tweet.*#{url}/, data[:html]
-  #   OpenURI.unstub(:open_uri)
-  # end
+  test "should fill in html when html parsing fails but API works" do
+    url = 'https://twitter.com/codinghorror/status/1276934067015974912'
+    OpenURI.stubs(:open_uri).raises(OpenURI::HTTPError.new('','429 Too Many Requests'))
+    m = create_media url: url
+    data = m.as_json
+    assert_match /twitter-tweet.*#{url}/, data[:html]
+    OpenURI.unstub(:open_uri)
+  end
   
-  # test "should not parse a twitter post when passing the twitter api key or subkey missing" do
-  #   key = create_api_key application_settings: { config: { twitter_consumer_key: 'consumer_key', twitter_consumer_secret: '' } }
-  #   m = create_media url: 'https://twitter.com/cal_fire/status/919029734847025152', key: key
-  #   assert_equal 'consumer_key', PenderConfig.get(:twitter_consumer_key)
-  #   assert_equal '', PenderConfig.get(:twitter_consumer_secret)
-  #   data = m.as_json
-  #   assert_equal m.url, data['title']
-  #   assert_match "Twitter::Error::Unauthorized", data['raw']['api']['error']['message']
-  #   PenderConfig.current = nil
+  test "should not parse a twitter post when passing the twitter api key or subkey missing" do
+    key = create_api_key application_settings: { config: { twitter_consumer_key: 'consumer_key', twitter_consumer_secret: '' } }
+    m = create_media url: 'https://twitter.com/cal_fire/status/919029734847025152', key: key
+    assert_equal 'consumer_key', PenderConfig.get(:twitter_consumer_key)
+    assert_equal '', PenderConfig.get(:twitter_consumer_secret)
+    data = m.as_json
+    assert_equal m.url, data['title']
+    assert_match "Twitter::Error::Unauthorized", data['raw']['api']['error']['message']
+    PenderConfig.current = nil
 
-  #   key = create_api_key application_settings: { config: { twitter_consumer_key: '' } }
-  #   m = create_media url: 'https://twitter.com/cal_fire/status/919029734847025152' , key: key
-  #   assert_equal '', PenderConfig.get(:twitter_consumer_key)
-  #   data = m.as_json
-  #   assert_equal m.url, data['title']
-  #   assert_match "Twitter::Error::Unauthorized", data['raw']['api']['error']['message']
-  # end
+    key = create_api_key application_settings: { config: { twitter_consumer_key: '' } }
+    m = create_media url: 'https://twitter.com/cal_fire/status/919029734847025152' , key: key
+    assert_equal '', PenderConfig.get(:twitter_consumer_key)
+    data = m.as_json
+    assert_equal m.url, data['title']
+    assert_match "Twitter::Error::Unauthorized", data['raw']['api']['error']['message']
+  end
 end
 
 class TwitterItemUnitTest < ActiveSupport::TestCase

@@ -86,6 +86,7 @@ class Media
 
   # Parsers and archivers
   PARSERS = [
+    Parser::YoutubeProfile,
     Parser::TwitterProfile,
     Parser::TwitterItem,
     Parser::InstagramItem,
@@ -97,7 +98,7 @@ class Media
   ]
 
   [
-    MediaYoutubeProfile,
+    # MediaYoutubeProfile,
     MediaYoutubeItem,
     # MediaTwitterProfile,
     # MediaTwitterItem,

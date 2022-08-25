@@ -105,6 +105,7 @@ module MediaPageItem
     end
   end
 
+  # This lives here until we refactor MediaFacebookItem
   def get_opengraph_metadata
     metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time', author_name: 'og:site_name' }
     data = get_html_metadata(self, metatags)
