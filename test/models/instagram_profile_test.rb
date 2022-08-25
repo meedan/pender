@@ -115,4 +115,13 @@ class InstagramProfileUnitTest < ActiveSupport::TestCase
     assert_match /scontent-sjc3-1.cdninstagram.com\/v\/t51.2885-19\/298966074_744587416797579_6159007932562050088_n.jpg/, data['author_picture']
     assert data['published_at'].blank?
   end
+
+  test "should store raw data of profile returned by Instagram request" do
+    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: graphql, status: 200)
+    
+    data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
+
+    assert_not_nil data['raw']['api']
+    assert !data['raw']['api'].empty?
+  end
 end 
