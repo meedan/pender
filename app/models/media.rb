@@ -181,7 +181,7 @@ class Media
 
   def parse
     self.data.merge!(Media.minimal_data(self))
-    get_jsonld_data(self)
+    get_jsonld_data(self) unless self.doc.nil?
     get_schema_data unless self.doc.nil?
     parsed = false
 
