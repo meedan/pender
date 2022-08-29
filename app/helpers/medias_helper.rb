@@ -43,7 +43,6 @@ module MediasHelper
   end
 
   def get_jsonld_data(media)
-    return if media.doc.nil?
     data = jsonld_tag_content(media)
     if data
       media.data['raw']['json+ld'] = data
