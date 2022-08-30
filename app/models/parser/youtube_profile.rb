@@ -26,7 +26,7 @@ module Parser
       end
     end
 
-    def parse_data(doc)
+    def parse_data(doc, _ = nil)
       @parsed_data[:raw][:api] = {}
       handle_youtube_exceptions do
         channel = Yt::Channel.new url: url

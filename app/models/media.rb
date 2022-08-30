@@ -90,6 +90,7 @@ class Media
     Parser::YoutubeItem,
     Parser::TwitterProfile,
     Parser::TwitterItem,
+    Parser::FacebookProfile,
     Parser::InstagramItem,
     Parser::InstagramProfile,
     Parser::DropboxItem,
@@ -103,7 +104,7 @@ class Media
     # MediaYoutubeItem,
     # MediaTwitterProfile,
     # MediaTwitterItem,
-    MediaFacebookProfile,
+    # MediaFacebookProfile,
     MediaFacebookItem,
     # MediaInstagramItem,
     # MediaInstagramProfile,
@@ -188,7 +189,8 @@ class Media
     PARSERS.each do |parser|
       if parseable = parser.match?(self.url)
         self.provider, self.type = parseable.type.split('_')
-        self.data.merge!(parseable.parse_data(self.doc))
+        self.data.merge!(parseable.parse_data(self.doc, self.original_url))
+        self.url = parseable.url
         self.get_oembed_data
         parsed = true
       end

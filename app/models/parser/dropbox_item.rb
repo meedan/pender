@@ -13,7 +13,7 @@ module Parser
       end
     end
   
-    def parse_data(doc)
+    def parse_data(doc, _ = nil)
       handle_exceptions(StandardError) do
         metatags = { title: 'og:title', picture: 'og:image', description: 'og:description' }
         @parsed_data.merge!(get_html_metadata(doc, metatags))

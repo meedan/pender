@@ -12,7 +12,7 @@ module Parser
       end
     end
 
-    def parse_data(doc)
+    def parse_data(doc, _ = nil)
       set_data_field('description', url)
 
       handle_exceptions(StandardError) do

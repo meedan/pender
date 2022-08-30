@@ -30,11 +30,12 @@ module Parser
   
     def initialize(url)
       @url = url
+      @unavailable_page = ignore_url?(url)
       @parsed_data = {}.with_indifferent_access
       @parsed_data[:raw] = {}
     end
   
-    def parse_data(doc)
+    def parse_data(doc, original_url)
       raise NotImplementedError.new("Parser subclasses must implement parse_data")
     end
   
@@ -42,12 +43,15 @@ module Parser
     
     private
 
+    attr_reader :unavailable_page
+
     def ignore_url?(url)
       self.ignored_urls.each do |item|
         if url.match?(item[:pattern])
           return item[:reason]
         end
       end
+      false
     end
 
     # Error-setting callback for RequestHelper.get_html

@@ -14,7 +14,7 @@ module Parser
       end
     end
 
-    def parse_data(doc)
+    def parse_data(doc, _ = nil)
       id = url.match(INSTAGRAM_ITEM_URL)[3]
 
       @parsed_data.merge!(external_id: id)

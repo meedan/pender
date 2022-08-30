@@ -287,4 +287,46 @@ module MediaFacebookItem
   def replace_facebook_url(username)
     self.url = self.original_url if username == 'groups'
   end
+
+  def get_facebook_username
+    patterns = [
+      /^https?:\/\/([^\.]+\.)?facebook\.com\/people\/([^\/\?]+)/,
+      /^https:\/\/(www\.)?facebook\.com\/([0-9]+)$/,
+      /^https?:\/\/(www\.)?facebook\.com\/([^\/\?]+)/
+    ]
+    username = compare_patterns(decoded_uri(self.url), patterns)
+    return if ['events', 'livemap', 'watch', 'live', 'story.php', 'category', 'photo', 'photo.php'].include? username
+    if username === 'pages'
+      page = self.url.match(/^https?:\/\/(www\.)?facebook\.com\/pages\/([^\/]+)\/([^\/\?]+).*/)[2]
+      username = page == 'category' ? '' : page
+    elsif username.to_i > 0 || username === 'profile.php'
+      username = self.data['username']
+    end
+    username
+  end
+
+  def get_facebook_privacy_error(page = nil)
+    title = get_facebook_page_title(page)
+    return false if title.blank? || self.has_valid_crowdtangle_data?
+    if self.unavailable_page || ['log in or sign up to view', 'log into facebook', 'log in to facebook'].include?(title.downcase)
+      self.data['title'] = self.data['description'] = ''
+      self.data['error'] = { message: 'Login required to see this profile', code: LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED') }
+      return true
+    end
+  end
+  
+  def get_facebook_page_title(page)
+    title_element = page&.css('meta[property="og:title"]')
+    title_element = page&.css('title') if title_element.blank?
+    return nil if title_element.blank?
+    (title_element.attr('content') && title_element.attr('content').value) || title_element.text
+  end
+
+  def compare_patterns(url, patterns)
+    patterns.each do |p|
+      match = url.match p
+      return match[2] unless match.nil?
+    end
+    nil
+  end
 end

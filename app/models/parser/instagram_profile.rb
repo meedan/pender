@@ -14,7 +14,7 @@ module Parser
       end
     end
 
-    def parse_data(doc)
+    def parse_data(doc, _ = nil)
       username = url.match(INSTAGRAM_PROFILE_URL)[2]
       @parsed_data.merge!({
         'external_id': username,
