@@ -15,7 +15,7 @@ module Parser
       end
     end
 
-    def parse_data(_)
+    def parse_data(_, _ = nil)
       @url = replace_subdomain_pattern(url)
       username = url.match(/^https?:\/\/(www\.)?twitter\.com\/([^\/]+)$/)[2]
 

@@ -12,7 +12,7 @@ module Parser
       end
     end
 
-    def parse_data(doc)
+    def parse_data(doc, _ = nil)
       match = url.match(TIKTOK_PROFILE_URL)
       base_url = match[0] # Should this be set as canonical_url?
       username = match['username']

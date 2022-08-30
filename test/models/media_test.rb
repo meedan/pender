@@ -1080,4 +1080,14 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:get_crowdtangle_id)
     Media.unstub(:crowdtangle_request)
   end
+
+  test "should add not found error and return empty html" do
+    url = 'https://www.facebook.com/ldfkgjdfghodhg'
+
+    m = create_media url: url
+    data = m.as_json
+    assert_equal '', data[:html]
+    assert_equal LapisConstants::ErrorCodes::const_get('NOT_FOUND'), data[:error][:code]
+    assert_equal 'URL Not Found', data[:error][:message]
+  end
 end

@@ -12,7 +12,7 @@ module Parser
       end
     end
   
-    def parse_data(doc)
+    def parse_data(doc, _ = nil)
       handle_exceptions(StandardError) do
         title = get_kwai_text_from_tag(doc, '.info .title')
         name = get_kwai_text_from_tag(doc, '.name')

@@ -19,7 +19,7 @@ module Parser
       end
     end
 
-    def parse_data(_)
+    def parse_data(_, _ = nil)
       @url.gsub!(/(%23|#)!\//, '')
       @url = replace_subdomain_pattern(url)
       parts = url.match(TWITTER_ITEM_URL)
