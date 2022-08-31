@@ -91,6 +91,7 @@ class Media
     Parser::TwitterProfile,
     Parser::TwitterItem,
     Parser::FacebookProfile,
+    Parser::FacebookItem,
     Parser::InstagramItem,
     Parser::InstagramProfile,
     Parser::DropboxItem,
@@ -105,7 +106,7 @@ class Media
     # MediaTwitterProfile,
     # MediaTwitterItem,
     # MediaFacebookProfile,
-    MediaFacebookItem,
+    # MediaFacebookItem,
     # MediaInstagramItem,
     # MediaInstagramProfile,
     # MediaDropboxItem,
@@ -188,8 +189,9 @@ class Media
 
     PARSERS.each do |parser|
       if parseable = parser.match?(self.url)
+        # get_metatags <--- should this go back in here?
         self.provider, self.type = parseable.type.split('_')
-        self.data.merge!(parseable.parse_data(self.doc, self.original_url))
+        self.data.deep_merge!(parseable.parse_data(self.doc, self.original_url))
         self.url = parseable.url
         self.get_oembed_data
         parsed = true

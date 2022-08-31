@@ -48,11 +48,6 @@ class MediasHelperTest < ActionView::TestCase
     JSON.unstub(:parse)
   end
 
-  test 'should verify value on published_time and use second option if available' do
-    assert_equal '2018-08-21 00:19:25 +0000', verify_published_time('1534810765').to_s
-    assert_equal '2018-08-20 22:05:01 +0000', verify_published_time('1534810765', '1534802701').to_s
-  end
-
   test 'should validate proxies subkeys' do
     proxy_keys = [ 'host', 'port', 'user_prefix', 'pass', 'country_prefix', 'session_prefix' ]
     video_proxy_keys = [ 'host', 'port', 'user_prefix', 'pass' ]
@@ -95,52 +90,26 @@ class MediasHelperTest < ActionView::TestCase
   end
 
   test 'should encode URLs on raw key' do
-    Media.any_instance.stubs(:get_crowdtangle_id).returns('111')
     Media.stubs(:crowdtangle_request).with(:facebook, '111').returns({ result: { posts: [{"platformId": "111", "platform":"Facebook", "expanded":"https://www.facebook.com/people/á<80><99>á<80><84>á<80>ºá<80>¸á<80><91>á<80>®á<80>¸/100056594476400"}]}})
     url = 'https://www.facebook.com/voice.myanmarnewsmm/posts/148110680335452'
     m = Media.new url: url
     m.data = Media.minimal_data(m)
-    m.get_crowdtangle_data(:facebook)
+    m.get_crowdtangle_data('111')
     assert_equal "https://www.facebook.com/people/%C3%A1%3C80%3E%3C99%3E%C3%A1%3C80%3E%3C84%3E%C3%A1%3C80%3E%C2%BA%C3%A1%3C80%3E%C2%B8%C3%A1%3C80%3E%3C91%3E%C3%A1%3C80%3E%C2%AE%C3%A1%3C80%3E%C2%B8/100056594476400", cleanup_data_encoding(m.data)['raw']['crowdtangle']['posts'].first['expanded']
     Media.unstub(:crowdtangle_request)
-    Media.any_instance.unstub(:get_crowdtangle_id)
   end
 
   test 'should handle error when cannot encode URLs on raw key' do
-    Media.any_instance.stubs(:get_crowdtangle_id).returns('111')
     encoded_url = "https://www.facebook.com/people/á<80><99>á<80><84>á<80>ºá<80>¸á<80><91>á<80>®á<80>¸/100056594476400"
     Media.stubs(:crowdtangle_request).with(:facebook, '111').returns({ result: { posts: [{"platformId":"111","platform":"Facebook", "expanded": encoded_url }]}})
     url = 'https://www.facebook.com/voice.myanmarnewsmm/posts/148110680335452'
     m = Media.new url: url
     m.data = Media.minimal_data(m)
-    m.get_crowdtangle_data(:facebook)
+    m.get_crowdtangle_data('111')
 
     URI.stubs(:encode)
     URI.stubs(:encode).with(encoded_url).raises(StandardError)
     assert_equal encoded_url, m.cleanup_data_encoding(m.data)['raw']['crowdtangle']['posts'].first['expanded']
-    Media.unstub(:crowdtangle_request)
-    Media.any_instance.unstub(:get_crowdtangle_id)
-    URI.unstub(:encode)
-  end
-
-  test 'should handle error with crowdtangle requests' do
-    PenderAirbrake.stubs(:notify).once
-    WebMock.enable!
-    WebMock.stub_request(:any, /api.crowdtangle.com/).to_return(body: '["invalid_json" : 123]')
-    assert_equal({}, Media.crowdtangle_request('facebook', '111111_222222'))
-    WebMock.disable!
-    PenderAirbrake.unstub(:notify)
-  end
-
-  test 'should get crowdtandgle id from data' do
-    data = {
-      facebook: { uuid: 'facebook_id' }.with_indifferent_access,
-    }
-    url = 'https://example.com'
-    m = Media.new url: url
-
-    m.stubs(:data).returns(data[:facebook])
-    assert_equal 'facebook_id', m.get_crowdtangle_id(:facebook)
   end
 
   test 'should decode url' do

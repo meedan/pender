@@ -26,7 +26,8 @@ module Parser
       handle_exceptions(StandardError) do
         doc = reparse_if_default_tiktok_page(doc, base_url) || doc
         metatags = { picture: 'og:image', title: 'twitter:creator', description: 'description' }
-        @parsed_data.merge! get_html_metadata(doc, metatags)
+        @parsed_data['raw']['metatags'] = get_raw_metatags(doc)
+        @parsed_data.merge!(get_metadata_from_tags(parsed_data.dig('raw', 'metatags'), metatags))
         set_data_field('author_name', parsed_data['title'], username)
         @parsed_data.merge!({
           author_name: parsed_data['title'],

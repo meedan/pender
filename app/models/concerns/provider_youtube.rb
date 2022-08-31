@@ -46,4 +46,15 @@ module ProviderYoutube
     @parsed_data['description'] = 'This video is unavailable.'
     @parsed_data[:raw][:api] = { error: { message: error.message, code: LapisConstants::ErrorCodes::const_get('NOT_FOUND') }}
   end
+
+  def get_opengraph_metadata(raw_metatags)
+    select_metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time', author_name: 'og:site_name' }
+    data = get_metadata_from_tags(raw_metatags, select_metatags).with_indifferent_access
+    if (data['username'] =~ /\A#{URI::regexp}\z/)
+      data['author_url'] = data['username']
+      data.delete('username')
+    end
+    data['published_at'] = parse_published_time(data['published_at'])
+    data
+  end
 end

@@ -94,15 +94,6 @@ module MediasHelper
     RequestHelper.decoded_uri(url)
   end
 
-  def verify_published_time(time1, time2 = nil)
-    return Time.at(time2.to_i) unless time2.nil?
-    begin
-      Time.parse(time1)
-    rescue ArgumentError
-      Time.at(time1.to_i)
-    end
-  end
-
   def is_url?(url)
     begin
       uri = URI.parse(URI.encode(url))

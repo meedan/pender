@@ -31,7 +31,7 @@ module Parser
       handle_exceptions(StandardError) do
         metatags = @parsed_data['raw']['metatags'] = get_raw_metatags(doc)
         
-        @parsed_data['external_id'] = get_id_from_url(parseable_url, original_url) || get_id_from_doc(doc) || ''
+        @parsed_data['external_id'] = get_id_from_url(parseable_url, original_url) || self.class.get_id_from_doc(doc) || ''
         @parsed_data['id'] = parsed_data['external_id']
         
         picture = get_metatag_value('og:image', metatags)
@@ -41,13 +41,13 @@ module Parser
         username = get_username(parseable_url)
         set_data_field('username', username)
         
-        title = get_title(doc, metatags)
+        title = get_page_title(doc)
         set_data_field('title', title, 'Facebook')
         set_data_field('author_name', username, title&.gsub(' | Facebook', ''), 'Facebook')
 
         set_data_field('description', get_metatag_value('og:description', metatags), get_metatag_value('description', metatags))
         set_data_field('author_url', parseable_url)
-        set_facebook_privacy_error(title, unavailable_page)
+        set_facebook_privacy_error(doc, unavailable_page)
       end
       @parsed_data['published_at'] = ''
       parsed_data
@@ -71,26 +71,6 @@ module Parser
       username
     end
 
-    def get_title(html_page, metatags)
-      return unless html_page
-      if metatag_title = get_metatag_value('og:title', metatags)
-        metatag_title
-      elsif html_page.at_css('title')
-        html_page.at_css('title').content
-      end
-    end
-
-    def set_facebook_privacy_error(title, is_ignored_url)
-      return false if title.blank?
-      if is_ignored_url || ['log in or sign up to view', 'log into facebook', 'log in to facebook'].include?(title.downcase)
-        @parsed_data['title'] = @parsed_data['description'] = ''
-        @parsed_data['error'] = {
-          message: 'Login required to see this profile',
-          code: LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED'),
-        }
-      end
-    end
-
     def get_id_from_url(request_url, original_url)
       # Same as self.patterns, but only targeting numeric IDs (not usernames)
       id_patterns = [
@@ -106,19 +86,6 @@ module Parser
         end
       end
       id
-    end
-
-    def get_id_from_doc(html_page)
-      match = html_page.to_s.match(/"pageID"(\s?):(\s?)"(?<id>\d+)"/)
-      match['id'] unless match.nil?
-    end
-
-    def compare_patterns(compared_url, patterns, capture_group = 0)
-      patterns.each do |p|
-        match = compared_url.match p
-        return match[capture_group] unless match.nil?
-      end
-      nil
     end
   end
 end
