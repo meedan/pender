@@ -60,7 +60,7 @@ class DropboxUnitTest <  ActiveSupport::TestCase
     mocked_airbrake = MiniTest::Mock.new
     mocked_airbrake.expect :call, :return_value, [StandardError, Hash]
 
-    Parser::DropboxItem.any_instance.stubs(:get_html_metadata).raises(NoMethodError.new("Faking in test"))
+    Parser::DropboxItem.any_instance.stubs(:get_metadata_from_tags).raises(NoMethodError.new("Faking in test"))
 
     data = nil
     PenderAirbrake.stub(:notify, mocked_airbrake) do

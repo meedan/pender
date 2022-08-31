@@ -35,7 +35,8 @@ module Parser
         end
       end
 
-      metadata = get_opengraph_metadata(doc) || {}
+      metatags = @parsed_data['raw']['metatags'] = get_raw_metatags(doc)
+      metadata = get_opengraph_metadata(metatags) || {}
       set_data_field('title', parsed_data.dig('raw', 'api', 'title'), metadata.dig('title'))
       set_data_field('description', parsed_data.dig('raw', 'api', 'description'), metadata.dig('description'))
       set_data_field('picture', get_thumbnail(parsed_data), metadata.dig('picture'))

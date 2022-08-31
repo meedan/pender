@@ -75,18 +75,6 @@ module MediaPageItem
     data
   end
 
-  def get_twitter_metadata
-    metatags = { title: 'twitter:title', picture: 'twitter:image', description: 'twitter:description', username: 'twitter:creator', author_name: 'twitter:site' }
-    data = get_html_metadata(self, metatags).with_indifferent_access
-    data['author_url'] = twitter_author_url(data['username'])
-    data.delete('author_name') if Parser::TwitterItem.ignore_metatag(data['author_name'])
-    unless data['author_url']
-      data.delete('author_url')
-      data.delete('username')
-    end
-    data
-  end
-
   # This lives here until we refactor MediaPageItem
   def twitter_author_url(username)
     return if Parser::TwitterItem.ignore_metatag(username)
@@ -103,18 +91,6 @@ module MediaPageItem
       Rails.logger.warn level: 'WARN', message: "[Parser] #{e.message}", username: username, error_class: e.class
       nil
     end
-  end
-
-  # This lives here until we refactor MediaFacebookItem
-  def get_opengraph_metadata
-    metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time', author_name: 'og:site_name' }
-    data = get_html_metadata(self, metatags)
-    if (data['username'] =~ /\A#{URI::regexp}\z/)
-      data['author_url'] = data['username']
-      data.delete('username')
-    end
-    data['published_at'] = verify_published_time(data['published_at']) unless data['published_at'].blank?
-    data
   end
 
   def get_oembed_metadata

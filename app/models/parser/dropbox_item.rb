@@ -16,7 +16,8 @@ module Parser
     def parse_data(doc, _ = nil)
       handle_exceptions(StandardError) do
         metatags = { title: 'og:title', picture: 'og:image', description: 'og:description' }
-        @parsed_data.merge!(get_html_metadata(doc, metatags))
+        @parsed_data['raw']['metatags'] = get_raw_metatags(doc)
+        @parsed_data.merge!(get_metadata_from_tags(parsed_data.dig('raw', 'metatags'), metatags))
         @parsed_data['title'] = get_title_from_url(url) if parsed_data['title'].blank?
         @parsed_data['description'] = 'Shared with Dropbox' if parsed_data['description'].blank?
       end

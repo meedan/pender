@@ -1064,23 +1064,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal false, Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
   end
 
-  # Below tests are candidates for refactor - they reference metrics,
-  # but seem to mainly be implicitly testing other parts of the code base
-  # (crowdtangle_request and PenderConfig behavior)
-  test "should not store crowdtangle data when id on response is different from request" do
-    crowdtangle_data = {"result"=>{"posts"=>[{"platformId"=>"537326876328007_4451640454896610","platform"=>"Facebook","type"=>"native_video","message"=>"Attention‼️ ","account"=>{"id"=>1852061,"platform"=>"Facebook","platformId"=>"537326876328007"}}]}}
-    Media.any_instance.stubs(:get_crowdtangle_id).returns('563555033699775_1866497603524209')
-    Metrics.stubs(:crowdtangle_request).returns(crowdtangle_data)
-    url = 'https://www.facebook.com/watch/?v=1866497603524209'
-    m = create_media url: url
-    m.as_json
-    id = Media.get_id(url)
-    data = Pender::Store.current.read(id, :json)
-    assert_match /Cannot get data/, data['raw']['crowdtangle']['error']['message']
-    Media.any_instance.unstub(:get_crowdtangle_id)
-    Media.unstub(:crowdtangle_request)
-  end
-
   test "should add not found error and return empty html" do
     url = 'https://www.facebook.com/ldfkgjdfghodhg'
 
@@ -1089,5 +1072,80 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', data[:html]
     assert_equal LapisConstants::ErrorCodes::const_get('NOT_FOUND'), data[:error][:code]
     assert_equal 'URL Not Found', data[:error][:message]
+  end
+
+  test "should store oembed data of a facebook page" do
+    m = create_media url: 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
+    m.as_json
+    m.data.delete(:error)
+    m.send(:data_from_oembed_item)
+    assert m.data['raw']['oembed'].is_a?(Hash), "Expected #{m.data['raw']['oembed']} to be a Hash"
+    assert !m.data['oembed']['author_name'].blank?
+    assert !m.data['oembed']['title'].blank?
+  end
+
+  test "should return item as oembed" do
+    url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
+    m = create_media url: url
+    data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150)
+    assert !data['title'].blank?
+    assert_match 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
+    assert_equal 'facebook', data['provider_name']
+    assert_equal 'http://www.facebook.com', data['provider_url']
+    assert_equal 300, data['width']
+    assert_equal 150, data['height']
+    assert_equal '<iframe src="http://pender.org/medias.html?url=https://www.facebook.com/pages/Meedan/105510962816034?fref=ts" width="300" height="150" scrolling="no" border="0" seamless>Not supported</iframe>', data['html']
+  end
+
+  test "should return item as oembed when data is not on cache" do
+    url = 'https://www.facebook.com/photo.php?fbid=265901254902229&set=pb.100044470688234.-2207520000..&type=3'
+    m = create_media url: url
+    data = Media.as_oembed(nil, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
+    assert !data['title'].blank?
+    assert !data['author_url'].blank?
+    assert_equal 'facebook', data['provider_name']
+    assert_equal 'http://www.facebook.com', data['provider_url']
+    assert_equal 300, data['width']
+    assert_equal 150, data['height']
+    assert_equal "<iframe src=\"http://pender.org/medias.html?url=#{url}\" width=\"300\" height=\"150\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>", data['html']
+    assert_not_nil data['thumbnail_url']
+  end
+
+  test "should return item as oembed when data is on cache and raw key is missing" do
+    url = 'https://www.facebook.com/photo/?fbid=264562325036122&set=pb.100044470688234.-2207520000..'
+    m = create_media url: url
+    json_data = m.as_json
+    json_data.delete('raw')
+    data = Media.as_oembed(json_data, "http://pender.org/medias.html?url=#{url}", 300, 150)
+    assert !data['title'].blank?
+    assert !data['author_url'].blank?
+    assert_equal 'facebook', data['provider_name']
+    assert_equal 'http://www.facebook.com', data['provider_url']
+    assert_equal 300, data['width']
+    assert_equal 150, data['height']
+    assert_equal "<iframe src=\"http://pender.org/medias.html?url=#{url}\" width=\"300\" height=\"150\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>", data['html']
+    assert_not_nil data['thumbnail_url']
+  end
+
+  test "should return item as oembed when the page has oembed url" do
+    url = 'https://www.facebook.com/teste637621352/posts/1028416870556238'
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:title' content='Teste'>"))
+    m = create_media url: url
+    data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
+    assert_match /teste/, data['title'].downcase
+    assert_match /facebook.com\//, data['author_url']
+    assert_equal 'facebook', data['provider_name']
+    assert_match /https?:\/\/www.facebook.com/, data['provider_url']
+    Media.any_instance.unstub(:get_html)
+  end
+  
+  test "should store oembed data of a facebook post" do
+    m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
+    m.as_json
+    m.data.delete(:error)
+    m.send(:data_from_oembed_item)
+    assert m.data['raw']['oembed'].is_a? Hash
+    assert_match /facebook.com/, m.data['oembed']['provider_url']
+    assert_equal "facebook", m.data['oembed']['provider_name'].downcase
   end
 end

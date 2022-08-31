@@ -1,5 +1,4 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
-
 class FacebookProfileIntegrationTest < ActiveSupport::TestCase
   test "should parse Facebook page" do
     m = create_media url: 'https://www.facebook.com/ironmaiden/?fref=ts'
@@ -89,7 +88,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
 
   # HTML when login is required (redirect or not)
   def login_doc
-    @login_doc ||= login_doc = response_fixture_from_file('facebook-profile-page_login.html', parse_as: :html)
+    @login_doc ||= response_fixture_from_file('facebook-profile-page_login.html', parse_as: :html)
   end
 
   def empty_doc

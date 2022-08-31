@@ -69,30 +69,16 @@ module Parser
       end
     end
     
-    def get_html_metadata(doc, metatags)
-      raw_metatags = []
+    def get_metadata_from_tags(raw_metatags, select_metatags)
       metadata = {}.with_indifferent_access
-      
-      raw_metatags = get_raw_metatags(doc)
-      metatags.each do |key, value|
+
+      select_metatags.each do |key, value|
         metatag = raw_metatags.find { |tag| tag['property'] == value || tag['name'] == value }
         metadata[key] = metatag['content'] if metatag
       end
-      metadata['raw'] = { 'metatags' => raw_metatags }
       metadata
     end
 
-    def get_opengraph_metadata(doc)
-      metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time', author_name: 'og:site_name' }
-      data = get_html_metadata(doc, metatags)
-      if (data['username'] =~ /\A#{URI::regexp}\z/)
-        data['author_url'] = data['username']
-        data.delete('username')
-      end
-      data['published_at'] = verify_published_time(data['published_at']) unless data['published_at'].blank?
-      data
-    end
-  
     def get_raw_metatags(doc)
       metatag_data = []
       unless doc.nil?
@@ -107,6 +93,23 @@ module Parser
       metatag_data
     end
   
+    def parse_published_time(time)
+      return if time.blank?
+      begin
+        Time.parse(time)
+      rescue ArgumentError
+        Time.at(time.to_i)
+      end
+    end
+
+    def compare_patterns(compared_url, patterns, capture_group = 0)
+      patterns.each do |p|
+        match = compared_url.match p
+        return match[capture_group] unless match.nil?
+      end
+      nil
+    end
+
     def handle_exceptions(exception)
       begin
         yield
