@@ -22,9 +22,9 @@ module ProviderFacebook
     end
   end
 
-  # def oembed_url
-  #   "https://www.facebook.com/plugins/post/oembed.json/?url=#{RequestHelper.parse_url(self.url)}"
-  # end
+  def oembed_url(_ = nil)
+    "https://www.facebook.com/plugins/post/oembed.json/?url=#{RequestHelper.parse_url(self.url)}"
+  end
 
   private
   

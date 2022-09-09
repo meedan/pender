@@ -272,4 +272,9 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
 
     assert_equal 'https://pbs.twimg.com/media/C7dYir1VMAAi46b.jpg', data['picture']
   end
+
+  test "#oembed_url returns URL with the instance URL" do
+    oembed_url = Parser::TwitterItem.new('https://twitter.com/fake-account/status/1234').oembed_url
+    assert_equal 'https://publish.twitter.com/oembed?url=https://twitter.com/fake-account/status/1234', oembed_url
+  end
 end

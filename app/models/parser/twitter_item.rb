@@ -12,11 +12,6 @@ module Parser
       def patterns
         [TWITTER_ITEM_URL]
       end
-
-      # Used in MediaPage Item
-      def ignore_metatag(value)
-        value.blank? || value == '@username'
-      end
     end
 
     def parse_data(_, _ = nil)
@@ -70,7 +65,7 @@ module Parser
 
     # Used in MediaPage Item as twitter_author_url
     def author_url(username)
-      return if self.class.ignore_metatag(username)
+      return if bad_username?(username)
       begin
         twitter_client.user(username).url.to_s
       rescue Twitter::Error => e

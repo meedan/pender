@@ -14,9 +14,9 @@ module ProviderTwitter
     end
   end
 
-  # def oembed_url
-  #   "https://publish.twitter.com/oembed?url=#{url}"
-  # end
+  def oembed_url(_ = nil)
+    "https://publish.twitter.com/oembed?url=#{self.url}"
+  end
 
   private
 

@@ -326,4 +326,9 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
 
     assert_equal 'https://facebook.com/fake-original-url', data['author_url']
   end
+
+  test "#oembed_url returns URL with the instance URL" do
+    oembed_url = Parser::FacebookProfile.new('https://www.facebook.com/fakeaccount').oembed_url
+    assert_equal 'https://www.facebook.com/plugins/post/oembed.json/?url=https://www.facebook.com/fakeaccount', oembed_url
+  end
 end

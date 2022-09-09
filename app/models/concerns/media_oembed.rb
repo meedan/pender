@@ -8,7 +8,7 @@ module MediaOembed
     else
       self.as_json if self.data.empty?
       %w(type provider).each { |key| self.data[key] = self.send(key.to_sym) }
-      self.data['oembed'] = self.data_from_oembed_item ? self.data['raw']['oembed'] : Media.default_oembed(self.data, url, maxwidth, maxheight)
+      self.data['oembed'] = (self.data.dig('raw','oembed') && self.data.dig('raw','oembed','error').blank?) ? self.data['raw']['oembed'] : Media.default_oembed(self.data, url, maxwidth, maxheight)
     end
     self.data['author_name'] ||= self.data.dig('raw', 'oembed', 'author_name')
     self.data['oembed']

@@ -123,4 +123,9 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
       Parser::TwitterProfile.new('https://twitter.com/fake-account').parse_data('')
     end
   end
+
+  test "#oembed_url returns URL with the instance URL" do
+    oembed_url = Parser::TwitterProfile.new('https://twitter.com/fake-account').oembed_url
+    assert_equal 'https://publish.twitter.com/oembed?url=https://twitter.com/fake-account', oembed_url
+  end
 end

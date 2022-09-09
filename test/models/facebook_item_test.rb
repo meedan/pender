@@ -282,4 +282,9 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_nil data['title']
     assert_nil data['description']
   end
+
+  test "#oembed_url returns URL with the instance URL" do
+    oembed_url = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/1234').oembed_url
+    assert_equal 'https://www.facebook.com/plugins/post/oembed.json/?url=https://www.facebook.com/fakeaccount/posts/1234', oembed_url
+  end
 end

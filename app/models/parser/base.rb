@@ -38,6 +38,13 @@ module Parser
     def parse_data(doc, original_url)
       raise NotImplementedError.new("Parser subclasses must implement parse_data")
     end
+
+    # Default implementation, subclasses can override
+    def oembed_url(doc)
+      return if doc.nil?
+      tag = doc.at_css('link[type="application/json+oembed"]')
+      tag.attribute('href').to_s unless tag.nil?
+    end
   
     attr_reader :url, :parsed_data
     
@@ -71,7 +78,7 @@ module Parser
     
     def get_metadata_from_tags(raw_metatags, select_metatags)
       metadata = {}.with_indifferent_access
-
+      
       select_metatags.each do |key, value|
         metatag = raw_metatags.find { |tag| tag['property'] == value || tag['name'] == value }
         metadata[key] = metatag['content'] if metatag
@@ -93,6 +100,36 @@ module Parser
       metatag_data
     end
   
+    def get_opengraph_metadata(raw_metatags)
+      select_metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time', author_name: 'og:site_name' }
+      data = get_metadata_from_tags(raw_metatags, select_metatags).with_indifferent_access
+      if (data['username'] =~ /\A#{URI::regexp}\z/)
+        data['author_url'] = data['username']
+        data.delete('username')
+      end
+      data['published_at'] = parse_published_time(data['published_at'])
+      data
+    end
+    
+    def get_twitter_metadata(raw_metatags)
+      select_metatags = { title: 'twitter:title', picture: 'twitter:image', description: 'twitter:description', username: 'twitter:creator', author_name: 'twitter:site' }
+      data = get_metadata_from_tags(raw_metatags, select_metatags).with_indifferent_access
+      # Commenting until we determine usefulness and how to pass 
+      # Twitter comment
+
+      # data['author_url'] = twitter_author_url(data['username'])
+      # data.delete('author_name') if bad_username?(data['author_name'])
+      # unless data['author_url']
+      #   data.delete('author_url')
+      #   data.delete('username')
+      # end
+      data
+    end
+
+    def bad_username?(value)
+      value.blank? || value == '@username'
+    end
+
     def parse_published_time(time)
       return if time.blank?
       begin
