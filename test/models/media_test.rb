@@ -404,7 +404,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should return empty html on oembed when script has http src" do
-    Media.any_instance.stubs(:get_oembed_url).returns('https://www.politico.com/story/2017/09/07/facebook-fake-news-social-media-242407?_embed=true&_format=oembed')
+    Parser::Base.any_instance.stubs(:oembed_url).returns('https://www.politico.com/story/2017/09/07/facebook-fake-news-social-media-242407?_embed=true&_format=oembed')
     m = create_media url: 'https://politi.co/2j7qyT0'
     oembed = '{"version":"1.0","type":"rich","html":"<script type=\"text/javascript\" src=\"http://www.politico.com/story/2017/09/07/facebook-fake-news-social-media-242407?_embed=true&amp;_format=js\"></script>"}'
     response = 'mock'
