@@ -181,21 +181,6 @@ class Media
       break if parsed
     end
 
-    unless parsed
-      TYPES.each do |type, patterns|
-        patterns.each do |pattern|
-          if pattern.match?(self.url)
-            get_metatags(self)
-            self.provider, self.type = type.split('_')
-            self.send("data_from_#{type}")
-            self.get_oembed_data
-            parsed = true
-            break
-          end
-        end
-        break if parsed
-      end
-    end
     cleanup_html_entities(self)
   end
 
