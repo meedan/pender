@@ -63,7 +63,7 @@ class Media
     self.original_url = self.url.strip
     self.data = {}.with_indifferent_access
     self.follow_redirections
-    self.url = Media.normalize_url(self.url) unless self.get_canonical_url
+    self.url = RequestHelper.normalize_url(self.url) unless self.get_canonical_url
     self.try_https
   end
 
@@ -84,7 +84,6 @@ class Media
     Pender::Store.current.read(Media.get_id(self.original_url), :json)
   end
 
-  # Parsers and archivers
   PARSERS = [
     Parser::YoutubeProfile,
     Parser::YoutubeItem,
@@ -102,19 +101,6 @@ class Media
   ]
 
   [
-    # MediaYoutubeProfile,
-    # MediaYoutubeItem,
-    # MediaTwitterProfile,
-    # MediaTwitterItem,
-    # MediaFacebookProfile,
-    # MediaFacebookItem,
-    # MediaInstagramItem,
-    # MediaInstagramProfile,
-    # MediaDropboxItem,
-    # MediaTiktokItem, 
-    # MediaTiktokProfile, 
-    # MediaKwaiItem,
-    # MediaPageItem, 
     MediaArchiveIsArchiver, 
     MediaArchiveOrgArchiver, 
     MediaSchemaOrg, 
@@ -136,12 +122,8 @@ class Media
     { url: instance.url, provider: provider || 'page', type: type || 'item', parsed_at: Time.now.to_s, favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}" }
   end
 
-  def self.validate_url(url)
-    RequestHelper.validate_url(url)
-  end
-
   def self.get_id(url)
-    Digest::MD5.hexdigest(Media.normalize_url(url))
+    Digest::MD5.hexdigest(RequestHelper.normalize_url(url))
   end
 
   def self.update_cache(url, newdata)
@@ -221,30 +203,26 @@ class Media
   # Parse the page and set it to media `doc`. If the `doc` has a tag (`og:url`, `twitter:url`, `rel='canonical`) with a different url, the media `url` is updated with the url found, the page is parsed and the media `doc` is updated
 
   def get_canonical_url
-    self.doc = self.get_html(Media.html_options(self.url))
+    self.doc = self.get_html(RequestHelper.html_options(self.url))
     tag = self.doc&.at_css("meta[property='og:url']") || self.doc&.at_css("meta[property='twitter:url']") || self.doc&.at_css("link[rel='canonical']")
     canonical_url = tag&.attr('content') || tag&.attr('href')
     get_parsed_url(canonical_url) if canonical_url
   end
 
   def get_parsed_url(canonical_url)
-    return false if !Media.validate_url(canonical_url)
+    return false if !RequestHelper.validate_url(canonical_url)
     if canonical_url != self.url && !self.ignore_url?(canonical_url)
-      self.url = absolute_url(canonical_url)
-      self.doc = self.get_html(Media.html_options(self.url)) if self.doc.nil?
+      self.url = RequestHelper.absolute_url(self.url, canonical_url)
+      self.doc = self.get_html(RequestHelper.html_options(self.url)) if self.doc.nil?
     end
     true
-  end
-
-  def self.normalize_url(url)
-    RequestHelper.normalize_url(url)
   end
 
   ##
   # Update the media `url` with the url found after all redirections
 
   def follow_redirections
-    self.url = self.add_scheme(decoded_uri(self.url.strip))
+    self.url = RequestHelper.add_scheme(decoded_uri(self.url.strip))
     attempts = 0
     code = '301'
     path = []
@@ -256,10 +234,6 @@ class Media
       code = response.code
       self.set_url_from_location(response, path)
     end
-  end
-
-  def add_scheme(url)
-    RequestHelper.add_scheme(url)
   end
 
   def set_url_from_location(response, path)
@@ -276,7 +250,7 @@ class Media
   def request_media_url
     response = nil
     Retryable.retryable(tries: 3, sleep: 1, :not => [Net::ReadTimeout]) do
-      response = Media.request_url(url, 'Get')
+      response = RequestHelper.request_url(url, 'Get')
     end
     response
   end
@@ -290,56 +264,19 @@ class Media
       uri = URI.parse(self.url)
       unless (uri.kind_of?(URI::HTTPS))
         self.url.gsub!(/^http:/i, 'https:')
-        Media.request_url(self.url, 'Get').value
+        RequestHelper.request_url(self.url, 'Get').value
       end
     rescue
       self.url.gsub!(/^https:/i, 'http:')
     end
   end
 
-  def self.request_url(url, verb = 'Get')
-    RequestHelper.request_url(url, verb)
-  end
-
-  def self.request_uri(uri, verb = 'Get')
-    RequestHelper.request_uri(uri, verb)
-  end
-
   def get_html(header_options = {}, force_proxy = false)
     RequestHelper.get_html(self.url, self.method(:set_error), header_options, force_proxy)
   end
 
-  # Error callback
   def set_error(**error_hash)
     return if error_hash.empty?
     self.data[:error] = error_hash
-  end
-
-  def self.html_options(url)
-    RequestHelper.html_options(url)
-  end
-
-  def self.get_cf_credentials(uri)
-    RequestHelper.get_cf_credentials(uri)
-  end
-
-  def top_url(url)
-    RequestHelper.top_url(url)
-  end
-
-  def absolute_url(path = '')
-    RequestHelper.absolute_url(self.url, path)
-  end
-
-  def self.parse_url(url)
-    RequestHelper.parse_url(url)
-  end
-
-  def redirect_https_to_http?(header_options, message)
-    RequestHelper.redirect_https_to_http?(header_options, message)
-  end
-
-  def self.set_cookies(uri)
-    RequestHelper.set_cookies(uri)
   end
 end

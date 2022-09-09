@@ -82,12 +82,11 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     response = 'mock'; response.stubs(:code).returns('302')
     response.stubs(:header).returns({ 'location' => redirection_to_login_page })
     response_login_page = 'mock'; response_login_page.stubs(:code).returns('200')
-    Media.stubs(:request_url).with(url, 'Get').returns(response)
-    Media.stubs(:request_url).with(redirection_to_login_page, 'Get').returns(response_login_page)
-    Media.stubs(:request_url).with(redirection_to_login_page + '?next=https%3A%2F%2Fwww.facebook.com%2Fugmhmyanmar%2Fposts%2F2850282508516442', 'Get').returns(response_login_page)
+    RequestHelper.stubs(:request_url).with(url, 'Get').returns(response)
+    RequestHelper.stubs(:request_url).with(redirection_to_login_page, 'Get').returns(response_login_page)
+    RequestHelper.stubs(:request_url).with(redirection_to_login_page + '?next=https%3A%2F%2Fwww.facebook.com%2Fugmhmyanmar%2Fposts%2F2850282508516442', 'Get').returns(response_login_page)
     m = create_media url: url
     assert_equal url, m.url
-    Media.unstub(:request_url)
   end
 
   test "should return empty html for deleted posts" do
@@ -98,7 +97,6 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
       data = m.as_json
       assert_equal '', data[:html]
     end
-    Media.any_instance.unstub(:get_html)
   end
 
   test "should add login required error and return empty html and description" do
@@ -113,8 +111,6 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert_equal m.url, data[:title]
     assert data[:description].empty?
     assert data[:html].empty?
-    Media.any_instance.unstub(:get_html)
-    Media.any_instance.unstub(:follow_redirections)
   end
 
   test "should get canonical URL parsed from facebook html when it is relative" do
@@ -124,8 +120,6 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:follow_redirections)
     m = create_media url: url
     assert_equal url, m.url
-    Media.any_instance.unstub(:get_html)
-    Media.any_instance.unstub(:follow_redirections)
   end
 
   test "should get canonical URL parsed from facebook html when it is a page" do
@@ -135,9 +129,6 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     Media.stubs(:validate_url).with(canonical_url).returns(true)
     m = create_media url: 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479?pnref=story.unseen-section'
     assert_equal canonical_url, m.url
-    Media.any_instance.unstub(:get_html)
-    Media.any_instance.unstub(:follow_redirections)
-    Media.unstub(:validate_url)
   end
 end
 

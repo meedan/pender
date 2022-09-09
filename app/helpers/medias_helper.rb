@@ -134,7 +134,7 @@ module MediasHelper
     [:author_picture, :picture].each do |attr|
       img_url = self.data.dig(attr)
       next if img_url.blank?
-      parsed_url = Media.parse_url(img_url)
+      parsed_url = RequestHelper.parse_url(img_url)
       if upload_image(id, attr, parsed_url)
         updates[attr] = self.data[attr]
       end

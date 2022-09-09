@@ -16,7 +16,7 @@ class BasePerformance < ActiveSupport::TestCase
   end
 
   test "1 validate_link" do
-    with_time('validate') { Media.validate_url(@url) unless @url.blank? }
+    with_time('validate') { RequestHelper.validate_url(@url) unless @url.blank? }
   end
 
   test "2 instantiate_link" do
