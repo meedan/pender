@@ -73,43 +73,6 @@ class MediaTest < ActiveSupport::TestCase
     ENV['hosts'] = host
   end
 
-  test "should parse meta tags as fallback" do
-    m = create_media url: 'http://ca.ios.ba/'
-    assert_match 'https://ca.ios.ba/', m.url
-    data = m.as_json
-    assert_match 'CaioSBA', data['title']
-    assert_match 'Personal website of Caio Sacramento de Britto Almeida', data['description']
-    assert_equal '', data['published_at']
-    assert_equal '', data['username']
-    assert_match 'https://ca.ios.ba', data['author_url']
-    assert_equal '', data['picture']
-  end
-
-  test "should parse opengraph metatags" do
-    m = create_media url: 'https://hacktoberfest.digitalocean.com/'
-    m.as_json
-    data = m.get_opengraph_metadata
-    assert_match "Hacktoberfest '21", data['title']
-    assert_match(/Open source/, data['description'])
-    assert_match 'Hacktoberfest presented by DigitalOcean', data['author_name']
-    assert_not_nil data['picture']
-  end
-  
-  test "should not overwrite metatags with nil" do
-    m = create_media url: 'http://meedan.com'
-    m.expects(:get_opengraph_metadata).returns({author_url: nil})
-    m.expects(:get_twitter_metadata).returns({author_url: nil})
-    m.expects(:get_oembed_metadata).returns({})
-    m.expects(:get_basic_metadata).returns({description: "", title: "Meedan Checkdesk", username: "Tom", published_at: "", author_url: "https://meedan.checkdesk.org", picture: 'meedan.png'})
-    data = m.as_json
-    assert_match 'Meedan Checkdesk', data['title']
-    assert_match 'Tom', data['username']
-    assert_not_nil data['description']
-    assert_not_nil data['picture']
-    assert_not_nil data['published_at']
-    assert_match 'https://meedan.checkdesk.org', data['author_url']
-  end
-
   test "should get relative canonical URL parsed from html tags" do
     m = create_media url: 'https://www.bbc.com'
     data = m.as_json
@@ -227,36 +190,6 @@ class MediaTest < ActiveSupport::TestCase
     OpenURI.unstub(:open_uri)
   end
 
-  test "should parse ca yahoo site" do
-    m = create_media url: 'https://ca.yahoo.com/'
-    data = m.as_json
-    assert_equal 'item', data['type']
-    assert_equal 'page', data['provider']
-    assert_match 'Yahoo', data['title']
-    assert_not_nil data['description']
-    assert_not_nil data['published_at']
-    assert_equal '', data['username']
-    assert_match 'https://ca.yahoo.com', data['author_url']
-    assert_match 'Yahoo', data['author_name']
-    assert_not_nil data['picture']
-    assert_nil data['error']
-  end
-
-  test "should parse us yahoo site" do
-    m = create_media url: 'https://www.yahoo.com/'
-    data = m.as_json
-    assert_equal 'item', data['type']
-    assert_equal 'page', data['provider']
-    assert_match /Yahoo/, data['title']
-    assert_not_nil data['description']
-    assert_not_nil data['published_at']
-    assert_equal '', data['username']
-    assert_not_nil data['author_url']
-    assert_match /Yahoo/, data['author_name']
-    assert_not_nil data['picture']
-    assert_nil data['error']
-  end
-
   test "should return absolute url" do
     m = create_media url: 'https://www.example.com/'
     paths = {
@@ -271,36 +204,6 @@ class MediaTest < ActiveSupport::TestCase
       returned = m.send(:absolute_url, path)
       assert_equal expected, returned
     end
-  end
-
-  test "should parse pages when the scheme is missing on oembed url" do
-    url = 'https://www.hongkongfp.com/2017/03/01/hearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers/'
-    m = create_media url: url
-    m.expects(:get_oembed_url).returns('//www.hongkongfp.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.hongkongfp.com%2F2017%2F03%2F01%2Fhearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers%2F')
-    data = m.as_json
-    assert_equal 'item', data['type']
-    assert_equal 'page', data['provider']
-    assert_match(/Hong Kong Free Press/, data['title'])
-    assert_match(/Hong Kong/, data['description'])
-    assert_not_nil data['published_at']
-    assert_match /https:\/\/.+AFP/, data['author_url']
-    assert_not_nil data['picture']
-    assert_nil data['error']
-  end
-
-  test "should handle exception when raises some error when get oembed data" do
-    url = 'https://www.hongkongfp.com/2017/03/01/hearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers/'
-    m = create_media url: url
-    m.expects(:get_oembed_url).raises(StandardError)
-    data = m.as_json
-    assert_equal 'item', data['type']
-    assert_equal 'page', data['provider']
-    assert_match(/Hong Kong Free Press/, data['title'])
-    assert_match(/Hong Kong/, data['description'])
-    assert_not_nil data['published_at']
-    assert_match /https:\/\/.+AFP/, data['author_url']
-    assert_not_nil data['picture']
-    assert_match(/StandardError/, data['error']['message'])
   end
 
   test "should handle zlib error when opening a url" do
@@ -465,12 +368,6 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:data_from_page_item)
   end
 
-  test "should store metatags in an Array" do
-    m = create_media url: 'https://www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html'
-    data = m.as_json
-    assert data['raw']['metatags'].is_a? Array
-    assert !data['raw']['metatags'].empty?
-  end
 
   test "should not return empty values on metadata keys due to bad html" do
     m = create_media url: 'http://www.politifact.com/truth-o-meter/article/2017/may/09/year-fact-checking-about-james-comey-clinton-email/'
@@ -483,36 +380,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal ['property', 'content'], tag_description.keys
     assert_match /\AJames Comey is out as FBI director.\z/, tag_description['content']
     Media.any_instance.unstub(:doc)
-  end
-
-  test "should parse url with redirection https -> http" do
-    m = create_media url: 'https://noticias.uol.com.br/cotidiano/ultimas-noticias/2017/07/18/nove-anos-apos-ser-condenado-por-moro-beira-mar-repete-trafico-em-presidio-federal.htm'
-    data = m.as_json
-    assert_equal 'item', data['type']
-    assert_equal 'page', data['provider']
-    assert_match /Nove anos após ser condenado/, data['title']
-    assert_not_nil data['description']
-    assert_not_nil data['published_at']
-    assert_equal '', data['username']
-    assert_equal 'https://noticias.uol.com.br', data['author_url']
-    assert_equal 'UOLNoticias @UOL', data['author_name']
-    assert_not_nil data['picture']
-    assert_nil data['error']
-  end
-
-  test "should get author_name from site" do
-    m = create_media url: 'https://noticias.uol.com.br/'
-    data = m.as_json
-    assert_equal 'item', data['type']
-    assert_equal 'page', data['provider']
-    assert_match /Acompanhe as últimas notícias do Brasil e do mundo/, data['title']
-    assert_not_nil data['description']
-    assert_not_nil data['published_at']
-    assert_equal '', data['username']
-    assert_equal 'https://noticias.uol.com.br', data['author_url']
-    assert_equal 'UOLNoticias @UOL', data['author_name']
-    assert_not_nil data['picture']
-    assert_nil data['error']
   end
 
   test "should check if article:author is a url and add it to author_url" do
@@ -663,17 +530,6 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:get_oembed_data)
   end
 
-  test "should parse page when item on microdata doesn't have type" do
-    url = 'https://medium.com/meedan-updates/meedan-at-mediaparty-2019-378f7202d460'
-    m = create_media url: url
-    Mida::Document.stubs(:new).with(m.doc).returns(OpenStruct.new(items: [OpenStruct.new(id: 'id')]))
-    data = m.as_json
-    assert_equal 'item', data['type']
-    assert_equal 'page', data['provider']
-    assert_nil data['error']
-    Mida::Document.unstub(:new)
-  end
-
   test "should request URL with User-Agent on header" do
     url = 'https://globalvoices.org/2019/02/16/nigeria-postpones-2019-general-elections-hours-before-polls-open-citing-logistics-and-operations-concerns'
     uri = Media.parse_url url
@@ -683,17 +539,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'success', Media.request_url(url, 'Get')
     Net::HTTP::Get.unstub(:new)
     Net::HTTP.any_instance.unstub(:request)
-  end
-
-  test "should convert published_time to time without error" do
-    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='article:published_time' content='1534810765'>"))
-    url = 'https://www.pagina12.com.ar/136611-tecnologias-de-la-desinformacion'
-    m = create_media url: url
-    data = m.as_json
-    assert_nothing_raised do
-      data['published_at'].to_time
-    end
-    Media.any_instance.unstub(:doc)
   end
 
   test "should add cookie from cookie.txt on header if domain matches" do
@@ -854,16 +699,6 @@ class MediaTest < ActiveSupport::TestCase
     OpenURI.unstub(:open_uri)
   end
 
-  test "should get html again if doc is nil" do
-    m = Media.new url: 'http://www.example.com'
-    doc = m.send(:get_html, Media.html_options(m.url))
-    Media.any_instance.stubs(:get_html).with(Media.send(:html_options, m.url)).returns(nil)
-    Media.any_instance.stubs(:get_html).with({allow_redirections: :all}).returns(doc)
-    m.as_json
-    assert_not_nil m.doc
-    Media.any_instance.unstub(:get_html)
-  end
-
   test "should update media cache" do
     url = 'http://www.example.com'
     id = Media.get_id(url)
@@ -873,21 +708,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal({}, Pender::Store.current.read(id, :json)['archives'])
     Media.update_cache(url, { archives: { 'archive_org' => 'new-data' } })
     assert_equal({'archive_org' => 'new-data'}, Pender::Store.current.read(id, :json)['archives'])
-  end
-
-  test "should not send errbit error when twitter username is a default" do
-    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta name='twitter:title' content='Page with default Twitter username'><br/><meta name='twitter:creator' content='@username'>"))
-    Airbrake.stubs(:configured?).returns(true)
-    Airbrake.stubs(:notify).never
-
-    m = create_media url: 'http://www.example.com'
-    m.data = Media.minimal_data(m)
-    m.get_metatags(m)
-    assert_equal 'Page with default Twitter username', m.get_twitter_metadata['title']
-
-    Airbrake.unstub(:configured?)
-    Airbrake.unstub(:notify)
-    Media.any_instance.unstub(:doc)
   end
 
   test "should add error on raw oembed and generate the default oembed when can't parse oembed" do
@@ -905,22 +725,6 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:oembed_get_data_from_url)
   end
 
-  test "should handle exception when oembed content is not a valid json" do
-    oembed_response = 'response'
-    oembed_response.stubs(:code).returns('200')
-    oembed_response.stubs(:message).returns('OK')
-    error = '\xEF\xBB\xBF{"version":"1.0","provider_name":"Philippines Lifestyle News"}'
-    oembed_response.stubs(:body).returns(error)
-    Media.any_instance.stubs(:oembed_get_data_from_url).returns(oembed_response)
-    url = 'https://web.archive.org/web/20190226023026/http://philippineslifestyle.com/flat-earth-theory-support-philippines/'
-    m = Media.new url: url
-    m.data = Media.minimal_data(m)
-    m.data_from_oembed_item
-    assert_match error, m.data[:raw][:oembed]['error']['message']
-    assert_nil m.data['error']
-    Media.any_instance.unstub(:oembed_get_data_from_url)
-  end
-
   test "should follow redirections of path relative urls" do
     url = 'https://www.yousign.org/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358'
     WebMock.enable!
@@ -930,22 +734,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.yousign.org/v2_404.php?notfound=/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358', m.url
     WebMock.disable!
     Media.any_instance.unstub(:get_canonical_url)
-  end
-
-  test "should return error if URL is not safe" do
-    Media.any_instance.stubs(:unsafe?).returns(true)
-    assert_raises Pender::UnsafeUrl do
-      m = create_media url: 'http://example.com/paytm.wishesrani.com'
-      data = m.as_json
-      assert_equal 'UNSAFE', data['error']['code']
-    end
-    Media.any_instance.unstub(:unsafe?)
-  end
-
-  test "should not crash if can't check if URL is not safe" do
-    m = create_media url: 'https://meedan.com'
-    data = m.as_json
-    assert !data['error']
   end
 
   test "should not reach the end of file caused by User-Agent" do
@@ -978,15 +766,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal url, data['url']
     assert_nil data['error']
     Media.any_instance.unstub(:get_html)
-  end
-
-  test "should ignore author_name when it is twitter default" do
-    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta content='@username' name='twitter:site'/>"))
-    url = 'http://www.dutertenews4network.com/2018/11/leni-nagpunta-sa-london-sinalubong-ng.html'
-    m = create_media url: url
-    data = m.as_json
-    assert_not_equal '@username', data['author_name']
-    Media.any_instance.unstub(:doc)
   end
 
   test "should not raise encoding error when saving data" do

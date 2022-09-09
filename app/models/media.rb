@@ -98,6 +98,7 @@ class Media
     Parser::TiktokItem,
     Parser::TiktokProfile,
     Parser::KwaiItem, 
+    Parser::PageItem,
   ]
 
   [
@@ -113,8 +114,7 @@ class Media
     # MediaTiktokItem, 
     # MediaTiktokProfile, 
     # MediaKwaiItem,
-    MediaPageItem, 
-    MediaOembedItem, 
+    # MediaPageItem, 
     MediaArchiveIsArchiver, 
     MediaArchiveOrgArchiver, 
     MediaSchemaOrg, 
