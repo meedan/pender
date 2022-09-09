@@ -31,7 +31,7 @@ module MediaOembed
         author_name: data['author_name'],
         author_url: (data['type'] === 'profile' ? data['url'] : data['author_url']),
         provider_name: data['provider'],
-        provider_url: 'http://' + Media.parse_url(data['url']).host,
+        provider_url: 'http://' + RequestHelper.parse_url(data['url']).host,
         thumbnail_url: data['picture'],
         html: Media.default_oembed_html(src, maxwidth, maxheight),
         width: maxwidth,

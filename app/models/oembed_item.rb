@@ -1,28 +1,30 @@
 require 'error_codes'
 
 class OembedItem
-  def initialize(oembed_url)
-    @oembed_url = oembed_url
+  def initialize(request_url, oembed_url)
+    @request_url = request_url
+    @oembed_uri = construct_absolute_path(request_url, oembed_url)
     @data = {}.with_indifferent_access
   end
 
   def get_data
-    return {} if oembed_url.blank?
+    return {} if oembed_uri.blank?
 
     handle_exceptions(StandardError) do
-      response = get_oembed_data_from_url(oembed_url)
+      response = get_oembed_data_from_url(oembed_uri)
       @data.merge!(parse_oembed_response(response))
     end
     data
   end
 
+  attr_reader :oembed_uri
+
   private
 
-  attr_reader :oembed_url, :data
+  attr_reader :data, :request_url
 
-  def get_oembed_data_from_url(url)
+  def get_oembed_data_from_url(uri)
     response = nil
-    uri = URI.parse(RequestHelper.absolute_url(url))
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = uri.scheme == 'https'
 
@@ -31,7 +33,7 @@ class OembedItem
     response = http.request(request)
 
     if %w(301 302).include?(response.code)
-      response = get_oembed_data_from_url(response.header['location'])
+      response = get_oembed_data_from_url(construct_absolute_path(request_url, response.header['location']))
     end
     response
   end
@@ -70,14 +72,22 @@ class OembedItem
     response&.code&.to_s == '200' && ['DENY', 'SAMEORIGIN'].include?(response.header['X-Frame-Options'])
   end
 
+  def construct_absolute_path(request_url, _oembed_url)
+    begin
+      URI.parse(RequestHelper.absolute_url(request_url, _oembed_url))
+    rescue URI::InvalidURIError => e
+      nil
+    end
+  end
+
   def handle_exceptions(exception)
     begin
       yield
     rescue exception => error
-      PenderAirbrake.notify(error, oembed_url: oembed_url, oembed_data: data )
+      PenderAirbrake.notify(error, oembed_url: oembed_uri&.to_s, oembed_data: data )
       code = error.is_a?(JSON::ParserError) ? LapisConstants::ErrorCodes::const_get('INVALID_VALUE') : LapisConstants::ErrorCodes::const_get('UNKNOWN')
       @data.merge!(error: { message: "#{error.class}: #{error.message}", code: code })
-      Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse oembed data', oembed_url: oembed_url, code: code, error_class: error.class, error_message: error.message
+      Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse oembed data', oembed_url: oembed_uri&.to_s, code: code, error_class: error.class, error_message: error.message
       return
     end
   end

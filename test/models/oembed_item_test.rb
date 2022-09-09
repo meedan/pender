@@ -13,8 +13,12 @@ class OembedItemUnitTest < ActiveSupport::TestCase
     @oembed_response ||= response_fixture_from_file('oembed-item_youtube.json')
   end
 
+  def request_url
+    'https://example.com/article'
+  end
+
   test ".get_data returns nil if no oembed_url provided" do
-    data = OembedItem.new(nil).get_data
+    data = OembedItem.new(nil, nil).get_data
     assert data.empty?
   end
 
@@ -22,7 +26,7 @@ class OembedItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, /example.com\/oembed/).to_return(status: 302, headers: { location: 'https://example.com/another-oembed' }, body: '')
     WebMock.stub_request(:get, /example.com\/another-oembed/).to_return(status: 200, body: successful_oembed_response)
 
-    data = OembedItem.new('https://example.com/oembed').get_data
+    data = OembedItem.new(request_url, 'https://example.com/oembed').get_data
     assert_match /<iframe/, data['html'].to_s
     assert_match /src="https:\/\/www.youtube.com\/embed\/S49CN57Y58o\?feature=oembed"/, data['html'].to_s
   end
@@ -30,7 +34,7 @@ class OembedItemUnitTest < ActiveSupport::TestCase
   test ".get_data assigns error and reports to errbit when response is weird" do
     WebMock.stub_request(:get, /example.com\/oembed/).to_return(status: 200, body: 'asdfasdf')
 
-    data = OembedItem.new('https://example.com/oembed').get_data
+    data = OembedItem.new(request_url, 'https://example.com/oembed').get_data
     assert_match /JSON::ParserError/, data[:error][:message]
   end
 
@@ -42,7 +46,7 @@ class OembedItemUnitTest < ActiveSupport::TestCase
     JSON
     WebMock.stub_request(:get, /example.com\/oembed/).to_return(status: 200, body: oembed_response)
 
-    data = OembedItem.new('https://example.com/oembed').get_data
+    data = OembedItem.new(request_url, 'https://example.com/oembed').get_data
     assert data['html'].blank?
   end
 
@@ -54,24 +58,38 @@ class OembedItemUnitTest < ActiveSupport::TestCase
     JSON
     WebMock.stub_request(:get, /example.com\/oembed/).to_return(status: 200, headers: { 'X-Frame-Options': 'DENY' }, body: oembed_response)
 
-    data = OembedItem.new('https://example.com/oembed').get_data
+    data = OembedItem.new(request_url, 'https://example.com/oembed').get_data
     assert data['html'].blank?
 
     WebMock.stub_request(:get, /example.com\/oembed/).to_return(status: 200, headers: { 'X-Frame-Options': 'SAMEORIGIN' }, body: oembed_response)
 
-    data = OembedItem.new('https://example.com/oembed').get_data
+    data = OembedItem.new(request_url, 'https://example.com/oembed').get_data
     assert data['html'].blank?
   end
 
   test ".get_data does not discard HTML for youtube even when iframe.src is set to excluded values" do
     WebMock.stub_request(:get, /example.com\/oembed/).to_return(status: 200, headers: { 'X-Frame-Options': 'DENY' }, body: successful_oembed_response)
 
-    data = OembedItem.new('https://example.com/oembed').get_data
+    data = OembedItem.new(request_url, 'https://example.com/oembed').get_data
     assert !data['html'].blank?
 
     WebMock.stub_request(:get, /example.com\/oembed/).to_return(status: 200, headers: { 'X-Frame-Options': 'SAMEORIGIN' }, body: successful_oembed_response)
 
-    data = OembedItem.new('https://example.com/oembed').get_data
+    data = OembedItem.new(request_url, 'https://example.com/oembed').get_data
     assert !data['html'].blank?
+  end
+
+  test "converts relative oembed URLs as absolute URLs" do
+    WebMock.stub_request(:get, /example.com\/foo/).to_return(status: 200, headers: { 'X-Frame-Options': 'SAMEORIGIN' }, body: successful_oembed_response)
+
+    item = OembedItem.new('https://example.com', '/foo')
+
+    assert_equal 'https://example.com/foo', item.oembed_uri.to_s
+  end
+
+  test "sets empty oembed_uri if URI is bunk for some reason" do
+    item = OembedItem.new('asasdf', 'asasdf')
+    assert_nil item.oembed_uri
+    assert item.get_data.empty?
   end
 end

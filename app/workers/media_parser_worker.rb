@@ -21,7 +21,7 @@ class MediaParserWorker
     media = nil
     return [type, cached] if !cached.nil? && !refresh
     begin
-      return ['error', invalid_url_error] unless Media.validate_url(url)
+      return ['error', invalid_url_error] unless RequestHelper.validate_url(url)
       media = Media.new(url: url, key: key)
       data = media.as_json(force: refresh, archivers: archivers)
     rescue Net::ReadTimeout

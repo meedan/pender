@@ -185,7 +185,7 @@ module Api
       end
 
       def valid_url?
-        Media.validate_url(@url)
+        RequestHelper.validate_url(@url)
       end
 
       def clear_upstream_cache

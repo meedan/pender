@@ -20,7 +20,7 @@ module Parser
 
       handle_exceptions(StandardError) do
         raise HtmlFetchingError.new if doc.blank?
-        parsed_data['raw']['oembed'] = OembedItem.new(oembed_url(doc)).get_data
+        parsed_data['raw']['oembed'] = OembedItem.new(url, oembed_url(doc)).get_data
 
         # The following will be merged in order, with later
         # values taking precedence and any empty values ignored.

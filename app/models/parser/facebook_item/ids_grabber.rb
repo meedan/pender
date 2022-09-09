@@ -109,7 +109,7 @@ module Parser
 
     # Catch-all for params that our regexes miss
     def post_id_from_params(url)
-      uri = Media.parse_url(url)
+      uri = RequestHelper.parse_url(url)
       parts = uri.path.split('/')
       id = parts.last
       id = parts[parts.size - 2] if id == 'posts'

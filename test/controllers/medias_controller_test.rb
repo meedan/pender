@@ -366,7 +366,7 @@ class MediasControllerTest < ActionController::TestCase
     Media.any_instance.stubs(:oembed_get_data_from_url).returns(oembed_response)
     url = 'https://example.com'
     get :index, params: { url: url, format: :oembed }
-    json = Pender::Store.current.read(Digest::MD5.hexdigest(Media.normalize_url(url)), :json)
+    json = Pender::Store.current.read(Digest::MD5.hexdigest(RequestHelper.normalize_url(url)), :json)
     assert_nil json[:raw][:oembed]['title']
     assert_equal error, json[:raw][:oembed]['error']['message']
     assert_match(/Example Domain/, json['oembed']['title'])
@@ -396,28 +396,23 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return invalid url when the certificate has error" do
     url = 'https://www.poynter.org/2017/european-policy-makers-are-not-done-with-facebook-google-and-fake-news-just-yet/465809/'
-    Media.stubs(:request_url).with(url, 'Get').raises(OpenSSL::SSL::SSLError)
+    RequestHelper.stubs(:request_url).with(url, 'Get').raises(OpenSSL::SSL::SSLError)
 
     authenticate_with_token
     get :index, params: { url: url, format: :json }
     assert_response 400
     assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
-
-    Media.unstub(:request_url)
   end
 
   test "should return invalid url if has SSL Error on follow_redirections" do
     url = 'https://asdfglkjh.ee'
-    Media.stubs(:validate_url).with(url).returns(true)
-    Media.stubs(:request_url).with(url, 'Get').raises(OpenSSL::SSL::SSLError)
+    RequestHelper.stubs(:validate_url).with(url).returns(true)
+    RequestHelper.stubs(:request_url).with(url, 'Get').raises(OpenSSL::SSL::SSLError)
 
     authenticate_with_token
     get :index, params: { url: url, format: :json }
     assert_response 400
     assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
-
-    Media.unstub(:validate_url)
-    Media.unstub(:request_url)
   end
 
   test "should parse Facebook user profile with normalized urls" do
@@ -777,7 +772,7 @@ class MediasControllerTest < ActionController::TestCase
   test "should return error if URL is not safe" do
     authenticate_with_token
     url = 'http://malware.wicar.org/data/ms14_064_ole_not_xp.html' # More examples: https://www.wicar.org/test-malware.html
-    Media.stubs(:validate_url).with(url).returns(true)
+    RequestHelper.stubs(:validate_url).with(url).returns(true)
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)
@@ -806,12 +801,6 @@ class MediasControllerTest < ActionController::TestCase
     response = JSON.parse(@response.body)
     assert_equal 'error', response['type']
     assert_equal 'Unsafe URL', response['data']['message']
-    Media.unstub(:validate_url)
-    Media.any_instance.unstub(:follow_redirections)
-    Media.any_instance.unstub(:get_canonical_url)
-    Media.any_instance.unstub(:try_https)
-    Media.any_instance.unstub(:get_html)
-    WebMock.disable!
   end
 
   test "should cache json and html on file" do
