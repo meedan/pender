@@ -1,4 +1,4 @@
-require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
+require 'test_helper'
 
 class TiktokItemIntegrationTest < ActiveSupport::TestCase
   test "should parse Tiktok item for real" do

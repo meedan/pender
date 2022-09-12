@@ -19,8 +19,9 @@ module Parser
       metatags = @parsed_data['raw']['metatags'] = get_raw_metatags(doc)
 
       handle_exceptions(StandardError) do
-        raise HtmlFetchingError.new if doc.blank?
-        parsed_data['raw']['oembed'] = OembedItem.new(url, oembed_url(doc)).get_data
+        raise HtmlFetchingError.new("Could not parse this media") if doc.blank?
+
+        @parsed_data.deep_merge!(OembedItem.new(url, oembed_url(doc)).get_data)
 
         # The following will be merged in order, with later
         # values taking precedence and any empty values ignored.
@@ -36,7 +37,7 @@ module Parser
           get_opengraph_metadata(metatags),
           get_twitter_metadata(metatags)
         ].each do |hash|
-          @parsed_data.merge!(hash.reject{|k,v| v.blank? })
+          @parsed_data.merge!(hash.reject{|k,v| v.nil? })
         end
 
         unless parsed_data[:picture].blank?
@@ -47,7 +48,7 @@ module Parser
         set_data_field('author_picture', parsed_data['picture'])
 
         cookie_metatag = get_metadata_from_tags(metatags, { cookie: 'pbContext' })
-        @url = original_url if !cookie_metatag.empty? && !cookie_metatag[:cookie].match(/Cookie Absent/).nil?
+        @url = original_url if !cookie_metatag.empty? && !cookie_metatag[:cookie]&.match(/Cookie Absent/).nil?
       end
 
       urls_to_check = [url, parsed_data['author_url'], parsed_data['author_picture'], parsed_data['picture']].reject(&:blank?)

@@ -1,4 +1,5 @@
 require 'test_helper'
+
 class KwaiIntegrationTest < ActiveSupport::TestCase
   test "should parse Kwai URL" do
     m = create_media url: 'https://s.kw.ai/p/1mCb9SSh'

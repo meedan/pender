@@ -104,7 +104,7 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'http://example.com/blah_blah', format: :json }
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_equal 'RuntimeError: Could not parse this media', data['error']['message']
+    assert_equal 'Parser::PageItem::HtmlFetchingError: Could not parse this media', data['error']['message']
     assert_equal 5, data['error']['code']
     assert_equal 'page', data['provider']
     assert_equal 'item', data['type']
@@ -356,26 +356,6 @@ class MediasControllerTest < ActionController::TestCase
     data = JSON.parse(response.body)['data']
     assert_not_nil data['error']['message']
     Media.unstub(:as_oembed)
-  end
-
-  test "should return data from default oembed when raw oembed fails" do
-    oembed_response = 'mock'
-    oembed_response.stubs(:code).returns('200')
-    error = '<br />\n<b>Warning</b>: {\"version\":\"1.0\"}'
-    oembed_response.stubs(:body).returns(error)
-    Media.any_instance.stubs(:oembed_get_data_from_url).returns(oembed_response)
-    url = 'https://example.com'
-    get :index, params: { url: url, format: :oembed }
-    json = Pender::Store.current.read(Digest::MD5.hexdigest(RequestHelper.normalize_url(url)), :json)
-    assert_nil json[:raw][:oembed]['title']
-    assert_equal error, json[:raw][:oembed]['error']['message']
-    assert_match(/Example Domain/, json['oembed']['title'])
-
-    assert_response :success
-    oembed = JSON.parse(response.body)
-    assert_match(/Example Domain/, oembed['title'])
-
-    Media.any_instance.unstub(:oembed_get_data_from_url)
   end
 
   test "should respond to oembed format when data is on cache" do
@@ -776,7 +756,7 @@ class MediasControllerTest < ActionController::TestCase
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)
-    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<title>Test Malware!</title>"))
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<title>Test Malware!</title>"))
     WebMock.enable!
     WebMock.disable_net_connect!(allow: 'safebrowsing.googleapis.com')
     safebrowsing_response = {

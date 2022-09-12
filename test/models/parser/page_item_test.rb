@@ -1,172 +1,74 @@
 require 'test_helper'
 
-# class PageItemIntegrationTest < ActiveSupport::TestCase
-#   test "should parse ca yahoo site" do
-#     m = create_media url: 'https://ca.yahoo.com/'
-#     data = m.as_json
-#     assert_equal 'item', data['type']
-#     assert_equal 'page', data['provider']
-#     assert_match 'Yahoo', data['title']
-#     assert_not_nil data['description']
-#     assert_not_nil data['published_at']
-#     assert_equal '', data['username']
-#     assert_match 'https://ca.yahoo.com', data['author_url']
-#     assert_match 'Yahoo', data['author_name']
-#     assert_not_nil data['picture']
-#     assert_nil data['error']
-#   end
+class PageItemIntegrationTest < ActiveSupport::TestCase
+  test "should parse a given site" do
+    m = create_media url: 'https://noticias.uol.com.br/'
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal 'page', data['provider']
+    assert_match /Acompanhe as últimas notícias do Brasil e do mundo/, data['title']
+    assert_not_nil data['description']
+    assert_not_nil data['published_at']
+    assert_equal '', data['username']
+    assert_equal 'https://noticias.uol.com.br', data['author_url']
+    assert_equal 'UOLNoticias @UOL', data['author_name']
+    assert_not_nil data['picture']
+    assert_nil data['error']
+  end
 
-#   test "should parse us yahoo site" do
-#     m = create_media url: 'https://www.yahoo.com/'
-#     data = m.as_json
-#     assert_equal 'item', data['type']
-#     assert_equal 'page', data['provider']
-#     assert_match /Yahoo/, data['title']
-#     assert_not_nil data['description']
-#     assert_not_nil data['published_at']
-#     assert_equal '', data['username']
-#     assert_not_nil data['author_url']
-#     assert_match /Yahoo/, data['author_name']
-#     assert_not_nil data['picture']
-#     assert_nil data['error']
-#   end
+  test "should parse page when item on microdata doesn't have type" do
+    url = 'https://medium.com/meedan-updates/meedan-at-mediaparty-2019-378f7202d460'
+    m = create_media url: url
+    Mida::Document.stubs(:new).with(m.doc).returns(OpenStruct.new(items: [OpenStruct.new(id: 'id')]))
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal 'page', data['provider']
+    assert_nil data['error']
+  end
 
-#   test "should get author_name from site" do
-#     m = create_media url: 'https://noticias.uol.com.br/'
-#     data = m.as_json
-#     assert_equal 'item', data['type']
-#     assert_equal 'page', data['provider']
-#     assert_match /Acompanhe as últimas notícias do Brasil e do mundo/, data['title']
-#     assert_not_nil data['description']
-#     assert_not_nil data['published_at']
-#     assert_equal '', data['username']
-#     assert_equal 'https://noticias.uol.com.br', data['author_url']
-#     assert_equal 'UOLNoticias @UOL', data['author_name']
-#     assert_not_nil data['picture']
-#     assert_nil data['error']
-#   end
+  test "should store metatags in an Array" do
+    m = create_media url: 'https://www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html'
+    data = m.as_json
+    assert data['raw']['metatags'].is_a? Array
+    assert !data['raw']['metatags'].empty?
+  end
 
-#   test "should parse url with redirection https -> http" do
-#     m = create_media url: 'https://noticias.uol.com.br/cotidiano/ultimas-noticias/2017/07/18/nove-anos-apos-ser-condenado-por-moro-beira-mar-repete-trafico-em-presidio-federal.htm'
-#     data = m.as_json
-#     assert_equal 'item', data['type']
-#     assert_equal 'page', data['provider']
-#     assert_match /Nove anos após ser condenado/, data['title']
-#     assert_not_nil data['description']
-#     assert_not_nil data['published_at']
-#     assert_equal '', data['username']
-#     assert_equal 'https://noticias.uol.com.br', data['author_url']
-#     assert_equal 'UOLNoticias @UOL', data['author_name']
-#     assert_not_nil data['picture']
-#     assert_nil data['error']
-#   end
+  test "should handle exception when raises some error when getting oembed data" do
+    url = 'https://www.hongkongfp.com/2017/03/01/hearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers/'
+    m = create_media url: url
+    OembedItem.any_instance.stubs(:get_oembed_data_from_url).raises(StandardError)
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal 'page', data['provider']
+    assert_match(/Hong Kong Free Press/, data['title'])
+    assert_match(/Hong Kong/, data['description'])
+    assert_not_nil data['published_at']
+    assert_match /https:\/\/.+AFP/, data['author_url']
+    assert_not_nil data['picture']
+    assert_match(/StandardError/, data['error']['message'])
+  end
 
-#   test "should parse page when item on microdata doesn't have type" do
-#     url = 'https://medium.com/meedan-updates/meedan-at-mediaparty-2019-378f7202d460'
-#     m = create_media url: url
-#     Mida::Document.stubs(:new).with(m.doc).returns(OpenStruct.new(items: [OpenStruct.new(id: 'id')]))
-#     data = m.as_json
-#     assert_equal 'item', data['type']
-#     assert_equal 'page', data['provider']
-#     assert_nil data['error']
-#     Mida::Document.unstub(:new)
-#   end
-
-#   test "should not crash if can't check if URL is not safe" do
-#     m = create_media url: 'https://meedan.com'
-#     data = m.as_json
-#     assert !data['error']
-#   end
-
-#   test "should get html again if doc is nil" do
-#     m = Media.new url: 'http://www.example.com'
-#     doc = m.send(:get_html, Media.html_options(m.url))
-#     Media.any_instance.stubs(:get_html).with(Media.send(:html_options, m.url)).returns(nil)
-#     Media.any_instance.stubs(:get_html).with({allow_redirections: :all}).returns(doc)
-#     m.as_json
-#     assert_not_nil m.doc
-#     Media.any_instance.unstub(:get_html)
-#   end
-
-#   test "should not overwrite metatags with nil" do
-#     m = create_media url: 'http://meedan.com'
-#     m.expects(:get_opengraph_metadata).returns({author_url: nil})
-#     m.expects(:get_twitter_metadata).returns({author_url: nil})
-#     m.expects(:get_oembed_metadata).returns({})
-#     m.expects(:get_basic_metadata).returns({description: "", title: "Meedan Checkdesk", username: "Tom", published_at: "", author_url: "https://meedan.checkdesk.org", picture: 'meedan.png'})
-#     data = m.as_json
-#     assert_match 'Meedan Checkdesk', data['title']
-#     assert_match 'Tom', data['username']
-#     assert_not_nil data['description']
-#     assert_not_nil data['picture']
-#     assert_not_nil data['published_at']
-#     assert_match 'https://meedan.checkdesk.org', data['author_url']
-#   end
-
-#   test "should parse opengraph metatags" do
-#     m = create_media url: 'https://hacktoberfest.digitalocean.com/'
-#     m.as_json
-#     data = m.get_opengraph_metadata
-#     assert_match "Hacktoberfest '21", data['title']
-#     assert_match(/Open source/, data['description'])
-#     assert_match 'Hacktoberfest presented by DigitalOcean', data['author_name']
-#     assert_not_nil data['picture']
-#   end
-
-#   test "should parse meta tags as fallback" do
-#     m = create_media url: 'http://ca.ios.ba/'
-#     assert_match 'https://ca.ios.ba/', m.url
-#     data = m.as_json
-#     assert_match 'CaioSBA', data['title']
-#     assert_match 'Personal website of Caio Sacramento de Britto Almeida', data['description']
-#     assert_equal '', data['published_at']
-#     assert_equal '', data['username']
-#     assert_match 'https://ca.ios.ba', data['author_url']
-#     assert_equal '', data['picture']
-#   end
-
-  # test "should store metatags in an Array" do
-  #   m = create_media url: 'https://www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html'
-  #   data = m.as_json
-  #   assert data['raw']['metatags'].is_a? Array
-  #   assert !data['raw']['metatags'].empty?
-  # end
-
-  # test "should parse pages when the scheme is missing on oembed url" do
-  #   url = 'https://www.hongkongfp.com/2017/03/01/hearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers/'
-  #   m = create_media url: url
-  #   Parser::Base.any_instance.stubs(:oembed_url).returns('//www.hongkongfp.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.hongkongfp.com%2F2017%2F03%2F01%2Fhearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers%2F')
-  #   data = m.as_json
-  #   assert_equal 'item', data['type']
-  #   assert_equal 'page', data['provider']
-  #   assert_match(/Hong Kong Free Press/, data['title'])
-  #   assert_match(/Hong Kong/, data['description'])
-  #   assert_not_nil data['published_at']
-  #   assert_match /https:\/\/.+AFP/, data['author_url']
-  #   assert_not_nil data['picture']
-  #   assert_nil data['error']
-  # end
-
-  # test "should handle exception when raises some error when get oembed data" do
-  #   url = 'https://www.hongkongfp.com/2017/03/01/hearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers/'
-  #   m = create_media url: url
-  #   Parser::Base.any_instance.stubs(:oembed_url).raises(StandardError)
-  #   data = m.as_json
-  #   assert_equal 'item', data['type']
-  #   assert_equal 'page', data['provider']
-  #   assert_match(/Hong Kong Free Press/, data['title'])
-  #   assert_match(/Hong Kong/, data['description'])
-  #   assert_not_nil data['published_at']
-  #   assert_match /https:\/\/.+AFP/, data['author_url']
-  #   assert_not_nil data['picture']
-  #   assert_match(/StandardError/, data['error']['message'])
-  # end
-# end
+  test "should parse pages when the scheme is missing on oembed url" do
+    url = 'https://www.hongkongfp.com/2017/03/01/hearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers/'
+    m = create_media url: url
+    Parser::PageItem.any_instance.stubs(:get_oembed_url).returns('//www.hongkongfp.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.hongkongfp.com%2F2017%2F03%2F01%2Fhearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers%2F')
+    data = m.as_json
+    assert_equal 'item', data['type']
+    assert_equal 'page', data['provider']
+    assert_match(/Hong Kong Free Press/, data['title'])
+    assert_match(/Hong Kong/, data['description'])
+    assert_not_nil data['published_at']
+    assert_match /https:\/\/.+AFP/, data['author_url']
+    assert_not_nil data['picture']
+    assert_nil data['error']
+  end
+end
 
 class PageItemUnitTest < ActiveSupport::TestCase
   def setup
     isolated_setup
     WebMock.stub_request(:post, /safebrowsing.googleapis.com/).to_return(status: 200, body: { matches: [] }.to_json )
+    OembedItem.any_instance.stubs(:get_data).returns({})
   end
 
   def teardown
@@ -251,17 +153,24 @@ class PageItemUnitTest < ActiveSupport::TestCase
     assert_equal 'this is a description', data['description']
   end
 
-  test "requests oembed data from URL in HTMl and assigns returned data" do
-    fake_oembed_item = Proc.new do |url|
-      assert_equal 'https://example.com/oembed', url
+  test "requests oembed data from URL in HTML and assigns returned data" do
+    # Using different mocking library below, so need to unstub
+    OembedItem.any_instance.unstub(:get_data)
+
+    fake_oembed_item = Proc.new do |request_url, oembed_url|
+      assert_equal 'https://example.com/oembed', oembed_url
 
       OpenStruct.new(get_data: {
-        author_name: 'Piglet McDog',
-        summary: "She's a great pup",
-        title: "Piglet's house",
-        thumbnail_url: 'https://example.com/pig-small.jpg',
-        html: '<div id="dog"></div>',
-        author_url: 'https://example.com/pig-small.jpg',
+        raw: {
+          oembed: {
+            author_name: 'Piglet McDog',
+            summary: "She's a great pup",
+            title: "Piglet's house",
+            thumbnail_url: 'https://example.com/pig-small.jpg',
+            html: '<div id="dog"></div>',
+            author_url: 'https://example.com/pig-small.jpg',
+          }
+        }
       })
     end
 
@@ -273,19 +182,23 @@ class PageItemUnitTest < ActiveSupport::TestCase
     assert !data['raw']['oembed'].empty?
     assert_nil data['raw']['oembed']['error']
 
-    assert_nil data['published_at']
-    assert_equal data['username'], 'Piglet McDog'
-    assert_equal data['description'], "She's a great pup"
-    assert_equal data['title'], "Piglet's house"
-    assert_equal data['picture'], "https://example.com/pig-small.jpg"
-    assert_equal data['html'], '<div id="dog"></div>'
-    assert_equal data['author_url'], 'https://example.com/pig-small.jpg'
+    assert_equal '', data['published_at']
+    assert_equal 'Piglet McDog', data['username']
+    assert_equal "She's a great pup", data['description']
+    assert_equal "Piglet's house", data['title']
+    assert_equal "https://example.com/pig-small.jpg", data['picture']
+    assert_equal '<div id="dog"></div>', data['html']
+    assert_equal 'https://example.com/pig-small.jpg', data['author_url']
   end
 
   test "falls back to using title for description from oembed data when summary not available" do
     OembedItem.any_instance.stubs(:get_data).returns(
       {
-        title: "Piglet's house",
+        raw: {
+          oembed: {
+            title: "Piglet's house",
+          }
+        }
       }
     )
     data = Parser::PageItem.new('https://example.com').parse_data(oembed_doc, throwaway_url)
@@ -296,8 +209,12 @@ class PageItemUnitTest < ActiveSupport::TestCase
   test "does not set oembed data if there is an issue with returned oembed data" do
     OembedItem.any_instance.stubs(:get_data).returns( 
       {
-        error: { some: 'error' },
-        summary: "Piglet's house",
+        raw: {
+          oembed: {
+            error: { some: 'error' },
+            summary: "Piglet's house",
+          }
+        }
       }
     )
     data = Parser::PageItem.new('https://example.com').parse_data(oembed_doc, throwaway_url)
@@ -359,6 +276,23 @@ class PageItemUnitTest < ActiveSupport::TestCase
     assert_equal "Piglet McDog's Blog", data['author_name']
   end
   
+  # Internal stubbing makes this brittle to changes in implementation, but want 
+  # to reinforce this behavior and make clearer than is in other tests
+  test "should not overwrite metatags with nil" do
+    Parser::PageItem.any_instance.stubs(:get_metadata_from_tags).returns({description: "Something", title: "Meedan Checkdesk", username: "Tom", published_at: "", author_url: "https://meedan.checkdesk.org", picture: 'meedan.png'})
+    Parser::PageItem.any_instance.stubs(:get_html_info).returns({ description: ""})
+    Parser::PageItem.any_instance.stubs(:format_oembed_data).returns({})
+    Parser::PageItem.any_instance.stubs(:get_opengraph_metadata).returns({author_url: nil})
+    Parser::PageItem.any_instance.stubs(:get_twitter_metadata).returns({author_url: nil})
+
+    data = Parser::PageItem.new('https://meedan.com').parse_data(empty_doc, throwaway_url)
+    assert_match 'Meedan Checkdesk', data['title']
+    assert_match 'Tom', data['username']
+    assert_match '', data['description']
+    assert_not_nil data['published_at']
+    assert_match 'https://meedan.checkdesk.org', data['author_url']
+  end
+
   # Note: this is existing behavior, but could see it having unintended results
   test "adds http to beginning of picture URL when needed" do
     doc = Nokogiri::HTML('<meta property="og:image" content="piglet.com/image.png" />')
@@ -401,6 +335,14 @@ class PageItemUnitTest < ActiveSupport::TestCase
     doc = Nokogiri::HTML('<meta property="twitter:image" content="http://example.com/image"/>')
     data = Parser::PageItem.new('https://example.com').parse_data(doc, throwaway_url)
     assert_equal 'http://example.com/image', data['author_picture']
+  end
+
+  test "does not reassign url if cookies are required and present" do
+    doc = Nokogiri::HTML('<meta property="pbContext" content="asdf"/>')
+    parser = Parser::PageItem.new('https://example.com')
+    data = parser.parse_data(doc, 'https://example.com/original')
+
+    assert_equal 'https://example.com', parser.url
   end
 
   test "reassigns url to original URL if cookies are required and not present" do
@@ -454,6 +396,14 @@ class PageItemUnitTest < ActiveSupport::TestCase
     assert_raises Pender::UnsafeUrl do
       Parser::PageItem.new('https://example.com/safeurl').parse_data(doc, throwaway_url)
     end
+  end
+
+  test "does not crash if it cannot determine whether site is safe " do
+    WebMock.stub_request(:post, /safebrowsing.googleapis.com/).
+      with(body: /example.com\/unsafeurl/).
+      to_return(status: 200, body: "{}" )
+
+    Parser::PageItem.new('https://example.com/unsafeurl').parse_data(empty_doc, throwaway_url)
   end
 
   test "sets author URL to the top-level URL" do

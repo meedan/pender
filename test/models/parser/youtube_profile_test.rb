@@ -1,5 +1,4 @@
-require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
-require 'cc_deville'
+require 'test_helper'
 
 class YoutubeProfileIntegrationTest < ActiveSupport::TestCase
   test "should parse YouTube user" do
@@ -20,7 +19,7 @@ class YoutubeProfileIntegrationTest < ActiveSupport::TestCase
   test "should store oembed data of a youtube profile" do
     skip "oembed implementation"
     
-    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<link rel='alternate' type='application/json+oembed' href='https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ' title='Iron Maiden'>"))
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<link rel='alternate' type='application/json+oembed' href='https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ' title='Iron Maiden'>"))
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
     data = m.as_json
 
@@ -29,7 +28,6 @@ class YoutubeProfileIntegrationTest < ActiveSupport::TestCase
     assert_equal 'Iron Maiden', data['oembed']['title']
     assert_match "http:\/\/www.youtube.com", data['oembed']['provider_url']
     assert_equal "youtube", data['oembed']['provider_name'].downcase
-    Media.any_instance.unstub(:get_html)
   end
 end
 
