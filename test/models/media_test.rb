@@ -49,27 +49,26 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.almasryalyoum.com/node/517699'
     assert_match /almasryalyoum.com\/editor\/details\/968/, m.url
     WebMock.disable!
-    Media.any_instance.unstub(:get_canonical_url)
   end
 
   test "should parse URL including cloudflare credentials on header" do
-    host = ENV['hosts']
-    url = 'https://example.com/'
-    parsed_url = RequestHelper.parse_url url
-    m = Media.new url: url
-    header_options_without_cf = RequestHelper.html_options(url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
-    assert_nil header_options_without_cf['CF-Access-Client-Id']
-    assert_nil header_options_without_cf['CF-Access-Client-Secret']
-
-    PenderConfig.current = nil
-    ENV['hosts'] = {"example.com"=>{"cf_credentials"=>"1234:5678"}}.to_json
-    header_options_with_cf = RequestHelper.html_options(url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
-    assert_equal '1234', header_options_with_cf['CF-Access-Client-Id']
-    assert_equal '5678', header_options_with_cf['CF-Access-Client-Secret']
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_cf).raises(RuntimeError.new('unauthorized'))
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options_with_cf)
-    assert_equal Nokogiri::HTML::Document, m.send(:get_html, RequestHelper.html_options(m.url)).class
-
+      host = ENV['hosts']
+      url = 'https://example.com/'
+      parsed_url = RequestHelper.parse_url url
+      m = Media.new url: url
+      header_options_without_cf = RequestHelper.html_options(url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
+      assert_nil header_options_without_cf['CF-Access-Client-Id']
+      assert_nil header_options_without_cf['CF-Access-Client-Secret']
+  
+      PenderConfig.current = nil
+      ENV['hosts'] = {"example.com"=>{"cf_credentials"=>"1234:5678"}}.to_json
+      header_options_with_cf = RequestHelper.html_options(url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
+      assert_equal '1234', header_options_with_cf['CF-Access-Client-Id']
+      assert_equal '5678', header_options_with_cf['CF-Access-Client-Secret']
+      OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_cf).raises(RuntimeError.new('unauthorized'))
+      OpenURI.stubs(:open_uri).with(parsed_url, header_options_with_cf)
+      assert_equal Nokogiri::HTML::Document, m.send(:get_html, RequestHelper.html_options(m.url)).class
+  ensure
     ENV['hosts'] = host
   end
 
@@ -403,21 +402,6 @@ class MediaTest < ActiveSupport::TestCase
     assert m.data['raw']['json+ld'].is_a? Hash
   end
 
-  test "should return empty html on oembed when script has http src" do
-    Parser::Base.any_instance.stubs(:oembed_url).returns('https://www.politico.com/story/2017/09/07/facebook-fake-news-social-media-242407?_embed=true&_format=oembed')
-    m = create_media url: 'https://politi.co/2j7qyT0'
-    oembed = '{"version":"1.0","type":"rich","html":"<script type=\"text/javascript\" src=\"http://www.politico.com/story/2017/09/07/facebook-fake-news-social-media-242407?_embed=true&amp;_format=js\"></script>"}'
-    response = 'mock'
-    response.stubs(:body).returns(oembed)
-
-    Media.any_instance.stubs(:oembed_get_data_from_url).with(m.get_oembed_url).returns(response)
-    
-    data = m.as_json
-    oembed_response = m.oembed_get_data_from_url(m.get_oembed_url)
-    assert_match /script.*src="http:\/\//, JSON.parse(oembed_response.body)['html']
-    assert_equal '', data['html']
-  end
-
   test "should store ClaimReview schema" do
     url = 'http://www.politifact.com/truth-o-meter/statements/2017/aug/17/donald-trump/donald-trump-retells-pants-fire-claim-about-gen-pe'
     m = create_media url: url
@@ -691,19 +675,20 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal({'archive_org' => 'new-data'}, Pender::Store.current.read(id, :json)['archives'])
   end
 
+  # Testing MediaOembed
   test "should add error on raw oembed and generate the default oembed when can't parse oembed" do
     oembed_response = 'mock'
     oembed_response.stubs(:code).returns('200')
     error = '<br />\n<b>Warning</b>: {\"version\":\"1.0\"}'
     oembed_response.stubs(:body).returns(error)
-    Media.any_instance.stubs(:oembed_get_data_from_url).returns(oembed_response)
+    OembedItem.any_instance.stubs(:get_oembed_data_from_url).returns(oembed_response)
     url = 'https://example.com'
     m = create_media url: url
     data = m.as_json
-    assert_equal error, data[:raw][:oembed]['error']['message']
+    assert_match /JSON::ParserError/, data[:raw][:oembed]['error']['message']
+    assert_match error, data[:raw][:oembed]['error']['message']
     assert_match(/Example Domain/, data['oembed']['title'])
     assert_equal 'page', data['oembed']['provider_name']
-    Media.any_instance.unstub(:oembed_get_data_from_url)
   end
 
   test "should follow redirections of path relative urls" do
@@ -740,13 +725,12 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should use original url when redirected page requires cookie" do
-    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='https://www.tandfonline.com/action/cookieAbsent'><meta name='pbContext' content=';wgroup:string:Publication Websites;website:website:TFOPB;page:string:Cookie Absent'>"))
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='https://www.tandfonline.com/action/cookieAbsent'><meta name='pbContext' content=';wgroup:string:Publication Websites;website:website:TFOPB;page:string:Cookie Absent'>"))
     url = 'https://doi.org/10.1080/10584609.2019.1619639'
     m = create_media url: url
     data = m.as_json
     assert_equal url, data['url']
     assert_nil data['error']
-    Media.any_instance.unstub(:get_html)
   end
 
   test "should not raise encoding error when saving data" do
@@ -790,7 +774,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should ignore metatag when content is not present" do
     Media.any_instance.stubs(:follow_redirections)
-    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' />"))
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' />"))
     url = 'https://www.mcdonalds.com/'
     m = Media.new url: url
     m.as_json
@@ -889,7 +873,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should return item as oembed when the page has oembed url" do
     url = 'https://www.facebook.com/teste637621352/posts/1028416870556238'
-    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:title' content='Teste'>"))
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:title' content='Teste'>"))
     m = create_media url: url
     data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
     assert_match /teste/, data['title'].downcase

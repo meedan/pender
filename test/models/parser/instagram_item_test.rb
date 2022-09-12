@@ -1,4 +1,5 @@
-require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
+require 'test_helper'
+
 class InstagramItemIntegrationTest < ActiveSupport::TestCase
   test "should parse Instagram item link for real" do
     m = Media.new url: 'https://www.instagram.com/p/CdOk-lLKmyH/'

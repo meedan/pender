@@ -1,4 +1,4 @@
-require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
+require 'test_helper'
 
 class InstagramProfileIntegrationTest < ActiveSupport::TestCase
   test "should parse Instagram profile link for real" do

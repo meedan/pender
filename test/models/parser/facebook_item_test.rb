@@ -90,7 +90,7 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
   end
 
   test "should return empty html for deleted posts" do
-    Media.any_instance.stubs(:get_html).returns(nil)
+    RequestHelper.stubs(:get_html).returns(nil)
     urls = ['https://www.facebook.com/danielafeitosa/posts/2074906892567200', 'https://www.facebook.com/caiosba/posts/8457689347638947']
     urls.each do |url|
       m = create_media url: url
@@ -101,7 +101,7 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
 
   test "should add login required error and return empty html and description" do
     html = "<title id='pageTitle'>Log in or sign up to view</title><meta property='og:description' content='See posts, photos and more on Facebook.'>"
-    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(html))
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML(html))
     Media.any_instance.stubs(:follow_redirections)
 
     m = create_media url: 'https://www.facebook.com/caiosba/posts/3588207164560845'
@@ -116,7 +116,7 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
   test "should get canonical URL parsed from facebook html when it is relative" do
     relative_url = '/dina.samak/posts/10153679232246949'
     url = "https://www.facebook.com#{relative_url}"
-    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='#{relative_url}'>"))
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='#{relative_url}'>"))
     Media.any_instance.stubs(:follow_redirections)
     m = create_media url: url
     assert_equal url, m.url
@@ -124,7 +124,7 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
 
   test "should get canonical URL parsed from facebook html when it is a page" do
     canonical_url = 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479'
-    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='#{canonical_url}'>"))
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='#{canonical_url}'>"))
     Media.any_instance.stubs(:follow_redirections)
     Media.stubs(:validate_url).with(canonical_url).returns(true)
     m = create_media url: 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479?pnref=story.unseen-section'

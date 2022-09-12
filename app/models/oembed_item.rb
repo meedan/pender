@@ -4,15 +4,17 @@ class OembedItem
   def initialize(request_url, oembed_url)
     @request_url = request_url
     @oembed_uri = construct_absolute_path(request_url, oembed_url)
+
     @data = {}.with_indifferent_access
+    @data[:raw] = { oembed: nil }
   end
 
   def get_data
-    return {} if oembed_uri.blank?
+    return data if oembed_uri.blank?
 
     handle_exceptions(StandardError) do
       response = get_oembed_data_from_url(oembed_uri)
-      @data.merge!(parse_oembed_response(response))
+      @data[:raw][:oembed] = parse_oembed_response(response)
     end
     data
   end
@@ -41,14 +43,20 @@ class OembedItem
   def parse_oembed_response(response)
     return if response.nil? || response.body.blank?
 
-    oembed_json = JSON.parse(response.body)
-    if oembed_json['html'].present?
-      doc = Nokogiri::HTML oembed_json['html']
-      # Discard the oEmbed's HTML fragment in the following cases:
-      # - The script.src URL is not HTTPS
-      # - The iframe.src response includes X-Frame-Options = DENY or SAMEORIGIN
-      oembed_json['html'] = '' if invalid_html_script?(doc)
-      oembed_json['html'] = '' if invalid_html_iframe?(doc)
+    oembed_json = {}
+    begin
+      oembed_json = JSON.parse(response.body)
+      if oembed_json['html'].present?
+        doc = Nokogiri::HTML oembed_json['html']
+        # Discard the oEmbed's HTML fragment in the following cases:
+        # - The script.src URL is not HTTPS
+        # - The iframe.src response includes X-Frame-Options = DENY or SAMEORIGIN
+        oembed_json['html'] = '' if invalid_html_script?(doc)
+        oembed_json['html'] = '' if invalid_html_iframe?(doc)
+      end
+    rescue JSON::ParserError => error
+      oembed_json.merge!({ error: { message: response.body, code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') } })
+      Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse `oembed` data as JSON', url: request_url, oembed_url: oembed_uri&.to_s, error_class: error.class, error_message: error.message, response_code: response.code
     end
     oembed_json
   end
@@ -85,11 +93,10 @@ class OembedItem
       yield
     rescue exception => error
       PenderAirbrake.notify(error, oembed_url: oembed_uri&.to_s, oembed_data: data )
-      code = error.is_a?(JSON::ParserError) ? LapisConstants::ErrorCodes::const_get('INVALID_VALUE') : LapisConstants::ErrorCodes::const_get('UNKNOWN')
+      code = LapisConstants::ErrorCodes::const_get('INVALID_VALUE')
       @data.merge!(error: { message: "#{error.class}: #{error.message}", code: code })
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse oembed data', oembed_url: oembed_uri&.to_s, code: code, error_class: error.class, error_message: error.message
       return
     end
   end
 end
-

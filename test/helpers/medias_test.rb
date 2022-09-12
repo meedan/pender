@@ -128,7 +128,7 @@ class MediasHelperTest < ActionView::TestCase
   test "should parse twitter metatags on regular page" do
     doc = nil
     open('test/data/flickr.html') { |f| doc = f.read }
-    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML(doc))
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML(doc))
     m = create_media url: 'https://www.flickr.com/photos/bees/2341623661'
     data = m.as_json
     assert_match 'ZB8T0193', data['title']
@@ -136,7 +136,6 @@ class MediasHelperTest < ActionView::TestCase
     assert_equal '', data['published_at']
     assert_match /https:\/\/.*staticflickr.com\/.*3123\/2341623661_7c99f48bbf_b.jpg/, data['picture']
     assert_match /www.flickr.com/, data['author_url']
-    Media.any_instance.unstub(:get_html)
   end
 
     test "should parse twitter metatags on regular page 2" do
