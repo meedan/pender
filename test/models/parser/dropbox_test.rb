@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class DropboxIntegrationTest < ActiveSupport::TestCase
-  test "should parse Kwai URL" do
+  test "should parse dropbox URL" do
     m = create_media url: 'https://www.dropbox.com/s/fa5w5erdkrdu4uo/How%20to%20use%20the%20Public%20folder.rtf?dl=0'
     data = m.as_json
     assert_equal 'item', data['type']
@@ -33,12 +33,18 @@ class DropboxUnitTest <  ActiveSupport::TestCase
   test "matches known URL patterns, and returns instance on success" do
     assert_nil Parser::DropboxItem.match?('https://example.com')
     
-    match_one = Parser::DropboxItem.match?('https://www.dropbox.com/s/fake-url/example.txt')
-    assert_equal true, match_one.is_a?(Parser::DropboxItem)
-    match_two = Parser::DropboxItem.match?('https://dropboxusercontent.com/s/fake-url/example.txt')
-    assert_equal true, match_two.is_a?(Parser::DropboxItem)
-    match_three = Parser::DropboxItem.match?('https://www.dropbox.com/sh/fake-url/example.txt')
-    assert_equal true, match_three.is_a?(Parser::DropboxItem)
+    assert Parser::DropboxItem.match?('https://www.dropbox.com/s/fake-url/example.txt').is_a?(Parser::DropboxItem)
+    assert Parser::DropboxItem.match?('https://dropboxusercontent.com/s/fake-url/example.txt').is_a?(Parser::DropboxItem)
+
+    # With sh
+    assert Parser::DropboxItem.match?('https://www.dropbox.com/sh/748f94925f0gesq/AAAMSoRJyhJFfkupnAU0wXuva?dl=0').is_a?(Parser::DropboxItem)
+    # Video URL
+    assert Parser::DropboxItem.match?('https://www.dropbox.com/s/t25htjxk3b3p8oo/A%20Progressive%20Journey%20%2350.mov?dl=0').is_a?(Parser::DropboxItem)
+    # Image
+    assert Parser::DropboxItem.match?('https://www.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg').is_a?(Parser::DropboxItem)
+    # DL subdomain
+    assert Parser::DropboxItem.match?('https://dl.dropbox.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg').is_a?(Parser::DropboxItem)
+    assert Parser::DropboxItem.match?('https://dl.dropboxusercontent.com/s/up6n654gyysvk8v/b2604c14-8c7a-43e3-a286-dbb9e42bdf59.jpeg').is_a?(Parser::DropboxItem)
   end
 
   test "assigns values to hash from the HTML doc" do

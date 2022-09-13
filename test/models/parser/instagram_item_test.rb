@@ -6,11 +6,9 @@ class InstagramItemIntegrationTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'CdOk-lLKmyH', data['external_id']
-    assert !data['description'].blank?
     assert !data['title'].blank?
   end
 
-  # TODO: Move this to unit test for canonical URL parsing
   test "should get canonical URL parsed from html tags" do
     media1 = create_media url: 'https://www.instagram.com/p/CAdW7PMlTWc/?taken-by=kikoloureiro'
     assert_match /https:\/\/www.instagram.com\/p\/CAdW7PMlTWc/, media1.url

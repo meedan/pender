@@ -61,6 +61,19 @@ class FacebookProfileIntegrationTest < ActiveSupport::TestCase
       data = m.as_json
     end
   end
+
+  # Need to update
+  test "should store oembed data of a facebook page" do
+    skip 'oembed implementation'
+
+    m = create_media url: 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
+    m.as_json
+    m.data.delete(:error)
+    m.send(:data_from_oembed_item)
+    assert m.data['raw']['oembed'].is_a?(Hash), "Expected #{m.data['raw']['oembed']} to be a Hash"
+    assert !m.data['oembed']['author_name'].blank?
+    assert !m.data['oembed']['title'].blank?
+  end
 end
 
 class FacebookProfileUnitTest < ActiveSupport::TestCase

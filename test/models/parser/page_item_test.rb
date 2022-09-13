@@ -16,6 +16,42 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     assert_nil data['error']
   end
 
+  test "should parse reddit page" do
+    url = 'https://www.reddit.com/r/Art/comments/58a8kp/emotions_language_youngjoo_namgung_ai_livesurface/'
+    id = Media.get_id url
+    m = create_media url: url
+    data = m.as_json
+    assert_match /emotion/, data['title']
+    assert_equal '', data['published_at']
+    assert_equal '', data['username']
+  end
+
+  test "should parse arabic url page" do
+    url = 'http://www.youm7.com/story/2016/7/6/بالصور-مياه-الشرب-بالإسماعيلية-تواصل-عملها-لحل-مشكلة-طفح-الصرف/2790125'
+    id = Media.get_id url
+    m = create_media url: url
+    data = m.as_json
+    assert !data['title'].blank?
+    assert_not_nil data['published_at']
+    assert_equal '', data['username']
+  end
+
+  test "should parse url with arabic or already encoded chars" do
+    urls = ['http://www.aljazeera.net/news/arabic/2016/10/19/تحذيرات-أممية-من-احتمال-نزوح-مليون-مدني-من-الموصل', 'http://www.aljazeera.net/news/arabic/2016/10/19/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1%D8%A7%D8%AA-%D8%A3%D9%85%D9%85%D9%8A%D8%A9-%D9%85%D9%86-%D8%A7%D8%AD%D8%AA%D9%85%D8%A7%D9%84-%D9%86%D8%B2%D9%88%D8%AD-%D9%85%D9%84%D9%8A%D9%88%D9%86-%D9%85%D8%AF%D9%86%D9%8A-%D9%85%D9%86-%D8%A7%D9%84%D9%85%D9%88%D8%B5%D9%84']
+    urls.each do |url|
+      id = Media.get_id url
+      m = create_media url: url
+      data = m.as_json
+      assert_equal 'تحذيرات أممية من احتمال نزوح مليون مدني من الموصل', data['title']
+      assert_equal 'عبرت الأمم المتحدة عن قلقها البالغ على سلامة 1.5 مليون شخص بالموصل، محذرة من احتمال نزوح مليون منهم، وقالت إن أكثر من 900 نازح فروا إلى سوريا بأول موجة نزوح.', data['description']
+      assert_equal '', data['published_at']
+      assert_equal '', data['username']
+      assert_match /^https?:\/\/www\.aljazeera\.net$/, data['author_url']
+      assert_nil data['error']
+      assert_match /\/medias\/#{id}\/picture/, data['picture']
+    end
+  end
+
   test "should parse page when item on microdata doesn't have type" do
     url = 'https://medium.com/meedan-updates/meedan-at-mediaparty-2019-378f7202d460'
     m = create_media url: url
@@ -51,7 +87,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
   test "should parse pages when the scheme is missing on oembed url" do
     url = 'https://www.hongkongfp.com/2017/03/01/hearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers/'
     m = create_media url: url
-    Parser::PageItem.any_instance.stubs(:get_oembed_url).returns('//www.hongkongfp.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.hongkongfp.com%2F2017%2F03%2F01%2Fhearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers%2F')
+    Parser::PageItem.any_instance.stubs(:oembed_url).returns('//www.hongkongfp.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.hongkongfp.com%2F2017%2F03%2F01%2Fhearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers%2F')
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'page', data['provider']
@@ -60,6 +96,65 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
     assert_match /https:\/\/.+AFP/, data['author_url']
     assert_not_nil data['picture']
+    assert_nil data['error']
+  end
+
+  test "should parse url scheme http" do
+    url = 'http://www.theatlantic.com/magazine/archive/2016/11/war-goes-viral/501125/'
+    id = Media.get_id url
+    m = create_media url: url
+    data = m.as_json
+    assert_match 'War Goes Viral', data['title']
+    assert_match 'How social media is being weaponized across the world', data['description']
+    assert !data['published_at'].blank?
+    assert_match /Brooking.+Singer/, data['username']
+    assert_match /https?:\/\/www.theatlantic.com/, data['author_url']
+    assert_match /\/#{id}\/picture/, data['picture']
+  end
+
+  test "should parse url scheme https" do
+    skip 'need to implement twitter author_url parsing'
+    
+    url = 'https://www.theguardian.com/politics/2016/oct/19/larry-sanders-on-brother-bernie-and-why-tony-blair-was-destructive'
+    m = create_media url: url
+    data = m.as_json
+    assert_match 'Larry Sanders on brother Bernie and why Tony Blair was ‘destructive’', data['title']
+    assert_match /The Green party candidate, who is fighting the byelection in David Cameron’s old seat/, data['description']
+    assert_match /2016-10/, data['published_at']
+    assert_match '@zoesqwilliams', data['username']
+    assert_match 'https://twitter.com/zoesqwilliams', data['author_url']
+    assert !data['picture'].blank?
+  end
+
+  test "should validate author_url when taken from twitter metatags" do
+    skip 'need to implement twitter author_url parsing'
+
+    url = 'http://lnphil.blogspot.com.br/2018/01/villar-at-duterte-nagsanib-pwersa-para.html'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal RequestHelper.top_url(m.url), data['author_url']
+    assert_equal '', data['username']
+  end
+
+  test "should parse urls without utf encoding" do
+    urls = [
+      'https://www.yallakora.com/epl/2545/News/350853/مصدر-ليلا-كورة-ليفربول-حذر-صلاح-وزملاءه-من-جماهير-فيديو-السيارة',
+      'https://www.yallakora.com/epl/2545/News/350853/%D9%85%D8%B5%D8%AF%D8%B1-%D9%84%D9%8A%D9%84%D8%A7-%D9%83%D9%88%D8%B1%D8%A9-%D9%84%D9%8A%D9%81%D8%B1%D8%A8%D9%88%D9%84-%D8%AD%D8%B0%D8%B1-%D8%B5%D9%84%D8%A7%D8%AD-%D9%88%D8%B2%D9%85%D9%84%D8%A7%D8%A1%D9%87-%D9%85%D9%86-%D8%AC%D9%85%D8%A7%D9%87%D9%8A%D8%B1-%D9%81%D9%8A%D8%AF%D9%8A%D9%88-%D8%A7%D9%84%D8%B3%D9%8A%D8%A7%D8%B1%D8%A9',
+      'https://www.yallakora.com//News/350853/%25D9%2585%25D8%25B5%25D8%25AF%25D8%25B1-%25D9%2584%25D9%258A%25D9%2584%25D8%25A7-%25D9%2583%25D9%2588%25D8%25B1%25D8%25A9-%25D9%2584%25D9%258A%25D9%2581%25D8%25B1%25D8%25A8%25D9%2588%25D9%2584-%25D8%25AD%25D8%25B0%25D8%25B1-%25D8%25B5%25D9%2584%25D8%25A7%25D8%25AD-%25D9%2588%25D8%25B2%25D9%2585%25D9%2584%25D8%25A7%25D8%25A1%25D9%2587-%25D9%2585%25D9%2586-%25D8%25AC%25D9%2585%25D8%25A7%25D9%2587%25D9%258A%25D8%25B1-%25D9%2581%25D9%258A%25D8%25AF%25D9%258A%25D9%2588-%25D8%25A7%25D9%2584%25D8%25B3%25D9%258A%25D8%25A7%25D8%25B1%25D8%25A9-'
+    ]
+    urls.each do |url|
+      m = create_media url: url
+      data = m.as_json
+      assert data['error'].nil?
+    end
+  end
+
+  test "should use original url when redirected page requires cookie" do
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='https://www.tandfonline.com/action/cookieAbsent'><meta name='pbContext' content=';wgroup:string:Publication Websites;website:website:TFOPB;page:string:Cookie Absent'>"))
+    url = 'https://doi.org/10.1080/10584609.2019.1619639'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal url, data['url']
     assert_nil data['error']
   end
 end
