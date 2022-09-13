@@ -57,25 +57,6 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert_equal '', data['html']
   end
 
-  test "should parse Facebook category page" do
-    m = create_media url: 'https://www.facebook.com/pages/category/Society---Culture-Website/PoporDezamagit/photos/'
-    data = m.as_json
-    assert !data['title'].blank?
-    assert_equal 'facebook', data['provider']
-    assert_equal 'item', data['type']
-  end
-
-  test "should get the group name when parsing group post" do
-    url = 'https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/'
-    m = Media.new url: url
-    data = m.as_json
-    assert_no_match "Not Identified", data['title']
-    assert_match 'permalink/1580570905320222/', data['url']
-    assert_equal 'facebook', data['provider']
-    assert_equal 'item', data['type']
-  end
-
-  # Past tests that we still need coverage for:
   test "should not change url when redirected to login page" do
     url = 'https://www.facebook.com/ugmhmyanmar/posts/2850282508516442'
     redirection_to_login_page = 'https://www.facebook.com/login/'
@@ -87,16 +68,6 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     RequestHelper.stubs(:request_url).with(redirection_to_login_page + '?next=https%3A%2F%2Fwww.facebook.com%2Fugmhmyanmar%2Fposts%2F2850282508516442', 'Get').returns(response_login_page)
     m = create_media url: url
     assert_equal url, m.url
-  end
-
-  test "should return empty html for deleted posts" do
-    RequestHelper.stubs(:get_html).returns(nil)
-    urls = ['https://www.facebook.com/danielafeitosa/posts/2074906892567200', 'https://www.facebook.com/caiosba/posts/8457689347638947']
-    urls.each do |url|
-      m = create_media url: url
-      data = m.as_json
-      assert_equal '', data[:html]
-    end
   end
 
   test "should add login required error and return empty html and description" do
@@ -124,11 +95,41 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
 
   test "should get canonical URL parsed from facebook html when it is a page" do
     canonical_url = 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479'
-    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='#{canonical_url}'>"))
+    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='#{canonical_url}'>"))
     Media.any_instance.stubs(:follow_redirections)
     Media.stubs(:validate_url).with(canonical_url).returns(true)
     m = create_media url: 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479?pnref=story.unseen-section'
     assert_equal canonical_url, m.url
+  end
+
+  test "should get the group name when parsing group post" do
+    url = 'https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/'
+    m = Media.new url: url
+    data = m.as_json
+    assert_match "memetics.hacking", data['title']
+    assert_match 'permalink/1580570905320222/', data['url']
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
+  end
+
+  test "should return empty html when FB url is private and cannot be embedded" do
+    url = 'https://www.facebook.com/caiosba/posts/1913749825339929'
+    m = create_media url: url
+    data = m.as_json
+    assert_equal 'facebook', data['provider']
+    assert_equal '', data['html']
+  end
+
+  test "should store oembed data of a facebook post" do
+    skip 'oembed implementation'
+    
+    m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
+    m.as_json
+    m.data.delete(:error)
+    m.send(:data_from_oembed_item)
+    assert m.data['raw']['oembed'].is_a? Hash
+    assert_match /facebook.com/, m.data['oembed']['provider_url']
+    assert_equal "facebook", m.data['oembed']['provider_name'].downcase
   end
 end
 
@@ -150,7 +151,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
   
   def post_doc
-    @post_doc ||= response_fixture_from_file('facebook-item-page_.html', parse_as: :html)
+    @post_doc ||= response_fixture_from_file('facebook-item-page_ironmaiden.html', parse_as: :html)
   end
 
   test "returns provider and type" do
@@ -272,6 +273,29 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_match /Unexpected platform ID from Crowdtangle/, data.dig('error', 'message')
     assert_nil data['title']
     assert_nil data['description']
+  end
+
+  test "should return empty html for deleted posts (when doc cannot be returned)" do
+    RequestHelper.stubs(:get_html).returns(nil)
+
+    data = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/12345').parse_data(nil, throwaway_url)
+    assert_equal '', data[:html]
+  end
+
+  test "should return empty html when FB url is from group and cannot be embedded" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: {}.to_json)
+
+    data = Parser::FacebookItem.new('https://www.facebook.com/groups/976472102413753/permalink/2013383948722558/').parse_data(empty_doc, throwaway_url)
+
+    assert_equal '', data['html']
+  end
+  
+  test "should return empty html when FB url is event and cannot be embedded" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: {}.to_json)
+
+    data = Parser::FacebookItem.new('https://www.facebook.com/events/331430157280289').parse_data(empty_doc, throwaway_url)
+
+    assert_equal '', data['html']
   end
 
   test "#oembed_url returns URL with the instance URL" do

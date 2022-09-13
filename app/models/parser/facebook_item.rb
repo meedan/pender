@@ -5,6 +5,7 @@ module Parser
     include ProviderFacebook
 
     EVENT_URL = /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>\w+)(?!.*permalink\/)/
+    GROUPS_URL = /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/groups\/(?<profile>[^\/]+)\/permalink\/(?<id>[0-9]+).*/
   
     FACEBOOK_ITEM_URLS = [
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/posts\/(?<id>[0-9]+).*/,
@@ -27,6 +28,7 @@ module Parser
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/live\/map(\/.*)?/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>[0-9]+)\/permalink\/([0-9]+).*/,
       /^https?:\/\/(www\.)?facebook\.com\/(?<id>[^\/\?]+).*$/,
+      GROUPS_URL,
       EVENT_URL
     ]
 
@@ -71,7 +73,7 @@ module Parser
       return unless html_page
       return if set_facebook_privacy_error(html_page, unavailable_page)
       return if username && !['groups', 'flx'].include?(username)
-      return unless not_an_event_page
+      return unless not_an_event_page && not_a_group_post
 
       '<script>
       window.fbAsyncInit = function() { FB.init({ xfbml: true, version: "v2.6" }); FB.Canvas.setAutoGrow(); };
@@ -84,6 +86,10 @@ module Parser
       }(document, "script", "facebook-jssdk"));
       </script>
       <div class="fb-post" data-href="' + request_url + '"></div>'
+    end
+
+    def not_a_group_post
+      url.match(GROUPS_URL).nil?
     end
 
     def not_an_event_page
