@@ -15,7 +15,7 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, original_url)
+    def parse_data_for_parser(doc, original_url, _jsonld)
       if doc.nil?
         doc = RequestHelper.get_html(url, self.method(:set_error), {allow_redirections: :all})
         set_raw_metatags(doc)

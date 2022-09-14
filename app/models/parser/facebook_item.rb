@@ -45,7 +45,7 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, original_url)
+    def parse_data_for_parser(doc, original_url, jsonld)
       handle_exceptions(StandardError) do
         grabber = IdsGrabber.new(doc, url, original_url)
         set_data_field('user_uuid', grabber.user_id)
@@ -68,6 +68,8 @@ module Parser
           @url = updated_url if updated_url && updated_url != url
           @parsed_data.merge!(crowdtangle_data)
         end
+        set_data_field('author_picture', jsonld.dig('creator', 'image'))
+        set_data_field('picture', jsonld.dig('thumbnailUrl'))
 
         @parsed_data['html'] = html_for_facebook_post(parsed_data.dig('username'), doc, url) || ''
       end

@@ -45,7 +45,7 @@ class InstagramProfileUnitTest < ActiveSupport::TestCase
   test "should set profile defaults upon error" do
     WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_raise(Net::ReadTimeout.new("Raised in test"))
 
-    data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc, nil)
+    data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
 
     assert_equal 'fake-account', data['external_id']
     assert_equal '@fake-account', data['username']
@@ -64,7 +64,7 @@ class InstagramProfileUnitTest < ActiveSupport::TestCase
     end
 
     PenderAirbrake.stub(:notify, arguments_checker) do
-      data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc, nil)
+      data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
       assert_equal 1, airbrake_call_count
     end
     assert_match /ProviderInstagram::ApiResponseCodeError/, data['error']['message']
@@ -96,7 +96,7 @@ class InstagramProfileUnitTest < ActiveSupport::TestCase
       assert_equal ProviderInstagram::ApiError, e.class
     end
     PenderAirbrake.stub(:notify, arguments_checker) do
-      data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc, nil)
+      data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
       assert_equal 1, airbrake_call_count
     end
     assert_match /ProviderInstagram::ApiAuthenticationError/, data['error']['message']
@@ -119,7 +119,7 @@ class InstagramProfileUnitTest < ActiveSupport::TestCase
   test "should store raw data of profile returned by Instagram request" do
     WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: graphql, status: 200)
     
-    data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc, nil)
+    data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
 
     assert_not_nil data['raw']['api']
     assert !data['raw']['api'].empty?

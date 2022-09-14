@@ -15,7 +15,7 @@ module Parser
     private    
 
     # Main function for class
-    def parse_data_for_parser(doc, _ = nil)
+    def parse_data_for_parser(doc, _original_url, _jsonld)
       handle_exceptions(StandardError) do
         title = get_kwai_text_from_tag(doc, '.info .title')
         name = get_kwai_text_from_tag(doc, '.name')

@@ -15,9 +15,9 @@ module Parser
     end
 
     private
-    
+
     # Main function for class
-    def parse_data_for_parser(doc, _ = nil)
+    def parse_data_for_parser(doc, _original_url, _jsonld)
       match = url.match(TIKTOK_PROFILE_URL)
       base_url = match[0] # Should this be set as canonical_url?
       username = match['username']

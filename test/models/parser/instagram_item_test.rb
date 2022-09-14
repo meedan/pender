@@ -55,7 +55,7 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
   test "should set profile defaults upon error" do
     WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_raise(Net::ReadTimeout.new("Raised in test"))
 
-    data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc, nil)
+    data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
 
     assert_equal 'fake-post', data['external_id']
     assert_match 'https://www.instagram.com/p/fake-post', data['description']
@@ -72,7 +72,7 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     end
 
     PenderAirbrake.stub(:notify, arguments_checker) do
-      data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc, nil)
+      data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
       assert_equal 1, airbrake_call_count
     end
     assert_match /ProviderInstagram::ApiResponseCodeError/, data['error']['message']
@@ -88,7 +88,7 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
       assert_equal ProviderInstagram::ApiError, e.class
     end
     PenderAirbrake.stub(:notify, arguments_checker) do
-      data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc, nil)
+      data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
       assert_equal 1, airbrake_call_count
     end
     assert_match /ProviderInstagram::ApiError/, data['error']['message']
@@ -104,7 +104,7 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
       assert_equal ProviderInstagram::ApiError, e.class
     end
     PenderAirbrake.stub(:notify, arguments_checker) do
-      data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc, nil)
+      data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
       assert_equal 1, airbrake_call_count
     end
     assert_match /ProviderInstagram::ApiAuthenticationError/, data['error']['message']
@@ -113,7 +113,7 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
   test 'should set item fields from successful api response' do
     WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: graphql, status: 200)
     
-    data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc, nil)
+    data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
     assert_equal 'fake-post', data['external_id']
     assert_equal '@retrobayarea', data['username']
     assert_match /This cool neon sign was located at the intersection of South Murphy and El Camino Real/, data['description']
