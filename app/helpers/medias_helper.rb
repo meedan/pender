@@ -195,29 +195,9 @@ module MediasHelper
   end
 
   Media.class_eval do
-    def self.decoded_uri(url)
-      RequestHelper.decoded_uri(url)
-    end
-
     def self.api_key_settings(key_id)
       key = ApiKey.where(id: key_id).last
       key ? key.settings : {}
-    end
-
-    def self.valid_proxy(config_key = 'proxy')
-      RequestHelper.valid_proxy(config_key)
-    end
-
-    def self.get_proxy(uri, format = :array, force = false)
-      RequestHelper.get_proxy(uri, format, force)
-    end
-
-    def self.proxy_format(proxy, format = :array)
-      RequestHelper.valid_proxy(proxy, format)
-    end
-
-    def self.extended_headers(uri = nil)
-      RequestHelper.extended_headers(uri)
     end
   end
 end

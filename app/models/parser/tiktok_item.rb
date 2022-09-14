@@ -38,7 +38,7 @@ module Parser
       uri = URI.parse("https://www.tiktok.com/oembed?url=#{requested_url}")
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = uri.scheme == 'https'
-      headers = Media.extended_headers(uri)
+      headers = RequestHelper.extended_headers(uri)
       request = Net::HTTP::Get.new(uri.request_uri, headers)
       response = http.request(request)
       parsed_response = JSON.parse(response.body)
