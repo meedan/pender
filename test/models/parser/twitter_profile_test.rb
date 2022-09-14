@@ -14,7 +14,6 @@ class TwitterProfileIntegrationTest < ActiveSupport::TestCase
   end
 
   test "should store oembed data of a twitter profile" do
-    skip "need to implement oembed parser"
     m = create_media url: 'https://twitter.com/meedan'
     data = m.as_json
 

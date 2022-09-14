@@ -84,7 +84,12 @@ class TiktokItemUnitTest < ActiveSupport::TestCase
 
     data = Parser::TiktokItem.new('https://www.tiktok.com/@fakeaccount/video/abcdef').parse_data(doc)
 
-    assert_not_nil data['raw']['oembed']
-    assert_not_nil data['raw']['api']
+    assert_equal JSON.parse(oembed), data['raw']['oembed']
+    assert_equal JSON.parse(oembed), data['raw']['api']
+  end
+
+  test ".oembed_url returns oembed URL" do
+    url = Parser::TiktokItem.new('https://tiktok.com/fakeaccount/1234').oembed_url
+    assert_equal 'https://www.tiktok.com/oembed?url=https://tiktok.com/fakeaccount/1234', url
   end
 end

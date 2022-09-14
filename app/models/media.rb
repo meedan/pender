@@ -50,7 +50,7 @@ class Media
   [ActiveModel::Validations, ActiveModel::Conversion, MediasHelper, MediaOembed, MediaArchiver].each { |concern| include concern }
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :unavailable_page
+  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :unavailable_page, :parser
 
   TYPES = {}
 
@@ -65,6 +65,7 @@ class Media
     self.follow_redirections
     self.url = RequestHelper.normalize_url(self.url) unless self.get_canonical_url
     self.try_https
+    self.parser = nil
   end
 
   def self.declare(type, patterns)
@@ -171,10 +172,11 @@ class Media
 
     PARSERS.each do |parser|
       if parseable = parser.match?(self.url)
+        self.parser = parseable
         # get_metatags <--- should this go back in here?
-        self.provider, self.type = parseable.type.split('_')
-        self.data.deep_merge!(parseable.parse_data(self.doc, self.original_url))
-        self.url = parseable.url
+        self.provider, self.type = self.parser.type.split('_')
+        self.data.deep_merge!(self.parser.parse_data(self.doc, self.original_url))
+        self.url = self.parser.url
         self.get_oembed_data
         parsed = true
       end

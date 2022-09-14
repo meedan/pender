@@ -46,6 +46,15 @@ class TwitterItemIntegrationTest < ActiveSupport::TestCase
     assert_equal m.url, data['title']
     assert_match "Twitter::Error::Unauthorized", data['raw']['api']['error']['message']
   end
+
+  test "should store oembed data of a twitter profile" do
+    m = create_media url: 'https://twitter.com/meedan'
+    data = m.as_json
+
+    assert data['raw']['oembed'].is_a? Hash
+    assert_equal "https:\/\/twitter.com", data['raw']['oembed']['provider_url']
+    assert_equal "Twitter", data['raw']['oembed']['provider_name']
+  end
 end
 
 class TwitterItemUnitTest < ActiveSupport::TestCase
@@ -133,18 +142,6 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
 
     assert data['raw']['api'].is_a? Hash
     assert !data['raw']['api'].empty?
-  end
-
-  test "should store oembed data of a twitter post" do
-    skip "needs oembed"
-    Twitter::REST::Client.any_instance.stubs(:status).returns(fake_tweet)
-    Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
-
-    data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data('')
-
-    assert data['raw']['oembed'].is_a? Hash
-    assert_equal "https:\/\/twitter.com", data['raw']['oembed']['provider_url']
-    assert_equal "Twitter", data['raw']['oembed']['provider_name']
   end
 
   # I'm not confident this is testing anything about HTML decoding as written

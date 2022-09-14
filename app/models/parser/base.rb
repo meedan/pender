@@ -14,6 +14,12 @@ module Parser
       def ignored_urls
         []
       end
+
+      def oembed_url(doc)
+        return if doc.nil?
+        tag = doc.at_css('link[type="application/json+oembed"]')
+        tag.attribute('href').to_s unless tag.nil?
+      end
   
       def match?(url)
         matched_pattern = false
@@ -41,11 +47,9 @@ module Parser
 
     # Default implementation, subclasses can override
     def oembed_url(doc)
-      return if doc.nil?
-      tag = doc.at_css('link[type="application/json+oembed"]')
-      tag.attribute('href').to_s unless tag.nil?
+      self.class.oembed_url(doc)
     end
-  
+
     attr_reader :url, :parsed_data
     
     private

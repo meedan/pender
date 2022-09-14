@@ -121,12 +121,9 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
   end
 
   test "should store oembed data of a facebook post" do
-    skip 'oembed implementation'
-    
-    m = create_media url: 'https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater'
+    m = create_media url: 'https://www.facebook.com/144585402276277/posts/1127489833985824'
     m.as_json
-    m.data.delete(:error)
-    m.send(:data_from_oembed_item)
+
     assert m.data['raw']['oembed'].is_a? Hash
     assert_match /facebook.com/, m.data['oembed']['provider_url']
     assert_equal "facebook", m.data['oembed']['provider_name'].downcase
