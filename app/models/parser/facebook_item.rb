@@ -42,7 +42,10 @@ module Parser
       end
     end
 
-    def parse_data(doc, original_url)
+    private
+
+    # Main function for class
+    def parse_data_for_parser(doc, original_url)
       handle_exceptions(StandardError) do
         grabber = IdsGrabber.new(doc, url, original_url)
         set_data_field('user_uuid', grabber.user_id)
@@ -53,7 +56,12 @@ module Parser
         @parsed_data['raw']['crowdtangle'] = get_crowdtangle_data(parsed_data['uuid']) || {}
         if crowdtangle_error = parsed_data.dig('raw', 'crowdtangle', 'error')
           @parsed_data['error'] = crowdtangle_error
-          @parsed_data['title'] = @parsed_data['description'] = nil
+
+          unless doc.nil?
+            @parsed_data.merge!(get_opengraph_metadata.reject{|k,v| v.nil? })
+            set_data_field('title', get_page_title(doc))
+            set_data_field('description', doc.at_css('description')&.content)
+          end
         else
           crowdtangle_data = format_crowdtangle_result(parsed_data['raw']['crowdtangle'])
           updated_url = parsed_data.dig('raw', 'crowdtangle', 'posts', 0, 'postUrl')
@@ -66,8 +74,6 @@ module Parser
 
       parsed_data
     end
-
-    private
 
     def html_for_facebook_post(username, html_page, request_url)
       return unless html_page

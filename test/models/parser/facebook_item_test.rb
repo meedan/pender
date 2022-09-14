@@ -204,14 +204,37 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert Parser::FacebookItem.match?('https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/').is_a?(Parser::FacebookItem)
   end
 
-  test "returns empty title and description on crowdtangle failure, but populates embed html" do
+  test "sets fallbacks from metatags on crowdtangle error, and populates HTML" do
     crowdtangle_error = response_fixture_from_file('crowdtangle-response_not-found.json')
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_error)
 
-    data = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/123456789').parse_data(empty_doc, 'https://www.facebook.com/fakeaccount/posts/new-123456789')
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="this is a page title" />
+      <meta property="og:description" content="also a description" />
+      <meta property="og:image" content="https://example.com/image" />
+    HTML
 
-    assert_nil data['title']
-    assert_nil data['description']
+    data = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/123456789').parse_data(doc, 'https://www.facebook.com/fakeaccount/posts/new-123456789')
+
+    assert_equal 'this is a page title', data['title']
+    assert_equal 'also a description', data['description']
+    assert_equal 'https://example.com/image', data['picture']
+    assert_match /data-href="https:\/\/www.facebook.com\/fakeaccount\/posts\/123456789"/, data.dig('html')
+  end
+
+  test "sets fallbacks from HTML on crowdtangle error, and populates HTML" do
+    crowdtangle_error = response_fixture_from_file('crowdtangle-response_not-found.json')
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_error)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <title id='pageTitle'>this is a page title</title>
+      <description>also a description</description>
+    HTML
+
+    data = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/123456789').parse_data(doc, 'https://www.facebook.com/fakeaccount/posts/new-123456789')
+
+    assert_equal 'this is a page title', data['title']
+    assert_equal 'also a description', data['description']
     assert_match /data-href="https:\/\/www.facebook.com\/fakeaccount\/posts\/123456789"/, data.dig('html')
   end
     

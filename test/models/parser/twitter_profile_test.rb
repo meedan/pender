@@ -39,6 +39,10 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     @fake_twitter_user = Twitter::User.new(api_response.with_indifferent_access)
   end
 
+  def empty_doc
+    Nokogiri::HTML('')
+  end
+
   test "returns provider and type" do
     assert_equal Parser::TwitterProfile.type, 'twitter_profile'
   end
@@ -76,7 +80,7 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     end
 
     PenderAirbrake.stub(:notify, arguments_checker) do
-      data = Parser::TwitterProfile.new('https://www.twitter.com/fakeaccount').parse_data(nil)
+      data = Parser::TwitterProfile.new('https://www.twitter.com/fakeaccount').parse_data(nil, nil)
       assert_equal 1, airbrake_call_count
     end
     assert_match /Twitter::Error/, data['error']['message']
@@ -90,7 +94,7 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
   test "assigns values to hash from the API response" do
     Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
 
-    data = Parser::TwitterProfile.new('https://www.twitter.com/fakeaccount').parse_data('')
+    data = Parser::TwitterProfile.new('https://www.twitter.com/fakeaccount').parse_data(empty_doc, nil)
 
     assert_equal 'fakeaccount', data['external_id']
     assert_equal '@fakeaccount', data['username']
@@ -109,7 +113,7 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
   test "should store raw data of profile returned by Twitter API" do
     Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
 
-    data = Parser::TwitterProfile.new('https://www.twitter.com/fakeaccount').parse_data('')
+    data = Parser::TwitterProfile.new('https://www.twitter.com/fakeaccount').parse_data(empty_doc, nil)
 
     assert_not_nil data['raw']['api']
     assert !data['raw']['api'].empty?
@@ -119,7 +123,7 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     Twitter::REST::Client.any_instance.stubs(:user).raises(Twitter::Error::TooManyRequests)
 
     assert_raises Pender::ApiLimitReached do
-      Parser::TwitterProfile.new('https://twitter.com/fake-account').parse_data('')
+      Parser::TwitterProfile.new('https://twitter.com/fake-account').parse_data(empty_doc, nil)
     end
   end
 

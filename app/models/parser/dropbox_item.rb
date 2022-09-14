@@ -12,20 +12,20 @@ module Parser
         ]
       end
     end
-  
-    def parse_data(doc, _ = nil)
+    
+    private
+
+    # Main function for class
+    def parse_data_for_parser(doc, _ = nil)
       handle_exceptions(StandardError) do
-        metatags = { title: 'og:title', picture: 'og:image', description: 'og:description' }
-        @parsed_data['raw']['metatags'] = get_raw_metatags(doc)
-        @parsed_data.merge!(get_metadata_from_tags(parsed_data.dig('raw', 'metatags'), metatags))
+        select_metatags = { title: 'og:title', picture: 'og:image', description: 'og:description' }
+        @parsed_data.merge!(get_metadata_from_tags(select_metatags))
         @parsed_data['title'] = get_title_from_url(url) if parsed_data['title'].blank?
         @parsed_data['description'] = 'Shared with Dropbox' if parsed_data['description'].blank?
       end
       parsed_data
     end
-  
-    private
-  
+    
     def get_title_from_url(url)
       uri = URI.parse(url)
       URI.unescape(uri.path.split('/').last)

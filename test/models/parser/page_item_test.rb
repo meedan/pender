@@ -196,7 +196,7 @@ class PageItemUnitTest < ActiveSupport::TestCase
     assert Parser::PageItem.match?('https://example.com').is_a?(Parser::PageItem)
   end
 
-  test "re-fetches HTML and sets metatags, following all redirects, if doc is empty" do
+  test "re-fetches HTML and re-sets metatags, following all redirects, if doc is empty" do
     url = 'https://example.com'
     RequestHelper.stubs(:get_html).with(url, kind_of(Method), {allow_redirections: :all}).returns(Nokogiri::HTML('<meta name="description" content="hello" />'))
 

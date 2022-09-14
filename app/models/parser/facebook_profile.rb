@@ -24,17 +24,18 @@ module Parser
         ]
       end
     end
+    
+    private
 
-    def parse_data(doc, original_url)
+    # Main function for class
+    def parse_data_for_parser(doc, original_url)
       parseable_url = unavailable_page ? original_url : url
 
       handle_exceptions(StandardError) do
-        metatags = @parsed_data['raw']['metatags'] = get_raw_metatags(doc)
-        
         @parsed_data['external_id'] = get_id_from_url(parseable_url, original_url) || self.class.get_id_from_doc(doc) || ''
         @parsed_data['id'] = parsed_data['external_id']
         
-        picture = get_metatag_value('og:image', metatags)
+        picture = get_metatag_value('og:image')
         set_data_field('author_picture', picture)
         set_data_field('picture', picture)
 
@@ -45,7 +46,7 @@ module Parser
         set_data_field('title', title, 'Facebook')
         set_data_field('author_name', username, title&.gsub(' | Facebook', ''), 'Facebook')
 
-        set_data_field('description', get_metatag_value('og:description', metatags), get_metatag_value('description', metatags))
+        set_data_field('description', get_metatag_value('og:description'), get_metatag_value('description'))
         set_data_field('author_url', parseable_url)
         set_facebook_privacy_error(doc, unavailable_page)
       end
@@ -53,11 +54,9 @@ module Parser
       parsed_data
     end
 
-    private
-
-    def get_metatag_value(name, metatags)
+    def get_metatag_value(name)
       value = nil
-      (metatags || []).each do |tag|
+      (parsed_data.dig('raw', 'metatags') || []).each do |tag|
         value = tag['content'] if (tag['name'] == name || tag['property'] == name)
       end
       value

@@ -13,8 +13,11 @@ module Parser
         [INSTAGRAM_ITEM_URL]
       end
     end
+    
+    private
 
-    def parse_data(doc, _ = nil)
+    # Main function for class
+    def parse_data_for_parser(doc, _ = nil)
       id = url.match(INSTAGRAM_ITEM_URL)[3]
 
       @parsed_data.merge!(external_id: id)
@@ -37,8 +40,6 @@ module Parser
       end
       parsed_data
     end
-
-    private
 
     def get_instagram_username_from_data
       username = parsed_data.dig('raw', 'api', 'user', 'username').to_s

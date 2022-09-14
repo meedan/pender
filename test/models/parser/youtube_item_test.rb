@@ -101,7 +101,7 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
       },
     )
     Yt::Video.stub(:new, fake_video) do
-      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(nil)
+      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(nil, nil)
     end
     
     assert_equal '12345', data[:raw][:api]['id']
@@ -128,7 +128,7 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
       },
     )
     Yt::Video.stub(:new, fake_video) do
-      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(nil)
+      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(nil, nil)
     end
     
     assert_equal '12345', data['external_id']
@@ -151,7 +151,7 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
       },
     )
     Yt::Video.stub(:new, fake_video) do
-      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(nil)
+      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(nil, nil)
     end
     
     assert_equal 'http://example.com/240x240.jpg', data['picture']
@@ -161,7 +161,7 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
   test 'assigns valid html when channel ID is present' do
     data = {}
     Yt::Video.stub(:new, minimal_video) do
-      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(nil)
+      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(nil, nil)
     end
     
     assert Nokogiri::HTML(data['html']).present?
@@ -171,7 +171,7 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
   test 'constructs author url when channel ID is present' do
     data = {}
     Yt::Video.stub(:new, minimal_video) do
-      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(nil)
+      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(nil, nil)
     end
     
     assert_equal 'https://www.youtube.com/channel/channel-abcd', data['author_url']
@@ -184,7 +184,7 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
 
     data = {}
     Yt::Video.stub(:new, minimal_video) do
-      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(nil)
+      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(nil, nil)
     end
     
     assert_equal 'https://example.com/thumbnailurl', data['author_picture']
@@ -195,7 +195,7 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
     
     data = {}
     Yt::Video.stub(:new, minimal_video) do
-      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(doc)
+      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(doc, nil)
     end
 
     assert data['author_picture'].empty?
@@ -212,7 +212,7 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
     end
 
     PenderAirbrake.stub(:notify, arguments_checker) do
-      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(doc)
+      data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(doc, nil)
       assert_equal 1, airbrake_call_count
     end
     assert_match /Yt::Errors::Forbidden/, data['raw']['api']['error']['message']
@@ -222,7 +222,7 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
   test "falls back to metadata from doc when data from API not present (error or misconfiguration)" do
     Yt::Video.stubs(:new).raises(Yt::Errors::Forbidden)
 
-    data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(doc)
+    data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(doc, nil)
     
     assert_equal 'Full Length Freight Trains! 1 Hour of Trains!', data['title']
     assert_match /All aboard!/, data['description']
@@ -232,7 +232,7 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
   test "falls back to parsing URL to get external ID" do
     Yt::Video.stubs(:new).raises(Yt::Errors::Forbidden)
 
-    data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(doc)
+    data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(doc, nil)
     
     assert_equal '123456789', data['external_id']
   end
@@ -240,7 +240,7 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
   test "should not crash when parsing a deleted YouTube video, and should set descriptive attributes" do
     Yt::Video.any_instance.stubs(:snippet).raises(Yt::Errors::NoItems)
 
-    data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(doc)
+    data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(doc, nil)
 
     assert_equal 'YouTube', data['username']
     assert_equal 'Deleted video', data['title']

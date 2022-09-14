@@ -41,8 +41,14 @@ module Parser
       @parsed_data[:raw] = {}
     end
   
+    # This is the entry function for the class, which performs
+    # any common setup and then calls down to `parse_data_for_parser`
     def parse_data(doc, original_url)
-      raise NotImplementedError.new("Parser subclasses must implement parse_data")
+      # Shared setup
+      set_raw_metatags(doc)
+
+      # Parse data (implemented by subclasses)
+      parse_data_for_parser(doc, original_url)
     end
 
     # Default implementation, subclasses can override
@@ -55,6 +61,11 @@ module Parser
     private
 
     attr_reader :unavailable_page
+
+    # Implemented by subclasses
+    def parse_data_for_parser(doc, original_url)
+      raise NotImplementedError.new("Parser subclasses must implement parse_data_for_parser")
+    end
 
     def twitter_client
       @twitter_client ||= Twitter::REST::Client.new do |config|
@@ -89,17 +100,17 @@ module Parser
       end
     end
     
-    def get_metadata_from_tags(raw_metatags, select_metatags)
+    def get_metadata_from_tags(select_metatags)
       metadata = {}.with_indifferent_access
       
       select_metatags.each do |key, value|
-        metatag = raw_metatags.find { |tag| tag['property'] == value || tag['name'] == value }
+        metatag = (parsed_data['raw']['metatags']).find { |tag| tag['property'] == value || tag['name'] == value }
         metadata[key] = metatag['content'] if metatag
       end
       metadata
     end
 
-    def get_raw_metatags(doc)
+    def set_raw_metatags(doc)
       metatag_data = []
       unless doc.nil?
         doc.search('meta').each do |meta|
@@ -110,12 +121,12 @@ module Parser
           metatag_data << metatag
         end
       end
-      metatag_data
+      @parsed_data['raw']['metatags'] = metatag_data
     end
   
-    def get_opengraph_metadata(raw_metatags)
+    def get_opengraph_metadata
       select_metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time', author_name: 'og:site_name' }
-      data = get_metadata_from_tags(raw_metatags, select_metatags).with_indifferent_access
+      data = get_metadata_from_tags(select_metatags).with_indifferent_access
       if (data['username'] =~ /\A#{URI::regexp}\z/)
         data['author_url'] = data['username']
         data.delete('username')
@@ -124,9 +135,9 @@ module Parser
       data
     end
     
-    def get_twitter_metadata(raw_metatags)
+    def get_twitter_metadata
       select_metatags = { title: 'twitter:title', picture: 'twitter:image', description: 'twitter:description', username: 'twitter:creator', author_name: 'twitter:site' }
-      data = get_metadata_from_tags(raw_metatags, select_metatags).with_indifferent_access
+      data = get_metadata_from_tags(select_metatags).with_indifferent_access
 
       data['author_url'] = twitter_author_url(data['username'])
       data.delete('author_name') if bad_username?(data['author_name'])

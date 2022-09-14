@@ -11,12 +11,15 @@ module Parser
         [/^.*$/]
       end
     end
+    
+    private
 
-    def parse_data(doc, original_url)
+    # Main function for class
+    def parse_data_for_parser(doc, original_url)
       if doc.nil?
         doc = RequestHelper.get_html(url, self.method(:set_error), {allow_redirections: :all})
+        set_raw_metatags(doc)
       end
-      metatags = @parsed_data['raw']['metatags'] = get_raw_metatags(doc)
 
       handle_exceptions(StandardError) do
         raise HtmlFetchingError.new("Could not parse this media") if doc.blank?
@@ -26,7 +29,7 @@ module Parser
         # The following will be merged in order, with later
         # values taking precedence and any empty values ignored.
         [
-          get_metadata_from_tags(metatags, {
+          get_metadata_from_tags({
             title: 'title', 
             description: 'description',
             username: 'author',
@@ -34,8 +37,8 @@ module Parser
           }),
           get_html_info(doc),
           format_oembed_data(parsed_data['raw']['oembed']),
-          get_opengraph_metadata(metatags),
-          get_twitter_metadata(metatags)
+          get_opengraph_metadata,
+          get_twitter_metadata,
         ].each do |hash|
           @parsed_data.merge!(hash.reject{|k,v| v.nil? })
         end
@@ -47,7 +50,7 @@ module Parser
         set_data_field('author_name', parsed_data['author_name'], parsed_data['username'], parsed_data['title'])
         set_data_field('author_picture', parsed_data['picture'])
 
-        cookie_metatag = get_metadata_from_tags(metatags, { cookie: 'pbContext' })
+        cookie_metatag = get_metadata_from_tags({ cookie: 'pbContext' })
         @url = original_url if !cookie_metatag.empty? && !cookie_metatag[:cookie]&.match(/Cookie Absent/).nil?
       end
 
@@ -56,8 +59,6 @@ module Parser
 
       parsed_data
     end
-
-    private
 
     def get_html_info(doc)
       {

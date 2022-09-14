@@ -40,7 +40,7 @@ class TiktokProfileUnitTest < ActiveSupport::TestCase
   end
   
   test "assigns values to hash from the HTML doc" do
-    data = Parser::TiktokProfile.new('https://www.tiktok.com/@fakeaccount').parse_data(doc)
+    data = Parser::TiktokProfile.new('https://www.tiktok.com/@fakeaccount').parse_data(doc, nil)
 
     assert_equal '@fakeaccount', data['external_id']
     assert_equal '@fakeaccount', data['username']
@@ -59,7 +59,7 @@ class TiktokProfileUnitTest < ActiveSupport::TestCase
   test "should set profile defaults upon error" do
     Parser::TiktokProfile.any_instance.stubs(:reparse_if_default_tiktok_page).raises(NoMethodError.new("Fake error raised for tests"))
 
-    data = Parser::TiktokProfile.new('https://www.tiktok.com/@fakeaccount?is_from_webapp=1&sender_device=pc').parse_data(doc)
+    data = Parser::TiktokProfile.new('https://www.tiktok.com/@fakeaccount?is_from_webapp=1&sender_device=pc').parse_data(doc, nil)
 
     assert_equal '@fakeaccount', data['external_id']
     assert_equal '@fakeaccount', data['username']
@@ -77,7 +77,7 @@ class TiktokProfileUnitTest < ActiveSupport::TestCase
     RequestHelper.stubs(:get_html).with(url, kind_of(Method), header_options, true).returns(doc)
     
     parser = Parser::TiktokProfile.new(url)
-    data = parser.parse_data(Nokogiri::HTML(blank_page))
+    data = parser.parse_data(Nokogiri::HTML(blank_page), nil)
 
     assert_equal '@fakeaccount', data['external_id']
     assert_equal '@fakeaccount', data['username']
