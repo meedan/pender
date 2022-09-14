@@ -253,12 +253,12 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should not try to clear upstream cache when generating cache for the first time" do
-    CcDeville.any_instance.expects(:clear_cache).never
+    CcDeville.expects(:clear_cache_for_url).never
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
   end
 
   test "should not try to clear upstream cache when not asking to" do
-    CcDeville.any_instance.expects(:clear_cache).never
+    CcDeville.expects(:clear_cache_for_url).never
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
   end
@@ -269,15 +269,15 @@ class MediasControllerTest < ActionController::TestCase
 
     url = 'https://twitter.com/caiosba/status/742779467521773568'
     encurl = CGI.escape(url)
-    CcDeville.any_instance.expects(:clear_cache).with(config['public_url'] + '/api/medias.html?url=' + encurl).once
-    CcDeville.any_instance.expects(:clear_cache).with(config['public_url'] + '/api/medias.html?refresh=1&url=' + encurl).once
+    CcDeville.expects(:clear_cache_for_url).with(config['public_url'] + '/api/medias.html?url=' + encurl).once
+    CcDeville.expects(:clear_cache_for_url).with(config['public_url'] + '/api/medias.html?refresh=1&url=' + encurl).once
     get :index, params: { url: url, format: :html }
     get :index, params: { url: url, format: :html, refresh: '1' }
   end
 
   test "should not try to clear upstream cache when there are no configs" do
     stub_configs({ 'cc_deville_token' => '', 'cc_deville_host' => '', 'cc_deville_httpauth' => '' }) do
-      CcDeville.any_instance.expects(:clear_cache).never
+      CcDeville.expects(:clear_cache_for_url).never
       get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html, refresh: '1' }
     end
   end
