@@ -1,5 +1,7 @@
 module Parser
   class TiktokProfile < Base
+    include ProviderTiktok
+
     TIKTOK_PROFILE_URL = /^https?:\/\/(www\.)?tiktok\.com\/(?<username>[^\/\?]+)/
 
     class << self

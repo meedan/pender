@@ -93,4 +93,9 @@ class TiktokProfileUnitTest < ActiveSupport::TestCase
     assert_not_nil data['author_name']
     assert_nil data['error']
   end
+
+  test ".oembed_url returns oembed URL" do
+    url = Parser::TiktokProfile.new('https://tiktok.com/fakeaccount').oembed_url
+    assert_equal 'https://www.tiktok.com/oembed?url=https://tiktok.com/fakeaccount', url
+  end
 end

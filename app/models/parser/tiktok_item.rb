@@ -1,5 +1,7 @@
 module Parser
   class TiktokItem < Base
+    include ProviderTiktok
+
     TIKTOK_ITEM_URL = /^https?:\/\/(www\.)?tiktok\.com\/(?<username>[^\/]+)\/video\/(?<id>[^\/|?]+)/
 
     class << self
@@ -16,7 +18,7 @@ module Parser
       set_data_field('description', url)
 
       handle_exceptions(StandardError) do
-        @parsed_data.merge!(get_tiktok_api_data(url))
+        @parsed_data[:raw][:api] = @parsed_data[:raw][:oembed] = get_tiktok_api_data(url)
         match = url.match(TIKTOK_ITEM_URL)
         @parsed_data.merge!({
           username: match['username'],
@@ -35,19 +37,13 @@ module Parser
     private
   
     def get_tiktok_api_data(requested_url)
-      uri = URI.parse("https://www.tiktok.com/oembed?url=#{requested_url}")
+      uri = URI.parse(oembed_url)
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = uri.scheme == 'https'
       headers = RequestHelper.extended_headers(uri)
       request = Net::HTTP::Get.new(uri.request_uri, headers)
       response = http.request(request)
-      parsed_response = JSON.parse(response.body)
-      {
-        'raw' => {
-          'oembed' => parsed_response,
-          'api' => parsed_response,
-        }
-      }
+      JSON.parse(response.body)
     end
   end
 end

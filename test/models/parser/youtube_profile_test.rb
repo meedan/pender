@@ -16,9 +16,7 @@ class YoutubeProfileIntegrationTest < ActiveSupport::TestCase
     assert_equal data[:raw][:api][:subscriber_count].to_s, data['subscriber_count']
   end
 
-  test "should store oembed data of a youtube profile" do
-    skip "oembed implementation"
-    
+  test "should store oembed data of a youtube profile using default oembed" do
     RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<link rel='alternate' type='application/json+oembed' href='https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ' title='Iron Maiden'>"))
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
     data = m.as_json
@@ -177,5 +175,10 @@ class YouTubeProfileUnitTest < ActiveSupport::TestCase
     assert_match /yt3.ggpht.com\/ytc\/AMLnZu_OnEG7QixZn1lpa0DF61S6SpSOAdoP4vwQUMFv3w/, data['author_picture']
     assert_equal 'CoasterFan2105', data['author_name']
     assert_equal 'coasterfan2105', data['username']
+  end
+
+  test "#oembed_url returns URL with the instance URL" do
+    oembed_url = Parser::YoutubeProfile.new('https://www.youtube.com/channel/examplechannel').oembed_url
+    assert_equal 'https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/channel/examplechannel', oembed_url
   end
 end

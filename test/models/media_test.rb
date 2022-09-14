@@ -565,13 +565,10 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should return item as oembed when data is not on cache" do
-    skip 'need to fix oembed behavior'
-
     url = 'https://www.facebook.com/photo.php?fbid=265901254902229&set=pb.100044470688234.-2207520000..&type=3'
     m = create_media url: url
     data = Media.as_oembed(nil, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
     assert !data['title'].blank?
-    assert !data['author_url'].blank?
     assert_equal 'facebook', data['provider_name']
     assert_equal 'http://www.facebook.com', data['provider_url']
     assert_equal 300, data['width']
@@ -581,33 +578,28 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should return item as oembed when data is on cache and raw key is missing" do
-    skip 'need to fix oembed behavior'
-
     url = 'https://www.facebook.com/photo/?fbid=264562325036122&set=pb.100044470688234.-2207520000..'
     m = create_media url: url
     json_data = m.as_json
+
+    # Remove raw data and reset to values we can expect
     json_data.delete('raw')
+    json_data.merge!(
+      url: 'https://www.facebook.com/photo/?fbid=264562325036122&set=pb.100044470688234.-2207520000..',
+      title: 'Fake pender item',
+      author_name: 'pender author',
+      author_url: 'https://example.com/author',
+      picture: 'https://example.com/picture'
+    )
     data = Media.as_oembed(json_data, "http://pender.org/medias.html?url=#{url}", 300, 150)
-    assert !data['title'].blank?
-    assert !data['author_url'].blank?
+    assert_equal 'Fake pender item', data['title']
+    assert_equal 'pender author', data['author_name']
+    assert_equal 'https://example.com/author', data['author_url']
     assert_equal 'facebook', data['provider_name']
     assert_equal 'http://www.facebook.com', data['provider_url']
+    assert_equal 'https://example.com/picture', data['thumbnail_url']
     assert_equal 300, data['width']
     assert_equal 150, data['height']
     assert_equal "<iframe src=\"http://pender.org/medias.html?url=#{url}\" width=\"300\" height=\"150\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>", data['html']
-    assert_not_nil data['thumbnail_url']
-  end
-
-  test "should return item as oembed when the page has oembed url" do
-    skip 'need to fix oembed behavior'
-
-    url = 'https://www.facebook.com/teste637621352/posts/1028416870556238'
-    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:title' content='Teste'>"))
-    m = create_media url: url
-    data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
-    assert_match /teste/, data['title'].downcase
-    assert_match /facebook.com\//, data['author_url']
-    assert_equal 'facebook', data['provider_name']
-    assert_match /https?:\/\/www.facebook.com/, data['provider_url']
   end
 end

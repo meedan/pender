@@ -7,9 +7,9 @@ module ProviderYoutube
     end
   end
 
-  # def oembed_url
-  #   "https://www.youtube.com/oembed?format=json&url=#{url}"
-  # end
+  def oembed_url(_ = nil)
+    "https://www.youtube.com/oembed?format=json&url=#{self.url}"
+  end
 
   def initialize(doc)
     super(doc)

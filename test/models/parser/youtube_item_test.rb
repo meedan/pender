@@ -15,7 +15,6 @@ class YoutubeItemIntegrationTest < ActiveSupport::TestCase
   end
 
   test "should store oembed data of a youtube item" do
-    skip "oembed implementation"
     RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<link rel='alternate' type='application/json+oembed' href='http://www.youtube.com/oembed?format=json&amp;url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DmtLxD7r4BZQ' title='RubyConf Portugal 2016 - Best Of'>"))
     m = create_media url: 'https://www.youtube.com/watch?v=mtLxD7r4BZQ'
     data = m.as_json
@@ -253,26 +252,8 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
     assert_match(/returned no items/, data[:raw][:api]['error']['message'])
   end
 
-  # Though this is default Base parser behavior, the YoutubeItem is currently
-  # the only place where oembed data returns regularly in real HTML so testing here
-  test "#oembed_url returns blank when doc is nil" do
-    oembed_url = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').oembed_url(nil)
-    assert_nil oembed_url
-  end
-
-  test "#oembed_url returns blank when no oembed data present in HTML" do
-    doc = Nokogiri::HTML('<div>something here</div>')
-    oembed_url = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').oembed_url(doc)
-    assert_nil oembed_url
-  end
-
-  test "#oembed_url returns oembed data from HTML when present" do
-    doc = Nokogiri::HTML(<<~HTML)
-      <link rel="alternate" type="application/json+oembed"
-      href="https://www.youtube.com/oembed?format=json&amp;url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DS49CN57Y58o"
-      title="Full Length Freight Trains! 1 Hour of Trains!">
-    HTML
-    oembed_url = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').oembed_url(doc)
-    assert_equal "https://www.youtube.com/oembed?format=json&url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DS49CN57Y58o", oembed_url
+  test "#oembed_url returns URL with the instance URL" do
+    oembed_url = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').oembed_url
+    assert_equal 'https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v=123456789', oembed_url
   end
 end
