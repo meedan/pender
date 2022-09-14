@@ -52,6 +52,15 @@ module Parser
 
     attr_reader :unavailable_page
 
+    def twitter_client
+      @twitter_client ||= Twitter::REST::Client.new do |config|
+        config.consumer_key        = PenderConfig.get('twitter_consumer_key')
+        config.consumer_secret     = PenderConfig.get('twitter_consumer_secret')
+        config.access_token        = PenderConfig.get('twitter_access_token')
+        config.access_token_secret = PenderConfig.get('twitter_access_token_secret')
+      end
+    end
+  
     def ignore_url?(url)
       self.ignored_urls.each do |item|
         if url.match?(item[:pattern])
@@ -114,16 +123,25 @@ module Parser
     def get_twitter_metadata(raw_metatags)
       select_metatags = { title: 'twitter:title', picture: 'twitter:image', description: 'twitter:description', username: 'twitter:creator', author_name: 'twitter:site' }
       data = get_metadata_from_tags(raw_metatags, select_metatags).with_indifferent_access
-      # Commenting until we determine usefulness and how to pass 
-      # Twitter comment
 
-      # data['author_url'] = twitter_author_url(data['username'])
-      # data.delete('author_name') if bad_username?(data['author_name'])
-      # unless data['author_url']
-      #   data.delete('author_url')
-      #   data.delete('username')
-      # end
+      data['author_url'] = twitter_author_url(data['username'])
+      data.delete('author_name') if bad_username?(data['author_name'])
+      unless data['author_url']
+        data.delete('author_url')
+        data.delete('username')
+      end
       data
+    end
+
+    def twitter_author_url(username)
+      return if bad_username?(username)
+      begin
+        twitter_client.user(username)&.url&.to_s
+      rescue Twitter::Error => e
+        PenderAirbrake.notify(e, url: url, username: username )
+        Rails.logger.warn level: 'WARN', message: "[Parser] #{e.message}", username: username, error_class: e.class
+        nil
+      end
     end
 
     def bad_username?(value)

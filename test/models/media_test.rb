@@ -287,16 +287,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal ['@context', '@type', 'author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview'].first.keys.sort
   end
 
-  test "should handle error when cannot get twitter url" do
-    skip 'need to implement twitter fetching on page item'
-
-    Media.any_instance.stubs(:twitter_client).raises(Twitter::Error::Forbidden)
-    m = create_media url: 'http://example.com'
-    data = m.as_json
-    assert data['error'].nil?
-    Media.any_instance.unstub(:twitter_client)
-  end
-
   test "should handle errors when call parse on each parser" do
     Media.any_instance.stubs(:get_oembed_data)
     Media::PARSERS.each do |parser|

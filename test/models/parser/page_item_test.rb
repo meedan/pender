@@ -113,8 +113,6 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
   end
 
   test "should parse url scheme https" do
-    skip 'need to implement twitter author_url parsing'
-
     url = 'https://www.theguardian.com/politics/2016/oct/19/larry-sanders-on-brother-bernie-and-why-tony-blair-was-destructive'
     m = create_media url: url
     data = m.as_json
@@ -124,16 +122,6 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     assert_match '@zoesqwilliams', data['username']
     assert_match 'https://twitter.com/zoesqwilliams', data['author_url']
     assert !data['picture'].blank?
-  end
-
-  test "should validate author_url when taken from twitter metatags" do
-    skip 'need to implement twitter author_url parsing'
-
-    url = 'http://lnphil.blogspot.com.br/2018/01/villar-at-duterte-nagsanib-pwersa-para.html'
-    m = create_media url: url
-    data = m.as_json
-    assert_equal RequestHelper.top_url(m.url), data['author_url']
-    assert_equal '', data['username']
   end
 
   test "should parse urls without utf encoding" do
@@ -157,6 +145,14 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     assert_equal url, data['url']
     assert_nil data['error']
   end
+
+  test "should handle error when cannot get twitter url" do
+    Parser::PageItem.stubs(:twitter_client).raises(Twitter::Error::Forbidden)
+    m = create_media url: 'http://example.com'
+    data = m.as_json
+    assert data['error'].nil?
+    Parser::PageItem.unstub(:twitter_client)
+  end
 end
 
 class PageItemUnitTest < ActiveSupport::TestCase
@@ -164,6 +160,7 @@ class PageItemUnitTest < ActiveSupport::TestCase
     isolated_setup
     WebMock.stub_request(:post, /safebrowsing.googleapis.com/).to_return(status: 200, body: { matches: [] }.to_json )
     OembedItem.any_instance.stubs(:get_data).returns({})
+    Twitter::REST::Client.any_instance.stubs(:user)
   end
 
   def teardown
@@ -182,6 +179,13 @@ class PageItemUnitTest < ActiveSupport::TestCase
 
   def throwaway_url
     'https://example.com/throwaway'
+  end
+
+  def fake_twitter_user
+    return @fake_twitter_user unless @fake_twitter_user.blank?
+    # https://github.com/sferik/twitter/blob/master/lib/twitter/user.rb
+    api_response = response_fixture_from_file('twitter-profile-response.json', parse_as: :json)
+    @fake_twitter_user = Twitter::User.new(api_response.with_indifferent_access)
   end
 
   test "returns provider and type" do
@@ -359,7 +363,6 @@ class PageItemUnitTest < ActiveSupport::TestCase
       <meta property="twitter:title" content="Piglet's page"/>
       <meta property="twitter:image" content="http://example.com/image"/>
       <meta property="twitter:description" content="A place for dogs, surprisingly"/>
-      <meta property="twitter:creator" content="@piglet"/>
       <meta property="twitter:site" content="Piglet McDog's Blog"/>
     HTML
     data = Parser::PageItem.new('https://example.com').parse_data(doc, throwaway_url)
@@ -367,10 +370,18 @@ class PageItemUnitTest < ActiveSupport::TestCase
     assert_equal "Piglet's page", data['title']
     assert_equal 'http://example.com/image', data['picture']
     assert_equal 'A place for dogs, surprisingly', data['description']
-    assert_equal '@piglet', data['username']
     assert_equal "Piglet McDog's Blog", data['author_name']
   end
-  
+
+  test "does not set author_name from metadata if it's default username" do
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="twitter:site" content="@username"/>
+    HTML
+    data = Parser::PageItem.new('https://example.com').parse_data(doc, throwaway_url)
+
+    assert_nil data['author_name']
+  end
+
   # Internal stubbing makes this brittle to changes in implementation, but want 
   # to reinforce this behavior and make clearer than is in other tests
   test "should not overwrite metatags with nil" do
@@ -404,6 +415,8 @@ class PageItemUnitTest < ActiveSupport::TestCase
   end
 
   test "sets author name as author_name, username, and then title" do
+    Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
+
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="twitter:site" content="Piglet McDog"/>'
       <meta property="twitter:creator" content="@piglet"/>'
@@ -468,6 +481,8 @@ class PageItemUnitTest < ActiveSupport::TestCase
       with(body: /example.com\/unsafeurl/).
       to_return(status: 200, body: { matches: ['fake match'] }.to_json )
 
+    Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
+
     # author_url
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="article:author" content="https://example.com/unsafeurl" />
@@ -491,6 +506,32 @@ class PageItemUnitTest < ActiveSupport::TestCase
     assert_raises Pender::UnsafeUrl do
       Parser::PageItem.new('https://example.com/safeurl').parse_data(doc, throwaway_url)
     end
+  end
+
+  test "uses twitter URL from twitter metadata for author_url (and not username) if valid" do
+    Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="twitter:creator" content="@fakeaccount" />
+    HTML
+    
+    data = Parser::PageItem.new('http://example.com').parse_data(doc, throwaway_url)
+    assert_equal 'https://twitter.com/TEDTalks', data['author_url']
+    assert_equal '@fakeaccount', data['username']
+  end
+
+  test "does not set author_url from twitter metadata if a default username, instead defaults to top URL" do
+    api_response = api_response = response_fixture_from_file('twitter-profile-response.json', parse_as: :json)
+    fake_twitter_user =  Twitter::User.new(api_response.with_indifferent_access)
+    Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="twitter:creator" content="@username" />
+    HTML
+    
+    data = Parser::PageItem.new('http://lnphil.blogspot.com.br/2018/01/villar-at-duterte-nagsanib-pwersa-para.html').parse_data(doc, throwaway_url)
+    assert_equal 'http://lnphil.blogspot.com.br', data['author_url']
+    assert_not_equal '@username', data['username']
   end
 
   test "does not crash if it cannot determine whether site is safe " do

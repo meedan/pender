@@ -35,7 +35,7 @@ module Parser
         published_at: parsed_data.dig('raw', 'api', 'created_at'),
         html: html_for_twitter_item(parsed_data, url),
         author_name: parsed_data.dig('raw', 'api', 'user', 'name'),
-        author_url: author_url(user) || RequestHelper.top_url(url)
+        author_url: twitter_author_url(user) || RequestHelper.top_url(url)
       })
       parsed_data
     end
@@ -61,18 +61,6 @@ module Parser
       '<a href="' + url + '"></a>' +
       '</blockquote>' +
       '<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>'
-    end
-
-    # Used in MediaPage Item as twitter_author_url
-    def author_url(username)
-      return if bad_username?(username)
-      begin
-        twitter_client.user(username).url.to_s
-      rescue Twitter::Error => e
-        PenderAirbrake.notify(e, url: url, username: username )
-        Rails.logger.warn level: 'WARN', message: "[Parser] #{e.message}", username: username, error_class: e.class
-        nil
-      end
     end
   end
 end

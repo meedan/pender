@@ -11,7 +11,6 @@ class TwitterItemIntegrationTest < ActiveSupport::TestCase
     assert_not_nil data['author_picture']
   end
 
-  # Candidates for removal below:
   test "should parse valid link with spaces" do
     m = create_media url: ' https://twitter.com/caiosba/status/742779467521773568 '
     data = m.as_json
@@ -28,7 +27,6 @@ class TwitterItemIntegrationTest < ActiveSupport::TestCase
     m = create_media url: url
     data = m.as_json
     assert_match /twitter-tweet.*#{url}/, data[:html]
-    OpenURI.unstub(:open_uri)
   end
   
   test "should not parse a twitter post when passing the twitter api key or subkey missing" do
