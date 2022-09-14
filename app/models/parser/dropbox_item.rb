@@ -16,7 +16,7 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, _ = nil)
+    def parse_data_for_parser(doc, _original_url, _jsonld)
       handle_exceptions(StandardError) do
         select_metatags = { title: 'og:title', picture: 'og:image', description: 'og:description' }
         @parsed_data.merge!(get_metadata_from_tags(select_metatags))

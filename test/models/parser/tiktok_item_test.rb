@@ -59,7 +59,7 @@ class TiktokItemUnitTest < ActiveSupport::TestCase
   test "should set profile defaults upon error" do
     WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_raise(Net::ReadTimeout.new("Raised in test"))
 
-    data = Parser::TiktokItem.new('https://www.tiktok.com/@fakeaccount/video/abcdef').parse_data(doc, nil)
+    data = Parser::TiktokItem.new('https://www.tiktok.com/@fakeaccount/video/abcdef').parse_data(doc)
 
     assert_match 'https://www.tiktok.com/@fakeaccount/video/abcdef', data['description']
   end
@@ -67,7 +67,7 @@ class TiktokItemUnitTest < ActiveSupport::TestCase
   test "assigns values to hash from the HTML doc" do
     WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_return(status: 200, body: oembed)
 
-    data = Parser::TiktokItem.new('https://www.tiktok.com/@fakeaccount/video/abcdef').parse_data(doc, nil)
+    data = Parser::TiktokItem.new('https://www.tiktok.com/@fakeaccount/video/abcdef').parse_data(doc)
 
     assert_equal '@fakeaccount', data['username']
     assert_equal 'abcdef', data['external_id']
@@ -82,7 +82,7 @@ class TiktokItemUnitTest < ActiveSupport::TestCase
   test "stores the raw response data under oembed & api keys" do
     WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_return(status: 200, body: oembed)
 
-    data = Parser::TiktokItem.new('https://www.tiktok.com/@fakeaccount/video/abcdef').parse_data(doc, nil)
+    data = Parser::TiktokItem.new('https://www.tiktok.com/@fakeaccount/video/abcdef').parse_data(doc)
 
     assert_equal JSON.parse(oembed), data['raw']['oembed']
     assert_equal JSON.parse(oembed), data['raw']['api']

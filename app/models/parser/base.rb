@@ -43,12 +43,12 @@ module Parser
   
     # This is the entry function for the class, which performs
     # any common setup and then calls down to `parse_data_for_parser`
-    def parse_data(doc, original_url)
+    def parse_data(doc, original_url = nil, jsonld = {})
       # Shared setup
       set_raw_metatags(doc)
 
       # Parse data (implemented by subclasses)
-      parse_data_for_parser(doc, original_url)
+      parse_data_for_parser(doc, original_url, jsonld || {})
     end
 
     # Default implementation, subclasses can override
@@ -63,7 +63,7 @@ module Parser
     attr_reader :unavailable_page
 
     # Implemented by subclasses
-    def parse_data_for_parser(doc, original_url)
+    def parse_data_for_parser(doc, original_url, jsonld)
       raise NotImplementedError.new("Parser subclasses must implement parse_data_for_parser")
     end
 

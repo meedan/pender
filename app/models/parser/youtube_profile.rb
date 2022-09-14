@@ -29,7 +29,7 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, _ = nil)
+    def parse_data_for_parser(_doc, _original_url, _jsonld)
       @parsed_data[:raw][:api] = {}
 
       handle_youtube_exceptions do
