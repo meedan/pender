@@ -24,7 +24,10 @@ module Parser
       end
     end
 
-    def parse_data(doc, _ = nil)
+    private
+
+    # Main function for class
+    def parse_data_for_parser(doc, _ = nil)
       @parsed_data[:raw][:api] = {}
 
       handle_youtube_exceptions do
@@ -35,8 +38,7 @@ module Parser
         end
       end
 
-      metatags = @parsed_data['raw']['metatags'] = get_raw_metatags(doc)
-      metadata = get_opengraph_metadata(metatags) || {}
+      metadata = get_opengraph_metadata || {}
       set_data_field('title', parsed_data.dig('raw', 'api', 'title'), metadata.dig('title'))
       set_data_field('description', parsed_data.dig('raw', 'api', 'description'), metadata.dig('description'))
       set_data_field('picture', get_thumbnail(parsed_data), metadata.dig('picture'))
@@ -52,8 +54,6 @@ module Parser
       
       parsed_data
     end
-
-    private
 
     def get_channel_id(request_url)
       request_url.match(YOUTUBE_ITEM_URL)['id']

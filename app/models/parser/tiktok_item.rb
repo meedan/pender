@@ -14,7 +14,10 @@ module Parser
       end
     end
 
-    def parse_data(doc, _ = nil)
+    private
+    
+    # Main function for class
+    def parse_data_for_parser(doc, _ = nil)
       set_data_field('description', url)
 
       handle_exceptions(StandardError) do
@@ -34,8 +37,6 @@ module Parser
       parsed_data
     end
     
-    private
-  
     def get_tiktok_api_data(requested_url)
       uri = URI.parse(oembed_url)
       http = Net::HTTP.new(uri.host, uri.port)

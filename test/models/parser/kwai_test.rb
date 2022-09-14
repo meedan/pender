@@ -39,7 +39,7 @@ class KwaiUnitTest <  ActiveSupport::TestCase
   test "assigns values to hash from the HTML doc" do
     doc = response_fixture_from_file('kwai-page.html', parse_as: :html)
 
-    data = Parser::KwaiItem.new('https://s.kw.ai/p/example').parse_data(doc)
+    data = Parser::KwaiItem.new('https://s.kw.ai/p/example').parse_data(doc, nil)
     assert_equal 'A special video', data[:title]
     assert_equal 'A special video', data[:description]
     assert_equal 'Reginaldo Silva2871', data[:author_name]
@@ -53,7 +53,7 @@ class KwaiUnitTest <  ActiveSupport::TestCase
     data = nil
     empty_doc = Nokogiri::HTML('')
     PenderAirbrake.stub(:notify, mocked_airbrake) do
-      data = Parser::KwaiItem.new('https://s.kw.ai/p/example').parse_data(empty_doc)
+      data = Parser::KwaiItem.new('https://s.kw.ai/p/example').parse_data(empty_doc, nil)
     end
     mocked_airbrake.verify
     assert_equal 5, data[:error][:code]

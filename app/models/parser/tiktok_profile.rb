@@ -14,7 +14,10 @@ module Parser
       end
     end
 
-    def parse_data(doc, _ = nil)
+    private
+    
+    # Main function for class
+    def parse_data_for_parser(doc, _ = nil)
       match = url.match(TIKTOK_PROFILE_URL)
       base_url = match[0] # Should this be set as canonical_url?
       username = match['username']
@@ -27,9 +30,8 @@ module Parser
 
       handle_exceptions(StandardError) do
         doc = reparse_if_default_tiktok_page(doc, base_url) || doc
-        metatags = { picture: 'og:image', title: 'twitter:creator', description: 'description' }
-        @parsed_data['raw']['metatags'] = get_raw_metatags(doc)
-        @parsed_data.merge!(get_metadata_from_tags(parsed_data.dig('raw', 'metatags'), metatags))
+        select_metatags = { picture: 'og:image', title: 'twitter:creator', description: 'description' }
+        @parsed_data.merge!(get_metadata_from_tags(select_metatags))
         set_data_field('author_name', parsed_data['title'], username)
         @parsed_data.merge!({
           author_name: parsed_data['title'],

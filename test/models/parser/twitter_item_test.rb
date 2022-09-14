@@ -80,6 +80,10 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     @fake_tweet = Twitter::Tweet.new(api_response.with_indifferent_access)
   end
 
+  def empty_doc
+    Nokogiri::HTML('')
+  end
+
   test "returns provider and type" do
     assert_equal Parser::TwitterItem.type, 'twitter_item'
   end
@@ -118,7 +122,7 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     Twitter::REST::Client.any_instance.stubs(:status).returns(fake_tweet)
     Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
 
-    data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data('')
+    data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data(empty_doc, nil)
 
     assert_equal '123456789', data['external_id']
     assert_equal '@fakeaccount', data['username']
@@ -138,7 +142,7 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     Twitter::REST::Client.any_instance.stubs(:status).returns(fake_tweet)
     Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
 
-    data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data('')
+    data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data(empty_doc, nil)
 
     assert data['raw']['api'].is_a? Hash
     assert !data['raw']['api'].empty?
@@ -153,7 +157,7 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     Twitter::REST::Client.any_instance.stubs(:status).returns(tweet)
     Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
 
-    data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data('')
+    data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data(empty_doc, nil)
     assert_no_match /&amp;/, data['title']
   end
 
@@ -161,7 +165,7 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     Twitter::REST::Client.any_instance.stubs(:status).raises(Twitter::Error::TooManyRequests)
 
     assert_raises Pender::ApiLimitReached do
-      Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data('')
+      Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data(empty_doc, nil)
     end
   end
 
@@ -177,7 +181,7 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     end
 
     PenderAirbrake.stub(:notify, arguments_checker) do
-      data = Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data('')
+      data = Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data(empty_doc, nil)
       assert_equal 1, airbrake_call_count
     end
     assert_match /Twitter::Error::NotFound/, data['error']['message']
@@ -201,7 +205,7 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     end
 
     PenderAirbrake.stub(:notify, arguments_checker) do
-      data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data('')
+      data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data(empty_doc, nil)
       assert_equal 1, airbrake_call_count
     end
     assert_nil data['error']
@@ -215,7 +219,7 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     Twitter::REST::Client.any_instance.stubs(:status).returns(fake_tweet)
     Twitter::REST::Client.any_instance.stubs(:user).raises(Twitter::Error)
 
-    data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data('')
+    data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data(empty_doc, nil)
     assert_nil data['error']
     assert_equal 'https://twitter.com', data['author_url']
   end
@@ -228,7 +232,7 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     Twitter::REST::Client.any_instance.stubs(:status).returns(tweet)
     Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
 
-    data = Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data('')
+    data = Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data(empty_doc, nil)
     assert_match 'LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary', data['title']
   end
 
@@ -237,12 +241,12 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
 
     parser = Parser::TwitterItem.new('https://twitter.com/#!/salmaeldaly/status/45532711472992256')
-    data = parser.parse_data('')
+    data = parser.parse_data(empty_doc, nil)
     
     assert_match 'https://twitter.com/salmaeldaly/status/45532711472992256', parser.url
 
     parser = Parser::TwitterItem.new('https://twitter.com/%23!/salmaeldaly/status/45532711472992256')
-    data = parser.parse_data('')
+    data = parser.parse_data(empty_doc, nil)
     
     assert_match 'https://twitter.com/salmaeldaly/status/45532711472992256', parser.url
   end
@@ -262,7 +266,7 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     Twitter::REST::Client.any_instance.stubs(:status).returns(tweet)
     Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
 
-    data = Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data('')
+    data = Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data(nil, nil)
 
     assert_equal 'https://pbs.twimg.com/media/C7dYir1VMAAi46b.jpg', data['picture']
   end

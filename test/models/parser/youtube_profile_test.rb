@@ -83,7 +83,7 @@ class YouTubeProfileUnitTest < ActiveSupport::TestCase
     fake_channel.stubs(:playlists).returns([])
     Yt::Channel.stubs(:new).returns(fake_channel)
     
-    data = Parser::YoutubeProfile.new('https://www.youtube.com/channel/examplechannel').parse_data(nil)
+    data = Parser::YoutubeProfile.new('https://www.youtube.com/channel/examplechannel').parse_data(nil, nil)
     
     assert_equal '12345', data[:raw][:api]['id']
     assert_equal '1', data[:raw][:api]['comment_count']
@@ -116,7 +116,7 @@ class YouTubeProfileUnitTest < ActiveSupport::TestCase
     fake_channel.stubs(:playlists).returns([])
     Yt::Channel.stubs(:new).returns(fake_channel)
 
-    data = Parser::YoutubeProfile.new('https://www.youtube.com/channel/examplechannel').parse_data(nil)
+    data = Parser::YoutubeProfile.new('https://www.youtube.com/channel/examplechannel').parse_data(nil, nil)
     
     assert_equal '12345', data['external_id']
     assert_equal 'RubyConf Portugal 2016 - Best Of', data['title']
@@ -139,7 +139,7 @@ class YouTubeProfileUnitTest < ActiveSupport::TestCase
     fake_channel.stubs(:playlists).returns([])
     Yt::Channel.stubs(:new).returns(fake_channel)
 
-    data = Parser::YoutubeProfile.new('https://www.youtube.com/channel/examplechannel').parse_data(nil)
+    data = Parser::YoutubeProfile.new('https://www.youtube.com/channel/examplechannel').parse_data(nil, nil)
     
     assert_equal 'http://example.com/240x240.jpg', data['picture']
     assert_equal 'http://example.com/240x240.jpg', data['author_picture']
@@ -156,7 +156,7 @@ class YouTubeProfileUnitTest < ActiveSupport::TestCase
     end
 
     PenderAirbrake.stub(:notify, arguments_checker) do
-      data = Parser::YoutubeProfile.new('https://www.youtube.com/user/fakeaccount/').parse_data(doc)
+      data = Parser::YoutubeProfile.new('https://www.youtube.com/user/fakeaccount/').parse_data(doc, nil)
       assert_equal 1, airbrake_call_count
     end
     assert_match /Yt::Errors::Forbidden/, data['raw']['api']['error']['message']
@@ -166,7 +166,7 @@ class YouTubeProfileUnitTest < ActiveSupport::TestCase
   test "falls back to metadata from doc when data from API not present (error or misconfiguration)" do
     Yt::Channel.stubs(:new).raises(Yt::Errors::Forbidden)
 
-    data = Parser::YoutubeProfile.new('https://www.youtube.com/channel/examplechannel').parse_data(doc)
+    data = Parser::YoutubeProfile.new('https://www.youtube.com/channel/examplechannel').parse_data(doc, nil)
     
     assert_equal 'examplechannel', data['external_id']
     assert_equal 'CoasterFan2105', data['title']

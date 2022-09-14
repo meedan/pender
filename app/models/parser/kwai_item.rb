@@ -11,8 +11,11 @@ module Parser
         [KWAI_URL]
       end
     end
-  
-    def parse_data(doc, _ = nil)
+
+    private    
+
+    # Main function for class
+    def parse_data_for_parser(doc, _ = nil)
       handle_exceptions(StandardError) do
         title = get_kwai_text_from_tag(doc, '.info .title')
         name = get_kwai_text_from_tag(doc, '.name')
@@ -25,8 +28,6 @@ module Parser
       end
       parsed_data
     end
-  
-    private
   
     def get_kwai_text_from_tag(doc, selector)
       doc&.at_css(selector)&.text&.to_s.strip

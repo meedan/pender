@@ -173,7 +173,6 @@ class Media
     PARSERS.each do |parser|
       if parseable = parser.match?(self.url)
         self.parser = parseable
-        # get_metatags <--- should this go back in here?
         self.provider, self.type = self.parser.type.split('_')
         self.data.deep_merge!(self.parser.parse_data(self.doc, self.original_url))
         self.url = self.parser.url

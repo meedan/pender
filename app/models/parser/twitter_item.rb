@@ -14,7 +14,10 @@ module Parser
       end
     end
 
-    def parse_data(_, _ = nil)
+    private
+
+    # Main function for class
+    def parse_data_for_parser(doc, _ = nil)
       @url.gsub!(/(%23|#)!\//, '')
       @url = replace_subdomain_pattern(url)
       parts = url.match(TWITTER_ITEM_URL)

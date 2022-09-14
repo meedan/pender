@@ -139,9 +139,11 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
       assert_equal NoMethodError, e.class
     end
     
-    PenderAirbrake.stub(:notify, arguments_checker) do
-      data = Parser::FacebookProfile.new('https://www.facebook.com/fake-account').parse_data('', 'https://www.facebook.com/fake-account')
-      assert_equal 1, airbrake_call_count
+    Parser::FacebookProfile.stub(:get_id_from_doc, -> (_) { raise NoMethodError.new('fake for test') }) do
+      PenderAirbrake.stub(:notify, arguments_checker) do
+        data = Parser::FacebookProfile.new('https://www.facebook.com/fake-account').parse_data(nil, 'https://www.facebook.com/fake-account')
+        assert_equal 1, airbrake_call_count
+      end
     end
     assert_match /NoMethodError/, data[:error][:message]
   end

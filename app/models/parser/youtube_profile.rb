@@ -26,8 +26,12 @@ module Parser
       end
     end
 
-    def parse_data(doc, _ = nil)
+    private
+
+    # Main function for class
+    def parse_data_for_parser(doc, _ = nil)
       @parsed_data[:raw][:api] = {}
+
       handle_youtube_exceptions do
         channel = Yt::Channel.new url: url
         video_data = channel.snippet.data.with_indifferent_access
@@ -44,8 +48,7 @@ module Parser
       end
       set_data_field('external_id', parsed_data.dig('raw', 'api', 'id'), get_channel_id(url))
 
-      metatags = @parsed_data['raw']['metatags'] = get_raw_metatags(doc)
-      metadata = get_opengraph_metadata(metatags) || {}
+      metadata = get_opengraph_metadata || {}
       set_data_field('title', parsed_data.dig('raw','api','title'), metadata.dig('title'))
       set_data_field('description', parsed_data.dig('raw','api','description'), metadata.dig('description'))
       set_data_field('picture', get_thumbnail(parsed_data), metadata.dig('picture'))
@@ -57,8 +60,6 @@ module Parser
 
       parsed_data
     end
-
-    private
 
     def get_channel_id(request_url)
       match = request_url.match(/^https?:\/\/(www\.)?youtube\.com\/channel\/([^\/]+)/)

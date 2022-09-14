@@ -48,7 +48,7 @@ class DropboxUnitTest <  ActiveSupport::TestCase
   end
 
   test "assigns values to hash from the HTML doc" do
-    data = Parser::DropboxItem.new('https://www.dropbox.com/sh/fake-url/example.txt').parse_data(doc)
+    data = Parser::DropboxItem.new('https://www.dropbox.com/sh/fake-url/example.txt').parse_data(doc, nil)
     assert_equal 'How to use the Public folder.rtf', data[:title]
     assert_equal 'This was totally shared with Dropbox', data[:description]
     assert_equal 'https://www.dropbox.com/static/metaserver/static/images/spectrum-icons/generated/content/content-docx-large.png', data[:picture]
@@ -57,7 +57,7 @@ class DropboxUnitTest <  ActiveSupport::TestCase
   test "should fall back to fetching information from URL" do
     empty_doc = Nokogiri::HTML('')
 
-    data = Parser::DropboxItem.new('https://www.dropbox.com/sh/fake-url/How%20to%20use%20the%20Public%20folder.rtf').parse_data(empty_doc)
+    data = Parser::DropboxItem.new('https://www.dropbox.com/sh/fake-url/How%20to%20use%20the%20Public%20folder.rtf').parse_data(empty_doc, nil)
     assert_equal 'How to use the Public folder.rtf', data[:title]
     assert_equal 'Shared with Dropbox', data[:description]
   end
@@ -70,7 +70,7 @@ class DropboxUnitTest <  ActiveSupport::TestCase
 
     data = nil
     PenderAirbrake.stub(:notify, mocked_airbrake) do
-      data = Parser::DropboxItem.new('https://www.dropbox.com/sh/fake-url/example.txt').parse_data(doc)
+      data = Parser::DropboxItem.new('https://www.dropbox.com/sh/fake-url/example.txt').parse_data(doc, nil)
     end
     mocked_airbrake.verify
     assert_equal 5, data[:error][:code]

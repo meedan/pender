@@ -11,8 +11,8 @@ module ProviderYoutube
     "https://www.youtube.com/oembed?format=json&url=#{self.url}"
   end
 
-  def initialize(doc)
-    super(doc)
+  def initialize(url)
+    super(url)
 
     Yt.configuration.api_key = PenderConfig.get(:google_api_key)
   end
