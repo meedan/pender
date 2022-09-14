@@ -207,7 +207,7 @@ class Media
   # Update the media `url` with the url found after all redirections
 
   def follow_redirections
-    self.url = RequestHelper.add_scheme(decoded_uri(self.url.strip))
+    self.url = RequestHelper.add_scheme(RequestHelper.decoded_uri(self.url.strip))
     attempts = 0
     code = '301'
     path = []
