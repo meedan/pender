@@ -150,7 +150,7 @@ class MediasHelperTest < ActionView::TestCase
   test 'should decode url' do
     url = 'https://example.com'
     URI.stubs(:decode).raises(Encoding::CompatibilityError)
-    assert_equal url, Media.decoded_uri(url)
+    assert_equal url, RequestHelper.decoded_uri(url)
   end
 
   test 'should not convert original url' do

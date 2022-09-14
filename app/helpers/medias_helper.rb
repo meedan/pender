@@ -71,10 +71,6 @@ module MediasHelper
     end
   end
 
-  def decoded_uri(url)
-    RequestHelper.decoded_uri(url)
-  end
-
   def is_url?(url)
     begin
       uri = URI.parse(URI.encode(url))
