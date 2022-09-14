@@ -57,10 +57,10 @@ class MediasHelperTest < ActionView::TestCase
     ApiKey.current = api_key
     PenderConfig.current = nil
     proxy_keys.each do |key|
-      assert_equal proxy["proxy_#{key}"], Media.valid_proxy('proxy')[key]
+      assert_equal proxy["proxy_#{key}"], RequestHelper.valid_proxy('proxy')[key]
     end
     video_proxy_keys.each do |key|
-      assert_equal video_proxy["ytdl_proxy_#{key}"], Media.valid_proxy('ytdl_proxy')[key]
+      assert_equal video_proxy["ytdl_proxy_#{key}"], RequestHelper.valid_proxy('ytdl_proxy')[key]
     end
 
     proxy_with_empty_values = { 'proxy_host' => 'my-proxy.mine', 'proxy_port' => '1111', 'proxy_user_prefix' => '', 'proxy_pass' => nil, 'proxy_session_prefix' => '-ss-' }
@@ -68,8 +68,8 @@ class MediasHelperTest < ActionView::TestCase
     api_key.application_settings = { config: proxy_with_empty_values.merge(video_proxy_with_empty_values) }; api_key.save
     ApiKey.current = api_key
     PenderConfig.current = nil
-    assert_nil Media.valid_proxy('proxy')
-    assert_nil Media.valid_proxy('ytdl_proxy')
+    assert_nil RequestHelper.valid_proxy('proxy')
+    assert_nil RequestHelper.valid_proxy('ytdl_proxy')
   end
 
   test 'should upload images to s3 and update media data' do

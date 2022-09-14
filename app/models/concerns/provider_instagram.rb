@@ -30,7 +30,7 @@ module ProviderInstagram
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = uri.scheme == 'https'
       
-      headers = Media.extended_headers(uri)
+      headers = RequestHelper.extended_headers(uri)
       headers.merge!(additional_headers)
 
       request = Net::HTTP::Get.new(uri.request_uri, headers)

@@ -4,8 +4,8 @@ class RequestHelper
 
     def get_html(url, set_error_callback, header_options = {}, force_proxy = false)
       begin
-        uri = RequestHelper.parse_url(RequestHelper.decoded_uri(url))
-        proxy = Media.get_proxy(uri, :array, force_proxy)
+        uri = self.parse_url(self.decoded_uri(url))
+        proxy = self.get_proxy(uri, :array, force_proxy)
         options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
         html = ''.freeze
         OpenURI.open_uri(uri, options.merge(read_timeout: PenderConfig.get('timeout', 30).to_i)) do |f|
@@ -22,7 +22,7 @@ class RequestHelper
         end
         get_html(url, set_error_callback, header_options, true)
       rescue Zlib::DataError, Zlib::BufError
-        get_html(url, set_error_callback, RequestHelper.html_options(url).merge('Accept-Encoding' => 'identity'))
+        get_html(url, set_error_callback, self.html_options(url).merge('Accept-Encoding' => 'identity'))
       rescue RuntimeError => e
         PenderAirbrake.notify(e, url: url) if !redirect_https_to_http?(header_options, e.message)
         Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
@@ -110,7 +110,7 @@ class RequestHelper
       http = Net::HTTP.new(uri.host, uri.port)
       http.read_timeout = PenderConfig.get('timeout', 30).to_i
       http.use_ssl = uri.scheme == 'https'.freeze
-      headers = { 'User-Agent' => RequestHelper.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }.merge(self.get_cf_credentials(uri))
+      headers = { 'User-Agent' => self.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }.merge(self.get_cf_credentials(uri))
       request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
       request['Cookie'] = self.set_cookies(uri)
       proxy_config = self.get_proxy(uri, :hash)
