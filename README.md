@@ -342,31 +342,53 @@ There are rake tasks for a few tasks (besides Rails' default ones). Run them thi
 
 ## How to add a new parser
 
-* Add a new file at `app/models/concerns/media_<provider>_<type>` (example... `provider` could be `facebook` and type could be `post` or `profile`)
-* Include the class in `app/models/media.rb`
+* Add a new file at `app/models/concerns/parser/<provider>_<type>.rb` (example... `provider` could be `facebook` and type could be `post` or `profile`)
+* Include the class in the `PARSERS` array in `app/models/media.rb`
 * It should return at least `published_at`, `username`, `title`, `description` and `picture`
 * If `type` is `item`, it should also return the `author_url` and `author_picture`
 * The skeleton should look like this:
 
 ```ruby
-module Media<Provider><Type>
-  extend ActiveSupport::Concern
+module Parser
+  class <Provider><Type> < Base  
+    class << self
+      def type
+        '<provider>_<type>'.freeze
+      end
+  
+      def patterns
+        [<list of URL patterns>]
+      end
+            
+      def ignored_urls
+        # Optional method to specify disallowed URLs
+        # Should return an array in format:
+        # [
+        #   {
+        #     pattern: /^https:\/\/www\.instagram\.com\/accounts\/login/,
+        #     reason: :login_page
+        #   },
+        # ]
+      end
+    end
 
-  included do
-    Media.declare('<provider>_<type>', [<list of URL patterns>])
-  end
+    private    
 
-  def data_from_<provider>_<type>
-    # Populate `self.data` with information
-    # `self.data` is a hash whose key is the attribute and the value is... the value
-  end
+    def parse_data_for_parser(doc, original_url)
+      # Populate `@parsed_data` with information and return parsed_data at the end of the function
+      # `@parsed_data` is a hash whose key is the attribute and the value is... the value
+    end
 
-  def <provider>_as_oembed(original_url, maxwidth, maxheight)
-    # Optional method
-    # Define a custom oEmbed structure for this provider
+    def oembed_url(doc)
+      # Optional method to define an Oembed URL, will default to looking in HTML in Parser::Base
+      # Passed to OembedItem
+    end
   end
 end
 ```
+
+If shared behavior is needed between parsers of the same provider, make a provider class as a concern and include it in the class.
+See ProviderInstagram, ProviderYoutube, ProviderFacebook, ProviderTwitter, or ProviderTiktok for examples.
 
 ## How to add a new archiver
 
