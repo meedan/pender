@@ -1,5 +1,6 @@
 require_relative '../test_helper'
 require 'time'
+require 'cc_deville'
 
 class MediasControllerTest < ActionController::TestCase
   def setup

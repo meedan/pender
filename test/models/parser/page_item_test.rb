@@ -114,7 +114,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
 
   test "should parse url scheme https" do
     skip 'need to implement twitter author_url parsing'
-    
+
     url = 'https://www.theguardian.com/politics/2016/oct/19/larry-sanders-on-brother-bernie-and-why-tony-blair-was-destructive'
     m = create_media url: url
     data = m.as_json
