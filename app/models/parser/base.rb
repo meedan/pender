@@ -123,6 +123,12 @@ module Parser
       end
       @parsed_data['raw']['metatags'] = metatag_data
     end
+
+    def refetch_html(url, html_options = {}, force_proxy = false)
+      doc = RequestHelper.get_html(url, self.method(:set_error), html_options, force_proxy)
+      set_raw_metatags(doc) if doc
+      doc
+    end
   
     def get_opengraph_metadata
       select_metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time', author_name: 'og:site_name' }
