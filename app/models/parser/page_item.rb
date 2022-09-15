@@ -16,10 +16,7 @@ module Parser
 
     # Main function for class
     def parse_data_for_parser(doc, original_url, _jsonld)
-      if doc.nil?
-        doc = RequestHelper.get_html(url, self.method(:set_error), {allow_redirections: :all})
-        set_raw_metatags(doc)
-      end
+      doc = refetch_html(url, {allow_redirections: :all}) if doc.nil?
 
       handle_exceptions(StandardError) do
         raise HtmlFetchingError.new("Could not parse this media") if doc.blank?
