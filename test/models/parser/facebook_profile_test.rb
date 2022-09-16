@@ -239,7 +239,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
   test 'sets title from title html tag if og:title not present' do
     data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(old_meedan_doc, throwaway_url)
 
-    assert_match /Iron Maiden | Facebook/, data['title']
+    assert_match /Meedan - Nonprofit Organization/, data['title']
   end
 
   test 'returns nil if og or html title tags not present' do
@@ -262,6 +262,14 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
     HTML
     parser.parse_data(doc, 'https://facebook.com/fakeaccount')
     assert_nil data['title']
+  end
+
+  test "should strip '| Facebook' from page titles" do
+    doc = Nokogiri::HTML(<<~HTML)
+      <title>Piglet the Dog | Facebook</title>
+    HTML
+    data = Parser::FacebookProfile.new('https://www.facebook.com/fakeaccount').parse_data(doc, throwaway_url)
+    assert_equal "Piglet the Dog", data['title']
   end
 
   test 'sets description from og:description metatag if present' do
