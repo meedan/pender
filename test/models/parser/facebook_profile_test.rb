@@ -105,6 +105,10 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
     @empty_doc ||= Nokogiri::HTML('')
   end
 
+  def throwaway_url
+    'https://facebook.com/throwaway-url'
+  end
+
   test "returns provider and type" do
     assert_equal Parser::FacebookProfile.type, 'facebook_profile'
   end
@@ -215,114 +219,130 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
   end
 
   test "sets pictures from og:image metatag" do
-    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(meedan_doc, 'https://facebook.com/fakeaccount')
+    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(meedan_doc, throwaway_url)
     assert_match /scontent-sjc3-1.xx.fbcdn.net\/v\/t1.6435-1\/48405270_10156958756529439_588050386544230400_n.png/, data['picture']
     assert_match /scontent-sjc3-1.xx.fbcdn.net\/v\/t1.6435-1\/48405270_10156958756529439_588050386544230400_n.png/, data['author_picture']
   end
 
   test "leaves pictures blank when og:image metatag missing" do
-    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(old_meedan_doc, 'https://facebook.com/fakeaccount')
+    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(old_meedan_doc, throwaway_url)
     assert_nil data['picture']
     assert_nil data['author_picture']
   end
 
   test 'sets title from og:title tag if present' do
-    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(arabic_doc, 'https://facebook.com/fakeaccount')
+    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(arabic_doc, throwaway_url)
 
     assert_match /المركز الثقافي القبطي الأرثوذكسي بالمانيا/, data['title']
   end
 
   test 'sets title from title html tag if og:title not present' do
-    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(old_meedan_doc, 'https://facebook.com/fakeaccount')
+    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(old_meedan_doc, throwaway_url)
 
     assert_match /Iron Maiden | Facebook/, data['title']
   end
 
-  test 'defaults title to Facebook if og or html title tags not present' do
-    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(empty_doc, 'https://facebook.com/fakeaccount')
+  test 'returns nil if og or html title tags not present' do
+    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(empty_doc, throwaway_url)
 
-    assert_equal 'Facebook', data['title']
+    assert_nil data['title']
+  end
+
+  test "returns nil if title is a default, non-unique word" do
+    parser = Parser::FacebookProfile.new('https://www.facebook.com/fakeaccount')
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="Facebook" />
+    HTML
+    data = parser.parse_data(doc, 'https://facebook.com/fakeaccount')
+    assert_nil data['title']
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <title>Watch</title>
+    HTML
+    parser.parse_data(doc, 'https://facebook.com/fakeaccount')
+    assert_nil data['title']
   end
 
   test 'sets description from og:description metatag if present' do
-    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(meedan_doc, 'https://facebook.com/fakeaccount')
+    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(meedan_doc, throwaway_url)
 
     assert_equal "Meedan. 3,738 likes · 2 talking about this · 72 were here. Make sense of the global web.", data['description']
   end
 
   test 'sets description from description metatag if og:description not present' do
-    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(old_meedan_doc, 'https://facebook.com/fakeaccount')
+    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(old_meedan_doc, throwaway_url)
 
     assert_equal "Meedan. 66 likes. Meedan is a non-profit social technology company which aims to increase cross-language interaction on the web, with particular emphasis...", data['description']
   end
 
   test 'leaves description empty if description not present in HTML present' do
-    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(empty_doc, 'https://facebook.com/fakeaccount')
+    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(empty_doc, throwaway_url)
 
     assert_nil data['description']
   end
 
   test 'gets username from URL when possible' do
-    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(meedan_doc, 'https://facebook.com/fakeaccount')
+    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(meedan_doc, throwaway_url)
     assert_equal 'fakeaccount', data['username']
 
-    data = Parser::FacebookProfile.new('https://facebook.com/people/fakeaccount/123456789').parse_data(meedan_doc, 'https://facebook.com/fakeaccount')
+    data = Parser::FacebookProfile.new('https://facebook.com/people/fakeaccount/123456789').parse_data(meedan_doc, throwaway_url)
     assert_equal 'fakeaccount', data['username']
   
-    data = Parser::FacebookProfile.new('https://facebook.com/pages/fakeaccount/123456789').parse_data(meedan_doc, 'https://facebook.com/fakeaccount')
+    data = Parser::FacebookProfile.new('https://facebook.com/pages/fakeaccount/123456789').parse_data(meedan_doc, throwaway_url)
     assert_equal 'fakeaccount', data['username']
   end
 
   test 'returns empty username if not clear from URL' do
-    data = Parser::FacebookProfile.new('https://facebook.com/events/123456').parse_data(meedan_doc, 'https://facebook.com/fakeaccount')
+    data = Parser::FacebookProfile.new('https://facebook.com/events/123456').parse_data(meedan_doc, throwaway_url)
     assert_nil data['username']
     
-    data = Parser::FacebookProfile.new('https://facebook.com/live/123456').parse_data(meedan_doc, 'https://facebook.com/fakeaccount')    
+    data = Parser::FacebookProfile.new('https://facebook.com/live/123456').parse_data(meedan_doc, throwaway_url)    
     assert_nil data['username']
   
-    data = Parser::FacebookProfile.new('https://facebook.com/livemap/123456').parse_data(meedan_doc, 'https://facebook.com/fakeaccount')    
+    data = Parser::FacebookProfile.new('https://facebook.com/livemap/123456').parse_data(meedan_doc, throwaway_url)    
     assert_nil data['username']
 
-    data = Parser::FacebookProfile.new('https://facebook.com/watch/123456').parse_data(meedan_doc, 'https://facebook.com/fakeaccount')    
+    data = Parser::FacebookProfile.new('https://facebook.com/watch/123456').parse_data(meedan_doc, throwaway_url)    
     assert_nil data['username']
 
-    data = Parser::FacebookProfile.new('https://facebook.com/story.php/123456').parse_data(meedan_doc, 'https://facebook.com/fakeaccount')    
+    data = Parser::FacebookProfile.new('https://facebook.com/story.php/123456').parse_data(meedan_doc, throwaway_url)    
     assert_nil data['username']
 
-    data = Parser::FacebookProfile.new('https://facebook.com/category/123456').parse_data(meedan_doc, 'https://facebook.com/fakeaccount')    
+    data = Parser::FacebookProfile.new('https://facebook.com/category/123456').parse_data(meedan_doc, throwaway_url)    
     assert_nil data['username']
 
-    data = Parser::FacebookProfile.new('https://facebook.com/photo/123456').parse_data(meedan_doc, 'https://facebook.com/fakeaccount')    
+    data = Parser::FacebookProfile.new('https://facebook.com/photo/123456').parse_data(meedan_doc, throwaway_url)    
     assert_nil data['username']
 
-    data = Parser::FacebookProfile.new('https://facebook.com/photo.php/123456').parse_data(meedan_doc, 'https://facebook.com/fakeaccount')    
+    data = Parser::FacebookProfile.new('https://facebook.com/photo.php/123456').parse_data(meedan_doc, throwaway_url)    
     assert_nil data['username']
 
     # Note: we don't expect to realistically get this URL pattern in the parser because it would be
     # redirected to the human-readable link before we parse data
-    data = Parser::FacebookProfile.new('https://facebook.com/123456789').parse_data(meedan_doc, 'https://facebook.com/ignored-url')    
+    data = Parser::FacebookProfile.new('https://facebook.com/123456789').parse_data(meedan_doc, throwaway_url)    
     assert_nil data['username']
   end
 
   test 'sets author name from URL if possible' do
-    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(meedan_doc, 'https://facebook.com/ignored-url')
+    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(meedan_doc, throwaway_url)
     assert_equal 'fakeaccount', data['author_name']
 
-    data = Parser::FacebookProfile.new('https://facebook.com/people/fakeaccount/123456789').parse_data(meedan_doc, 'https://facebook.com/ignored-url')
+    data = Parser::FacebookProfile.new('https://facebook.com/people/fakeaccount/123456789').parse_data(meedan_doc, throwaway_url)
     assert_equal 'fakeaccount', data['author_name']
   
-    data = Parser::FacebookProfile.new('https://facebook.com/pages/fakeaccount/123456789').parse_data(meedan_doc, 'https://facebook.com/ignored-url')
+    data = Parser::FacebookProfile.new('https://facebook.com/pages/fakeaccount/123456789').parse_data(meedan_doc, throwaway_url)
     assert_equal 'fakeaccount', data['author_name']
   end
 
   test 'sets author name from og:title tag if not parseable from URL' do
-    data = Parser::FacebookProfile.new('https://facebook.com/1234567').parse_data(arabic_doc, 'https://facebook.com/ignored-url')
+    data = Parser::FacebookProfile.new('https://facebook.com/1234567').parse_data(arabic_doc, throwaway_url)
 
     assert_match /المركز الثقافي القبطي الأرثوذكسي بالمانيا/, data['author_name']
   end
 
   test 'sets author name from title html tag if if not parseable from URL and og:title not present' do
-    data = Parser::FacebookProfile.new('https://facebook.com/1234567').parse_data(old_meedan_doc, 'https://facebook.com/ignored-url')
+    data = Parser::FacebookProfile.new('https://facebook.com/1234567').parse_data(old_meedan_doc, throwaway_url)
 
     assert_equal 'Meedan - Nonprofit Organization', data['author_name']
   end

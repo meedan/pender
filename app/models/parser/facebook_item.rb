@@ -58,8 +58,10 @@ module Parser
           @parsed_data['error'] = crowdtangle_error
 
           unless doc.nil?
-            @parsed_data.merge!(get_opengraph_metadata.reject{|k,v| v.nil? })
-            set_data_field('title', get_page_title(doc))
+            @parsed_data.merge!(get_opengraph_metadata.reject{|k,v| v.nil?})
+            @parsed_data['title'] = nil if parsed_data['title'] && NONUNIQUE_TITLES.include?(parsed_data['title'].downcase) 
+
+            set_data_field('title', get_unique_facebook_page_title(doc))
             set_data_field('description', doc.at_css('description')&.content)
           end
         else
