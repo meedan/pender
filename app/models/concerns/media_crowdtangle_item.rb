@@ -17,7 +17,7 @@ module MediaCrowdtangleItem
 
         begin
           response = http.request(request)
-          raise CrowdtangleResponseError.new(crowdtangle_url: uri, response_code: response.code, response_body: response.body) if response.nil? || response.code != '200' || response.body.blank?
+          raise CrowdtangleResponseError if response.nil? || response.code != '200' || response.body.blank?
           JSON.parse(response.body)
         rescue CrowdtangleResponseError, JSON::ParserError => error
           PenderAirbrake.notify(CrowdtangleError.new(error), crowdtangle_url: uri, error_message: error.message, response_code: response.code, response_body: response.body )

@@ -174,7 +174,7 @@ class Media
       if parseable = parser.match?(self.url)
         self.parser = parseable
         self.provider, self.type = self.parser.type.split('_')
-        self.data.deep_merge!(self.parser.parse_data(self.doc, self.original_url, self.data.dig('json', 'json+ld')))
+        self.data.deep_merge!(self.parser.parse_data(self.doc, self.original_url, self.data.dig('raw', 'json+ld')))
         self.url = self.parser.url
         self.get_oembed_data
         parsed = true
