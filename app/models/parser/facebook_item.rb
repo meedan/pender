@@ -54,21 +54,17 @@ module Parser
         set_data_field('external_id', grabber.uuid)
         
         @parsed_data['raw']['crowdtangle'] = get_crowdtangle_data(parsed_data['uuid']) || {}
-        if crowdtangle_error = parsed_data.dig('raw', 'crowdtangle', 'error')
-          @parsed_data['error'] = crowdtangle_error
-
-          unless doc.nil?
-            @parsed_data.merge!(get_opengraph_metadata.reject{|k,v| v.nil?})
-            @parsed_data['title'] = nil if parsed_data['title'] && NONUNIQUE_TITLES.include?(parsed_data['title'].downcase) 
-
-            set_data_field('title', get_unique_facebook_page_title(doc))
-            set_data_field('description', doc.at_css('description')&.content)
-          end
-        else
+        if has_valid_crowdtangle_data?
           crowdtangle_data = format_crowdtangle_result(parsed_data['raw']['crowdtangle'])
           updated_url = parsed_data.dig('raw', 'crowdtangle', 'posts', 0, 'postUrl')
           @url = updated_url if updated_url && updated_url != url
           @parsed_data.merge!(crowdtangle_data)
+        else
+          @parsed_data.merge!(get_opengraph_metadata.reject{|k,v| v.nil?})
+          @parsed_data['title'] = nil if parsed_data['title'] && NONUNIQUE_TITLES.include?(parsed_data['title'].downcase) 
+
+          set_data_field('title', get_unique_facebook_page_title(doc))
+          set_data_field('description', doc&.at_css('description')&.content)
         end
         set_data_field('author_picture', jsonld.dig('creator', 'image'))
         set_data_field('picture', jsonld.dig('thumbnailUrl'))
