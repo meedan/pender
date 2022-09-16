@@ -225,6 +225,22 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_match /data-href="https:\/\/www.facebook.com\/fakeaccount\/posts\/123456789"/, data.dig('html')
   end
 
+  # Implicitly testing MediaCrowdtangleItem
+  test "sends error to errbit when we receive unexpected response from crowdtangle API" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: '')
+
+    data = {}
+    airbrake_call_count = 0
+    arguments_checker = Proc.new do |e|
+      airbrake_call_count += 1
+      assert_equal MediaCrowdtangleItem::CrowdtangleError, e.class
+    end
+    PenderAirbrake.stub(:notify, arguments_checker) do
+      data = Parser::FacebookItem.new('https://www.facebook.com/555555/posts/123456789').parse_data(empty_doc, throwaway_url)
+    end
+    assert_equal 1, airbrake_call_count
+  end
+
   test "sets fallbacks from HTML on crowdtangle error, and populates HTML" do
     crowdtangle_error = response_fixture_from_file('crowdtangle-response_not-found.json')
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_error)
