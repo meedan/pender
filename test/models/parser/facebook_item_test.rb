@@ -216,6 +216,9 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
 
     data = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/123456789').parse_data(doc, 'https://www.facebook.com/fakeaccount/posts/new-123456789')
 
+    assert data['error'].blank?
+    assert !data['raw']['crowdtangle']['error'].blank?
+
     assert_equal 'this is a page title', data['title']
     assert_equal 'also a description', data['description']
     assert_equal 'https://example.com/image', data['picture']
@@ -232,26 +235,31 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     HTML
 
     data = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/123456789').parse_data(doc, 'https://www.facebook.com/fakeaccount/posts/new-123456789')
+    
+    assert data['error'].blank?
+    assert !data['raw']['crowdtangle']['error'].blank?
 
     assert_equal 'this is a page title', data['title']
     assert_equal 'also a description', data['description']
     assert_match /data-href="https:\/\/www.facebook.com\/fakeaccount\/posts\/123456789"/, data.dig('html')
   end
     
-  test 'sets error when issue parsing UUID' do
+  test 'sets raw error when issue parsing UUID' do
     Parser::FacebookItem::IdsGrabber.any_instance.stubs(:uuid).returns(nil)
 
     data = Parser::FacebookItem.new('https://www.facebook.com/55555/posts/123456789').parse_data(empty_doc, throwaway_url)
-    assert_match /No ID given for Crowdtangle/, data.dig('error', 'message')
+    assert data['error'].blank?
+    assert_match /No ID given for Crowdtangle/, data.dig('raw', 'crowdtangle', 'error', 'message')
   end
   
-  test 'sets error when crowdtangle request fails' do
+  test 'sets raw error when crowdtangle request fails' do
     crowdtangle_error = response_fixture_from_file('crowdtangle-response_not-found.json')
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_error)
 
     data = Parser::FacebookItem.new('https://www.facebook.com/55555/posts/123456789').parse_data(empty_doc, throwaway_url)
 
-    assert_match /No results received from Crowdtangle/, data.dig('error', 'message')
+    assert data['error'].blank?
+    assert_match /No results received from Crowdtangle/, data.dig('raw', 'crowdtangle', 'error', 'message')
   end
 
   test "sets information from crowdtangle" do
@@ -261,6 +269,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     parser = Parser::FacebookItem.new('https://www.facebook.com/144585402276277/posts/1127489833985824')
     data = parser.parse_data(empty_doc, throwaway_url)
 
+    assert data['error'].blank?
     assert_equal '144585402276277_1127489833985824', data['external_id']
     assert_equal 'Trent Aric - Meteorologist', data['author_name']
     assert_equal 'TrentAricTV', data['username']
@@ -290,7 +299,8 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
 
     data = Parser::FacebookItem.new('https://www.facebook.com/12345/posts/55555').parse_data(empty_doc, 'https://www.facebook.com/12345/posts/55555')
 
-    assert_match /Unexpected platform ID from Crowdtangle/, data.dig('error', 'message')
+    assert data['error'].blank?
+    assert_match /Unexpected platform ID from Crowdtangle/, data.dig('raw', 'crowdtangle', 'error', 'message')
     assert_nil data['title']
     assert_nil data['description']
   end
