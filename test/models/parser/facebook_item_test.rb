@@ -331,7 +331,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   test "should return empty html when FB url is from group and cannot be embedded" do
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: {}.to_json)
 
-    data = Parser::FacebookItem.new('https://www.facebook.com/groups/976472102413753/permalink/2013383948722558/').parse_data(empty_doc, throwaway_url)
+    data = Parser::FacebookItem.new('https://www.facebook.com/groups/133819471984630/').parse_data(empty_doc, throwaway_url)
 
     assert_equal '', data['html']
   end
