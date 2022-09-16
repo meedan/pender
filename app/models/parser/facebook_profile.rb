@@ -44,7 +44,7 @@ module Parser
         
         title = get_unique_facebook_page_title(doc)
         set_data_field('title', title)
-        set_data_field('author_name', username, title&.gsub(' | Facebook', ''), 'Facebook')
+        set_data_field('author_name', username, title, 'Facebook')
 
         set_data_field('description', get_metatag_value('og:description'), get_metatag_value('description'))
         set_data_field('author_url', parseable_url)

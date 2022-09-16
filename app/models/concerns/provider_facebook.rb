@@ -96,6 +96,6 @@ module ProviderFacebook
     return unless title
     return if NONUNIQUE_TITLES.include?(title.downcase)
 
-    title
+    title.gsub(' | Facebook', '')
   end
 end
