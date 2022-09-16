@@ -328,6 +328,23 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_equal 'https://fb.com/thumbnail.jpg', data['picture']
   end
 
+  test "should reject default page titles" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: {}.to_json)
+    parser = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/12345')
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="Facebook" />
+    HTML
+    data = parser.parse_data(doc, throwaway_url)
+    assert_nil data['title']
+    
+    doc = Nokogiri::HTML(<<~HTML)
+    <title>Watch</title>
+    HTML
+    data = parser.parse_data(doc, throwaway_url)
+    assert_nil data['title']
+  end
+
   test "#oembed_url returns URL with the instance URL" do
     oembed_url = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/1234').oembed_url
     assert_equal 'https://www.facebook.com/plugins/post/oembed.json/?url=https://www.facebook.com/fakeaccount/posts/1234', oembed_url

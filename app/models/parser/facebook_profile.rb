@@ -42,8 +42,8 @@ module Parser
         username = get_username(parseable_url)
         set_data_field('username', username)
         
-        title = get_page_title(doc)
-        set_data_field('title', title, 'Facebook')
+        title = get_unique_facebook_page_title(doc)
+        set_data_field('title', title)
         set_data_field('author_name', username, title&.gsub(' | Facebook', ''), 'Facebook')
 
         set_data_field('description', get_metatag_value('og:description'), get_metatag_value('description'))
@@ -64,7 +64,7 @@ module Parser
 
     def get_username(request_url)
       username = compare_patterns(RequestHelper.decoded_uri(request_url), self.patterns, 'username')
-      return if ['events', 'livemap', 'watch', 'live', 'story.php', 'category', 'photo', 'photo.php', 'profile.php'].include? username
+      return if NONUNIQUE_TITLES.include? username
       return if username.to_i > 0
 
       username

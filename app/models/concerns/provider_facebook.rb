@@ -1,6 +1,10 @@
 module ProviderFacebook
   extend ActiveSupport::Concern
 
+  NONUNIQUE_TITLES = %w[
+    facebook events livemap watch live story.php category photo photo.php profile.php
+  ]
+
   class_methods do
     def ignored_urls
       [
@@ -87,12 +91,11 @@ module ProviderFacebook
     end
   end
 
-  def get_page_title(html_page)
-    return if html_page.nil?
+  def get_unique_facebook_page_title(html_page)
+    title = get_page_title(html_page)
+    return unless title
+    return if NONUNIQUE_TITLES.include?(title.downcase)
 
-    meta_title = html_page.at_css('meta[property="og:title"]')
-    html_title = html_page.at_css('title')
-
-    meta_title&.attr('content') || html_title&.content
+    title
   end
 end

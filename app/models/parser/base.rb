@@ -186,6 +186,15 @@ module Parser
       nil
     end
 
+    def get_page_title(html_page)
+      return if html_page.nil?
+  
+      meta_title = html_page.at_css('meta[property="og:title"]')
+      html_title = html_page.at_css('title')
+  
+      meta_title&.attr('content') || html_title&.content
+    end
+
     def handle_exceptions(exception)
       begin
         yield
