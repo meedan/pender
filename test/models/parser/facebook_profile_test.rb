@@ -265,11 +265,18 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
   end
 
   test "should strip '| Facebook' from page titles" do
+    parser = Parser::FacebookProfile.new('https://www.facebook.com/fakeaccount')
     doc = Nokogiri::HTML(<<~HTML)
-      <title>Piglet the Dog | Facebook</title>
+      <title>Piglet the Dog's post | Facebook</title>
     HTML
-    data = Parser::FacebookProfile.new('https://www.facebook.com/fakeaccount').parse_data(doc, throwaway_url)
-    assert_equal "Piglet the Dog", data['title']
+    data = parser.parse_data(doc, throwaway_url)
+    assert_equal "Piglet the Dog's post", data['title']
+    
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="Piglet the Dog's post | Facebook" />
+    HTML
+    data = parser.parse_data(doc, throwaway_url)
+    assert_equal "Piglet the Dog's post", data['title']
   end
 
   test 'sets description from og:description metatag if present' do

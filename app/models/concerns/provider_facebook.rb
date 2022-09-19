@@ -96,6 +96,12 @@ module ProviderFacebook
     return unless title
     return if NONUNIQUE_TITLES.include?(title.downcase)
 
-    title.gsub(' | Facebook', '')
+    title
+  end
+
+  def strip_facebook_from_title!
+    return unless @parsed_data['title']
+
+    @parsed_data['title'].gsub!(' | Facebook', '')
   end
 end

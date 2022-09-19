@@ -70,6 +70,8 @@ module Parser
         set_data_field('author_picture', jsonld.dig('creator', 'image'))
         set_data_field('picture', jsonld.dig('thumbnailUrl'))
 
+        strip_facebook_from_title!
+
         @parsed_data['html'] = html_for_facebook_post(parsed_data.dig('username'), doc, url) || ''
       end
 
