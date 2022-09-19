@@ -50,6 +50,9 @@ module Parser
         set_data_field('author_url', parseable_url)
         set_facebook_privacy_error(doc, unavailable_page)
       end
+
+      strip_facebook_from_title!
+
       @parsed_data['published_at'] = ''
       parsed_data
     end

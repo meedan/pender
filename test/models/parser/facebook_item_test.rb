@@ -374,10 +374,17 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   test "should strip '| Facebook' from page titles" do
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: {}.to_json)
 
+    parser = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/12345')
     doc = Nokogiri::HTML(<<~HTML)
       <title>Piglet the Dog's post | Facebook</title>
     HTML
-    data = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/12345').parse_data(doc, throwaway_url)
+    data = parser.parse_data(doc, throwaway_url)
+    assert_equal "Piglet the Dog's post", data['title']
+    
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="Piglet the Dog's post | Facebook" />
+    HTML
+    data = parser.parse_data(doc, throwaway_url)
     assert_equal "Piglet the Dog's post", data['title']
   end
 
