@@ -55,7 +55,7 @@ Open http://localhost:3200/api-docs/index.html to access Pender API directly.
 
 ### Setting Cookies
 
-We send cookies with certain requests that require logged-in users (e.g. Instagram, TikTok). To provide these for development and tests, log in on your browser and copy the cookie information to `config/cookies.txt`.
+We send cookies with certain requests that require logged-in users (e.g. Instagram, TikTok). To provide these for development and tests, log in on your browser and copy the cookie information to `config/cookies.txt`. The location of this file can also be configured as `cookies_file_path` in `config.yml`
 
 To do this easily in Chrome:
 1. Install the [Get cookies.txt](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid) browser extension
@@ -66,11 +66,8 @@ To do this easily in Chrome:
 **Note**: If you do install this extension, consider doing it on a limited Chrome profile since it requires read and write permission for all websites.
 
 #### Rotating cookies in CI
-1. Follow steps for Setting Cookies above
-1. Re-encrypt the new cookies file: `travis encrypt-file config/cookies.txt -o config/cookies.txt.enc --pro`
-1. Copy the resulting decrypt command and replace the corresponding line in `.travis.yml`
 
-**Note**: Deployed environment cookies should be set in [configurator](https://github.com/meedan/configurator).
+Deployed environment cookies should be updated in the respective cookies file in S3. The path to this file can be found for each environment in [SSM](https://meedan.atlassian.net/wiki/spaces/ENG/pages/1126694913/How+to+get+and+set+configuration+values+and+secrets+on+SSM).
 
 ## API
 

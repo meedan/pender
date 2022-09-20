@@ -310,7 +310,9 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'success', RequestHelper.request_url(url, 'Get')
   end
 
-  test "should add cookie from cookie.txt on header if domain matches" do
+  test "should add cookie from config on header if domain matches" do
+    stub_configs(cookies: { '.example.com' => { 'wp_devicetype' => '0' } })
+
     url_no_cookie = 'https://www.istqb.org/'
     assert_equal "", RequestHelper.html_options(url_no_cookie)['Cookie']
     url_with_cookie = 'https://example.com/politics/winter-is-coming-allies-fear-trump-isnt-prepared-for-gathering-legal-storm/2018/08/29/b07fc0a6-aba0-11e8-b1da-ff7faa680710_story.html'
@@ -324,6 +326,8 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should use cookies from api key config if present" do
+    stub_configs(cookies: { '.example.com' => { 'wp_devicetype' => '0' } })
+
     api_key = create_api_key
     uri = RequestHelper.parse_url('http://example.com')
 
