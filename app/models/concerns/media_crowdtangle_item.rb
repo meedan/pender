@@ -1,40 +1,8 @@
 module MediaCrowdtangleItem
   extend ActiveSupport::Concern
 
-  # "resource" is currently only Facebook
-  def get_crowdtangle_id(_resource)
-    self.data.dig('uuid')
-  end
-
-  def get_crowdtangle_data(resource)
-    id = self.get_crowdtangle_id(resource)
-    self.data['raw']['crowdtangle'] = { error: { message: 'Unknown ID', code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }} and return if id.blank?
-    crowdtangle_data = Media.crowdtangle_request(resource, id).with_indifferent_access
-    result = crowdtangle_data.dig('result')
-    post_info = (crowdtangle_data.dig('result', 'posts') || []).first
-    unless post_info&.dig('platformId') == id
-      self.data['raw']['crowdtangle'] = { error: { message: "Cannot get data from Crowdtangle. #{crowdtangle_data['notes']}", code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }} and return
-    end
-    self.data['raw']['crowdtangle'] = result
-    self.send("get_crowdtangle_#{resource}_result", post_info)
-  end
-
-  def get_crowdtangle_facebook_result(post_info)
-    self.url = post_info.dig('postUrl') if post_info.dig('postUrl') && post_info.dig('postUrl') != self.url
-    self.data[:author_name] = post_info.dig('account', 'name')
-    self.data[:username] = post_info.dig('account', 'handle')
-    self.data[:author_picture] = post_info.dig('account', 'profileImage')
-    self.data[:author_url] = post_info.dig('account', 'url')
-    self.data[:title] = self.data[:description] = self.data[:text] = post_info.dig('message')
-    self.data[:external_id] = post_info.dig('platformId')
-    self.data[:object_id] = post_info.dig('platformId')
-    self.data[:picture] = (post_info.dig('media').select { |m| m['type'] == 'photo'}.first || {}).dig('full') if post_info.dig('media')
-    self.data[:published_at] = post_info.dig('date')
-  end
-
-  def has_valid_crowdtangle_data?
-    !self.data.dig('raw', 'crowdtangle').blank? && self.data.dig('raw', 'crowdtangle', 'error').nil?
-  end
+  class CrowdtangleError < StandardError; end
+  class CrowdtangleResponseError < StandardError; end
 
   Media.class_eval do
     def self.crowdtangle_request(resource, id)
@@ -47,13 +15,13 @@ module MediaCrowdtangleItem
         headers = { 'X-API-Token' => PenderConfig.get("crowdtangle_#{resource}_token") }
         request = Net::HTTP::Get.new(uri.request_uri, headers)
 
-        response = http.request(request)
-        return {} unless !response.nil? && response.code == '200' && !response.body.blank?
         begin
+          response = http.request(request)
+          raise CrowdtangleResponseError if response.nil? || response.code != '200' || response.body.blank?
           JSON.parse(response.body)
-        rescue JSON::ParserError => error
-          PenderAirbrake.notify(StandardError.new('Could not parse `crowdtangle` data as JSON'), crowdtangle_url: uri, error_message: error.message, response_body: response.body )
-          Rails.logger.warn level: 'WARN', message: '[Parser] Could not get `crowdtangle` data', crowdtangle_url: uri, error_class: error.class, response_code: response.code, response_message: response.message
+        rescue CrowdtangleResponseError, JSON::ParserError => error
+          PenderAirbrake.notify(CrowdtangleError.new(error), crowdtangle_url: uri, error_message: error.message, response_code: response.code, response_body: response.body )
+          Rails.logger.warn level: 'WARN', message: '[Parser] Could not get `crowdtangle` data', crowdtangle_url: uri, error_class: error.class, response_code: response.code, response_body: response.body
           {}
         end
       end

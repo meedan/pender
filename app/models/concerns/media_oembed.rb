@@ -1,19 +1,6 @@
 module MediaOembed
   extend ActiveSupport::Concern
 
-  def get_oembed_data(original_url = nil, maxwidth = nil, maxheight= nil)
-    url = original_url || self.url
-    if Media.valid_raw_oembed?(self.data)
-      self.data['oembed'] = self.data['raw']['oembed'].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(url, maxwidth, maxheight))
-    else
-      self.as_json if self.data.empty?
-      %w(type provider).each { |key| self.data[key] = self.send(key.to_sym) }
-      self.data['oembed'] = self.data_from_oembed_item ? self.data['raw']['oembed'] : Media.default_oembed(self.data, url, maxwidth, maxheight)
-    end
-    self.data['author_name'] ||= self.data.dig('raw', 'oembed', 'author_name')
-    self.data['oembed']
-  end
-
   module ClassMethods
     def as_oembed(data, original_url, maxwidth, maxheight, instance = nil)
       return instance.send(:get_oembed_data, original_url, maxwidth, maxheight) if instance
@@ -31,7 +18,7 @@ module MediaOembed
         author_name: data['author_name'],
         author_url: (data['type'] === 'profile' ? data['url'] : data['author_url']),
         provider_name: data['provider'],
-        provider_url: 'http://' + Media.parse_url(data['url']).host,
+        provider_url: 'http://' + RequestHelper.parse_url(data['url']).host,
         thumbnail_url: data['picture'],
         html: Media.default_oembed_html(src, maxwidth, maxheight),
         width: maxwidth,
@@ -45,6 +32,32 @@ module MediaOembed
 
     def valid_raw_oembed?(data)
       !data.dig('raw').nil? && !data.dig('raw', 'oembed').nil? && data.dig('raw', 'oembed', 'error').nil?
+    end
+  end
+
+  def get_oembed_data(original_url = nil, maxwidth = nil, maxheight= nil)
+    url = original_url || self.url
+    if Media.valid_raw_oembed?(self.data)
+      self.data['oembed'] = self.data['raw']['oembed'].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(url, maxwidth, maxheight))
+    else
+      self.as_json if self.data.empty?
+      %w(type provider).each { |key| self.data[key] = self.send(key.to_sym) }
+      self.data['oembed'] = get_raw_oembed_data(url)|| Media.default_oembed(self.data, url, maxwidth, maxheight)
+    end
+    self.data['author_name'] ||= self.data.dig('raw', 'oembed', 'author_name')
+    self.data['oembed']
+  end
+
+  private
+
+  def get_raw_oembed_data(url)
+    return if self.data[:error]
+
+    raw_oembed_data = OembedItem.new(url, self.parser.oembed_url(self.doc)).get_data
+    self.data.deep_merge!(raw_oembed_data)
+
+    if Media.valid_raw_oembed?(raw_oembed_data)
+      self.data[:raw][:oembed]
     end
   end
 end

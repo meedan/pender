@@ -25,7 +25,7 @@ module Api
           @id = Media.get_id(@url)
           (render_uncached_media and return) if @refresh || Pender::Store.current.read(@id, :json).nil?
           respond_to do |format|
-            list_formats.each do |f|
+            %w(html js json oembed).each do |f|
               format.send(f) { send("render_as_#{f}") }
             end
           end
@@ -185,7 +185,7 @@ module Api
       end
 
       def valid_url?
-        Media.validate_url(@url)
+        RequestHelper.validate_url(@url)
       end
 
       def clear_upstream_cache

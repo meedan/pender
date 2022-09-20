@@ -60,7 +60,7 @@ module MediaVideoArchiver
     def yt_download_proxy(url)
       uri = URI.parse(url)
       return unless uri.host.match(/youtube\.com/)
-      proxy = Media.valid_proxy('ytdl_proxy')
+      proxy = RequestHelper.valid_proxy('ytdl_proxy')
       return nil unless proxy
       "http://#{proxy.dig('user_prefix')}:#{proxy.dig('pass')}@#{proxy.dig('host')}:#{proxy.dig('port')}"
     end

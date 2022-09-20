@@ -10,7 +10,7 @@
 # canonical url and normalize it before parsing.
 #
 # There are specific parsers for +Youtube+, +Twitter+, +Facebook+, +Instagram+,
-# +Dropbox+ and +oEmbed+.
+# +Dropbox+, +TikTok+, and +oEmbed+.
 # When the url cannot be parsed by a specific parser, it is parsed as a
 # generic page.
 #
@@ -47,10 +47,10 @@ require 'postrank-uri'
 require 'nokogiri'
 
 class Media
-  [ActiveModel::Validations, ActiveModel::Conversion, MediasHelper, MediaOembed, MediaArchiver, MediaMetrics].each { |concern| include concern }
+  [ActiveModel::Validations, ActiveModel::Conversion, MediasHelper, MediaOembed, MediaArchiver].each { |concern| include concern }
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :unavailable_page
+  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :unavailable_page, :parser
 
   TYPES = {}
 
@@ -63,8 +63,9 @@ class Media
     self.original_url = self.url.strip
     self.data = {}.with_indifferent_access
     self.follow_redirections
-    self.url = Media.normalize_url(self.url) unless self.get_canonical_url
+    self.url = RequestHelper.normalize_url(self.url) unless self.get_canonical_url
     self.try_https
+    self.parser = nil
   end
 
   def self.declare(type, patterns)
@@ -80,12 +81,34 @@ class Media
       self.upload_images
     end
     self.archive(options.delete(:archivers))
-    self.get_metrics_from_facebook_in_background
+    Metrics.get_metrics_from_facebook_in_background(self.data, self.original_url, ApiKey.current&.id)
     Pender::Store.current.read(Media.get_id(self.original_url), :json)
   end
 
-  # Parsers and archivers
-  [MediaYoutubeProfile, MediaYoutubeItem, MediaTwitterProfile, MediaTwitterItem, MediaFacebookProfile, MediaFacebookItem, MediaInstagramItem, MediaInstagramProfile, MediaDropboxItem, MediaTiktokItem, MediaTiktokProfile, MediaKwaiItem, MediaPageItem, MediaOembedItem, MediaArchiveIsArchiver, MediaArchiveOrgArchiver, MediaHtmlPreprocessor, MediaSchemaOrg, MediaPermaCcArchiver, MediaVideoArchiver, MediaFacebookEngagementMetrics, MediaCrowdtangleItem].each { |concern| include concern }
+  PARSERS = [
+    Parser::YoutubeProfile,
+    Parser::YoutubeItem,
+    Parser::TwitterProfile,
+    Parser::TwitterItem,
+    Parser::FacebookProfile,
+    Parser::FacebookItem,
+    Parser::InstagramItem,
+    Parser::InstagramProfile,
+    Parser::DropboxItem,
+    Parser::TiktokItem,
+    Parser::TiktokProfile,
+    Parser::KwaiItem, 
+    Parser::PageItem,
+  ]
+
+  [
+    MediaArchiveIsArchiver, 
+    MediaArchiveOrgArchiver, 
+    MediaSchemaOrg, 
+    MediaPermaCcArchiver, 
+    MediaVideoArchiver, 
+    MediaCrowdtangleItem
+  ].each { |concern| include concern }
 
   def self.minimal_data(instance)
     data = {}
@@ -100,20 +123,8 @@ class Media
     { url: instance.url, provider: provider || 'page', type: type || 'item', parsed_at: Time.now.to_s, favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}" }
   end
 
-  def self.validate_url(url)
-    begin
-      uri = URI.parse(URI.encode(url))
-      return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
-      Media.request_url(url, 'Get')
-    rescue OpenSSL::SSL::SSLError, URI::InvalidURIError, SocketError => e
-      PenderAirbrake.notify(e, url: url)
-      Rails.logger.warn level: 'WARN', message: '[Parser] Invalid URL', url: url, error_class: e.class, error_message: e.message
-      return false
-    end
-  end
-
   def self.get_id(url)
-    Digest::MD5.hexdigest(Media.normalize_url(url))
+    Digest::MD5.hexdigest(RequestHelper.normalize_url(url))
   end
 
   def self.update_cache(url, newdata)
@@ -155,22 +166,22 @@ class Media
 
   def parse
     self.data.merge!(Media.minimal_data(self))
-    get_metatags(self)
-    get_jsonld_data(self)
+    get_jsonld_data(self) unless self.doc.nil?
     get_schema_data unless self.doc.nil?
     parsed = false
-    TYPES.each do |type, patterns|
-      patterns.each do |pattern|
-        if pattern.match?(self.url)
-          self.provider, self.type = type.split('_')
-          self.send("data_from_#{type}")
-          self.get_oembed_data
-          parsed = true
-          break
-        end
+
+    PARSERS.each do |parser|
+      if parseable = parser.match?(self.url)
+        self.parser = parseable
+        self.provider, self.type = self.parser.type.split('_')
+        self.data.deep_merge!(self.parser.parse_data(self.doc, self.original_url, self.data.dig('raw', 'json+ld')))
+        self.url = self.parser.url
+        self.get_oembed_data
+        parsed = true
       end
       break if parsed
     end
+
     cleanup_html_entities(self)
   end
 
@@ -178,30 +189,26 @@ class Media
   # Parse the page and set it to media `doc`. If the `doc` has a tag (`og:url`, `twitter:url`, `rel='canonical`) with a different url, the media `url` is updated with the url found, the page is parsed and the media `doc` is updated
 
   def get_canonical_url
-    self.doc = self.get_html(Media.html_options(self.url))
+    self.doc = self.get_html(RequestHelper.html_options(self.url))
     tag = self.doc&.at_css("meta[property='og:url']") || self.doc&.at_css("meta[property='twitter:url']") || self.doc&.at_css("link[rel='canonical']")
     canonical_url = tag&.attr('content') || tag&.attr('href')
     get_parsed_url(canonical_url) if canonical_url
   end
 
   def get_parsed_url(canonical_url)
-    return false if !Media.validate_url(canonical_url)
+    return false if !RequestHelper.validate_url(canonical_url)
     if canonical_url != self.url && !self.ignore_url?(canonical_url)
-      self.url = absolute_url(canonical_url)
-      self.doc = self.get_html(Media.html_options(self.url)) if self.doc.nil?
+      self.url = RequestHelper.absolute_url(self.url, canonical_url)
+      self.doc = self.get_html(RequestHelper.html_options(self.url)) if self.doc.nil?
     end
     true
-  end
-
-  def self.normalize_url(url)
-    PostRank::URI.normalize(url).to_s
   end
 
   ##
   # Update the media `url` with the url found after all redirections
 
   def follow_redirections
-    self.url = self.add_scheme(decoded_uri(self.url.strip))
+    self.url = RequestHelper.add_scheme(RequestHelper.decoded_uri(self.url.strip))
     attempts = 0
     code = '301'
     path = []
@@ -213,11 +220,6 @@ class Media
       code = response.code
       self.set_url_from_location(response, path)
     end
-  end
-
-  def add_scheme(url)
-    return url if url =~ /^https?:/
-    'http://' + url
   end
 
   def set_url_from_location(response, path)
@@ -234,130 +236,33 @@ class Media
   def request_media_url
     response = nil
     Retryable.retryable(tries: 3, sleep: 1, :not => [Net::ReadTimeout]) do
-      response = Media.request_url(url, 'Get')
+      response = RequestHelper.request_url(url, 'Get')
     end
     response
-  end
-
-  def self.request_url(url, verb = 'Get')
-    uri = Media.parse_url(decoded_uri(url))
-    Media.request_uri(uri, verb)
-  end
-
-  def self.request_uri(uri, verb = 'Get')
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.read_timeout = PenderConfig.get('timeout', 30).to_i
-    http.use_ssl = uri.scheme == 'https'.freeze
-    headers = { 'User-Agent' => Media.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }.merge(Media.get_cf_credentials(uri))
-    request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
-    request['Cookie'] = Media.set_cookies(uri)
-    proxy_config = Media.get_proxy(uri, :hash)
-    if proxy_config
-      proxy = Net::HTTP::Proxy(proxy_config['host'], proxy_config['port'], proxy_config['user'], proxy_config['pass'])
-      proxy.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http2|
-        http2.request(request)
-      end
-    else
-      http.request(request)
-    end
-  end
-
-  def get_html(header_options = {}, force_proxy = false)
-    begin
-      uri = Media.parse_url(decoded_uri(self.url))
-      proxy = Media.get_proxy(uri, :array, force_proxy)
-      options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
-      html = ''.freeze
-      OpenURI.open_uri(uri, options.merge(read_timeout: PenderConfig.get('timeout', 30).to_i)) do |f|
-        f.binmode
-        html = f.read
-      end
-      Nokogiri::HTML preprocess_html(html)
-    rescue OpenURI::HTTPError, Errno::ECONNRESET => e
-      if force_proxy
-        PenderAirbrake.notify(e, url: self.url)
-        Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: self.url, error_class: e.class, error_message: e.message
-        self.data[:error] = { message: 'URL Not Found', code: LapisConstants::ErrorCodes::const_get('NOT_FOUND')}
-        return nil
-      end
-      self.get_html(header_options, true)
-    rescue Zlib::DataError, Zlib::BufError
-      self.get_html(Media.html_options(self.url).merge('Accept-Encoding' => 'identity'))
-    rescue RuntimeError => e
-      PenderAirbrake.notify(e, url: self.url) if !redirect_https_to_http?(header_options, e.message)
-      Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: self.url, error_class: e.class, error_message: e.message
-      return nil
-    end
-  end
-
-  def self.html_options(url)
-    uri = url.is_a?(String) ? Media.parse_url(url) : url
-    uri.host.match?(/twitter\.com/) ? Media.extended_headers(url) : { allow_redirections: :safe, proxy: nil, 'User-Agent' => 'Mozilla/5.0 (X11)', 'Accept' => '*/*', 'Accept-Language' => LANG, 'Cookie' => Media.set_cookies(uri) }.merge(Media.get_cf_credentials(uri))
-  end
-
-  def self.get_cf_credentials(uri)
-    hosts = PenderConfig.get('hosts', {}, :json)
-    config = hosts[uri.host]
-    if config && config.has_key?('cf_credentials')
-      id, secret = config['cf_credentials'].split(':')
-      credentials = { 'CF-Access-Client-Id' => id, 'CF-Access-Client-Secret' => secret }
-    end
-    credentials || {}
-  end
-
-  def top_url(url)
-    uri = Media.parse_url(url)
-    (uri.port == 80 || uri.port == 443) ? "#{uri.scheme}://#{uri.host}" : "#{uri.scheme}://#{uri.host}:#{uri.port}"
-  end
-
-  def absolute_url(path = '')
-    return self.url if path.blank?
-    if path =~ /^https?:/
-      path
-    elsif path =~ /^\/\//
-      Media.parse_url(self.url).scheme + ':' + path
-    elsif path =~ /^www\./
-      self.add_scheme(path)
-    else
-      self.top_url(self.url) + path
-    end
-  end
-
-  def self.parse_url(url)
-    URI.parse(URI.encode(url))
   end
 
   ##
   # Try to access the media `url` with HTTPS and it it succeeds, the media `url` is updated with the HTTPS version
 
   def try_https
+    # Makes modifications to URL behavior
     begin
       uri = URI.parse(self.url)
       unless (uri.kind_of?(URI::HTTPS))
         self.url.gsub!(/^http:/i, 'https:')
-        Media.request_url(self.url, 'Get').value
+        RequestHelper.request_url(self.url, 'Get').value
       end
     rescue
       self.url.gsub!(/^https:/i, 'http:')
     end
   end
 
-  def redirect_https_to_http?(header_options, message)
-    message.match?('redirection forbidden') && header_options[:allow_redirections] != :all
+  def get_html(header_options = {}, force_proxy = false)
+    RequestHelper.get_html(self.url, self.method(:set_error), header_options, force_proxy)
   end
 
-  def self.set_cookies(uri)
-    empty = ''.freeze
-    begin
-      host = PublicSuffix.parse(uri.host).domain
-      cookies = []
-      PenderConfig.get('cookies', {}).each do |domain, content|
-        next unless domain.match?(host)
-        content.each { |k, v| cookies << "#{k}=#{v}" }
-      end
-      cookies.empty? ? empty : cookies.join('; '.freeze)
-    rescue
-      empty
-    end
+  def set_error(**error_hash)
+    return if error_hash.empty?
+    self.data[:error] = error_hash
   end
 end
