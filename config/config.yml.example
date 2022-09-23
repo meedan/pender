@@ -117,6 +117,17 @@ development: &default
   #
   perma_cc_key: # '<PERMA.CC ACCESS KEY>'
 
+  # Open Telemetry configuration, for reporting to Honeycomb
+  # See initializers/open_telemetry.rb for usage.
+  #
+  # OPTIONAL
+  #
+  otel_exporter_otlp_endpoint: "https://api.honeycomb.io"
+  otel_exporter_otlp_headers: "x-honeycomb-team=<DEV API KEY>"
+  otel_service_name: "pender"
+  otel_resource_attributes:
+    developer.name: <DEVELOPER_NAME>
+
 test:
   <<: *default
   chrome_debug_port: 9444

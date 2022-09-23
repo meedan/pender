@@ -56,3 +56,7 @@ gem 'rack', '>= 1.6.11', require: false
 gem 'aws-sdk-s3', require: false
 gem 'lograge'
 gem 'request_store'
+gem 'opentelemetry-sdk'
+gem 'opentelemetry-exporter-otlp'
+gem 'opentelemetry-instrumentation-all'
+
