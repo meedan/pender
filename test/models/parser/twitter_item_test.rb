@@ -44,7 +44,7 @@ class TwitterItemIntegrationTest < ActiveSupport::TestCase
     assert_equal '', PenderConfig.get(:twitter_consumer_key)
     data = m.as_json
     assert_equal m.url, data['title']
-    assert_match "Twitter::Error::Unauthorized", data['raw']['api']['error']['message']
+    assert_match "Twitter::Error::BadRequest", data['raw']['api']['error']['message']
   end
 
   test "should store oembed data of a twitter profile" do

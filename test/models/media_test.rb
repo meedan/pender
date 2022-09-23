@@ -607,3 +607,63 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal "<iframe src=\"http://pender.org/medias.html?url=#{url}\" width=\"300\" height=\"150\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>", data['html']
   end
 end
+
+class MediaUnitTest < ActiveSupport::TestCase
+  def setup
+    isolated_setup
+  end
+
+  def teardown
+    isolated_teardown
+  end
+
+  test "should cache on successful parse" do
+    WebMock.stub_request(:get, /example.com/).and_return(status: 200, body: '<html>something</html>')
+    Parser::PageItem.any_instance.stubs(:parse_data).returns({title: 'a title'})
+
+    url = 'http://www.example.com'
+    id = Media.get_id(url)
+
+    Pender::Store.current.delete(id, :json)
+    assert Pender::Store.current.read(id, :json).blank?
+
+    m = create_media url: url
+    data = m.as_json
+
+    assert_equal data[:title], 'a title'
+    assert_equal Pender::Store.current.read(id, :json)[:title], 'a title'
+  end
+
+  test "should not cache when top-level error" do
+    WebMock.stub_request(:get, /example.com/).and_return(status: 200, body: '<html>something</html>')
+    Parser::PageItem.any_instance.stubs(:parse_data).returns({title: 'a title', error: {message: 'fake error for test'}})
+
+    url = 'http://www.example.com'
+    id = Media.get_id(url)
+
+    Pender::Store.current.delete(id, :json)
+    assert Pender::Store.current.read(id, :json).blank?
+
+    m = create_media url: url
+    data = m.as_json
+    assert Pender::Store.current.read(id, :json).blank?
+  end
+
+  test "should still return uncoded data on error" do
+    WebMock.stub_request(:get, /example.com/).and_return(status: 200, body: '<html>something</html>')
+    Parser::PageItem.any_instance.stubs(:parse_data).returns({title: 'this is a title', raw: {link: 'https://www.example.com/á<80><99>á<80><84>á<80>'}, error: {message: 'fake error for test'}})
+
+    url = 'http://www.example.com'
+    id = Media.get_id(url)
+
+    Pender::Store.current.delete(id, :json)
+    assert Pender::Store.current.read(id, :json).blank?
+    
+    m = create_media url: url
+    data = m.as_json
+    
+    assert Pender::Store.current.read(id, :json).blank?
+    assert_equal 'this is a title', data[:title]
+    assert_equal 'https://www.example.com/%C3%A1%3C80%3E%3C99%3E%C3%A1%3C80%3E%3C84%3E%C3%A1%3C80%3E', data[:raw][:link]
+  end
+end
