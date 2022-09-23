@@ -73,17 +73,12 @@ class MediasHelperTest < ActionView::TestCase
   end
 
   test 'should upload images to s3 and update media data' do
-    urls = %w(
-      https://opensource.globo.com/hacktoberfest/
-      https://hacktoberfest.digitalocean.com/
-    )
-    urls.each do |url|
-      id = Media.get_id(url)
-      m = Media.new url: url
-      data = m.as_json
-      assert_match /#{Pender::Store.current.storage_path('medias')}\/#{id}\/author_picture.(jpg|png)/, data[:author_picture], "Can't get `author_picture` from url #{url}"
-      assert_match /#{Pender::Store.current.storage_path('medias')}\/#{id}\/picture.(jpg|png)/, data[:picture], "Can't get `picture` from url #{url}"
-    end
+    url = 'https://hacktoberfest.com/'
+    id = Media.get_id(url)
+    m = Media.new url: url
+    data = m.as_json
+    assert_match /#{Pender::Store.current.storage_path('medias')}\/#{id}\/author_picture.(jpg|png)/, data[:author_picture], "Can't get `author_picture` from url #{url}"
+    assert_match /#{Pender::Store.current.storage_path('medias')}\/#{id}\/picture.(jpg|png)/, data[:picture], "Can't get `picture` from url #{url}"
   end
 
   test "#cleanup_data_encoding should only encode URLs on raw key" do
