@@ -107,7 +107,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should return author picture" do
-    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:image' content='https://github.githubassets.com/images/modules/open_graph/github-logo.png'>"))
+    WebMock.stub_request(:get, /github.com/).to_return(status: 200, body: "<meta property='og:image' content='https://github.githubassets.com/images/modules/open_graph/github-logo.png'>")
     url = 'http://github.com'
     id = Media.get_id url
     m = create_media url: url
