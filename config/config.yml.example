@@ -122,11 +122,11 @@ development: &default
   #
   # OPTIONAL
   #
-  otel_exporter_otlp_endpoint: "https://api.honeycomb.io"
-  otel_exporter_otlp_headers: "x-honeycomb-team=<DEV API KEY>"
-  otel_service_name: "pender"
+  otel_exporter_otlp_endpoint: # "https://api.honeycomb.io"
+  otel_exporter_otlp_headers: # "x-honeycomb-team=<DEV API KEY>"
+  otel_service_name: # "pender"
   otel_resource_attributes:
-    developer.name: <DEVELOPER_NAME>
+    # developer.name: <DEVELOPER_NAME>
 
 test:
   <<: *default
