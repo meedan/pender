@@ -98,7 +98,6 @@ module Pender
       )
     end
 
-
     def write(id, type, content)
       content = JSON.pretty_generate(content) if type == :json
       store_object(key(id, type), content)

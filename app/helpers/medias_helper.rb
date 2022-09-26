@@ -85,9 +85,7 @@ module MediasHelper
     data['title'] = url if data['title'].blank?
     code = error_data[:code]
     error_data[:code] = LapisConstants::ErrorCodes::const_get(code)
-    data = data.merge(error: error_data)
-    Pender::Store.current.write(id, :json, data) unless code == 'DUPLICATED'
-    data
+    data.merge(error: error_data)
   end
 
   def get_timeout_data(media, url, id)

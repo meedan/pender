@@ -63,7 +63,7 @@ module Api
 
       def render_uncached_media
         render_timeout(false) do
-          (render_url_invalid and return true) unless valid_url?
+          (render_url_invalid and return true) unless RequestHelper.validate_url(@url)
           rescue_block = Proc.new { |_e| render_url_invalid and return true }
           handle_exceptions(OpenSSL::SSL::SSLError, rescue_block, {url: @url, request: request}) do
             @media = Media.new(url: @url, request: request)
@@ -182,10 +182,6 @@ module Api
 
       def should_serve_external_embed?(data)
         !data['html'].blank? && (data['url'] =~ /^https:/ || Rails.env.development?)
-      end
-
-      def valid_url?
-        RequestHelper.validate_url(@url)
       end
 
       def clear_upstream_cache

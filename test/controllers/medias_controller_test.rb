@@ -382,16 +382,6 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
   end
 
-  test "should parse Facebook user profile with normalized urls" do
-    authenticate_with_token
-    get :index, params: { url: 'https://facebook.com/caiosba', refresh: '1', format: :json }
-    first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
-    sleep 1
-    get :index, params: { url: 'https://facebook.com/caiosba/', format: :json }
-    second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
-    assert_equal first_parsed_at, second_parsed_at
-  end
-
   test "should return invalid url when is there is only the scheme" do
     variations = %w(
       http
@@ -586,8 +576,13 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal url, MediaParserWorker.jobs[0]['args'][0]
 
     assert_nil Pender::Store.current.read(id, :json)
-    MediaParserWorker.drain
-    assert_equal timeout_error, Pender::Store.current.read(id, :json)['error']
+
+    args_checker = ->(type, url, data, settings) {
+      assert_equal timeout_error, data['error']
+    }
+    Media.stub(:notify_webhook, args_checker) do
+      MediaParserWorker.drain
+    end
   end
 
   test "should return data with error message if can't parse" do
@@ -841,5 +836,53 @@ class MediasControllerTest < ActionController::TestCase
     assert_response 200
     assert_equal url, JSON.parse(@response.body)['data']['title']
     assert_equal LapisConstants::ErrorCodes::const_get('DUPLICATED'), JSON.parse(@response.body)['data']['error']['code']
+  end
+end
+
+class MediasControllerUnitTest < ActionController::TestCase
+  def setup
+    isolated_setup
+    @controller = Api::V1::MediasController.new
+  end
+
+  def teardown
+    isolated_teardown
+  end
+
+  test "should not cache if error message" do
+    class MockMedia
+      RESPONSE = {
+        "error" => {
+          "message" => "Fake error for testing",
+          "code"=> 4,
+        },
+        "title" => "some throwaway title"
+      }
+      def initialize(**args); end
+      
+      def data
+        RESPONSE
+      end
+      
+      def as_json(**args)
+        RESPONSE
+      end
+    end
+    Media.stubs(:new).returns(MockMedia.new)
+
+    RequestHelper.stubs(:validate_url).returns(true)
+    Semaphore.any_instance.stubs(:locked?).returns(false)
+
+    id = Media.get_id('https://www.instagram.com/fakeaccount/')
+    Pender::Store.any_instance.expects(:write).with(id).never
+    
+    Pender::Store.current.delete(id, :json)
+    assert Pender::Store.current.read(id, :json).blank?
+    
+    authenticate_with_token
+    get :index, params: { url: 'https://www.instagram.com/fakeaccount/', format: :json }
+    assert_response 200
+
+    assert Pender::Store.current.read(id, :json).blank?
   end
 end
