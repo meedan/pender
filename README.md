@@ -428,6 +428,26 @@ _Everytime you make a new request, the results on tmp/profile are overwritten_
 
 We can also run performance tests. It calculates the amount of time taken to validate, instantiate and parse a link for each of the supported types/providers. In order to do that, run: `bundle exec rake test:performance`. It will generate a CSV at `tmp/performance.csv`, so that you can compare the time take for each provider.
 
+## Observability
+
+We use Honeycomb for monitoring information about our application. It is currently configured to report to suppress Honeycomb
+reporting when the open telemetry required config is unset, which we would expect in development and test environments; however it is
+possible to report data from your local environment to either console or remotely to Honeycomb for troubleshooting purposes.
+
+If you would like to see data reported from your local machine, do the following:
+
+**Local console**
+1. Make sure that the `otlp` prefixed values are set in `config.yml` following `config.yml.example`. The values provided in `config.yml.example` can be used since we don't need a real API key.
+1. In `initializers/open_telemetry.rb`, uncomment the line setting exporter to 'console'. Warning: this is noisy!
+1. Restart the server
+1. View output in local server logs
+
+**On Honeycomb**
+1. Make sure that the `otlp` prefixed values are set in `config.yml` following `config.yml.example`
+1. In the config key `otel_exporter_otlp_headers`, set `x-honeycomb-team` to a Honeycomb API key for the Development environment (a sandbox where we put anything). This can be found in the [Honeycomb web interface](https://ui.honeycomb.io/meedan/environments/dev/api_keys). To track your own reported info, be sure to set the `otel_resource_attributes.developer.name` key in `config.yml` to your own name or unique identifier (e.g. `christa`). You will need this to filter information on Honeycomb.
+1. Restart the server
+1. See reported information in Development environment on Honeycomb
+
 ## Credits
 
 Meedan (hello@meedan.com)
