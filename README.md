@@ -428,6 +428,20 @@ _Everytime you make a new request, the results on tmp/profile are overwritten_
 
 We can also run performance tests. It calculates the amount of time taken to validate, instantiate and parse a link for each of the supported types/providers. In order to do that, run: `bundle exec rake test:performance`. It will generate a CSV at `tmp/performance.csv`, so that you can compare the time take for each provider.
 
+## Observability
+
+We use Honeycomb for monitoring information about our application. It is currently configured to report to local console
+and not report to Honeycomb in test and development environments (see `initializers/open_telemetry.rb`), but it is possible to 
+also report data from your local environment for troubleshooting purposes.
+
+If you would like to send data to Honeycomb from your local machine, do the following:
+1. Make sure that the `otlp` prefixed values are set in `config.yml` following `config.yml.example`
+1. In the config key `otel_exporter_otlp_headers`, set `x-honeycomb-team` to a Honeycomb API key for the Development environment (a sandbox where we put anything). This can be found in the [Honeycomb web interface](https://ui.honeycomb.io/meedan/environments/dev/api_keys). To track your own reported info, be sure to set the `otel_resource_attributes.developer.name` key in `config.yml` to your own name or unique identifier (e.g. `christa`). You will need this to filter information on Honeycomb.
+1. Uncomment the guard statement that logs to console in `initializers/open_telemetry.rb` in dev and test environments
+1. Restart the server
+1. See reported information in Development environment on Honeycomb
+
+
 ## Credits
 
 Meedan (hello@meedan.com)

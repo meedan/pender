@@ -6,7 +6,7 @@ require 'opentelemetry/instrumentation/all'
 # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md
 ENV['OTEL_EXPORTER_OTLP_ENDPOINT'] = PenderConfig.get('otel_exporter_otlp_endpoint')
 ENV['OTEL_EXPORTER_OTLP_HEADERS'] = PenderConfig.get('otel_exporter_otlp_headers')
-ENV['OTEL_RESOURCE_ATTRIBUTES'] = (PenderConfig.get('otel_resource_attributes') || {'developer.name' => 'default'}).map{ |k, v| "#{k}=#{v}"}.join(',')
+ENV['OTEL_RESOURCE_ATTRIBUTES'] = (PenderConfig.get('otel_resource_attributes') || {}).map{ |k, v| "#{k}=#{v}"}.join(',')
 
 # Prints traces locally rather than sending remotely
 if Rails.env.test? || Rails.env.development?
