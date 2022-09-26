@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z ${DEPLOY_ENV+x} || -z ${APP+x} ]]; then
-	echo "GITHUB_TOKEN, DEPLOY_ENV, and APP must be in the environment. Exiting."
+	echo "DEPLOY_ENV and APP must be in the environment. Exiting."
 	exit 1
 fi
 
