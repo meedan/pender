@@ -8,9 +8,12 @@ ENV['OTEL_EXPORTER_OTLP_ENDPOINT'] = PenderConfig.get('otel_exporter_otlp_endpoi
 ENV['OTEL_EXPORTER_OTLP_HEADERS'] = PenderConfig.get('otel_exporter_otlp_headers')
 ENV['OTEL_RESOURCE_ATTRIBUTES'] = (PenderConfig.get('otel_resource_attributes') || {}).map{ |k, v| "#{k}=#{v}"}.join(',')
 
-# Prints traces locally rather than sending remotely
+# Suppress Honeycomb trace information in development and test environments
+# To debug and print to console locally, switch the exporter to the commented
+# 'console' line below
 if Rails.env.test? || Rails.env.development?
-  ENV['OTEL_TRACES_EXPORTER'] = 'console'
+  ENV['OTEL_TRACES_EXPORTER'] = nil
+  # ENV['OTEL_TRACES_EXPORTER'] = 'console'
 end
 
 OpenTelemetry::SDK.configure do |c|
