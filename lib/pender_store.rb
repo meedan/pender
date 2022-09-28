@@ -21,14 +21,7 @@ module Pender
         @storage[key] = PenderConfig.get("storage_#{key}")
       end
 
-      config = {
-        endpoint: @storage.dig('endpoint'),
-        access_key_id: @storage.dig('access_key'),
-        secret_access_key: @storage.dig('secret_key'),
-        force_path_style: true,
-        region: @storage.dig('bucket_region')
-      }
-      @client = Aws::S3::Client.new(config)
+      @client = Pender::AwsS3Client.get_client
       @resource = Aws::S3::Resource.new(client: @client)
       create_buckets
     end
@@ -104,7 +97,6 @@ module Pender
         content_type: content_type
       )
     end
-
 
     def write(id, type, content)
       content = JSON.pretty_generate(content) if type == :json

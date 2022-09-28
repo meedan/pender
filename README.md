@@ -53,9 +53,12 @@ $ docker-compose up --abort-on-container-exit
 ```
 Open http://localhost:3200/api-docs/index.html to access Pender API directly.
 
-### Setting Cookies
+### Setting Cookies for Requests
 
-We send cookies with certain requests that require logged-in users (e.g. Instagram, TikTok). To provide these for development and tests, log in on your browser and copy the cookie information to `config/cookies.txt`.
+We send cookies with certain requests that require logged-in users (e.g. Instagram, TikTok).
+
+**In development**
+To provide these for development, log in on your browser and copy the cookie information to `config/cookies.txt`. The location of this file can also be configured as `cookies_file_path` in `config.yml`
 
 To do this easily in Chrome:
 1. Install the [Get cookies.txt](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid) browser extension
@@ -65,12 +68,8 @@ To do this easily in Chrome:
 
 **Note**: If you do install this extension, consider doing it on a limited Chrome profile since it requires read and write permission for all websites.
 
-#### Rotating cookies in CI
-1. Follow steps for Setting Cookies above
-1. Re-encrypt the new cookies file: `travis encrypt-file config/cookies.txt -o config/cookies.txt.enc --pro`
-1. Copy the resulting decrypt command and replace the corresponding line in `.travis.yml`
-
-**Note**: Deployed environment cookies should be set in [configurator](https://github.com/meedan/configurator).
+**In deployed environments**
+Deployed environment cookies are stored in S3. To update them, use steps 1-3 above and then update the remote file in AWS. The path to this file can be found for each environment in [SSM](https://meedan.atlassian.net/wiki/spaces/ENG/pages/1126694913/How+to+get+and+set+configuration+values+and+secrets+on+SSM).
 
 ## API
 
@@ -342,31 +341,53 @@ There are rake tasks for a few tasks (besides Rails' default ones). Run them thi
 
 ## How to add a new parser
 
-* Add a new file at `app/models/concerns/media_<provider>_<type>` (example... `provider` could be `facebook` and type could be `post` or `profile`)
-* Include the class in `app/models/media.rb`
+* Add a new file at `app/models/concerns/parser/<provider>_<type>.rb` (example... `provider` could be `facebook` and type could be `post` or `profile`)
+* Include the class in the `PARSERS` array in `app/models/media.rb`
 * It should return at least `published_at`, `username`, `title`, `description` and `picture`
 * If `type` is `item`, it should also return the `author_url` and `author_picture`
 * The skeleton should look like this:
 
 ```ruby
-module Media<Provider><Type>
-  extend ActiveSupport::Concern
+module Parser
+  class <Provider><Type> < Base  
+    class << self
+      def type
+        '<provider>_<type>'.freeze
+      end
+  
+      def patterns
+        [<list of URL patterns>]
+      end
+            
+      def ignored_urls
+        # Optional method to specify disallowed URLs
+        # Should return an array in format:
+        # [
+        #   {
+        #     pattern: /^https:\/\/www\.instagram\.com\/accounts\/login/,
+        #     reason: :login_page
+        #   },
+        # ]
+      end
+    end
 
-  included do
-    Media.declare('<provider>_<type>', [<list of URL patterns>])
-  end
+    private    
 
-  def data_from_<provider>_<type>
-    # Populate `self.data` with information
-    # `self.data` is a hash whose key is the attribute and the value is... the value
-  end
+    def parse_data_for_parser(doc, original_url)
+      # Populate `@parsed_data` with information and return parsed_data at the end of the function
+      # `@parsed_data` is a hash whose key is the attribute and the value is... the value
+    end
 
-  def <provider>_as_oembed(original_url, maxwidth, maxheight)
-    # Optional method
-    # Define a custom oEmbed structure for this provider
+    def oembed_url(doc)
+      # Optional method to define an Oembed URL, will default to looking in HTML in Parser::Base
+      # Passed to OembedItem
+    end
   end
 end
 ```
+
+If shared behavior is needed between parsers of the same provider, make a provider class as a concern and include it in the class.
+See ProviderInstagram, ProviderYoutube, ProviderFacebook, ProviderTwitter, or ProviderTiktok for examples.
 
 ## How to add a new archiver
 
@@ -406,6 +427,26 @@ It's possible to profile Pender in order to look for bottlenecks, slownesses, pe
 _Everytime you make a new request, the results on tmp/profile are overwritten_
 
 We can also run performance tests. It calculates the amount of time taken to validate, instantiate and parse a link for each of the supported types/providers. In order to do that, run: `bundle exec rake test:performance`. It will generate a CSV at `tmp/performance.csv`, so that you can compare the time take for each provider.
+
+## Observability
+
+We use Honeycomb for monitoring information about our application. It is currently configured to report to suppress Honeycomb
+reporting when the open telemetry required config is unset, which we would expect in development and test environments; however it is
+possible to report data from your local environment to either console or remotely to Honeycomb for troubleshooting purposes.
+
+If you would like to see data reported from your local machine, do the following:
+
+**Local console**
+1. Make sure that the `otlp` prefixed values are set in `config.yml` following `config.yml.example`. The values provided in `config.yml.example` can be used since we don't need a real API key.
+1. In `initializers/open_telemetry.rb`, uncomment the line setting exporter to 'console'. Warning: this is noisy!
+1. Restart the server
+1. View output in local server logs
+
+**On Honeycomb**
+1. Make sure that the `otlp` prefixed values are set in `config.yml` following `config.yml.example`
+1. In the config key `otel_exporter_otlp_headers`, set `x-honeycomb-team` to a Honeycomb API key for the Development environment (a sandbox where we put anything). This can be found in the [Honeycomb web interface](https://ui.honeycomb.io/meedan/environments/dev/api_keys). To track your own reported info, be sure to set the `otel_resource_attributes.developer.name` key in `config.yml` to your own name or unique identifier (e.g. `christa`). You will need this to filter information on Honeycomb.
+1. Restart the server
+1. See reported information in Development environment on Honeycomb
 
 ## Credits
 

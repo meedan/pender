@@ -21,14 +21,24 @@ development: &default
   storage_video_asset_path: 'http://localhost:9000/pender-video/video'
   storage_medias_asset_path: 'http://localhost:9000/pender-dev/medias'
 
+  # Location for cookies to send with requests, on S3 or local filesystem
+  #
+  # REQUIRED for deployed environments
+  # OPTIONAL for development; defaults to `config/cookies.txt` on local filesystem
+  #
+  # Any S3 links will be authenticated with storage_access_key, storage_secret_key,
+  # and storage_bucket_region via Pender::AwsS3Client
+  # Example: cookies_file_path: 's3://<BUCKET NAME>/<FILE NAME>'
+  cookies_file_path: 'config/cookies.txt'
+
   # Exception reporting using Airbrake or API equivalent https://airbrake.io/
   #
   # OPTIONAL
   #
-  aribrake_host: # '<AIRBRAKE HOST>'
-  aribrake_port: # '<AIRBRAKE PORT>'
-  aribrake_project_key: # '<AIRBRAKE PROJECT KEY>'
-  aribrake_environment: # '<AIRBRAKE ENVIRONMENT>'
+  airbrake_host: # '<AIRBRAKE HOST>'
+  airbrake_port: # '<AIRBRAKE PORT>'
+  airbrake_project_key: # '<AIRBRAKE PROJECT KEY>'
+  airbrake_environment: # '<AIRBRAKE ENVIRONMENT>'
 
   # Google API
   #
@@ -106,6 +116,17 @@ development: &default
   # OPTIONAL
   #
   perma_cc_key: # '<PERMA.CC ACCESS KEY>'
+
+  # Open Telemetry configuration, for reporting to Honeycomb
+  # See initializers/open_telemetry.rb for usage.
+  #
+  # OPTIONAL
+  #
+  otel_exporter_otlp_endpoint: # "https://api.honeycomb.io"
+  otel_exporter_otlp_headers: # "x-honeycomb-team=<DEV API KEY>"
+  otel_service_name: # "pender"
+  otel_resource_attributes:
+    # developer.name: <DEVELOPER_NAME>
 
 test:
   <<: *default

@@ -1,5 +1,6 @@
 require_relative '../test_helper'
 require 'time'
+require 'cc_deville'
 
 class MediasControllerTest < ActionController::TestCase
   def setup
@@ -104,7 +105,7 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'http://example.com/blah_blah', format: :json }
     assert_response 200
     data = JSON.parse(@response.body)['data']
-    assert_equal 'RuntimeError: Could not parse this media', data['error']['message']
+    assert_equal 'Parser::PageItem::HtmlFetchingError: Could not parse this media', data['error']['message']
     assert_equal 5, data['error']['code']
     assert_equal 'page', data['provider']
     assert_equal 'item', data['type']
@@ -128,9 +129,6 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal 'twitter', data['provider']
     assert_equal 'item', data['type']
     assert_not_nil data['embed_tag']
-    status.unstub(:as_json); user.unstub(:url)
-    twitter_client.unstub(:status);twitter_client.unstub(:user);
-    Media.any_instance.unstub(:twitter_client)
   end
 
   test "should parse facebook url when fb post url does not exist" do
@@ -151,7 +149,6 @@ class MediasControllerTest < ActionController::TestCase
     data = JSON.parse(@response.body)['data']
     assert_equal 'RuntimeError', data['error']['message']
     assert_equal LapisConstants::ErrorCodes::const_get('UNKNOWN'), data['error']['code']
-    Media.any_instance.unstub(:as_json)
   end
 
   test "should not return error message on HTML format response" do
@@ -159,7 +156,6 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'https://www.facebook.com/caiosba/posts/3588207164560845', format: :html, refresh: '1' }
     assert_response 200
     assert_match('Login required to see this profile', assigns(:media).data['error']['message'])
-    Media.any_instance.unstub(:doc)
   end
 
   test "should return message with HTML error 2" do
@@ -171,7 +167,6 @@ class MediasControllerTest < ActionController::TestCase
     assert_response 200
 
     assert_match /Could not parse this media/, response.body
-    Pender::Store.any_instance.unstub(:read)
   end
 
   test "should be able to fetch JS without token" do
@@ -203,7 +198,6 @@ class MediasControllerTest < ActionController::TestCase
     assert_response :success
     assert_match /meedan_iframes.parent.min.js/, response.body
     assert_no_match /pender-title/, response.body
-    Media.any_instance.unstub(:oembed_get_data_from_url)
   end
 
   test "should render default HTML if not provided by oEmbed" do
@@ -220,7 +214,6 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'http://meedan.com', format: :oembed }
     assert_response :success
     assert_not_nil response.body
-    Media.any_instance.unstub(:oembed_get_data_from_url)
   end
 
   test "should create cache file" do
@@ -260,16 +253,14 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should not try to clear upstream cache when generating cache for the first time" do
-    CcDeville.any_instance.expects(:clear_cache).never
+    CcDeville.expects(:clear_cache_for_url).never
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
-    CcDeville.any_instance.unstub(:clear_cache)
   end
 
   test "should not try to clear upstream cache when not asking to" do
-    CcDeville.any_instance.expects(:clear_cache).never
+    CcDeville.expects(:clear_cache_for_url).never
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
-    CcDeville.any_instance.unstub(:clear_cache)
   end
 
   test "should try to clear upstream cache when asking to" do
@@ -278,26 +269,23 @@ class MediasControllerTest < ActionController::TestCase
 
     url = 'https://twitter.com/caiosba/status/742779467521773568'
     encurl = CGI.escape(url)
-    CcDeville.any_instance.expects(:clear_cache).with(config['public_url'] + '/api/medias.html?url=' + encurl).once
-    CcDeville.any_instance.expects(:clear_cache).with(config['public_url'] + '/api/medias.html?refresh=1&url=' + encurl).once
+    CcDeville.expects(:clear_cache_for_url).with(config['public_url'] + '/api/medias.html?url=' + encurl).once
+    CcDeville.expects(:clear_cache_for_url).with(config['public_url'] + '/api/medias.html?refresh=1&url=' + encurl).once
     get :index, params: { url: url, format: :html }
     get :index, params: { url: url, format: :html, refresh: '1' }
-    CcDeville.any_instance.unstub(:clear_cache)
   end
 
   test "should not try to clear upstream cache when there are no configs" do
     stub_configs({ 'cc_deville_token' => '', 'cc_deville_host' => '', 'cc_deville_httpauth' => '' }) do
-      CcDeville.any_instance.expects(:clear_cache).never
+      CcDeville.expects(:clear_cache_for_url).never
       get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html, refresh: '1' }
     end
-    CcDeville.any_instance.unstub(:clear_cache)
   end
 
   test "should return success even if media could not be instantiated" do
     authenticate_with_token
     Media.expects(:new).raises(Net::ReadTimeout)
     get :index, params: { url: 'http://ca.ios.ba/files/meedan/random.php', format: :json, refresh: '1' }
-    Media.unstub(:new)
     assert_response :success
   end
 
@@ -355,27 +343,6 @@ class MediasControllerTest < ActionController::TestCase
     assert_response :success
     data = JSON.parse(response.body)['data']
     assert_not_nil data['error']['message']
-    Media.unstub(:as_oembed)
-  end
-
-  test "should return data from default oembed when raw oembed fails" do
-    oembed_response = 'mock'
-    oembed_response.stubs(:code).returns('200')
-    error = '<br />\n<b>Warning</b>: {\"version\":\"1.0\"}'
-    oembed_response.stubs(:body).returns(error)
-    Media.any_instance.stubs(:oembed_get_data_from_url).returns(oembed_response)
-    url = 'https://example.com'
-    get :index, params: { url: url, format: :oembed }
-    json = Pender::Store.current.read(Digest::MD5.hexdigest(Media.normalize_url(url)), :json)
-    assert_nil json[:raw][:oembed]['title']
-    assert_equal error, json[:raw][:oembed]['error']['message']
-    assert_match(/Example Domain/, json['oembed']['title'])
-
-    assert_response :success
-    oembed = JSON.parse(response.body)
-    assert_match(/Example Domain/, oembed['title'])
-
-    Media.any_instance.unstub(:oembed_get_data_from_url)
   end
 
   test "should respond to oembed format when data is on cache" do
@@ -396,38 +363,23 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return invalid url when the certificate has error" do
     url = 'https://www.poynter.org/2017/european-policy-makers-are-not-done-with-facebook-google-and-fake-news-just-yet/465809/'
-    Media.stubs(:request_url).with(url, 'Get').raises(OpenSSL::SSL::SSLError)
+    RequestHelper.stubs(:request_url).with(url, 'Get').raises(OpenSSL::SSL::SSLError)
 
     authenticate_with_token
     get :index, params: { url: url, format: :json }
     assert_response 400
     assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
-
-    Media.unstub(:request_url)
   end
 
   test "should return invalid url if has SSL Error on follow_redirections" do
     url = 'https://asdfglkjh.ee'
-    Media.stubs(:validate_url).with(url).returns(true)
-    Media.stubs(:request_url).with(url, 'Get').raises(OpenSSL::SSL::SSLError)
+    RequestHelper.stubs(:validate_url).with(url).returns(true)
+    RequestHelper.stubs(:request_url).with(url, 'Get').raises(OpenSSL::SSL::SSLError)
 
     authenticate_with_token
     get :index, params: { url: url, format: :json }
     assert_response 400
     assert_equal 'The URL is not valid', JSON.parse(response.body)['data']['message']
-
-    Media.unstub(:validate_url)
-    Media.unstub(:request_url)
-  end
-
-  test "should parse Facebook user profile with normalized urls" do
-    authenticate_with_token
-    get :index, params: { url: 'https://facebook.com/caiosba', refresh: '1', format: :json }
-    first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
-    sleep 1
-    get :index, params: { url: 'https://facebook.com/caiosba/', format: :json }
-    second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
-    assert_equal first_parsed_at, second_parsed_at
   end
 
   test "should return invalid url when is there is only the scheme" do
@@ -490,8 +442,6 @@ class MediasControllerTest < ActionController::TestCase
       error = JSON.parse(@response.body)['data']['error']
       assert_equal 'Timeout', error['message']
       assert_equal LapisConstants::ErrorCodes::const_get('TIMEOUT'), error['code']
-      Airbrake.unstub(:configured?)
-      Airbrake.unstub(:notify)
     end
   end
 
@@ -559,7 +509,6 @@ class MediasControllerTest < ActionController::TestCase
       end
 
       WebMock.disable!
-      Media.unstub(:get_available_archive_org_snapshot)
     end
   end
 
@@ -574,7 +523,6 @@ class MediasControllerTest < ActionController::TestCase
     post :bulk, params: { url: [url1, url2], format: :json }
     assert_response :success
     assert_equal({"enqueued"=>[url1], "failed"=>[url2]}, JSON.parse(@response.body)['data'])
-    MediaParserWorker.unstub(:perform_async)
   end
 
   test "should enqueue, parse and notify with error when invalid url" do
@@ -588,7 +536,6 @@ class MediasControllerTest < ActionController::TestCase
     post :bulk, params: { url: [url1, url2], format: :json }
     assert_response :success
     assert_equal({"enqueued"=>[url1, url2], "failed"=>[]}, JSON.parse(@response.body)['data'])
-    Media.unstub(:notify_webhook)
   end
 
   test "should parse multiple URLs sent as list" do
@@ -609,12 +556,10 @@ class MediasControllerTest < ActionController::TestCase
     assert !data1['title'].blank?
     data2 = Pender::Store.current.read(id2, :json)
     assert !data2['title'].blank?
-
   end
 
   test "should enqueue, parse and notify with error when timeout" do
     Sidekiq::Testing.fake!
-    Media.any_instance.stubs(:get_metrics_from_facebook_in_background)
     webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
     a = create_api_key application_settings: webhook_info.merge(config: { timeout: '0.001' })
     authenticate_with_token(a)
@@ -631,9 +576,13 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal url, MediaParserWorker.jobs[0]['args'][0]
 
     assert_nil Pender::Store.current.read(id, :json)
-    MediaParserWorker.drain
-    assert_equal timeout_error, Pender::Store.current.read(id, :json)['error']
-    Media.any_instance.unstub(:get_metrics_from_facebook_in_background)
+
+    args_checker = ->(type, url, data, settings) {
+      assert_equal timeout_error, data['error']
+    }
+    Media.stub(:notify_webhook, args_checker) do
+      MediaParserWorker.drain
+    end
   end
 
   test "should return data with error message if can't parse" do
@@ -650,9 +599,6 @@ class MediasControllerTest < ActionController::TestCase
     post :bulk, params: { url: url, format: :json }
     assert_response :success
     assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
-    Media.any_instance.unstub(:parse)
-    Media.unstub(:notify_webhook)
-    Media.unstub(:required_fields)
   end
 
   test "should return data with error message if can't instantiate" do
@@ -674,10 +620,6 @@ class MediasControllerTest < ActionController::TestCase
     Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(parse_error), webhook_info)
     Media.any_instance.stubs(:get_canonical_url).raises(OpenSSL::SSL::SSLError)
     MediaParserWorker.drain
-
-    Media.any_instance.unstub(:get_canonical_url)
-    Media.unstub(:notify_webhook)
-    Media.unstub(:minimal_data)
   end
 
   test "should remove empty parameters" do
@@ -716,11 +658,6 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'https://twitter.com/meedan/status/1110219801295765504', format: :html }
     assert_response :success
     assert_match("<title>@InternetFF Our Meedani @WafHeikal will be...</title>", response.body)
-    status.unstub(:as_json)
-    twitter_client.unstub(:status)
-    user.unstub(:url)
-    twitter_client.unstub(:user)
-    Media.any_instance.unstub(:twitter_client)
   end
 
   test "should rescue and unlock url when raises error" do
@@ -751,7 +688,6 @@ class MediasControllerTest < ActionController::TestCase
         assert_equal 'error', JSON.parse(response.body)['data']['error']['message']
       end
     end
-    Pender::Store.any_instance.unstub(:read)
   end
 
   test "should unlock url after timeout" do
@@ -779,13 +715,15 @@ class MediasControllerTest < ActionController::TestCase
   test "should return error if URL is not safe" do
     authenticate_with_token
     url = 'http://malware.wicar.org/data/ms14_064_ole_not_xp.html' # More examples: https://www.wicar.org/test-malware.html
-    Media.stubs(:validate_url).with(url).returns(true)
+    RequestHelper.stubs(:validate_url).with(url).returns(true)
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)
-    Media.any_instance.stubs(:get_html).returns(Nokogiri::HTML("<title>Test Malware!</title>"))
     WebMock.enable!
-    WebMock.disable_net_connect!(allow: 'safebrowsing.googleapis.com')
+    WebMock.disable_net_connect!
+    
+    WebMock.stub_request(:get, /malware.wicar.org/).to_return(status: 200, body: "<title>Test Malware!</title>")
+
     safebrowsing_response = {
       "matches": [{
         "threatType": "MALWARE",
@@ -801,19 +739,12 @@ class MediasControllerTest < ActionController::TestCase
         "cacheDuration": "300.000s"
       }]
     }
-
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(body: safebrowsing_response.to_json)
 
     get :index, params: { url: url, format: 'json' }
     response = JSON.parse(@response.body)
     assert_equal 'error', response['type']
     assert_equal 'Unsafe URL', response['data']['message']
-    Media.unstub(:validate_url)
-    Media.any_instance.unstub(:follow_redirections)
-    Media.any_instance.unstub(:get_canonical_url)
-    Media.any_instance.unstub(:try_https)
-    Media.any_instance.unstub(:get_html)
-    WebMock.disable!
   end
 
   test "should cache json and html on file" do
@@ -862,7 +793,6 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'http://meedan.com', format: :json }
     assert_response 200
     assert_equal 'api_config_value', PenderConfig.get('key_for_test')
-    @controller.unstub(:unload_current_config)
   end
 
   test "should return API limit reached error" do
@@ -873,9 +803,6 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'http://twitter.com/meedan', format: :json }
     assert_response 429
     assert_equal 123, JSON.parse(@response.body)['data']['message']
-
-    Twitter::REST::Client.any_instance.unstub(:user)
-    Twitter::Error::TooManyRequests.any_instance.unstub(:rate_limit)
   end
 
   test "should add url on title when timeout" do
@@ -889,14 +816,16 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return 200 when raises error parsing" do
+    WebMock.enable!
+    WebMock.disable_net_connect!(allow: [/minio/])
+    WebMock.stub_request(:any, /example.com/).to_raise(Errno::ECONNRESET.new('Exception from WebMock'))
+    
     authenticate_with_token
-    url = 'https://scotthale.net/'
-    Media.stubs(:request_uri).raises(Errno::ECONNRESET.new('SSL_connect'))
+    url = 'https://example.com/fail-to-parse'
     get :index, params: { url: url, format: :json }
     assert_response 200
     assert_equal url, JSON.parse(@response.body)['data']['title']
     assert_equal LapisConstants::ErrorCodes::const_get('UNKNOWN'), JSON.parse(@response.body)['data']['error']['code']
-    Media.unstub(:request_uri)
   end
 
   test "should return 200 when duplicated url" do
@@ -907,6 +836,53 @@ class MediasControllerTest < ActionController::TestCase
     assert_response 200
     assert_equal url, JSON.parse(@response.body)['data']['title']
     assert_equal LapisConstants::ErrorCodes::const_get('DUPLICATED'), JSON.parse(@response.body)['data']['error']['code']
-    Semaphore.any_instance.unstub(:locked?)
+  end
+end
+
+class MediasControllerUnitTest < ActionController::TestCase
+  def setup
+    isolated_setup
+    @controller = Api::V1::MediasController.new
+  end
+
+  def teardown
+    isolated_teardown
+  end
+
+  test "should not cache if error message" do
+    class MockMedia
+      RESPONSE = {
+        "error" => {
+          "message" => "Fake error for testing",
+          "code"=> 4,
+        },
+        "title" => "some throwaway title"
+      }
+      def initialize(**args); end
+      
+      def data
+        RESPONSE
+      end
+      
+      def as_json(**args)
+        RESPONSE
+      end
+    end
+    Media.stubs(:new).returns(MockMedia.new)
+
+    RequestHelper.stubs(:validate_url).returns(true)
+    Semaphore.any_instance.stubs(:locked?).returns(false)
+
+    id = Media.get_id('https://www.instagram.com/fakeaccount/')
+    Pender::Store.any_instance.expects(:write).with(id).never
+    
+    Pender::Store.current.delete(id, :json)
+    assert Pender::Store.current.read(id, :json).blank?
+    
+    authenticate_with_token
+    get :index, params: { url: 'https://www.instagram.com/fakeaccount/', format: :json }
+    assert_response 200
+
+    assert Pender::Store.current.read(id, :json).blank?
   end
 end
