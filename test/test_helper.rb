@@ -118,4 +118,12 @@ class ActiveSupport::TestCase
       fixture_body
     end
   end
+
+  # Supplement Open Telemetry config to capture spans in test
+  # https://github.com/open-telemetry/opentelemetry-ruby-contrib/blob/main/.instrumentation_generator/templates/test/test_helper.rb
+  exporter = OpenTelemetry::SDK::Trace::Export::InMemorySpanExporter.new
+  span_processor = OpenTelemetry::SDK::Trace::Export::SimpleSpanProcessor.new(exporter)
+  OpenTelemetry::SDK.configure do |c|
+    c.add_span_processor span_processor
+  end
 end
