@@ -29,7 +29,7 @@ group :test do
 end
 gem 'logstash-logger'
 gem 'railroady'
-gem 'airbrake', '11.0.0'
+gem 'airbrake', '~>13.0.0'
 gem 'responders'
 gem 'yt', '~> 0.25.5'
 gem 'rswag-api'
