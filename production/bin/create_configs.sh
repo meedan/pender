@@ -37,6 +37,7 @@ echo "Starting application configuration. Processing ENV settings."
     echo ${sidekiq_config} | base64 -d > $WORKTMP
     if (( $? != 0 )); then
       echo "Error: could not decode ENV var: ${sidekiq_config} . Using defaults."
+      missing_configs="$missing_configs sidekiq_config,"
       rm $WORKTMP
     else
       echo "Using decoded sidekiq config from ENV var: ${sidekiq_config} ."
@@ -54,6 +55,7 @@ echo "Starting application configuration. Processing ENV settings."
     echo ${database_config} | base64 -d > $WORKTMP
     if (( $? != 0 )); then
       echo "Error: could not decode ENV var: ${database_config} . Using defaults."
+      missing_configs="$missing_configs database_config,"
       rm $WORKTMP
     else
       echo "Using decoded database config from ENV var: ${database_config} ."
@@ -71,9 +73,10 @@ echo "Starting application configuration. Processing ENV settings."
     echo ${environments_production} | base64 -d > $WORKTMP
     if (( $? != 0 )); then
       echo "Error: could not decode ENV var: ${environments_production} . Using defaults."
+      missing_configs="$missing_configs environments_production,"
       rm $WORKTMP
     else
-      echo "Using decoded database config from ENV var: ${environments_production} ."
+      echo "Using decoded environments_production config from ENV var: ${environments_production} ."
       mv $WORKTMP environments/production.rb
       sha1sum environments/production.rb
     fi
