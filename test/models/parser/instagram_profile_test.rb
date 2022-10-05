@@ -87,7 +87,7 @@ class InstagramProfileUnitTest < ActiveSupport::TestCase
   end
 
   test "should re-raise a wrapped error when redirected to a page that requires authentication" do
-    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/challenge?' })
+    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/challenge/?' })
 
     data = {}
     airbrake_call_count = 0
