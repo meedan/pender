@@ -1,6 +1,7 @@
 require_relative '../test_helper'
 require_relative '../../lib/pender_open_telemetry_config'
 
+# Testing the real config
 class OpenTelemetryConfigTest < ActiveSupport::TestCase
   def setup
     isolated_setup
