@@ -22,17 +22,12 @@ module Parser
       base_url = match[0] # Should this be set as canonical_url?
       username = match['username']
 
-      set_data_field('external_id', username)
-      set_data_field('username', username)
-      set_data_field('title', username)
-      set_data_field('author_name', username)
-      set_data_field('description', base_url)
-
       handle_exceptions(StandardError) do
         doc = reparse_if_default_tiktok_page(doc, base_url) || doc
-        select_metatags = { picture: 'og:image', title: 'twitter:creator', description: 'description' }
-        @parsed_data.merge!(get_metadata_from_tags(select_metatags))
-        set_data_field('author_name', parsed_data['title'], username)
+        set_data_field('title', get_metadata_from_tag('twitter:creator'))
+        set_data_field('picture', get_metadata_from_tag('og:image'))
+        set_data_field('description', get_metadata_from_tag('description'))
+        set_data_field('author_name', parsed_data['title'])
         @parsed_data.merge!({
           author_name: parsed_data['title'],
           author_picture: parsed_data['picture'],
@@ -40,6 +35,14 @@ module Parser
           url: base_url
         })
       end
+
+      # Set defaults if above fails
+      set_data_field('external_id', username)
+      set_data_field('username', username)
+      set_data_field('title', username)
+      set_data_field('author_name', username)
+      set_data_field('description', base_url)
+
       parsed_data
     end
 

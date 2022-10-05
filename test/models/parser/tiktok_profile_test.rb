@@ -52,6 +52,7 @@ class TiktokProfileUnitTest < ActiveSupport::TestCase
     # Data doesn't seem to actually be assigned to twitter:creator, where we look
     # for it for title and author_name, but is included with the json+ld, which is 
     # set outside of this object before parsing
+    # For now, though, we use the URL
     assert_not_nil data['title']
     assert_not_nil data['author_name']
   end
