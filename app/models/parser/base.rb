@@ -102,12 +102,15 @@ module Parser
     
     def get_metadata_from_tags(select_metatags)
       metadata = {}.with_indifferent_access
-      
       select_metatags.each do |key, value|
-        metatag = (parsed_data['raw']['metatags']).find { |tag| tag['property'] == value || tag['name'] == value }
-        metadata[key] = metatag['content'] if metatag
+        metadata[key] = get_metadata_from_tag(value)
       end
       metadata
+    end
+
+    def get_metadata_from_tag(value)
+      metatag = (parsed_data['raw']['metatags'] || []).find { |tag| tag['property'] == value || tag['name'] == value }
+      metatag['content'] if metatag
     end
 
     def set_raw_metatags(doc)
