@@ -103,7 +103,8 @@ module Parser
     def get_metadata_from_tags(select_metatags)
       metadata = {}.with_indifferent_access
       select_metatags.each do |key, value|
-        metadata[key] = get_metadata_from_tag(value)
+        metatag_value = get_metadata_from_tag(value)
+        metadata[key] = metatag_value unless metatag_value.blank?
       end
       metadata
     end
