@@ -150,4 +150,12 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     assert_match /scontent-sjc3-1.cdninstagram.com\/v\/t51.2885-19\/275782436_803363541058120_8527469417809134606_n.jpg/, data['author_picture']
     assert_equal Time.new(2022,8,23,16,51,41), data['published_at']
   end  
+
+  test "should preserve all raw data, without overwriting" do
+    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: graphql, status: 200)
+    
+    data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
+    assert data['raw']['metatags'].present?
+    assert data['raw']['api'].present?
+  end
 end
