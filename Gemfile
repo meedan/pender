@@ -29,7 +29,7 @@ group :test do
 end
 gem 'logstash-logger'
 gem 'railroady'
-gem 'airbrake', '11.0.0'
+gem 'airbrake', '~>13.0.0'
 gem 'responders'
 gem 'yt', '~> 0.25.5'
 gem 'rswag-api'
@@ -56,3 +56,7 @@ gem 'rack', '>= 1.6.11', require: false
 gem 'aws-sdk-s3', require: false
 gem 'lograge'
 gem 'request_store'
+gem 'opentelemetry-sdk'
+gem 'opentelemetry-exporter-otlp'
+gem 'opentelemetry-instrumentation-all'
+

@@ -1,3 +1,5 @@
+require 'pender_exceptions'
+
 module Metrics
   class << self
     RETRYABLE_FACEBOOK_ERROR_CODES = [

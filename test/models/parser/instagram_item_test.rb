@@ -110,6 +110,32 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     assert_match /ProviderInstagram::ApiAuthenticationError/, data['error']['message']
   end
 
+  test "should attempt to set defaults from metatags on failure" do
+    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: '', status: 401)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta name="twitter:site" content="@instagram">
+      <meta name="twitter:image" content="https://example.com/1111">
+      <meta name="twitter:title" content="Ana C. Lana (@direitatemrazao) • Instagram photos and videos">
+      <meta name="description" content='Ana C. Lana shared a post on Instagram: "Nada que a gente já não tenha vivido." Follow their account to see 541 posts.'>
+      <meta property="og:site_name" content="Instagram">
+      <meta property="og:title" content='Ana C. Lana on Instagram: "Nada que a gente já não tenha vivido."'>
+      <meta property="og:image" content="https://example.com/2222">
+      <meta property="og:url" content="https://www.instagram.com/p/CjG7HTOLvd8/">
+      <meta property="og:description" content='Ana C. Lana shared a post on Instagram: "Nada que a gente já não tenha vivido." Follow their account to see 541 posts.'>
+    HTML
+
+    data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
+    assert_equal "Nada que a gente já não tenha vivido.", data['title']
+    assert_equal "@direitatemrazao", data['username']
+    assert_equal "Nada que a gente já não tenha vivido.", data['description']
+    assert_equal "https://example.com/2222", data['picture']
+    assert_equal "Ana C. Lana", data['author_name']
+    assert_equal "https://instagram.com/direitatemrazao", data['author_url']
+    assert data['author_picture'].blank?
+    assert data['published_at'].blank?
+  end
+
   test 'should set item fields from successful api response' do
     WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: graphql, status: 200)
     

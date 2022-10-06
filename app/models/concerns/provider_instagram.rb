@@ -13,7 +13,7 @@ module ProviderInstagram
           reason: :login_page
         },
         {
-          pattern: /^https:\/\/www\.instagram\.com\/challenge\?/,
+          pattern: /^https:\/\/www\.instagram\.com\/challenge\//,
           reason: :account_challenge_page
         },
         {
@@ -40,7 +40,7 @@ module ProviderInstagram
 
       location = response.header['location']
       if unavailable_reason = ignore_url?(location)
-        raise ApiAuthenticationError.new("Page unreachable, received redirect for #{unavailable_reason} to #{location}")
+        raise ApiAuthenticationError.new("Page unreachable, received redirect for #{unavailable_reason}")
       else
         get_instagram_api_data(location)
       end
