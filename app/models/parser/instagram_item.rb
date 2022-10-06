@@ -65,7 +65,7 @@ module Parser
 
     def get_instagram_title_from_og_title
       raw_title = get_metadata_from_tag('og:title')
-      matches = raw_title&.match(/on Instagram:(|\s)"(?<title>.+)"/)
+      matches = raw_title&.match(/on Instagram:(|\s)"(?<title>.+)"/m)
       return if matches.blank?
 
       matches['title']
