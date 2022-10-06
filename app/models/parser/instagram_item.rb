@@ -23,7 +23,7 @@ module Parser
 
       handle_exceptions(StandardError) do
         response_data = get_instagram_api_data("https://www.instagram.com/p/#{id}/?__a=1&__d=a")
-        @parsed_data['raw'] = { 'api' => response_data.dig('items', 0) }
+        @parsed_data['raw']['api'] = response_data.dig('items', 0)
 
         username = get_instagram_username_from_data
         set_data_field('description', get_instagram_item_text_from_data)
