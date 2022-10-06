@@ -127,6 +127,7 @@ development: &default
   otel_service_name: # "pender"
   otel_resource_attributes:
     # developer.name: <DEVELOPER_NAME>
+  otel_log_level: info
 
 test:
   <<: *default
@@ -137,6 +138,7 @@ test:
   storage_medias_asset_path: 'http://localhost:9000/check-test/medias'
   otel_exporter_otlp_endpoint:
   otel_exporter_otlp_headers:
+  otel_log_level: error
   airbrake_host:
 
 production:
