@@ -50,7 +50,8 @@ class Media
   [ActiveModel::Validations, ActiveModel::Conversion, MediasHelper, MediaOembed, MediaArchiver].each { |concern| include concern }
   extend ActiveModel::Naming
 
-  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :unavailable_page, :parser
+  attr_accessor :provider, :type, :data, :request, :doc, :original_url, :unavailable_page, :parser
+  attr_reader :url
 
   TYPES = {}
 
@@ -64,7 +65,6 @@ class Media
     self.data = {}.with_indifferent_access
     self.follow_redirections
     self.get_canonical_url
-    self.url = RequestHelper.normalize_url(self.url)
     self.try_https
     self.parser = nil
   end
@@ -178,7 +178,7 @@ class Media
         self.parser = parseable
         self.provider, self.type = self.parser.type.split('_')
         self.data.deep_merge!(self.parser.parse_data(self.doc, self.original_url, self.data.dig('raw', 'json+ld')))
-        self.url = RequestHelper.normalize_url(self.parser.url)
+        self.url = self.parser.url
         self.get_oembed_data
         parsed = true
       end
@@ -267,5 +267,9 @@ class Media
   def set_error(**error_hash)
     return if error_hash.empty?
     self.data[:error] = error_hash
+  end
+
+  def url=(raw_url)
+    @url = RequestHelper.normalize_url(raw_url)
   end
 end
