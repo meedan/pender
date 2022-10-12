@@ -1,4 +1,5 @@
 class RequestHelper
+  REDIRECT_HTTP_CODES = %w(301 302 307 308)
   class << self
     LANG = 'en-US;q=0.6,en;q=0.4'
 

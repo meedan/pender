@@ -35,7 +35,7 @@ module ProviderInstagram
 
       request = Net::HTTP::Get.new(uri.request_uri, headers)
       response = http.request(request)
-      raise ApiResponseCodeError.new("#{response.class}: #{response.message}") unless %(200 301 302).include?(response.code)
+      raise ApiResponseCodeError.new("#{response.class}: #{response.message}") unless (RequestHelper::REDIRECT_HTTP_CODES << '200').include?(response.code)
       return JSON.parse(response.body) if response.code == '200'
 
       location = response.header['location']

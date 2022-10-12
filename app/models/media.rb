@@ -50,8 +50,7 @@ class Media
   [ActiveModel::Validations, ActiveModel::Conversion, MediasHelper, MediaOembed, MediaArchiver].each { |concern| include concern }
   extend ActiveModel::Naming
 
-  attr_accessor :provider, :type, :data, :request, :doc, :original_url, :unavailable_page, :parser
-  attr_reader :url
+  attr_accessor :url, :provider, :type, :data, :request, :doc, :original_url, :unavailable_page, :parser
 
   TYPES = {}
 
@@ -178,7 +177,7 @@ class Media
         self.parser = parseable
         self.provider, self.type = self.parser.type.split('_')
         self.data.deep_merge!(self.parser.parse_data(self.doc, self.original_url, self.data.dig('raw', 'json+ld')))
-        self.url = self.parser.url
+        self.url = RequestHelper.normalize_url(self.parser.url) if self.parser.url != self.url
         self.get_oembed_data
         parsed = true
       end
@@ -200,8 +199,8 @@ class Media
 
   def get_parsed_url(canonical_url)
     return false if !RequestHelper.validate_url(canonical_url)
-    if canonical_url != self.url && !self.ignore_url?(canonical_url)
-      self.url = RequestHelper.absolute_url(self.url, canonical_url)
+    if RequestHelper.normalize_url(canonical_url) != self.url && !self.ignore_url?(canonical_url)
+      self.url = RequestHelper.normalize_url(RequestHelper.absolute_url(self.url, canonical_url))
       self.doc = self.get_html(RequestHelper.html_options(self.url)) if self.doc.nil?
     end
     true
@@ -211,35 +210,44 @@ class Media
   # Update the media `url` with the url found after all redirections
 
   def follow_redirections
-    self.url = RequestHelper.add_scheme(RequestHelper.decoded_uri(self.url.strip))
+    current_url = RequestHelper.add_scheme(RequestHelper.decoded_uri(self.url.strip))
     attempts = 0
     code = '301'
     path = []
 
-    while attempts < 5 && %w(301 302).include?(code) && !path.include?(self.url)
+    while attempts < 5 && RequestHelper::REDIRECT_HTTP_CODES.include?(code) && !path.include?(current_url)
       attempts += 1
-      path << self.url
-      response = self.request_media_url
+      path << current_url
+      response = self.request_media_url(current_url)
       code = response.code
-      self.set_url_from_location(response, path)
+      current_url = self.url_from_location(response, path) || current_url
+    end
+
+    # Attempt to normalize URL. If it breaks a previously successful response, fall back to previous URL
+    normalized_current_url = RequestHelper.normalize_url(current_url)
+    if response.code == '200' && self.request_media_url(normalized_current_url).code != '200'
+      self.url = current_url
+    else
+      self.url = normalized_current_url
     end
   end
 
-  def set_url_from_location(response, path)
-    if %w(301 302).include?(response.code)
-      self.url = response.header['location'] unless self.ignore_url?(response.header['location'])
-      if self.url !~ /^https?:/
-        self.url.prepend('/') unless self.url.match?(/^\//)
-        previous = path.last.match(/^https?:\/\/[^\/]+/)[0]
-        self.url = previous + self.url
-      end
+  def url_from_location(response, path)
+    return unless RequestHelper::REDIRECT_HTTP_CODES.include?(response.code)
+
+    redirect_url = response.header['location'] unless self.ignore_url?(response.header['location'])
+    if redirect_url && redirect_url !~ /^https?:/
+      redirect_url.prepend('/') unless redirect_url.match?(/^\//)
+      previous = path.last.match(/^https?:\/\/[^\/]+/)[0]
+      redirect_url = previous + redirect_url
     end
+    redirect_url
   end
 
-  def request_media_url
+  def request_media_url(request_url)
     response = nil
     Retryable.retryable(tries: 3, sleep: 1, :not => [Net::ReadTimeout]) do
-      response = RequestHelper.request_url(url, 'Get')
+      response = RequestHelper.request_url(request_url, 'Get')
     end
     response
   end
@@ -269,7 +277,4 @@ class Media
     self.data[:error] = error_hash
   end
 
-  def url=(raw_url)
-    @url = RequestHelper.normalize_url(raw_url)
-  end
 end

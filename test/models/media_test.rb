@@ -23,10 +23,11 @@ class MediaTest < ActiveSupport::TestCase
       media = Media.new(url: url)
       assert_equal expected, media.url
     end
+  end
 
+  test "should maintain encoding for normalized URLs" do
     media = Media.new(url: 'http://ca.ios.ba/a%c3%82/%7Euser?a=b')
     assert_match '//ca.ios.ba/a%C3%82/~user?a=b', media.url
-
   end
 
   test "should not normalize URL" do
@@ -519,7 +520,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should not change media url if url parsed on metatags is not valid" do
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:url' content='aosfatos.org/noticias/em-video-difundido-por-trump-medica-engana-ao-dizer-que-cloroquina-cura-covid19'>"))
-    url = 'https://www.aosfatos.org/noticias/em-video-difundido-por-trump-medica-engana-ao-dizer-que-cloroquina-cura-covid19'
+    url = 'https://www.aosfatos.org/noticias/em-video-difundido-por-trump-medica-engana-ao-dizer-que-cloroquina-cura-covid19/'
     m = Media.new url: url
     m.as_json
     assert_equal url, m.url

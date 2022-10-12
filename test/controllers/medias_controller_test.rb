@@ -373,8 +373,8 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return invalid url if has SSL Error on follow_redirections" do
     url = 'https://asdfglkjh.ee'
-    RequestHelper.stubs(:validate_url).with(url).returns(true)
-    RequestHelper.stubs(:request_url).with(url, 'Get').raises(OpenSSL::SSL::SSLError)
+    RequestHelper.stubs(:validate_url).with(/#{url}/).returns(true)
+    RequestHelper.stubs(:request_url).with(/#{url}/, 'Get').raises(OpenSSL::SSL::SSLError)
 
     authenticate_with_token
     get :index, params: { url: url, format: :json }
