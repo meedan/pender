@@ -34,7 +34,7 @@ class OembedItem
     request = Net::HTTP::Get.new(uri.request_uri, headers)
     response = http.request(request)
 
-    if %w(301 302).include?(response.code)
+    if RequestHelper::REDIRECT_HTTP_CODES.include?(response.code)
       response = get_oembed_data_from_url(construct_absolute_path(request_url, response.header['location']))
     end
     response
