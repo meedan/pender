@@ -29,8 +29,8 @@ class YoutubeItemIntegrationTest < ActiveSupport::TestCase
     response = ''
     response.stubs(:code).returns('302')
     response.stubs(:header).returns({ 'location' => consent_page })
-    Media.any_instance.stubs(:request_media_url).returns(response)
     url = 'https://www.youtube.com/watch?v=bEAdvXRJ9mU'
+    Media.any_instance.stubs(:request_media_url).with(url).returns(response)
     m = create_media url: url
     data = m.as_json
     assert_equal 'item', data['type']
@@ -40,7 +40,6 @@ class YoutubeItemIntegrationTest < ActiveSupport::TestCase
     assert_equal 'https://www.youtube.com/channel/UCKyn6nCR9fXFhDL-WeeyOzQ', data['author_url']
     assert !data['html'].blank?
     assert_equal 'https://www.youtube.com/watch?v=bEAdvXRJ9mU', m.url
-    Media.any_instance.unstub(:request_media_url)
   end
 end
 
