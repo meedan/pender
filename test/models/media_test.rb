@@ -41,18 +41,6 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
-  test "should normalize the canonical URL consistently, regardless of how determined" do
-    canonical_url = 'http://example.com/canonical/'
-
-    WebMock.enable!
-    WebMock.stub_request(:any, /example.com\/requested/).to_return(body: '<meta property="og:url" content="' + canonical_url + '">', status: 200)
-    WebMock.stub_request(:any, /example.com\/canonical/).to_return(body: '', status: 200)
-
-    m1 = create_media url: 'http://example.com/requested/'
-    m2 = create_media url: canonical_url
-    assert_equal m1.url, m2.url
-  end
-
   test "should follow redirection of relative paths" do
     WebMock.enable!
     WebMock.stub_request(:any, /https?:\/\/www.almasryalyoum.com\/node\/517699/).to_return(body: '', headers: { location: '/editor/details/968' }, status: 302)
