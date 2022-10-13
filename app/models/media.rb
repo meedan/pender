@@ -218,7 +218,7 @@ class Media
     while attempts < 5 && RequestHelper::REDIRECT_HTTP_CODES.include?(code) && !path.include?(self.url)
       attempts += 1
       path << self.url
-      response = self.request_media_url
+      response = self.request_media_url(self.url)
       code = response.code
 
       if RequestHelper::REDIRECT_HTTP_CODES.include?(code)
@@ -241,10 +241,10 @@ class Media
     redirect_url
   end
 
-  def request_media_url
+  def request_media_url(request_url)
     response = nil
     Retryable.retryable(tries: 3, sleep: 1, :not => [Net::ReadTimeout]) do
-      response = RequestHelper.request_url(url, 'Get')
+      response = RequestHelper.request_url(request_url, 'Get')
     end
     response
   end
