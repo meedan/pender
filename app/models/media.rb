@@ -63,8 +63,7 @@ class Media
     self.original_url = self.url.strip
     self.data = {}.with_indifferent_access
     self.follow_redirections
-    self.get_canonical_url
-    self.url = RequestHelper.normalize_url(self.url)
+    self.url = RequestHelper.normalize_url(self.url) unless self.get_canonical_url
     self.try_https
     self.parser = nil
   end
@@ -178,7 +177,7 @@ class Media
         self.parser = parseable
         self.provider, self.type = self.parser.type.split('_')
         self.data.deep_merge!(self.parser.parse_data(self.doc, self.original_url, self.data.dig('raw', 'json+ld')))
-        self.url = RequestHelper.normalize_url(self.parser.url)
+        self.url = self.parser.url
         self.get_oembed_data
         parsed = true
       end

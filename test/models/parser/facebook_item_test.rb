@@ -106,8 +106,8 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     url = 'https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/'
     m = Media.new url: url
     data = m.as_json
-    assert_match /(memetics.hacking|exploring belief systems)/, data['title']
-    assert_match 'permalink/1580570905320222', data['url']
+    assert_match "memetics.hacking", data['title']
+    assert_match 'permalink/1580570905320222/', data['url']
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
   end
