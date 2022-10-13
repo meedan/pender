@@ -100,4 +100,11 @@ class OembedItemUnitTest < ActiveSupport::TestCase
     assert_nil item.oembed_uri
     assert item.get_data[:raw][:oembed].blank?
   end
+
+  test "should not explode if infinite redirect" do
+    WebMock.stub_request(:get, /example.com/).and_return(status: 308, body: '', headers: { location: 'http://example.com/original'} )
+
+    item = OembedItem.new('http://example.com/original', 'http://example.com/oembed')
+    assert !item.get_data.blank?
+  end
 end
