@@ -25,7 +25,7 @@ class OembedItem
 
   attr_reader :data, :request_url
 
-  def get_oembed_data_from_url(uri)
+  def get_oembed_data_from_url(uri, attempts: 0)
     response = nil
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = uri.scheme == 'https'
@@ -34,8 +34,8 @@ class OembedItem
     request = Net::HTTP::Get.new(uri.request_uri, headers)
     response = http.request(request)
 
-    if %w(301 302).include?(response.code)
-      response = get_oembed_data_from_url(construct_absolute_path(request_url, response.header['location']))
+    if attempts < 5 && RequestHelper::REDIRECT_HTTP_CODES.include?(response.code)
+      response = get_oembed_data_from_url(construct_absolute_path(request_url, response.header['location']), attempts: attempts + 1)
     end
     response
   end

@@ -215,30 +215,36 @@ class Media
     code = '301'
     path = []
 
-    while attempts < 5 && %w(301 302).include?(code) && !path.include?(self.url)
+    while attempts < 5 && RequestHelper::REDIRECT_HTTP_CODES.include?(code) && !path.include?(self.url)
       attempts += 1
       path << self.url
-      response = self.request_media_url
+      response = self.request_media_url(self.url)
       code = response.code
-      self.set_url_from_location(response, path)
-    end
-  end
 
-  def set_url_from_location(response, path)
-    if %w(301 302).include?(response.code)
-      self.url = response.header['location'] unless self.ignore_url?(response.header['location'])
-      if self.url !~ /^https?:/
-        self.url.prepend('/') unless self.url.match?(/^\//)
-        previous = path.last.match(/^https?:\/\/[^\/]+/)[0]
-        self.url = previous + self.url
+      if RequestHelper::REDIRECT_HTTP_CODES.include?(code)
+        redirect_url = self.url_from_location(response, path)
+        self.url = redirect_url if redirect_url
       end
     end
   end
 
-  def request_media_url
+  def url_from_location(response, path)
+    return unless response.header['location']
+    return if self.ignore_url?(response.header['location'])
+
+    redirect_url = response.header['location']
+    if redirect_url && redirect_url !~ /^https?:/
+      redirect_url.prepend('/') unless redirect_url.match?(/^\//)
+      previous = path.last.match(/^https?:\/\/[^\/]+/)[0]
+      redirect_url = previous + redirect_url
+    end
+    redirect_url
+  end
+
+  def request_media_url(request_url)
     response = nil
     Retryable.retryable(tries: 3, sleep: 1, :not => [Net::ReadTimeout]) do
-      response = RequestHelper.request_url(url, 'Get')
+      response = RequestHelper.request_url(request_url, 'Get')
     end
     response
   end

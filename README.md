@@ -438,7 +438,7 @@ If you would like to see data reported from your local machine, do the following
 
 **Local console**
 1. Make sure that the `otlp` prefixed values are set in `config.yml` following `config.yml.example`. The values provided in `config.yml.example` can be used since we don't need a real API key.
-1. In `initializers/open_telemetry.rb`, uncomment the line setting exporter to 'console'. Warning: this is noisy!
+1. In `lib/pender_open_telemetry_config.rb`, uncomment the line setting exporter to 'console'. Warning: this is noisy!
 1. Restart the server
 1. View output in local server logs
 

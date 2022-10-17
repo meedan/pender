@@ -62,9 +62,9 @@ GEM
       tzinfo (~> 1.1)
     addressable (2.8.0)
       public_suffix (>= 2.0.2, < 5.0)
-    airbrake (11.0.0)
-      airbrake-ruby (~> 5.0)
-    airbrake-ruby (5.2.1)
+    airbrake (13.0.3)
+      airbrake-ruby (~> 6.0)
+    airbrake-ruby (6.2.0)
       rbtree3 (~> 0.5)
     ansi (1.5.0)
     arel (9.0.0)
@@ -127,7 +127,7 @@ GEM
       ffi (~> 1.0)
     globalid (1.0.0)
       activesupport (>= 5.0)
-    google-protobuf (3.21.6)
+    google-protobuf (3.21.7)
     googleapis-common-protos-types (1.4.0)
       google-protobuf (~> 3.14)
     hashdiff (1.0.1)
@@ -522,7 +522,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  airbrake (= 11.0.0)
+  airbrake (~> 13.0.0)
   awesome_print
   aws-sdk-s3
   byebug
