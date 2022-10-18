@@ -11,7 +11,11 @@ unless Rails.env.test?
     PenderConfig.get('otel_exporter_otlp_headers'),
     ENV['PENDER_SKIP_HONEYCOMB']
   ).configure!(
-    PenderConfig.get('otel_resource_attributes')
+    PenderConfig.get('otel_resource_attributes'),
+    sampling_config: {
+      sampler: PenderConfig.get('otel_traces_sampler'),
+      rate: PenderConfig.get('otel_custom_sampling_rate')
+    }
   )
 else
   Pender::OpenTelemetryTestConfig.configure!

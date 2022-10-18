@@ -121,6 +121,8 @@ development: &default
   # See initializers/open_telemetry.rb for usage.
   #
   # OPTIONAL (set to report to Honeycomb Dev environment from local)
+  # Note: any values prefixed with `otel_custom` are our own configuration,
+  # which will be used to programmatically set otel-supported env vars
   #
   otel_exporter_otlp_endpoint: # "https://api.honeycomb.io"
   otel_exporter_otlp_headers: # "x-honeycomb-team=<DEV API KEY>"
@@ -128,6 +130,8 @@ development: &default
   otel_resource_attributes:
     # developer.name: <DEVELOPER_NAME>
   otel_log_level: info
+  otel_traces_sampler:
+  otel_custom_sampling_rate:
 
 test:
   <<: *default
@@ -136,9 +140,8 @@ test:
   storage_video_bucket:
   storage_video_asset_path:
   storage_medias_asset_path: 'http://localhost:9000/check-test/medias'
-  otel_exporter_otlp_endpoint:
-  otel_exporter_otlp_headers:
   otel_log_level: error
+  otel_traces_sampler:
   airbrake_host:
 
 production:

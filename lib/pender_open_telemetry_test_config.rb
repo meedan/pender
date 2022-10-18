@@ -9,27 +9,16 @@ module Pender
       
         # By default this discards spans. To enable recording for test purposes, 
         # set the following in the test setup block:
-        # 
-        # Pender::OpenTelemetryTestConfig.current_exporter.recording = true
+        #     Pender::OpenTelemetryTestConfig.current_exporter.recording = true
         @exporter = OpenTelemetry::SDK::Trace::Export::InMemorySpanExporter.new(recording: false)
         OpenTelemetry::SDK.configure do |c|
+          c.service_name = 'test-pender'
           c.add_span_processor(OpenTelemetry::SDK::Trace::Export::SimpleSpanProcessor.new(@exporter))
-      
-          # Keep this list in sync with Pender::OpenTelemetryConfig, to make sure we track
-          # any potential issues coming from instrumentation libraries
-          c.use 'OpenTelemetry::Instrumentation::ActiveSupport'
-          c.use 'OpenTelemetry::Instrumentation::Rack'
-          c.use 'OpenTelemetry::Instrumentation::ActionPack'
-          c.use 'OpenTelemetry::Instrumentation::ActiveJob'
-          c.use 'OpenTelemetry::Instrumentation::ActiveRecord'
-          c.use 'OpenTelemetry::Instrumentation::ActionView'
-          c.use 'OpenTelemetry::Instrumentation::AwsSdk'
-          c.use 'OpenTelemetry::Instrumentation::HTTP'
-          c.use 'OpenTelemetry::Instrumentation::ConcurrentRuby'
-          c.use 'OpenTelemetry::Instrumentation::Net::HTTP'
-          c.use 'OpenTelemetry::Instrumentation::Rails'
-          c.use 'OpenTelemetry::Instrumentation::Redis'
-          c.use 'OpenTelemetry::Instrumentation::Sidekiq'
+
+          # Keep Open Telemetry instrumentation in sync across environments,
+          # so that we can catch any problems arising from instrumentation libraries
+          # and configuration
+          Pender::OpenTelemetryConfig.configure_instrumentation!(c)
         end
         @exporter
       end
