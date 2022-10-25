@@ -31,7 +31,7 @@ class OpenTelemetryConfigTest < ActiveSupport::TestCase
 
   test "configures open telemetry to report remotely when exporting enabled" do
     env_var_original_state = cache_and_clear_env
-    
+
     Pender::OpenTelemetryConfig.new('https://fake.com','foo=bar').configure!({'developer.name' => 'piglet'})
 
     assert_equal 'otlp', ENV['OTEL_TRACES_EXPORTER']
@@ -66,6 +66,24 @@ class OpenTelemetryConfigTest < ActiveSupport::TestCase
     assert_equal 'traceidratio', ENV['OTEL_TRACES_SAMPLER']
     assert_equal '0.5', ENV['OTEL_TRACES_SAMPLER_ARG']
     assert_equal 'developer.name=piglet,SampleRate=2', ENV['OTEL_RESOURCE_ATTRIBUTES']
+  ensure
+    env_var_original_state.each{|env_var, original_state| ENV[env_var] = original_state}
+  end
+
+  test "does not set the sampler arguments when sampling config cannot be set properly" do
+    env_var_original_state = cache_and_clear_env
+
+    Pender::OpenTelemetryConfig.new('https://fake.com','foo=bar').configure!(
+      {'developer.name' => 'piglet' },
+      sampling_config: { sampler: 'traceidratio', rate: 'asdf' }
+    )
+
+    assert_nil ENV['OTEL_TRACES_SAMPLER_ARG']
+    assert_equal 'developer.name=piglet', ENV['OTEL_RESOURCE_ATTRIBUTES']
+
+    # Keeps sampler, since it could be something like alwayson or alwaysoff, which does
+    # not require a sample rate
+    assert_equal 'traceidratio', ENV['OTEL_TRACES_SAMPLER']
   ensure
     env_var_original_state.each{|env_var, original_state| ENV[env_var] = original_state}
   end
