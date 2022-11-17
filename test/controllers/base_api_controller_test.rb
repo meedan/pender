@@ -41,4 +41,16 @@ class BaseApiControllerTest < ActionController::TestCase
     assert_equal 'Keep', response['data']['name']
     MemoryProfiler::Results.any_instance.unstub(:pretty_print)
   end
+
+  test "should send basic tracing information for api key" do
+    api_key = create_api_key
+    authenticate_with_token(api_key)
+
+
+    TracingService.expects(:add_attributes_to_current_span).with({
+      'app.api_key' => api_key.id
+    })
+
+    get :about, params: { format: :json }
+  end
 end
