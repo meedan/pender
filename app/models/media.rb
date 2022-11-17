@@ -99,16 +99,15 @@ class Media
     Parser::DropboxItem,
     Parser::TiktokItem,
     Parser::TiktokProfile,
-    Parser::KwaiItem, 
+    Parser::KwaiItem,
     Parser::PageItem,
   ]
 
   [
-    MediaArchiveIsArchiver, 
-    MediaArchiveOrgArchiver, 
-    MediaSchemaOrg, 
-    MediaPermaCcArchiver, 
-    MediaVideoArchiver, 
+    MediaArchiveOrgArchiver,
+    MediaSchemaOrg,
+    MediaPermaCcArchiver,
+    MediaVideoArchiver,
     MediaCrowdtangleItem
   ].each { |concern| include concern }
 
