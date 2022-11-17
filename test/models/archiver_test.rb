@@ -40,7 +40,6 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal "https://web.archive.org/web/timestamp/#{url}", data['archives']['archive_org']['location']
 
     WebMock.disable!
-    Media.unstub(:get_available_archive_org_snapshot)
   end
 
   test "should archive Arabics url to Archive.org" do
@@ -91,13 +90,6 @@ class ArchiverTest < ActiveSupport::TestCase
     end
 
     WebMock.disable!
-    Airbrake.unstub(:configured?)
-    Airbrake.unstub(:notify)
-    Media.any_instance.unstub(:follow_redirections)
-    Media.any_instance.unstub(:get_canonical_url)
-    Media.any_instance.unstub(:try_https)
-    Media.any_instance.unstub(:parse)
-    Media.any_instance.unstub(:archive)
   end
 
   test "should update media with error when Archive.org can't archive the url" do
@@ -133,13 +125,6 @@ class ArchiverTest < ActiveSupport::TestCase
     end
 
     WebMock.disable!
-    Airbrake.unstub(:configured?)
-    Airbrake.unstub(:notify)
-    Media.any_instance.unstub(:follow_redirections)
-    Media.any_instance.unstub(:get_canonical_url)
-    Media.any_instance.unstub(:try_https)
-    Media.any_instance.unstub(:parse)
-    Media.any_instance.unstub(:archive)
   end
 
   test "should update cache for all archivers sent if refresh" do
@@ -167,8 +152,6 @@ class ArchiverTest < ActiveSupport::TestCase
     m.as_json(force: true, archivers: 'perma_cc, archive_org')
     assert_equal({'perma_cc' => {'location' => 'http://perma.cc/perma-cc-guid-2'}, 'archive_org' => {'location' => "https://web.archive.org/web/timestamp/#{url}" }}, Pender::Store.current.read(id, :json)[:archives])
     WebMock.disable!
-    Media.unstub(:get_available_archive_org_snapshot)
-    Media.any_instance.unstub(:parse)
   end
 
   test "should not archive in any archiver if don't send or it's none" do
@@ -198,6 +181,8 @@ class ArchiverTest < ActiveSupport::TestCase
 
     m.as_json(archivers: 'archive_org')
     assert_equal({'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://health-desk.org/'}}, Pender::Store.current.read(id, :json)[:archives])
+
+    WebMock.disable!
   end
 
   test "should archive only on new archivers if media on cache, not a refresh and specific archiver" do
@@ -292,7 +277,6 @@ class ArchiverTest < ActiveSupport::TestCase
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
     assert_equal({ 'location' => 'http://perma.cc/AUA8-QNGH'}, cached['perma_cc'])
-    Media.unstub(:available_archivers)
     WebMock.disable!
   end
 
@@ -307,8 +291,6 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.stubs(:notify_webhook_and_update_cache).with('perma_cc', url, { location: 'http://perma.cc/AUA8-QNGH'}, a.id).never
 
     m.archive_to_perma_cc
-
-    Media.unstub(:notify_webhook_and_update_cache)
   end
 
   test "should update media with error when archive to Perma.cc fails" do
@@ -330,12 +312,6 @@ class ArchiverTest < ActiveSupport::TestCase
       assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'perma_cc', 'error', 'code')
       assert_equal "401 Unauthorized", media_data.dig('archives', 'perma_cc', 'error', 'message')
     end
-
-    Media.any_instance.unstub(:follow_redirections)
-    Media.any_instance.unstub(:get_canonical_url)
-    Media.any_instance.unstub(:try_https)
-    Media.any_instance.unstub(:parse)
-    Media.any_instance.unstub(:archive)
   end
 
   test "should add disabled Perma.cc archiver error message if perma_key is not present" do
@@ -377,11 +353,6 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.stubs(:system).returns(`(exit 0)`)
     assert_equal 'store_video_folder', Media.send_to_video_archiver(url, a.id)
     assert_nil Media.send_to_video_archiver(url, a.id, false)
-
-    Media.unstub(:supported_video?)
-    Media.unstub(:notify_video_already_archived)
-    Media.unstub(:store_video_folder)
-    Media.unstub(:system)
   end
 
   test "should return false and add error to data when video archiving is not supported" do
@@ -407,10 +378,6 @@ class ArchiverTest < ActiveSupport::TestCase
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA'), media_data.dig('archives', 'video_archiver', 'error', 'code')
     assert_equal '1 Unsupported URL', media_data.dig('archives', 'video_archiver', 'error', 'message')
-
-    Media.any_instance.unstub(:parse)
-    Metrics.unstub(:get_metrics_from_facebook_in_background)
-    Media.any_instance.unstub(:system)
   end
 
   test "should check if non-ascii URL support video download" do
@@ -434,9 +401,6 @@ class ArchiverTest < ActiveSupport::TestCase
     Pender::Store.any_instance.stubs(:read).with(Media.get_id(url), :json).returns(data)
     Media.stubs(:notify_webhook).with('video_archiver', url, data, {}).returns('Notify webhook')
     assert_equal 'Notify webhook', Media.notify_video_already_archived(url, nil)
-
-    Pender::Store.any_instance.unstub(:read)
-    Media.unstub(:notify_webhook)
   end
 
   # FIXME Mocking Youtube-DL to avoid `HTTP Error 429: Too Many Requests`
@@ -471,10 +435,6 @@ class ArchiverTest < ActiveSupport::TestCase
     data.dig('archives', 'video_archiver', 'thumbnails').each do |thumb|
       assert_match /\A#{folder}\/#{id}.*\.jpg\z/, thumb
     end
-    Media.unstub(:supported_video?)
-    Media.unstub(:system)
-    Dir.unstub(:glob)
-    Pender::Store.any_instance.unstub(:upload_video_folder)
   end
 
   test "should raise retry error when video archiving fails" do
@@ -496,9 +456,6 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_raises Pender::RetryLater do
       Media.send_to_video_archiver(not_video_url, a.id)
     end
-    Media.unstub(:supported_video?)
-    Media.unstub(:notify_video_already_archived)
-    Media.unstub(:system)
   end
 
   test "should update media with error when supported video call raises on video archiving" do
@@ -524,11 +481,6 @@ class ArchiverTest < ActiveSupport::TestCase
     end
 
     WebMock.disable!
-    Media.any_instance.unstub(:follow_redirections)
-    Media.any_instance.unstub(:get_canonical_url)
-    Media.any_instance.unstub(:try_https)
-    Media.any_instance.unstub(:parse)
-    Media.unstub(:supported_video?)
   end
 
   test "should update media with error when video download fails when video archiving" do
@@ -553,12 +505,6 @@ class ArchiverTest < ActiveSupport::TestCase
     end
 
     WebMock.disable!
-    Media.any_instance.unstub(:follow_redirections)
-    Media.any_instance.unstub(:get_canonical_url)
-    Media.any_instance.unstub(:try_https)
-    Media.any_instance.unstub(:parse)
-    Media.unstub(:supported_video?)
-    Media.unstub(:system)
   end
 
   test "should generate the public archiving folder for videos" do
@@ -621,10 +567,6 @@ class ArchiverTest < ActiveSupport::TestCase
         m.archive_to_video
       end
     end
-
-    Media.unstub(:follow_redirections)
-    Media.unstub(:get_canonical_url)
-    Media.unstub(:try_https)
   end
 
   test "should get proxy to download video from api key if present" do
@@ -671,8 +613,6 @@ class ArchiverTest < ActiveSupport::TestCase
       assert_equal api_key.settings[:config]["storage_#{key}"], PenderConfig.current("storage_#{key}")
       assert_equal api_key.settings[:config]["storage_#{key}"], Pender::Store.current.instance_variable_get(:@storage)[key]
     end
-
-    Media.unstub(:system)
   end
 
   test "should return true and get available snapshot if page was already archived on Archive.org" do
