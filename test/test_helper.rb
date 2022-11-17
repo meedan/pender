@@ -47,11 +47,9 @@ class ActiveSupport::TestCase
     # puts "#{self.class.name}::#{self.method_name}"
     Sidekiq::Testing.inline!
     Rails.application.reload_routes!
-    Media.any_instance.stubs(:archive_to_archive_is).returns(nil)
     Media.any_instance.stubs(:archive_to_archive_org).returns(nil)
     Media.any_instance.stubs(:archive_to_perma_cc).returns(nil)
     Media.any_instance.stubs(:archive_to_video).returns(nil)
-    Media::ARCHIVERS['archive_is'][:enabled] = true
     Media::ARCHIVERS['archive_org'][:enabled] = true
     ApiKey.current = Pender::Store.current = PenderConfig.current = nil
     clear_bucket
@@ -64,7 +62,6 @@ class ActiveSupport::TestCase
   def teardown
     WebMock.reset!
     WebMock.allow_net_connect!
-    Media::ARCHIVERS['archive_is'][:enabled] = false
     Media::ARCHIVERS['archive_org'][:enabled] = false
     clear_bucket
   end

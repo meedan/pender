@@ -30,8 +30,6 @@ paths:
                   name: Keep
                   version: v0.76.0
                   archivers:
-                  - key: archive_is
-                    label: Archive.is
                   - key: archive_org
                     label: Archive.org
                   - key: perma_cc

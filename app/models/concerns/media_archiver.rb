@@ -105,5 +105,4 @@ module MediaArchiver
       raise Pender::RetryLater, "[#{archiver}]: #{params[:message]}"
     end
   end
-
 end
