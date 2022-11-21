@@ -506,6 +506,8 @@ class MediasControllerTest < ActionController::TestCase
         archiver.strip!
         assert_equal(archived[archiver], data[:archives][archiver])
       end
+
+      WebMock.disable!
     end
   end
 
