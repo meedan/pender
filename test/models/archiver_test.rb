@@ -215,6 +215,8 @@ class ArchiverTest < ActiveSupport::TestCase
 
     m.as_json(archivers: 'perma_cc, archive_org')
     assert_equal({'perma_cc' => {'location' => 'http://perma.cc/perma-cc-guid-1'}, 'archive_org' => {'location' => "https://web.archive.org/web/timestamp/#{url}" }}, Pender::Store.current.read(id, :json)[:archives])
+
+    WebMock.disable!
   end
 
   test "should not archive again if media on cache have both archivers" do
