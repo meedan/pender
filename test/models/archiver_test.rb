@@ -49,7 +49,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m = create_media url: url, key: a
     data = m.as_json(archivers: 'archive_org')
     assert_equal "https://web.archive.org/web/timestamp/#{url}", data['archives']['archive_org']['location']
-
+  ensure
     WebMock.disable!
   end
 
@@ -67,7 +67,7 @@ class ArchiverTest < ActiveSupport::TestCase
       m = create_media url: url, key: a
       data = m.as_json
     end
-
+  ensure
     WebMock.disable!
   end
 
@@ -100,6 +100,7 @@ class ArchiverTest < ActiveSupport::TestCase
       assert_equal "#{data[:code]} #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
     end
 
+  ensure
     WebMock.disable!
   end
 
@@ -134,7 +135,7 @@ class ArchiverTest < ActiveSupport::TestCase
       assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
       assert_equal "(#{data[:status_ext]}) #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
     end
-
+  ensure
     WebMock.disable!
   end
 
@@ -160,6 +161,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
     m.as_json(force: true, archivers: 'perma_cc, archive_org')
     assert_equal({'perma_cc' => {'location' => 'http://perma.cc/perma-cc-guid-2'}, 'archive_org' => {'location' => "https://web.archive.org/web/timestamp/#{url}" }}, Pender::Store.current.read(id, :json)[:archives])
+  ensure
     WebMock.disable!
   end
 
@@ -190,7 +192,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     m.as_json(archivers: 'archive_org')
     assert_equal({'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://health-desk.org/'}}, Pender::Store.current.read(id, :json)[:archives])
-
+  ensure
     WebMock.disable!
   end
 
@@ -215,7 +217,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     m.as_json(archivers: 'perma_cc, archive_org')
     assert_equal({'perma_cc' => {'location' => 'http://perma.cc/perma-cc-guid-1'}, 'archive_org' => {'location' => "https://web.archive.org/web/timestamp/#{url}" }}, Pender::Store.current.read(id, :json)[:archives])
-
+  ensure
     WebMock.disable!
   end
 
@@ -279,6 +281,7 @@ class ArchiverTest < ActiveSupport::TestCase
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
     assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-1'}, cached['perma_cc'])
+  ensure
     WebMock.disable!
   end
 
@@ -481,7 +484,7 @@ class ArchiverTest < ActiveSupport::TestCase
       assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'video_archiver', 'error', 'code')
       assert_equal "#{error.class} #{error.message}", media_data.dig('archives', 'video_archiver', 'error', 'message')
     end
-
+  ensure
     WebMock.disable!
   end
 
@@ -505,7 +508,7 @@ class ArchiverTest < ActiveSupport::TestCase
       assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'video_archiver', 'error', 'code')
       assert_match 'not available', media_data.dig('archives', 'video_archiver', 'error', 'message').downcase
     end
-
+  ensure
     WebMock.disable!
   end
 
@@ -551,6 +554,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_match 'Not Found', m.data.dig('archives', 'unexistent_archive', 'error', 'message')
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_DISABLED'), m.data.dig('archives', 'archive_org', 'error', 'code')
     assert_match 'Disabled', m.data.dig('archives', 'archive_org', 'error', 'message')
+  ensure
     Media.send(:remove_const, :ENABLED_ARCHIVERS)
     Media.const_set(:ENABLED_ARCHIVERS, enabled)
     ENV['archiver_skip_hosts'] = skip
@@ -631,7 +635,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal true, Media.get_available_archive_org_snapshot(url, nil)
     data = m.as_json
     assert_equal 'http://web.archive.org/web/20210223111252/http://example.com/' , data['archives']['archive_org']['location']
-
+  ensure
     WebMock.disable!
   end
 
@@ -644,7 +648,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     url = 'https://example.com/'
     assert_nil Media.get_available_archive_org_snapshot(url, nil)
-
+  ensure
     WebMock.disable!
   end
 end
