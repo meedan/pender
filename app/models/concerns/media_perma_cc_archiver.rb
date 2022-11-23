@@ -11,7 +11,7 @@ module MediaPermaCcArchiver
 
   module ClassMethods
     def send_to_perma_cc_in_background(url, key_id)
-      ArchiverWorker.perform_async(url, :perma_cc, key_id)
+      ArchiverWorker.perform_in(30.seconds, url, :perma_cc, key_id)
     end
 
     def send_to_perma_cc(url, key_id, _supported = nil)

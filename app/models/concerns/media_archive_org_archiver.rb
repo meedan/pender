@@ -11,7 +11,7 @@ module MediaArchiveOrgArchiver
 
   module ClassMethods
     def send_to_archive_org_in_background(url, key_id)
-      ArchiverWorker.perform_async(url, :archive_org, key_id)
+      ArchiverWorker.perform_in(30.seconds, url, :archive_org, key_id)
     end
 
     def send_to_archive_org(url, key_id, _supported = nil)
