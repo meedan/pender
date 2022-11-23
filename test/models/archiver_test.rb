@@ -1,20 +1,19 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 
 class ArchiverTest < ActiveSupport::TestCase
-
   def teardown
+    super
+
     FileUtils.rm_rf(File.join(Rails.root, 'tmp', 'videos'))
   end
 
-  def enable_perma_cc!(api_key)
-    Media.any_instance.unstub(:archive_to_perma_cc)
+  def quietly_redefine_constant(klass, constant, new_value)
+    original_verbosity = $VERBOSE
+    $VERBOSE = nil
 
-    settings = api_key.application_settings
-    settings['config'] ||= {}
-    settings['config']['perma_cc_key'] = 'my-perma-key'
-    api_key.update!(application_settings: settings)
+    klass.const_set(constant, new_value)
 
-    WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
+    $VERBOSE = original_verbosity
   end
 
   test "should skip screenshots" do
@@ -141,14 +140,16 @@ class ArchiverTest < ActiveSupport::TestCase
 
   test "should update cache for all archivers sent if refresh" do
     Media.any_instance.unstub(:archive_to_archive_org)
+    Media.any_instance.unstub(:archive_to_perma_cc)
     Media.any_instance.stubs(:parse)
     Media.stubs(:get_available_archive_org_snapshot).returns(nil)
     a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
 
     WebMock.enable!
-    enable_perma_cc!(a)
+
     allowed_sites = lambda{ |uri| !['api.perma.cc', 'web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
+    WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
 
     url = 'https://www.bbc.com/portuguese'
     id = Media.get_id(url)
@@ -168,6 +169,7 @@ class ArchiverTest < ActiveSupport::TestCase
   test "should not archive in any archiver if don't send or it's none" do
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+
     WebMock.enable!
     allowed_sites = lambda{ |uri| !['archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
@@ -197,6 +199,7 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should archive only on new archivers if media on cache, not a refresh and specific archiver" do
+    Media.any_instance.unstub(:archive_to_perma_cc)
     Media.any_instance.unstub(:archive_to_archive_org)
     Media.stubs(:get_available_archive_org_snapshot).returns(nil)
 
@@ -204,8 +207,8 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.enable!
     allowed_sites = lambda{ |uri| !['api.perma.cc', 'web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
+    WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
 
-    enable_perma_cc!(a)
     url = 'https://opensource.globo.com/hacktoberfest/'
     id = Media.get_id(url)
     m = create_media url: url, key: a
@@ -223,6 +226,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
   test "should not archive again if media on cache have both archivers" do
     Media.any_instance.unstub(:archive_to_archive_org)
+    Media.any_instance.unstub(:archive_to_perma_cc)
     Media.stubs(:get_available_archive_org_snapshot).returns(nil)
 
     a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
@@ -231,8 +235,8 @@ class ArchiverTest < ActiveSupport::TestCase
     allowed_sites = lambda{ |uri| !['api.perma.cc', 'web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
 
-    enable_perma_cc!(a)
     url = 'https://edition.cnn.com/'
+    WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
     WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
 
@@ -255,22 +259,27 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "return the enabled archivers" do
+    enabled_archivers = Media::ENABLED_ARCHIVERS
     Media.const_set(:ENABLED_ARCHIVERS, [{key: 'archive_org'}, {key: 'perma_cc'}])
 
     assert_equal ['archive_org', 'perma_cc'].sort, Media.enabled_archivers(['archive_org', 'perma_cc']).keys
-    Media.send(:remove_const, :ENABLED_ARCHIVERS)
-    Media.const_set(:ENABLED_ARCHIVERS, [{key: 'archive_org'}])
+
+    quietly_redefine_constant(Media, :ENABLED_ARCHIVERS, [{key: 'archive_org'}])
 
     assert_equal ['archive_org'].sort, Media.enabled_archivers(['perma_cc', 'archive_org']).keys
+  ensure
+    quietly_redefine_constant(Media, :ENABLED_ARCHIVERS, enabled_archivers)
   end
 
   test "should archive to perma.cc and store the URL on archives if perma_cc_key is present" do
+    Media.any_instance.unstub(:archive_to_perma_cc)
+
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'api.perma.cc' }
     WebMock.disable_net_connect!(allow: allowed_sites)
+    WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
 
     a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test'}
-    enable_perma_cc!(a)
 
     url = 'https://slack.com/intl/en-br/'
     id = Media.get_id(url)
@@ -546,7 +555,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     PenderConfig.reload
     enabled = Media::ENABLED_ARCHIVERS
-    Media.const_set(:ENABLED_ARCHIVERS, enabled.select { |archiver| archiver[:key] != 'archive_org' })
+    Media.const_set(:ENABLED_ARCHIVERS, [])
 
     m.archive('archive_org,unexistent_archive')
 
@@ -555,8 +564,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_DISABLED'), m.data.dig('archives', 'archive_org', 'error', 'code')
     assert_match 'Disabled', m.data.dig('archives', 'archive_org', 'error', 'message')
   ensure
-    Media.send(:remove_const, :ENABLED_ARCHIVERS)
-    Media.const_set(:ENABLED_ARCHIVERS, enabled)
+    quietly_redefine_constant(Media, :ENABLED_ARCHIVERS, enabled)
     ENV['archiver_skip_hosts'] = skip
   end
 
