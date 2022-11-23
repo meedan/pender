@@ -7,6 +7,15 @@ class ArchiverTest < ActiveSupport::TestCase
     FileUtils.rm_rf(File.join(Rails.root, 'tmp', 'videos'))
   end
 
+  def quietly_redefine_constant(klass, constant, new_value)
+    original_verbosity = $VERBOSE
+    $VERBOSE = nil
+
+    klass.const_set(constant, new_value)
+
+    $VERBOSE = original_verbosity
+  end
+
   test "should skip screenshots" do
     stub_configs({'archiver_skip_hosts' => '' })
 
@@ -250,20 +259,16 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "return the enabled archivers" do
-    enabled_archivers = Media.send(:remove_const, :ENABLED_ARCHIVERS)
+    enabled_archivers = Media::ENABLED_ARCHIVERS
     Media.const_set(:ENABLED_ARCHIVERS, [{key: 'archive_org'}, {key: 'perma_cc'}])
 
     assert_equal ['archive_org', 'perma_cc'].sort, Media.enabled_archivers(['archive_org', 'perma_cc']).keys
 
-    Media.send(:remove_const, :ENABLED_ARCHIVERS)
-    Media.const_set(:ENABLED_ARCHIVERS, [{key: 'archive_org'}])
+    quietly_redefine_constant(Media, :ENABLED_ARCHIVERS, [{key: 'archive_org'}])
 
     assert_equal ['archive_org'].sort, Media.enabled_archivers(['perma_cc', 'archive_org']).keys
   ensure
-    if Media.const_defined?(:ENABLED_ARCHIVERS)
-      Media.send(:remove_const, :ENABLED_ARCHIVERS)
-      Media.const_set(:ENABLED_ARCHIVERS, enabled_archivers)
-    end
+    quietly_redefine_constant(Media, :ENABLED_ARCHIVERS, enabled_archivers)
   end
 
   test "should archive to perma.cc and store the URL on archives if perma_cc_key is present" do
@@ -549,7 +554,7 @@ class ArchiverTest < ActiveSupport::TestCase
     ENV['archiver_skip_hosts'] = ''
 
     PenderConfig.reload
-    enabled = Media.send(:remove_const, :ENABLED_ARCHIVERS)
+    enabled = Media::ENABLED_ARCHIVERS
     Media.const_set(:ENABLED_ARCHIVERS, [])
 
     m.archive('archive_org,unexistent_archive')
@@ -559,10 +564,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_DISABLED'), m.data.dig('archives', 'archive_org', 'error', 'code')
     assert_match 'Disabled', m.data.dig('archives', 'archive_org', 'error', 'message')
   ensure
-    if Media.const_defined?(:ENABLED_ARCHIVERS)
-      Media.send(:remove_const, :ENABLED_ARCHIVERS)
-      Media.const_set(:ENABLED_ARCHIVERS, enabled)
-    end
+    quietly_redefine_constant(Media, :ENABLED_ARCHIVERS, enabled)
     ENV['archiver_skip_hosts'] = skip
   end
 
