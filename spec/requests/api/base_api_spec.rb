@@ -49,7 +49,7 @@ RSpec.describe 'BaseApi', type: :request do
           expect(data).not_to be_nil
           expect(data['name']).to eq('Keep')
           expect(data['version']).to eq(VERSION)
-          expect(data['archivers']).to eq([{"key"=>"archive_is", "label"=>"Archive.is"}, {"key"=>"archive_org", "label"=>"Archive.org"}, {"key"=>"perma_cc", "label"=>"Perma.cc"}, {"key"=>"video", "label"=>"Video"}])
+          expect(data['archivers']).to eq([{"key"=>"archive_org", "label"=>"Archive.org"}, {"key"=>"perma_cc", "label"=>"Perma.cc"}, {"key"=>"video", "label"=>"Video"}])
         end
 
         include_context 'generate examples'

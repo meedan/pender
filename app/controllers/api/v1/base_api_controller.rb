@@ -32,7 +32,11 @@ module Api
       def authenticate_from_token!
         header = PenderConfig.get('authorization_header') || 'X-Token'
         token = request.headers[header]
-        ApiKey.current = ApiKey.valid.where(access_token: token).last
+
+        api_key = ApiKey.valid.where(access_token: token).last
+        ApiKey.current = api_key
+        TracingService.add_attributes_to_current_span('app.api_key' => api_key&.id)
+
         PenderConfig.reload
         (render_unauthorized and return false) if ApiKey.current.nil?
       end

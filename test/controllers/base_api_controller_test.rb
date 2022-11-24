@@ -11,13 +11,13 @@ class BaseApiControllerTest < ActionController::TestCase
     get :about, params: { format: :json }
     assert_response :success
     response = JSON.parse(@response.body)
-    assert_equal [{"key"=>"archive_is", "label"=>"Archive.is"}, {"key"=>"archive_org", "label"=>"Archive.org"}, {"key"=>"perma_cc", "label"=>"Perma.cc"}, {"key"=>"video", "label"=>"Video"}], response['data']['archivers']
+    assert_equal [{"key"=>"archive_org", "label"=>"Archive.org"}, {"key"=>"perma_cc", "label"=>"Perma.cc"}, {"key"=>"video", "label"=>"Video"}], response['data']['archivers']
 
     enabled = Media::ENABLED_ARCHIVERS
-    Media.const_set(:ENABLED_ARCHIVERS, enabled.select { |archiver| archiver[:key] != 'archive_is' })
+    Media.const_set(:ENABLED_ARCHIVERS, enabled.select { |archiver| archiver[:key] != 'archive_org' })
     get :about, params: { format: :json }
     response = JSON.parse(@response.body)
-    assert_equal [{"key"=>"archive_org", "label"=>"Archive.org"}, {"key"=>"perma_cc", "label"=>"Perma.cc"}, {"key"=>"video", "label"=>"Video"}], response['data']['archivers']
+    assert_equal [{"key"=>"perma_cc", "label"=>"Perma.cc"}, {"key"=>"video", "label"=>"Video"}], response['data']['archivers']
     Media.send(:remove_const, :ENABLED_ARCHIVERS)
     Media.const_set(:ENABLED_ARCHIVERS, enabled)
   end
@@ -40,5 +40,17 @@ class BaseApiControllerTest < ActionController::TestCase
     response = JSON.parse(@response.body)
     assert_equal 'Keep', response['data']['name']
     MemoryProfiler::Results.any_instance.unstub(:pretty_print)
+  end
+
+  test "should send basic tracing information for api key" do
+    api_key = create_api_key
+    authenticate_with_token(api_key)
+
+
+    TracingService.expects(:add_attributes_to_current_span).with({
+      'app.api_key' => api_key.id
+    })
+
+    get :about, params: { format: :json }
   end
 end

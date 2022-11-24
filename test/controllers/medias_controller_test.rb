@@ -446,13 +446,11 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should not archive in any archiver when no archiver parameter is sent" do
-    Media.any_instance.unstub(:archive_to_archive_is)
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     WebMock.enable!
-    allowed_sites = lambda{ |uri| !['archive.is', 'web.archive.org'].include?(uri.host) }
+    allowed_sites = lambda{ |uri| !['web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
-    WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
 
     authenticate_with_token(a)
@@ -465,13 +463,11 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should not archive when archiver parameter is none" do
-    Media.any_instance.unstub(:archive_to_archive_is)
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
     WebMock.enable!
-    allowed_sites = lambda{ |uri| !['archive.today', 'web.archive.org'].include?(uri.host) }
+    allowed_sites = lambda{ |uri| !['web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
-    WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
 
     authenticate_with_token(a)
@@ -483,21 +479,24 @@ class MediasControllerTest < ActionController::TestCase
     WebMock.disable!
   end
 
-  [['archive_is'], ['archive_org'], ['archive_is', 'archive_org'], [' archive_is ', ' archive_org ']].each do |archivers|
+  [['perma_cc'], ['archive_org'], ['perma_cc', 'archive_org'], [' perma_cc ', ' archive_org ']].each do |archivers|
     test "should archive on `#{archivers}`" do
-      Media.any_instance.unstub(:archive_to_archive_is)
       Media.any_instance.unstub(:archive_to_archive_org)
+      Media.any_instance.unstub(:archive_to_perma_cc)
       Media.stubs(:get_available_archive_org_snapshot).returns(nil)
-      a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+      Media::ARCHIVERS['perma_cc'][:enabled] = true
+
+      a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
       WebMock.enable!
-      allowed_sites = lambda{ |uri| !['archive.today', 'web.archive.org'].include?(uri.host) }
+      allowed_sites = lambda{ |uri| !['api.perma.cc', 'web.archive.org'].include?(uri.host) }
       WebMock.disable_net_connect!(allow: allowed_sites)
-      WebMock.stub_request(:any, 'http://archive.today/submit/').to_return(body: '', headers: { location: 'http://archive.is/test' })
+
+      WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
       WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
       WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
 
       url = 'https://www.nytimes.com/section/world/europe'
-      archived = {"archive_is"=>{"location"=>"http://archive.is/test"}, "archive_org"=>{"location"=>"https://web.archive.org/web/timestamp/#{url}"}}
+      archived = {"perma_cc"=>{"location"=>"http://perma.cc/perma-cc-guid-1"}, "archive_org"=>{"location"=>"https://web.archive.org/web/timestamp/#{url}"}}
 
       authenticate_with_token(a)
       get :index, params: { url: url, archivers: archivers.join(','), format: :json }
@@ -721,7 +720,7 @@ class MediasControllerTest < ActionController::TestCase
     Media.any_instance.stubs(:try_https)
     WebMock.enable!
     WebMock.disable_net_connect!
-    
+
     WebMock.stub_request(:get, /malware.wicar.org/).to_return(status: 200, body: "<title>Test Malware!</title>")
 
     safebrowsing_response = {
@@ -770,11 +769,11 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should parse suspended Twitter profile" do
     authenticate_with_token
-    
+
     url = 'https://twitter.com/g9wuortn6sve9fn/status/940956917010259970'
     get :index, params: { url: url, format: 'json' }
     assert_response :success
-    
+
     url = 'https://twitter.com/account/suspended'
     get :index, params: { url: url, format: 'json' }
     assert_response :success
@@ -819,7 +818,7 @@ class MediasControllerTest < ActionController::TestCase
     WebMock.enable!
     WebMock.disable_net_connect!(allow: [/minio/])
     WebMock.stub_request(:any, /example.com/).to_raise(Errno::ECONNRESET.new('Exception from WebMock'))
-    
+
     authenticate_with_token
     url = 'https://example.com/fail-to-parse'
     get :index, params: { url: url, format: :json }
@@ -859,11 +858,11 @@ class MediasControllerUnitTest < ActionController::TestCase
         "title" => "some throwaway title"
       }
       def initialize(**args); end
-      
+
       def data
         RESPONSE
       end
-      
+
       def as_json(**args)
         RESPONSE
       end
@@ -875,10 +874,10 @@ class MediasControllerUnitTest < ActionController::TestCase
 
     id = Media.get_id('https://www.instagram.com/fakeaccount/')
     Pender::Store.any_instance.expects(:write).with(id).never
-    
+
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?
-    
+
     authenticate_with_token
     get :index, params: { url: 'https://www.instagram.com/fakeaccount/', format: :json }
     assert_response 200

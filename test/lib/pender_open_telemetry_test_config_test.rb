@@ -1,5 +1,4 @@
 require_relative '../test_helper'
-require_relative '../../lib/pender_open_telemetry_config'
 
 # Verifying we can use our test-specific open telemetry config --
 # not to be confused with OpenTelemetryConfigTest, which
