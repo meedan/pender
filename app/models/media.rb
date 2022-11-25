@@ -150,17 +150,21 @@ class Media
         http.use_ssl = uri.scheme == 'https'
         request = Net::HTTP::Post.new(uri.request_uri, headers)
         request.body = payload
-        http.request(request)
+        response = http.request(request)
         @webhook_called = true
+        # .value raises an exception if the response is unsuccessful, but otherwise
+        # returns nil (terribly named method, imo). This is a way to raise that
+        # exception if request failed and still return a successful response if present.
+        response.value || response
       rescue StandardError => e
         PenderAirbrake.notify(e, url: url, type: type, webhook_url: settings['webhook_url'])
         Rails.logger.warn level: 'WARN', message: 'Failed to notify webhook', url: url, type: type, error_class: e.class, error_message: e.message, webhook_url: settings['webhook_url']
-        return false
+        raise(e)
       end
     else
       Rails.logger.warn level: 'WARN', message: 'Webhook settings not configured for API key', url: url, type: type, api_key: ApiKey.current&.id
+      return false
     end
-    true
   end
 
   protected
