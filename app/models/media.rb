@@ -156,10 +156,12 @@ class Media
         # returns nil (terribly named method, imo). This is a way to raise that
         # exception if request failed and still return a successful response if present.
         response.value || response
+      rescue Net::HTTPExceptions => e
+        raise Pender::RetryLater
       rescue StandardError => e
         PenderAirbrake.notify(e, url: url, type: type, webhook_url: settings['webhook_url'])
         Rails.logger.warn level: 'WARN', message: 'Failed to notify webhook', url: url, type: type, error_class: e.class, error_message: e.message, webhook_url: settings['webhook_url']
-        raise(e)
+        return false
       end
     else
       Rails.logger.warn level: 'WARN', message: 'Webhook settings not configured for API key', url: url, type: type, api_key: ApiKey.current&.id

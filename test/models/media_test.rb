@@ -662,13 +662,30 @@ class MediaUnitTest < ActiveSupport::TestCase
     assert_equal 'https://www.example.com/%C3%A1%3C80%3E%3C99%3E%C3%A1%3C80%3E%3C84%3E%C3%A1%3C80%3E', data[:raw][:link]
   end
 
-  test "#notify_webhook should raise exception for unsuccessful response from webhook" do
+  test "#notify_webhook should raise a retry exception for unsuccessful response from webhook" do
     WebMock.stub_request(:post, /example.com/).and_return(status: 404, body: 'fake response body')
     webhook_info = { 'webhook_url' => 'http://example.com/webhook', 'webhook_token' => 'test' }
 
-    assert_raises Net::HTTPServerException do
+    assert_raises Pender::RetryLater do
       Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
     end
+  end
+
+  test "#notify_webhook should swallow exception and report error to errbit if error happens while notifying webhook" do
+    WebMock.stub_request(:post, /example.com/).and_return(status: 200, body: 'fake response body')
+    webhook_info = { 'webhook_url' => 'asdfasdf', 'webhook_token' => 'test' }
+
+    airbrake_call_count = 0
+    arguments_checker = Proc.new do |e|
+      airbrake_call_count += 1
+    end
+
+    PenderAirbrake.stub(:notify, arguments_checker) do
+      assert_nothing_raised do
+        Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+      end
+    end
+    assert_equal 1, airbrake_call_count
   end
 
   test "#notify_webhook should return successful response from webhook" do
