@@ -447,35 +447,38 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should not archive in any archiver when no archiver parameter is sent" do
     Media.any_instance.unstub(:archive_to_archive_org)
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     WebMock.enable!
     allowed_sites = lambda{ |uri| !['web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     authenticate_with_token(a)
     url = 'https://twitter.com/meedan/status/1095693211681673218'
     get :index, params: { url: url, format: :json }
     id = Media.get_id(url)
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives].sort.to_h)
-
+  ensure
     WebMock.disable!
   end
 
   test "should not archive when archiver parameter is none" do
     Media.any_instance.unstub(:archive_to_archive_org)
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     WebMock.enable!
     allowed_sites = lambda{ |uri| !['web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     authenticate_with_token(a)
     url = 'https://twitter.com/meedan/status/1095035775736078341'
     get :index, params: { url: url, archivers: 'none', format: :json }
     id = Media.get_id(url)
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
-
+  ensure
     WebMock.disable!
   end
 
@@ -486,11 +489,12 @@ class MediasControllerTest < ActionController::TestCase
       Media.stubs(:get_available_archive_org_snapshot).returns(nil)
       Media::ARCHIVERS['perma_cc'][:enabled] = true
 
-      a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+      a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' },  'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
       WebMock.enable!
       allowed_sites = lambda{ |uri| !['api.perma.cc', 'web.archive.org'].include?(uri.host) }
       WebMock.disable_net_connect!(allow: allowed_sites)
 
+      WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
       WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
       WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
       WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
@@ -506,15 +510,18 @@ class MediasControllerTest < ActionController::TestCase
         archiver.strip!
         assert_equal(archived[archiver], data[:archives][archiver])
       end
-
+    ensure
       WebMock.disable!
     end
   end
 
   test "should show the urls that couldn't be enqueued when bulk parsing" do
-    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
-    a = create_api_key application_settings: webhook_info
+    WebMock.enable!
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+
+    a = create_api_key application_settings: { 'webhook_url' => 'https://example.com/webhook.php', 'webhook_token' => 'test' }
     authenticate_with_token(a)
+
     url1 = 'https://twitter.com/check/status/1102991340294557696'
     url2 = 'https://twitter.com/dimalb/status/1102928768673423362'
     MediaParserWorker.stubs(:perform_async).with(url1, a.id, false, nil)
@@ -522,10 +529,12 @@ class MediasControllerTest < ActionController::TestCase
     post :bulk, params: { url: [url1, url2], format: :json }
     assert_response :success
     assert_equal({"enqueued"=>[url1], "failed"=>[url2]}, JSON.parse(@response.body)['data'])
+  ensure
+    WebMock.disable!
   end
 
   test "should enqueue, parse and notify with error when invalid url" do
-    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
+    webhook_info = { 'webhook_url' => 'https://example.com/webhook.php', 'webhook_token' => 'test' }
     a = create_api_key application_settings: webhook_info
     authenticate_with_token(a)
     url1 = 'http://invalid-url'
@@ -546,7 +555,9 @@ class MediasControllerTest < ActionController::TestCase
     assert_nil Pender::Store.current.read(id1, :json)
     assert_nil Pender::Store.current.read(id2, :json)
 
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    WebMock.enable!
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     authenticate_with_token(a)
     post :bulk, params: { url: "#{url1}, #{url2}", format: :json }
     assert_response :success
@@ -555,12 +566,14 @@ class MediasControllerTest < ActionController::TestCase
     assert !data1['title'].blank?
     data2 = Pender::Store.current.read(id2, :json)
     assert !data2['title'].blank?
+  ensure
+    WebMock.disable!
   end
 
   test "should enqueue, parse and notify with error when timeout" do
     Sidekiq::Testing.fake!
-    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
-    a = create_api_key application_settings: webhook_info.merge(config: { timeout: '0.001' })
+    a = create_api_key application_settings: { config: { timeout: '0.001' }, 'webhook_url' => 'https://example.com/webhook.php', 'webhook_token' => 'test' }
+
     authenticate_with_token(a)
 
     url = 'https://ca.ios.ba/files/meedan/sleep.php'
@@ -585,7 +598,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return data with error message if can't parse" do
-    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
+    webhook_info = { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1102990605339316224'
     parse_error = { error: { "message"=>"RuntimeError: RuntimeError", "code"=>5}}
     required_fields = Media.required_fields(OpenStruct.new(url: url))
@@ -593,6 +606,7 @@ class MediasControllerTest < ActionController::TestCase
     Media.stubs(:notify_webhook)
     Media.stubs(:notify_webhook).with('media_parsed', url, parse_error.merge(required_fields).with_indifferent_access, webhook_info)
     Media.any_instance.stubs(:parse).raises(RuntimeError)
+
     a = create_api_key application_settings: webhook_info
     authenticate_with_token(a)
     post :bulk, params: { url: url, format: :json }
@@ -602,13 +616,15 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return data with error message if can't instantiate" do
     Sidekiq::Testing.fake!
-    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
-    url = 'https://twitter.com/meedan/status/1102990605339316224'
+    webhook_info = { 'webhook_url' => 'https://example.com/webhook.php', 'webhook_token' => 'test' }
     a = create_api_key application_settings: webhook_info
     authenticate_with_token(a)
 
     assert_equal 0, MediaParserWorker.jobs.size
+
+    url = 'https://twitter.com/meedan/status/1102990605339316224'
     post :bulk, params: { url: url, format: :json }
+
     assert_response :success
     assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
     assert_equal 1, MediaParserWorker.jobs.size

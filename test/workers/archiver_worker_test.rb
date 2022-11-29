@@ -24,8 +24,9 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     WebMock.stub_request(:any, /archive.org\/wayback\/available/).to_return(body: "{\"archived_snapshots\": {}}", headers: {})
     WebMock.stub_request(:post, /archive.org\/save/).to_return(body: "{\"job_id\":\"spn2-invalid-job-id\"}", headers: {})
     WebMock.stub_request(:get, /archive.org\/save\/status/).to_return(body: "{\"job_id\":\"spn2-invalid-job-id\",\"status\":\"pending\"}", headers: {})
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/marcouza/status/875424957613920256'
     m = create_media url: url, key: a
     assert_raises Pender::RetryLater do
@@ -37,6 +38,7 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal 'Test Archiver', data.dig('archives', 'archive_org', 'error', 'message')
+  ensure
     WebMock.disable!
   end
 
@@ -46,8 +48,9 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
     WebMock.disable_net_connect!(allow: allowed_sites)
     WebMock.stub_request(:any, /archive.org/).to_raise(Net::ReadTimeout.new('Exception from WebMock'))
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/marcouza/status/875424957613920256'
 
     m = create_media url: url, key: a
@@ -59,7 +62,7 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal 'Net::ReadTimeout with "Exception from WebMock"', data.dig('archives', 'archive_org', 'error', 'message')
+  ensure
     WebMock.disable!
   end
-
 end

@@ -99,8 +99,8 @@ module Metrics
       return if value.nil?
       settings = Media.api_key_settings(key_id)
       data = { 'metrics' => { name => value } }
-      Media.notify_webhook('metrics', url, data, settings)
       Media.update_cache(url, data)
+      Media.notify_webhook('metrics', url, data, settings)
     end
   end
 end

@@ -58,7 +58,7 @@ class MediaTest < ActiveSupport::TestCase
       header_options_without_cf = RequestHelper.html_options(url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
       assert_nil header_options_without_cf['CF-Access-Client-Id']
       assert_nil header_options_without_cf['CF-Access-Client-Secret']
-  
+
       PenderConfig.current = nil
       ENV['hosts'] = {"example.com"=>{"cf_credentials"=>"1234:5678"}}.to_json
       header_options_with_cf = RequestHelper.html_options(url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
@@ -82,7 +82,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.bbc.com', data['author_url']
     assert_equal '', data['picture']
   end
-  
+
   test "should get canonical URL parsed from html tags" do
     doc = ''
     open('test/data/page-with-url-on-tag.html') { |f| doc = f.read }
@@ -163,7 +163,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:try_https)
     OpenURI.unstub(:open_uri)
     Airbrake.unstub(:configured?)
-  end 
+  end
 
   test "should redirect to HTTPS if available and not already HTTPS" do
     m = create_media url: 'http://imotorhead.com'
@@ -292,7 +292,7 @@ class MediaTest < ActiveSupport::TestCase
     Media::PARSERS.each do |parser|
       parser.any_instance.stubs(:parse_data).raises(StandardError)
     end
-    
+
     # If we stub within this block, the stub isn't in place when we need it
     Media::PARSERS.each do |parser|
       m = create_media url: 'http://example.com'
@@ -540,11 +540,6 @@ class MediaTest < ActiveSupport::TestCase
     m.send(:get_html, RequestHelper.html_options(m.url))
   end
 
-  test "should handle error when can't notify webhook" do
-    webhook_info = { 'webhook_url' => 'http://invalid.webhook', 'webhook_token' => 'test' }
-    assert_equal false, Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
-  end
-
   test "should add not found error and return empty html" do
     url = 'https://www.facebook.com/ldfkgjdfghodhg'
 
@@ -658,12 +653,52 @@ class MediaUnitTest < ActiveSupport::TestCase
 
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?
-    
+
     m = create_media url: url
     data = m.as_json
-    
+
     assert Pender::Store.current.read(id, :json).blank?
     assert_equal 'this is a title', data[:title]
     assert_equal 'https://www.example.com/%C3%A1%3C80%3E%3C99%3E%C3%A1%3C80%3E%3C84%3E%C3%A1%3C80%3E', data[:raw][:link]
+  end
+
+  test "#notify_webhook should raise a retry exception for unsuccessful response from webhook" do
+    WebMock.stub_request(:post, /example.com/).and_return(status: 404, body: 'fake response body')
+    webhook_info = { 'webhook_url' => 'http://example.com/webhook', 'webhook_token' => 'test' }
+
+    assert_raises Pender::RetryLater do
+      Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+    end
+  end
+
+  test "#notify_webhook should swallow exception and report error to errbit if error happens while notifying webhook" do
+    WebMock.stub_request(:post, /example.com/).and_return(status: 200, body: 'fake response body')
+    webhook_info = { 'webhook_url' => 'asdfasdf', 'webhook_token' => 'test' }
+
+    airbrake_call_count = 0
+    arguments_checker = Proc.new do |e|
+      airbrake_call_count += 1
+    end
+
+    PenderAirbrake.stub(:notify, arguments_checker) do
+      assert_nothing_raised do
+        Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+      end
+    end
+    assert_equal 1, airbrake_call_count
+  end
+
+  test "#notify_webhook should return successful response from webhook" do
+    webhook_info = { 'webhook_url' => 'http://example.com/webhook', 'webhook_token' => 'test' }
+
+    WebMock.stub_request(:post, /example.com/).and_return(status: 200, body: 'fake response body')
+    response = Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+    assert_equal "200", response.code
+    assert_equal 'fake response body', response.body
+
+    WebMock.stub_request(:post, /example.com/).and_return(status: 201, body: 'fake response body')
+    response = Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+    assert_equal "201", response.code
+    assert_equal 'fake response body', response.body
   end
 end
