@@ -723,4 +723,29 @@ class ArchiverTest < ActiveSupport::TestCase
   ensure
     WebMock.disable!
   end
+
+  test "should still cache data if notifying webhook fails" do
+    Media.any_instance.unstub(:archive_to_perma_cc)
+
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'api.perma.cc' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 425, body: '')
+
+    url = 'https://slack.com/intl/en-br/'
+    id = Media.get_id(url)
+
+    a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
+    m = Media.new url: url, key: a
+    assert_raises Pender::RetryLater do
+      m.as_json(archivers: 'perma_cc')
+    end
+
+    cached = Pender::Store.current.read(id, :json)[:archives]
+    assert_equal ['perma_cc'], cached.keys
+    assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-1'}, cached['perma_cc'])
+  ensure
+    WebMock.disable!
+  end
 end

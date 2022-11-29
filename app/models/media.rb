@@ -133,7 +133,6 @@ class Media
     data = Pender::Store.current.read(id, :json)
     unless data.blank?
       newdata.each { |key, value| data[key] = data[key].is_a?(Hash) ? data[key].merge(value) : value }
-      data['webhook_called'] = @webhook_called ? 1 : 0
       Pender::Store.current.write(id, :json, data)
     end
     data
@@ -151,13 +150,12 @@ class Media
         request = Net::HTTP::Post.new(uri.request_uri, headers)
         request.body = payload
         response = http.request(request)
-        @webhook_called = true
         # .value raises an exception if the response is unsuccessful, but otherwise
         # returns nil (terribly named method, imo). This is a way to raise that
         # exception if request failed and still return a successful response if present.
         response.value || response
       rescue Net::HTTPExceptions => e
-        raise Pender::RetryLater
+        raise Pender::RetryLater, "(#{response.code}) #{response.message}"
       rescue StandardError => e
         PenderAirbrake.notify(e, url: url, type: type, webhook_url: settings['webhook_url'])
         Rails.logger.warn level: 'WARN', message: 'Failed to notify webhook', url: url, type: type, error_class: e.class, error_message: e.message, webhook_url: settings['webhook_url']

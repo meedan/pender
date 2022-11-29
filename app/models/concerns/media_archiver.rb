@@ -69,8 +69,8 @@ module MediaArchiver
 
     def notify_webhook_and_update_cache(archiver, url, data, key_id)
       settings = Media.api_key_settings(key_id)
-      Media.notify_webhook(archiver, url, data, settings)
       Media.update_cache(url, { archives: { archiver => data } })
+      Media.notify_webhook(archiver, url, data, settings)
     end
 
     def available_archivers(archivers, media = nil)
