@@ -701,18 +701,4 @@ class MediaUnitTest < ActiveSupport::TestCase
     assert_equal "201", response.code
     assert_equal 'fake response body', response.body
   end
-
-  test "#notify_webhook should return successful response from webhook" do
-    webhook_info = { 'webhook_url' => 'http://example.com/webhook', 'webhook_token' => 'test' }
-
-    WebMock.stub_request(:post, /example.com/).and_return(status: 200, body: 'fake response body')
-    response = Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
-    assert_equal "200", response.code
-    assert_equal 'fake response body', response.body
-
-    WebMock.stub_request(:post, /example.com/).and_return(status: 201, body: 'fake response body')
-    response = Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
-    assert_equal "201", response.code
-    assert_equal 'fake response body', response.body
-  end
 end
