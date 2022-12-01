@@ -16,7 +16,7 @@ module MediaArchiver
     Media.enabled_archivers(available, self).each do |name, rule|
       rule[:patterns].each do |pattern|
         if (rule[:modifier] == :only && !pattern.match(url).nil?) || (rule[:modifier] == :except && pattern.match(url).nil?)
-          self.send("archive_to_#{name}")
+          self.public_send("archive_to_#{name}", url, ApiKey.current&.id)
         end
       end
     end
@@ -47,7 +47,7 @@ module MediaArchiver
   end
 
   def filter_archivers(archivers)
-    id = Media.get_id(original_url)
+    id = Media.get_id(self.url)
     data = Pender::Store.current.read(id, :json)
     return archivers if data.nil? || data.dig(:archives).nil?
     archivers - data[:archives].keys

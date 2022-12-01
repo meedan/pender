@@ -11,11 +11,11 @@ module Metrics
       613, # Calls to graph_url_engagement_count have exceeded the rate of 10 calls per 3600 seconds
     ]
 
-    def get_metrics_from_facebook_in_background(data, original_url, key_id)
+    def get_metrics_from_facebook_in_background(data, url, key_id)
       facebook_id = data['uuid'] if is_a_facebook_post?(data)
       # Delaying a bit to prevent race condition where initial request that creates
       # record on Check API beats our metrics reporting
-      MetricsWorker.perform_in(10.seconds, original_url, key_id, 0, facebook_id)
+      MetricsWorker.perform_in(10.seconds, url, key_id, 0, facebook_id)
     end
 
     def get_metrics_from_facebook(url, key_id, count = 0, facebook_id = nil)

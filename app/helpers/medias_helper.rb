@@ -123,7 +123,7 @@ module MediasHelper
   end
 
   def upload_images
-    id = Media.get_id(self.original_url)
+    id = Media.get_id(self.url)
     updates = {}
     [:author_picture, :picture].each do |attr|
       img_url = self.data.dig(attr)
@@ -133,7 +133,7 @@ module MediasHelper
         updates[attr] = self.data[attr]
       end
     end
-    Media.update_cache(self.original_url, updates) unless updates.empty?
+    Media.update_cache(self.url, updates) unless updates.empty?
   end
 
   def upload_image(id, attr, url)

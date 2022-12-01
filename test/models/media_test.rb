@@ -108,9 +108,9 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should return author picture" do
     WebMock.stub_request(:get, /github.com/).to_return(status: 200, body: "<meta property='og:image' content='https://github.githubassets.com/images/modules/open_graph/github-logo.png'>")
-    url = 'http://github.com'
-    id = Media.get_id url
+    url = 'https://github.com/'
     m = create_media url: url
+    id = Media.get_id m.url
     data = m.as_json
     assert_match /\/medias\/#{id}\/author_picture/, data['author_picture']
   end
@@ -428,12 +428,12 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should update media cache" do
     url = 'http://www.example.com'
-    id = Media.get_id(url)
     m = create_media url: url
+    id = Media.get_id(m.url)
     m.as_json
 
     assert_equal({}, Pender::Store.current.read(id, :json)['archives'])
-    Media.update_cache(url, { archives: { 'archive_org' => 'new-data' } })
+    Media.update_cache(m.url, { archives: { 'archive_org' => 'new-data' } })
     assert_equal({'archive_org' => 'new-data'}, Pender::Store.current.read(id, :json)['archives'])
   end
 
@@ -554,13 +554,13 @@ class MediaUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, /example.com/).and_return(status: 200, body: '<html>something</html>')
     Parser::PageItem.any_instance.stubs(:parse_data).returns({title: 'a title'})
 
-    url = 'http://www.example.com'
-    id = Media.get_id(url)
+    url = 'http://www.example.com/'
+    m = create_media url: url
+    id = Media.get_id(m.url)
 
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?
 
-    m = create_media url: url
     data = m.as_json
 
     assert_equal data[:title], 'a title'
@@ -572,13 +572,14 @@ class MediaUnitTest < ActiveSupport::TestCase
     Parser::PageItem.any_instance.stubs(:parse_data).returns({title: 'a title', error: {message: 'fake error for test'}})
 
     url = 'http://www.example.com'
-    id = Media.get_id(url)
+    m = create_media url: url
+    id = Media.get_id(m.url)
 
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?
 
-    m = create_media url: url
     data = m.as_json
+
     assert Pender::Store.current.read(id, :json).blank?
   end
 
@@ -587,12 +588,13 @@ class MediaUnitTest < ActiveSupport::TestCase
     Parser::PageItem.any_instance.stubs(:parse_data).returns({title: 'this is a title', raw: {link: 'https://www.example.com/á<80><99>á<80><84>á<80>'}, error: {message: 'fake error for test'}})
 
     url = 'http://www.example.com'
-    id = Media.get_id(url)
+
+    m = create_media url: url
+    id = Media.get_id(m.url)
 
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?
 
-    m = create_media url: url
     data = m.as_json
 
     assert Pender::Store.current.read(id, :json).blank?

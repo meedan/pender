@@ -22,6 +22,7 @@ module Api
           (render_url_invalid; return) unless is_url?(@url)
 
           @id = Media.get_id(@url)
+
           (render_uncached_media and return) if @refresh || Pender::Store.current.read(@id, :json).nil?
           respond_to do |format|
             format.html { render_as_html }
@@ -66,6 +67,8 @@ module Api
           rescue_block = Proc.new { |_e| render_url_invalid and return true }
           handle_exceptions(OpenSSL::SSL::SSLError, rescue_block, {url: @url, request: request}) do
             @media = Media.new(url: @url, request: request)
+            @url = @media.url
+            @id = Media.get_id(@url)
           end
         end and return true
         false

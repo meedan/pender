@@ -17,7 +17,7 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json }
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
-    name = Digest::MD5.hexdigest('https://twitter.com/caiosba/status/742779467521773568')
+    name = Media.get_id('https://twitter.com/caiosba/status/742779467521773568')
     [:html, :json].each do |type|
       assert Pender::Store.current.read(name, type), "#{name}.#{type} is missing"
     end
@@ -40,9 +40,9 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://twitter.com/GyenesNat/status/1220020473955635200'
+    url = 'https://twitter.com/gyenesnat/status/1220020473955635200'
     get :index, params: { url: url, refresh: '1', format: :html }
-    id = Digest::MD5.hexdigest(url)
+    id = Media.get_id(url)
     first_parsed_at = Pender::Store.current.get(id, :html).last_modified
     sleep 1
     get :index, params: { url: url, refresh: '1', format: :html }
@@ -52,8 +52,8 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should not ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://twitter.com/GyenesNat/status/1220020473955635200'
-    id = Digest::MD5.hexdigest(url)
+    url = 'https://twitter.com/gyenesnat/status/1220020473955635200'
+    id = Media.get_id(url)
     get :index, params: { url: url, refresh: '0', format: :html }
     first_parsed_at = Pender::Store.current.get(id, :html).last_modified
     sleep 1
@@ -254,8 +254,13 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     url1 = 'http://ca.ios.ba'
     url2 = 'https://twitter.com/caiosba/status/742779467521773568'
-    id1 = Media.get_id(url1)
-    id2 = Media.get_id(url2)
+
+    normalized_url1 = 'https://ca.ios.ba/'
+    normalized_url2 = 'https://twitter.com/caiosba/status/742779467521773568'
+
+    id1 = Media.get_id(normalized_url1)
+    id2 = Media.get_id(normalized_url2)
+
     [:html, :json].each do |type|
       [id1, id2].each do |id|
         assert !Pender::Store.current.read(id, type), "#{id}.#{type} should not exist"
@@ -270,7 +275,7 @@ class MediasControllerTest < ActionController::TestCase
       end
     end
 
-    delete :delete, params: { url: [url1, url2], format: 'json' }
+    delete :delete, params: { url: [normalized_url1, normalized_url2], format: 'json' }
     assert_response :success
     [:html, :json].each do |type|
       [id1, id2].each do |id|

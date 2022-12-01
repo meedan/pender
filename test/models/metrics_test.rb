@@ -38,7 +38,7 @@ class MetricsIntegrationTest < ActiveSupport::TestCase
         end
         raise AllTestFacebookAppsRateLimited if attempts == allowed_attempts
 
-        id = Media.get_id(url)
+        id = Media.get_id(m.url)
         data = Pender::Store.current.read(id, :json)
 
         assert data['metrics']['facebook']['share_count'] > 0

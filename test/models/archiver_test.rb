@@ -219,7 +219,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    url = 'https://hacktoberfest.com/'
+    url = 'https://hacktoberfest.com'
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json(archivers: 'perma_cc')
@@ -245,7 +245,7 @@ class ArchiverTest < ActiveSupport::TestCase
     allowed_sites = lambda{ |uri| !['api.perma.cc', 'web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
 
-    url = 'https://edition.cnn.com/'
+    url = 'https://edition.cnn.com'
     WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
     WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
@@ -293,11 +293,10 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
-    url = 'https://slack.com/intl/en-br/'
-    id = Media.get_id(url)
-
     a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
+    url = 'https://slack.com/intl/en-br/'
     m = Media.new url: url, key: a
+    id = Media.get_id(m.url)
     m.as_json(archivers: 'perma_cc')
 
     cached = Pender::Store.current.read(id, :json)[:archives]
@@ -315,12 +314,12 @@ class ArchiverTest < ActiveSupport::TestCase
     url = 'https://www.washingtonpost.com/'
     m = Media.new url: url, key: a
     m.as_json
-    Media.update_cache(url, { archives: { 'perma_cc' => { location: 'http://perma.cc/AUA8-QNGH'}}})
+    Media.update_cache(m.url, { archives: { 'perma_cc' => { location: 'http://perma.cc/AUA8-QNGH'}}})
 
     Media.any_instance.unstub(:archive_to_perma_cc)
-    Media.stubs(:notify_webhook_and_update_cache).with('perma_cc', url, { location: 'http://perma.cc/AUA8-QNGH'}, a.id).never
+    Media.stubs(:notify_webhook_and_update_cache).with('perma_cc', m.url, { location: 'http://perma.cc/AUA8-QNGH'}, a.id).never
 
-    m.archive_to_perma_cc
+    m.archive_to_perma_cc(m.url, a.id)
   ensure
     WebMock.disable!
   end
@@ -383,17 +382,16 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive_to_video)
 
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    url = 'https://www.bbc.com/news/av/world-us-canada-57176620'
-    m = Media.new url: url, key: a
+    m = Media.new url: 'https://www.bbc.com/news/av/world-us-canada-57176620', key: a
     m.as_json
 
-    Media.stubs(:supported_video?).with(url, a.id).returns(true)
-    Media.stubs(:notify_video_already_archived).with(url, a.id).returns(nil)
+    Media.stubs(:supported_video?).with(m.url, a.id).returns(true)
+    Media.stubs(:notify_video_already_archived).with(m.url, a.id).returns(nil)
 
     Media.stubs(:store_video_folder).returns('store_video_folder')
     Media.stubs(:system).returns(`(exit 0)`)
-    assert_equal 'store_video_folder', Media.send_to_video_archiver(url, a.id)
-    assert_nil Media.send_to_video_archiver(url, a.id, false)
+    assert_equal 'store_video_folder', Media.send_to_video_archiver(m.url, a.id)
+    assert_nil Media.send_to_video_archiver(m.url, a.id, false)
   ensure
     WebMock.disable!
   end
@@ -631,7 +629,7 @@ class ArchiverTest < ActiveSupport::TestCase
       url = 'http://example.com'
       m = Media.new url: url
       assert_difference 'ArchiverWorker.jobs.size', 1 do
-        m.archive_to_video
+        m.archive_to_video(m.url, nil)
       end
     end
   end
@@ -733,11 +731,9 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 425, body: '')
 
-    url = 'https://slack.com/intl/en-br/'
-    id = Media.get_id(url)
-
     a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    m = Media.new url: url, key: a
+    m = Media.new url: 'https://slack.com/intl/en-br/', key: a
+    id = Media.get_id(m.url)
     assert_raises Pender::RetryLater do
       m.as_json(archivers: 'perma_cc')
     end
