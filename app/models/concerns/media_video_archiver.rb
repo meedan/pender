@@ -7,15 +7,11 @@ module MediaVideoArchiver
     Media.declare_archiver('video', [/^.*$/], :only)
   end
 
-  def archive_to_video
-    self.class.archive_video_in_background(self.original_url, ApiKey.current&.id)
+  def archive_to_video(url, key_id)
+    ArchiverWorker.perform_async(url, :video_archiver, key_id)
   end
 
   module ClassMethods
-    def archive_video_in_background(url, key_id)
-      ArchiverWorker.perform_async(url, :video_archiver, key_id)
-    end
-
     def send_to_video_archiver(url, key_id, supported = nil)
       handle_archiving_exceptions('video_archiver', { url: url, key_id: key_id }) do
         supported = supported_video?(url, key_id) if supported.nil?

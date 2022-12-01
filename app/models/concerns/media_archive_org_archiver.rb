@@ -5,15 +5,11 @@ module MediaArchiveOrgArchiver
     Media.declare_archiver('archive_org', [/^.*$/], :only)
   end
 
-  def archive_to_archive_org
-    self.class.send_to_archive_org_in_background(self.original_url, ApiKey.current&.id)
+  def archive_to_archive_org(url, key_id)
+    ArchiverWorker.perform_in(30.seconds, url, :archive_org, key_id)
   end
 
   module ClassMethods
-    def send_to_archive_org_in_background(url, key_id)
-      ArchiverWorker.perform_in(30.seconds, url, :archive_org, key_id)
-    end
-
     def send_to_archive_org(url, key_id, _supported = nil)
       handle_archiving_exceptions('archive_org', { url: url, key_id: key_id }) do
         encoded_uri = URI.encode(URI.decode(url))
