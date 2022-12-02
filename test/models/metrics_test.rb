@@ -192,21 +192,6 @@ class MetricsUnitTest < ActiveSupport::TestCase
     assert data['metrics'].present?
   end
 
-  test  "should send exception to errbit when fb metrics returns a non-retryable error" do
-    stub_facebook_oauth_request
-    WebMock.stub_request(:get, /graph.facebook.com\/\S*access_token=fake-access-token/).to_return(status: 403, body: "{\"error\":{\"message\":\"Requires Facebook page permissions.\",\"code\":\"10\"}}")
-
-    mocked_airbrake = MiniTest::Mock.new
-    mocked_airbrake.expect :call, :return_value do |message, args|
-      message.match(/Facebook metrics error: 10 - Requires Facebook page permissions/) && !args[:retryable]
-    end
-
-    PenderAirbrake.stub(:notify, mocked_airbrake) do
-      Metrics.get_metrics_from_facebook('http://example.com/trending-article-123', key.id)
-    end
-    mocked_airbrake.verify
-  end
-
   test "should add error to tracing span and raise retry error when fb metrics returns a retryable error" do
     stub_facebook_oauth_request
     WebMock.stub_request(:get, /graph.facebook.com\/\S*access_token=fake-access-token/).to_return(status: 400, body: "{\"error\":{\"message\":\"Try again soon.\",\"code\":\"101\"}}")

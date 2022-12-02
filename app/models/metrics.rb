@@ -101,8 +101,6 @@ module Metrics
       if is_retryable
         @locker.lock(3600) if FACEBOOK_RATE_LIMIT_CODES.include?(error['code'].to_i)
         raise Pender::RetryLater, 'Metrics request failed'
-      else
-        PenderAirbrake.notify("Facebook metrics error: #{error['code']}", url: url, key_id: ApiKey.current&.id, error: error, retryable: is_retryable)
       end
     end
 
