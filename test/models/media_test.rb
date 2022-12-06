@@ -539,16 +539,6 @@ class MediaTest < ActiveSupport::TestCase
     OpenURI.stubs(:open_uri).with(parsed_url, header_with_proxy).raises(OpenURI::HTTPError.new('','403 Forbidden'))
     m.send(:get_html, RequestHelper.html_options(m.url))
   end
-
-  test "should add not found error and return empty html" do
-    url = 'https://www.facebook.com/ldfkgjdfghodhg'
-
-    m = create_media url: url
-    data = m.as_json
-    assert_equal '', data[:html]
-    assert_equal LapisConstants::ErrorCodes::const_get('NOT_FOUND'), data[:error][:code]
-    assert_equal 'URL Not Found', data[:error][:message]
-  end
 end
 
 class MediaUnitTest < ActiveSupport::TestCase
