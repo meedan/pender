@@ -19,7 +19,6 @@ module Pender
         config.use 'OpenTelemetry::Instrumentation::ConcurrentRuby'
         config.use 'OpenTelemetry::Instrumentation::Net::HTTP'
         config.use 'OpenTelemetry::Instrumentation::Rails'
-        config.use 'OpenTelemetry::Instrumentation::Redis'
         config.use 'OpenTelemetry::Instrumentation::Sidekiq'
       end
     end
