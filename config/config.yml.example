@@ -89,14 +89,6 @@ development: &default
   #
   hosts: "{\"<HOST DOMAIN>\":{\"country\":\"<COUNTRY CODE FOR PROXY SETTING>\"},\"<HOST DOMAIN>\":{\"cf_credentials\":\"<CLOUDFLARE CREDENTIALS>\"}}"
 
-  # CloudFlare caching https://support.cloudflare.com/hc/en-us/categories/200275248-Caching
-  #
-  # OPTIONAL
-  #
-  cloudflare_auth_email: # '<CLOUDFLARE AUTH EMAIL>'
-  cloudflare_auth_key: # '<CLOUDFLARE AUTH KEY>'
-  cloudflare_zone: # '<CLOUDFLARE ZONE>'
-
   # Crowdtangle parsing
   #
   # OPTIONAL

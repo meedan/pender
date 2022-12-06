@@ -1,6 +1,5 @@
 require 'pender_exceptions'
 require 'pender_store'
-require 'cc_deville'
 require 'semaphore'
 
 module Api
@@ -8,7 +7,7 @@ module Api
     class MediasController < Api::V1::BaseApiController
       include MediasHelper
 
-      skip_before_action :authenticate_from_token!, if: proc { request.format.html? || request.format.js? || request.format.oembed? }
+      skip_before_action :authenticate_from_token!, if: proc { request.format.html? || request.format.js? }
       before_action :strip_params, only: :index, if: proc { request.format.html? }
       before_action :get_params, only: [:index, :bulk]
       before_action :lock_url, only: :index
@@ -25,20 +24,19 @@ module Api
           @id = Media.get_id(@url)
           (render_uncached_media and return) if @refresh || Pender::Store.current.read(@id, :json).nil?
           respond_to do |format|
-            %w(html js json oembed).each do |f|
-              format.send(f) { send("render_as_#{f}") }
-            end
+            format.html { render_as_html }
+            format.js { render_as_js }
+            format.json { render_as_json }
           end
         end
       end
 
       def delete
         return unless request.format.json?
+
         urls = params[:url].is_a?(Array) ? params[:url] : params[:url].split(' ')
         urls.each do |url|
           @id = Media.get_id(url)
-          cc_url = PenderConfig.get('public_url') + '/api/medias.html?url=' + url
-          CcDeville.clear_cache_for_url(cc_url)
           Pender::Store.current.delete(@id, :json, :html)
         end
         render json: { type: 'success' }, status: 200
@@ -46,6 +44,7 @@ module Api
 
       def bulk
         return unless request.format.json?
+
         urls = params[:url].is_a?(Array) ? params[:url] : params[:url].split(',').map(&:strip)
         result = { enqueued: [], failed: []}
         urls.each do |url|
@@ -79,7 +78,7 @@ module Api
       def render_as_json
         @request = request
         begin
-          clear_html_cache if @refresh
+          Pender::Store.current.delete(@id, :html) if @refresh
           render_timeout(true) { render_media(@media.as_json({ force: @refresh, archivers: @archivers })) and return }
         rescue Pender::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
@@ -95,10 +94,10 @@ module Api
         end
       end
 
-      def render_timeout(must_render, oembed = false)
+      def render_timeout(must_render)
         data = Pender::Store.current.read(@id, :json)
         if !data.nil? && !@refresh
-          render_timeout_media(data, must_render, oembed) and return true
+          render_timeout_media(data, must_render) and return true
         end
         begin
           yield
@@ -109,9 +108,9 @@ module Api
         return false
       end
 
-      def render_timeout_media(data, must_render, oembed = false)
+      def render_timeout_media(data, must_render)
         return false unless must_render
-        oembed ? render_oembed(data) : render_media(data)
+        render_media(data)
         return true
       end
 
@@ -119,11 +118,6 @@ module Api
         data ||= @data || {}
         data.merge!({ embed_tag: embed_url(request) })
         render_success 'media', data
-      end
-
-      def render_oembed(data, instance = nil)
-        json = Media.as_oembed(data, request.original_url, params[:maxwidth], params[:maxheight], instance)
-        render json: json, status: 200
       end
 
       def render_as_html
@@ -142,18 +136,6 @@ module Api
         render template: 'medias/index'
       end
 
-      def render_as_oembed
-        begin
-          render_timeout(true, true) { render_oembed(@media.as_json({ force: @refresh, archivers: @archivers }), @media)}
-        rescue StandardError => e
-          data = @media.nil? ? {} : @media.data
-          data.merge!(error: { message: e.message, code: LapisConstants::ErrorCodes::const_get('UNKNOWN') })
-          notify_airbrake(e, data)
-          Rails.logger.warn level: 'WARN', message: '[Rendering] Could not render media oEmbed data', error_class: e.class, error_message: e.message
-          render_media(data)
-        end
-      end
-
       def save_cache
         template = locals = nil
         cache = Pender::Store.current.read(@id, :json)
@@ -170,7 +152,6 @@ module Api
         content = generate_media_html(template, locals)
 
         Pender::Store.current.write(@id, :html, content)
-        clear_upstream_cache if @refresh
       end
 
       def generate_media_html(template, locals)
@@ -182,23 +163,6 @@ module Api
 
       def should_serve_external_embed?(data)
         !data['html'].blank? && (data['url'] =~ /^https:/ || Rails.env.development?)
-      end
-
-      def clear_upstream_cache
-        url = public_url(request)
-        CcDeville.clear_cache_for_url(url)
-        url_no_refresh = url.gsub(/&?refresh=1&?/, '')
-        CcDeville.clear_cache_for_url(url_no_refresh) if url != url_no_refresh
-      end
-
-      def clear_html_cache
-        Pender::Store.current.delete(@id, :html)
-        url = public_url(request).gsub(/medias(\.[a-z]+)?\?/, 'medias.html?')
-        CcDeville.clear_cache_for_url(url)
-      end
-
-      def public_url(request)
-        request.original_url.gsub(request.base_url, PenderConfig.get('public_url'))
       end
 
       def lock_url

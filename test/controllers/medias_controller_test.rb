@@ -1,6 +1,5 @@
 require_relative '../test_helper'
 require 'time'
-require 'cc_deville'
 
 class MediasControllerTest < ActionController::TestCase
   def setup
@@ -185,11 +184,6 @@ class MediasControllerTest < ActionController::TestCase
     assert_not_nil assigns(:caller)
   end
 
-  test "should return default oEmbed format" do
-    get :index, params: { url: 'https://twitter.com/CommitStrip', format: :oembed }
-    assert_response :success
-  end
-
   test "should render custom HTML if provided by oEmbed" do
     oembed = '{"version":"1.0","type":"rich","html":"<script type=\"text/javascript\"src=\"https:\/\/meedan.com\/meedan_iframes\/js\/meedan_iframes.parent.min.js?style=width%3A%20100%25%3B&amp;u=\/en\/embed\/3300\"><\/script>"}'
     response = 'mock';response.stubs(:code).returns('200');response.stubs(:body).returns(oembed)
@@ -204,16 +198,6 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'https://twitter.com/check', format: :html }
     assert_response :success
     assert_match /pender-title/, response.body
-  end
-
-  test "should return custom oEmbed format" do
-    oembed = '{"version":"1.0","type":"rich","html":"<script type=\"text/javascript\"src=\"https:\/\/meedan.com\/meedan_iframes\/js\/meedan_iframes.parent.min.js?style=width%3A%20100%25%3B&amp;u=\/en\/embed\/3300\"><\/script>"}'
-    response = 'mock';response.stubs(:code).returns('200');response.stubs(:body).returns(oembed)
-    Media.any_instance.stubs(:oembed_get_data_from_url).returns(response);response.stubs(:header).returns({})
-
-    get :index, params: { url: 'http://meedan.com', format: :oembed }
-    assert_response :success
-    assert_not_nil response.body
   end
 
   test "should create cache file" do
@@ -250,36 +234,6 @@ class MediasControllerTest < ActionController::TestCase
     assert time <= expected_time, "Expected it to take less than #{expected_time} seconds, but took #{time} seconds"
     assert_equal 'Timeout', JSON.parse(@response.body)['data']['error']['message']
     assert_response 200
-  end
-
-  test "should not try to clear upstream cache when generating cache for the first time" do
-    CcDeville.expects(:clear_cache_for_url).never
-    get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
-  end
-
-  test "should not try to clear upstream cache when not asking to" do
-    CcDeville.expects(:clear_cache_for_url).never
-    get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
-    get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
-  end
-
-  test "should try to clear upstream cache when asking to" do
-    config = {'public_url' => 'http://localhost:3200' }
-    stub_configs(config)
-
-    url = 'https://twitter.com/caiosba/status/742779467521773568'
-    encurl = CGI.escape(url)
-    CcDeville.expects(:clear_cache_for_url).with(config['public_url'] + '/api/medias.html?url=' + encurl).once
-    CcDeville.expects(:clear_cache_for_url).with(config['public_url'] + '/api/medias.html?refresh=1&url=' + encurl).once
-    get :index, params: { url: url, format: :html }
-    get :index, params: { url: url, format: :html, refresh: '1' }
-  end
-
-  test "should not try to clear upstream cache when there are no configs" do
-    stub_configs({ 'cc_deville_token' => '', 'cc_deville_host' => '', 'cc_deville_httpauth' => '' }) do
-      CcDeville.expects(:clear_cache_for_url).never
-      get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html, refresh: '1' }
-    end
   end
 
   test "should return success even if media could not be instantiated" do
@@ -323,42 +277,6 @@ class MediasControllerTest < ActionController::TestCase
         assert !Pender::Store.current.read(id, type), "#{id}.#{type} is missing"
       end
     end
-  end
-
-  test "should return custom oEmbed format for scmp url" do
-    url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
-    get :index, params: { url: url, format: :oembed }
-    assert_response :success
-    assert_not_nil response.body
-    data = JSON.parse(response.body)
-    assert_nil data['error']
-  end
-
-  test "should handle error when calls oembed format" do
-    url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
-    id = Digest::MD5.hexdigest(url)
-    Media.stubs(:as_oembed).raises(StandardError)
-    Pender::Store.current.delete(id, :json)
-    get :index, params: { url: url, format: :oembed }
-    assert_response :success
-    data = JSON.parse(response.body)['data']
-    assert_not_nil data['error']['message']
-  end
-
-  test "should respond to oembed format when data is on cache" do
-    url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
-    id = Digest::MD5.hexdigest(url)
-
-    assert_nil Pender::Store.current.read(id, :json)
-    get :index, params: { url: url, format: :oembed }
-    assert_not_nil assigns(:media)
-    assert_response :success
-    assert_nil JSON.parse(response.body)['error']
-
-    assert_not_nil Pender::Store.current.read(assigns(:id), :json)
-    get :index, params: { url: url, format: :oembed }
-    assert_response :success
-    assert_nil JSON.parse(response.body)['error']
   end
 
   test "should return invalid url when the certificate has error" do
@@ -428,7 +346,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return timeout error with minimal data if cannot parse url" do
-    stub_configs({ 'timeout' => 0.1, 'cloudflare_auth_email' => nil }) do
+    stub_configs({ 'timeout' => 0.1 }) do
       url = 'https://changescamming.net/halalan-2019/maria-ressa-to-bong-go-um-attend-ka-ng-senatorial-debate-di-yung-nagtatapon-ka-ng-pera'
       Airbrake.stubs(:configured?).returns(true)
       Airbrake.stubs(:notify).never
@@ -679,7 +597,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     url = 'https://twitter.com/meedan/status/1118436001570086912'
     assert !Semaphore.new(url).locked?
-    [:js, :json, :html, :oembed].each do |format|
+    [:js, :json, :html].each do |format|
       @controller.stubs("render_as_#{format}".to_sym).raises(RuntimeError.new('error'))
       get :index, params: { url: url, format: format }
       assert !Semaphore.new(url).locked?
@@ -694,7 +612,7 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://twitter.com/knowloitering/status/1140462371820826624'
     assert !Semaphore.new(url).locked?
     Pender::Store.any_instance.stubs(:read).raises(RuntimeError.new('error'))
-    [:js, :json, :html, :oembed].each do |format|
+    [:js, :json, :html].each do |format|
       assert_nothing_raised do
         get :index, params: { url: url, format: format }
         assert !Semaphore.new(url).locked?
