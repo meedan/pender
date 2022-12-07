@@ -116,7 +116,6 @@ Use this method in order to get the archivers enabled on this application
 Get parseable data for a given URL, that can be a post or a profile, from different providers. `format` can be one of the following, see responses below:
 - `html`
 - `js`
-- `oembed`
 - `json`
 
 **Parameters**
@@ -144,26 +143,6 @@ An embed code for the item, which should be called this way:
 
 ```html
 <script src="http://pender.host/api/medias.js?url=https%3A%2F%2Fwww.youtube.com%2Fchannel%2FUCEWHPFNilsT0IfQfutVzsag"></script>
-```
-
-**oEmbed**
-
-An oEmbed representation of the item, e.g.:
-
-```json
-{
-  "type": "rich",
-  "version": "1.0",
-  "title": "Porta dos Fundos",
-  "author_name": "PortadosFundos",
-  "author_url": "https://www.youtube.com/channel/UCEWHPFNilsT0IfQfutVzsag",
-  "provider_name": "youtube",
-  "provider_url": "http://www.youtube.com",
-  "thumbnail_url": "https://yt3.ggpht.com/-xle954Zxs4E/AAAAAAAAAAI/AAAAAAAAAAA/geYaRfTQ0FY/s88-c-k-no-rj-c0xffffff/photo.jpg",
-  "html": "\u003ciframe src=\"http://localhost:3005/api/medias.html?url=https%3A%2F%2Fwww.youtube.com%2Fchannel%2FUCEWHPFNilsT0IfQfutVzsag\" width=\"600\" height=\"300\" scrolling=\"no\" seamless\u003eNot supported\u003c/iframe\u003e",
-  "width": 600,
-  "height": 300
-}
 ```
 
 **JSON**

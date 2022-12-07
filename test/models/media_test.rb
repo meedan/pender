@@ -539,68 +539,6 @@ class MediaTest < ActiveSupport::TestCase
     OpenURI.stubs(:open_uri).with(parsed_url, header_with_proxy).raises(OpenURI::HTTPError.new('','403 Forbidden'))
     m.send(:get_html, RequestHelper.html_options(m.url))
   end
-
-  test "should add not found error and return empty html" do
-    url = 'https://www.facebook.com/ldfkgjdfghodhg'
-
-    m = create_media url: url
-    data = m.as_json
-    assert_equal '', data[:html]
-    assert_equal LapisConstants::ErrorCodes::const_get('NOT_FOUND'), data[:error][:code]
-    assert_equal 'URL Not Found', data[:error][:message]
-  end
-
-  test "should return item as oembed" do
-    url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
-    m = create_media url: url
-    data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150)
-    assert !data['title'].blank?
-    assert_match 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
-    assert_equal 'facebook', data['provider_name']
-    assert_equal 'http://www.facebook.com', data['provider_url']
-    assert_equal 300, data['width']
-    assert_equal 150, data['height']
-    assert_equal '<iframe src="http://pender.org/medias.html?url=https://www.facebook.com/pages/Meedan/105510962816034?fref=ts" width="300" height="150" scrolling="no" border="0" seamless>Not supported</iframe>', data['html']
-  end
-
-  test "should return item as oembed when data is not on cache" do
-    url = 'https://www.facebook.com/photo.php?fbid=265901254902229&set=pb.100044470688234.-2207520000..&type=3'
-    m = create_media url: url
-    data = Media.as_oembed(nil, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
-    assert !data['title'].blank?
-    assert_equal 'facebook', data['provider_name']
-    assert_equal 'http://www.facebook.com', data['provider_url']
-    assert_equal 300, data['width']
-    assert_equal 150, data['height']
-    assert_equal "<iframe src=\"http://pender.org/medias.html?url=#{url}\" width=\"300\" height=\"150\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>", data['html']
-    assert_not_nil data['thumbnail_url']
-  end
-
-  test "should return item as oembed when data is on cache and raw key is missing" do
-    url = 'https://www.facebook.com/photo/?fbid=264562325036122&set=pb.100044470688234.-2207520000..'
-    m = create_media url: url
-    json_data = m.as_json
-
-    # Remove raw data and reset to values we can expect
-    json_data.delete('raw')
-    json_data.merge!(
-      url: 'https://www.facebook.com/photo/?fbid=264562325036122&set=pb.100044470688234.-2207520000..',
-      title: 'Fake pender item',
-      author_name: 'pender author',
-      author_url: 'https://example.com/author',
-      picture: 'https://example.com/picture'
-    )
-    data = Media.as_oembed(json_data, "http://pender.org/medias.html?url=#{url}", 300, 150)
-    assert_equal 'Fake pender item', data['title']
-    assert_equal 'pender author', data['author_name']
-    assert_equal 'https://example.com/author', data['author_url']
-    assert_equal 'facebook', data['provider_name']
-    assert_equal 'http://www.facebook.com', data['provider_url']
-    assert_equal 'https://example.com/picture', data['thumbnail_url']
-    assert_equal 300, data['width']
-    assert_equal 150, data['height']
-    assert_equal "<iframe src=\"http://pender.org/medias.html?url=#{url}\" width=\"300\" height=\"150\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>", data['html']
-  end
 end
 
 class MediaUnitTest < ActiveSupport::TestCase
