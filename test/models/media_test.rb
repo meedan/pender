@@ -58,7 +58,7 @@ class MediaTest < ActiveSupport::TestCase
       header_options_without_cf = RequestHelper.html_options(url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
       assert_nil header_options_without_cf['CF-Access-Client-Id']
       assert_nil header_options_without_cf['CF-Access-Client-Secret']
-  
+
       PenderConfig.current = nil
       ENV['hosts'] = {"example.com"=>{"cf_credentials"=>"1234:5678"}}.to_json
       header_options_with_cf = RequestHelper.html_options(url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
@@ -82,7 +82,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal 'https://www.bbc.com', data['author_url']
     assert_equal '', data['picture']
   end
-  
+
   test "should get canonical URL parsed from html tags" do
     doc = ''
     open('test/data/page-with-url-on-tag.html') { |f| doc = f.read }
@@ -108,9 +108,9 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should return author picture" do
     WebMock.stub_request(:get, /github.com/).to_return(status: 200, body: "<meta property='og:image' content='https://github.githubassets.com/images/modules/open_graph/github-logo.png'>")
-    url = 'http://github.com'
-    id = Media.get_id url
+    url = 'https://github.com/'
     m = create_media url: url
+    id = Media.get_id m.url
     data = m.as_json
     assert_match /\/medias\/#{id}\/author_picture/, data['author_picture']
   end
@@ -163,7 +163,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:try_https)
     OpenURI.unstub(:open_uri)
     Airbrake.unstub(:configured?)
-  end 
+  end
 
   test "should redirect to HTTPS if available and not already HTTPS" do
     m = create_media url: 'http://imotorhead.com'
@@ -292,7 +292,7 @@ class MediaTest < ActiveSupport::TestCase
     Media::PARSERS.each do |parser|
       parser.any_instance.stubs(:parse_data).raises(StandardError)
     end
-    
+
     # If we stub within this block, the stub isn't in place when we need it
     Media::PARSERS.each do |parser|
       m = create_media url: 'http://example.com'
@@ -428,12 +428,12 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should update media cache" do
     url = 'http://www.example.com'
-    id = Media.get_id(url)
     m = create_media url: url
+    id = Media.get_id(m.url)
     m.as_json
 
     assert_equal({}, Pender::Store.current.read(id, :json)['archives'])
-    Media.update_cache(url, { archives: { 'archive_org' => 'new-data' } })
+    Media.update_cache(m.url, { archives: { 'archive_org' => 'new-data' } })
     assert_equal({'archive_org' => 'new-data'}, Pender::Store.current.read(id, :json)['archives'])
   end
 
@@ -539,73 +539,6 @@ class MediaTest < ActiveSupport::TestCase
     OpenURI.stubs(:open_uri).with(parsed_url, header_with_proxy).raises(OpenURI::HTTPError.new('','403 Forbidden'))
     m.send(:get_html, RequestHelper.html_options(m.url))
   end
-
-  test "should handle error when can't notify webhook" do
-    webhook_info = { 'webhook_url' => 'http://invalid.webhook', 'webhook_token' => 'test' }
-    assert_equal false, Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
-  end
-
-  test "should add not found error and return empty html" do
-    url = 'https://www.facebook.com/ldfkgjdfghodhg'
-
-    m = create_media url: url
-    data = m.as_json
-    assert_equal '', data[:html]
-    assert_equal LapisConstants::ErrorCodes::const_get('NOT_FOUND'), data[:error][:code]
-    assert_equal 'URL Not Found', data[:error][:message]
-  end
-
-  test "should return item as oembed" do
-    url = 'https://www.facebook.com/pages/Meedan/105510962816034?fref=ts'
-    m = create_media url: url
-    data = Media.as_oembed(m.as_json, "http://pender.org/medias.html?url=#{url}", 300, 150)
-    assert !data['title'].blank?
-    assert_match 'https://www.facebook.com/pages/Meedan/105510962816034', data['author_url']
-    assert_equal 'facebook', data['provider_name']
-    assert_equal 'http://www.facebook.com', data['provider_url']
-    assert_equal 300, data['width']
-    assert_equal 150, data['height']
-    assert_equal '<iframe src="http://pender.org/medias.html?url=https://www.facebook.com/pages/Meedan/105510962816034?fref=ts" width="300" height="150" scrolling="no" border="0" seamless>Not supported</iframe>', data['html']
-  end
-
-  test "should return item as oembed when data is not on cache" do
-    url = 'https://www.facebook.com/photo.php?fbid=265901254902229&set=pb.100044470688234.-2207520000..&type=3'
-    m = create_media url: url
-    data = Media.as_oembed(nil, "http://pender.org/medias.html?url=#{url}", 300, 150, m)
-    assert !data['title'].blank?
-    assert_equal 'facebook', data['provider_name']
-    assert_equal 'http://www.facebook.com', data['provider_url']
-    assert_equal 300, data['width']
-    assert_equal 150, data['height']
-    assert_equal "<iframe src=\"http://pender.org/medias.html?url=#{url}\" width=\"300\" height=\"150\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>", data['html']
-    assert_not_nil data['thumbnail_url']
-  end
-
-  test "should return item as oembed when data is on cache and raw key is missing" do
-    url = 'https://www.facebook.com/photo/?fbid=264562325036122&set=pb.100044470688234.-2207520000..'
-    m = create_media url: url
-    json_data = m.as_json
-
-    # Remove raw data and reset to values we can expect
-    json_data.delete('raw')
-    json_data.merge!(
-      url: 'https://www.facebook.com/photo/?fbid=264562325036122&set=pb.100044470688234.-2207520000..',
-      title: 'Fake pender item',
-      author_name: 'pender author',
-      author_url: 'https://example.com/author',
-      picture: 'https://example.com/picture'
-    )
-    data = Media.as_oembed(json_data, "http://pender.org/medias.html?url=#{url}", 300, 150)
-    assert_equal 'Fake pender item', data['title']
-    assert_equal 'pender author', data['author_name']
-    assert_equal 'https://example.com/author', data['author_url']
-    assert_equal 'facebook', data['provider_name']
-    assert_equal 'http://www.facebook.com', data['provider_url']
-    assert_equal 'https://example.com/picture', data['thumbnail_url']
-    assert_equal 300, data['width']
-    assert_equal 150, data['height']
-    assert_equal "<iframe src=\"http://pender.org/medias.html?url=#{url}\" width=\"300\" height=\"150\" scrolling=\"no\" border=\"0\" seamless>Not supported</iframe>", data['html']
-  end
 end
 
 class MediaUnitTest < ActiveSupport::TestCase
@@ -621,13 +554,13 @@ class MediaUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, /example.com/).and_return(status: 200, body: '<html>something</html>')
     Parser::PageItem.any_instance.stubs(:parse_data).returns({title: 'a title'})
 
-    url = 'http://www.example.com'
-    id = Media.get_id(url)
+    url = 'http://www.example.com/'
+    m = create_media url: url
+    id = Media.get_id(m.url)
 
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?
 
-    m = create_media url: url
     data = m.as_json
 
     assert_equal data[:title], 'a title'
@@ -639,13 +572,14 @@ class MediaUnitTest < ActiveSupport::TestCase
     Parser::PageItem.any_instance.stubs(:parse_data).returns({title: 'a title', error: {message: 'fake error for test'}})
 
     url = 'http://www.example.com'
-    id = Media.get_id(url)
+    m = create_media url: url
+    id = Media.get_id(m.url)
 
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?
 
-    m = create_media url: url
     data = m.as_json
+
     assert Pender::Store.current.read(id, :json).blank?
   end
 
@@ -654,16 +588,57 @@ class MediaUnitTest < ActiveSupport::TestCase
     Parser::PageItem.any_instance.stubs(:parse_data).returns({title: 'this is a title', raw: {link: 'https://www.example.com/á<80><99>á<80><84>á<80>'}, error: {message: 'fake error for test'}})
 
     url = 'http://www.example.com'
-    id = Media.get_id(url)
+
+    m = create_media url: url
+    id = Media.get_id(m.url)
 
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?
-    
-    m = create_media url: url
+
     data = m.as_json
-    
+
     assert Pender::Store.current.read(id, :json).blank?
     assert_equal 'this is a title', data[:title]
     assert_equal 'https://www.example.com/%C3%A1%3C80%3E%3C99%3E%C3%A1%3C80%3E%3C84%3E%C3%A1%3C80%3E', data[:raw][:link]
+  end
+
+  test "#notify_webhook should raise a retry exception for unsuccessful response from webhook" do
+    WebMock.stub_request(:post, /example.com/).and_return(status: 404, body: 'fake response body')
+    webhook_info = { 'webhook_url' => 'http://example.com/webhook', 'webhook_token' => 'test' }
+
+    assert_raises Pender::RetryLater do
+      Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+    end
+  end
+
+  test "#notify_webhook should swallow exception and report error to errbit if error happens while notifying webhook" do
+    WebMock.stub_request(:post, /example.com/).and_return(status: 200, body: 'fake response body')
+    webhook_info = { 'webhook_url' => 'asdfasdf', 'webhook_token' => 'test' }
+
+    airbrake_call_count = 0
+    arguments_checker = Proc.new do |e|
+      airbrake_call_count += 1
+    end
+
+    PenderAirbrake.stub(:notify, arguments_checker) do
+      assert_nothing_raised do
+        Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+      end
+    end
+    assert_equal 1, airbrake_call_count
+  end
+
+  test "#notify_webhook should return successful response from webhook" do
+    webhook_info = { 'webhook_url' => 'http://example.com/webhook', 'webhook_token' => 'test' }
+
+    WebMock.stub_request(:post, /example.com/).and_return(status: 200, body: 'fake response body')
+    response = Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+    assert_equal "200", response.code
+    assert_equal 'fake response body', response.body
+
+    WebMock.stub_request(:post, /example.com/).and_return(status: 201, body: 'fake response body')
+    response = Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+    assert_equal "201", response.code
+    assert_equal 'fake response body', response.body
   end
 end

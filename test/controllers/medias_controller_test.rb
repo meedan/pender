@@ -1,6 +1,5 @@
 require_relative '../test_helper'
 require 'time'
-require 'cc_deville'
 
 class MediasControllerTest < ActionController::TestCase
   def setup
@@ -18,7 +17,7 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json }
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
-    name = Digest::MD5.hexdigest('https://twitter.com/caiosba/status/742779467521773568')
+    name = Media.get_id('https://twitter.com/caiosba/status/742779467521773568')
     [:html, :json].each do |type|
       assert Pender::Store.current.read(name, type), "#{name}.#{type} is missing"
     end
@@ -41,9 +40,9 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://twitter.com/GyenesNat/status/1220020473955635200'
+    url = 'https://twitter.com/gyenesnat/status/1220020473955635200'
     get :index, params: { url: url, refresh: '1', format: :html }
-    id = Digest::MD5.hexdigest(url)
+    id = Media.get_id(url)
     first_parsed_at = Pender::Store.current.get(id, :html).last_modified
     sleep 1
     get :index, params: { url: url, refresh: '1', format: :html }
@@ -53,8 +52,8 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should not ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://twitter.com/GyenesNat/status/1220020473955635200'
-    id = Digest::MD5.hexdigest(url)
+    url = 'https://twitter.com/gyenesnat/status/1220020473955635200'
+    id = Media.get_id(url)
     get :index, params: { url: url, refresh: '0', format: :html }
     first_parsed_at = Pender::Store.current.get(id, :html).last_modified
     sleep 1
@@ -185,11 +184,6 @@ class MediasControllerTest < ActionController::TestCase
     assert_not_nil assigns(:caller)
   end
 
-  test "should return default oEmbed format" do
-    get :index, params: { url: 'https://twitter.com/CommitStrip', format: :oembed }
-    assert_response :success
-  end
-
   test "should render custom HTML if provided by oEmbed" do
     oembed = '{"version":"1.0","type":"rich","html":"<script type=\"text/javascript\"src=\"https:\/\/meedan.com\/meedan_iframes\/js\/meedan_iframes.parent.min.js?style=width%3A%20100%25%3B&amp;u=\/en\/embed\/3300\"><\/script>"}'
     response = 'mock';response.stubs(:code).returns('200');response.stubs(:body).returns(oembed)
@@ -204,16 +198,6 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'https://twitter.com/check', format: :html }
     assert_response :success
     assert_match /pender-title/, response.body
-  end
-
-  test "should return custom oEmbed format" do
-    oembed = '{"version":"1.0","type":"rich","html":"<script type=\"text/javascript\"src=\"https:\/\/meedan.com\/meedan_iframes\/js\/meedan_iframes.parent.min.js?style=width%3A%20100%25%3B&amp;u=\/en\/embed\/3300\"><\/script>"}'
-    response = 'mock';response.stubs(:code).returns('200');response.stubs(:body).returns(oembed)
-    Media.any_instance.stubs(:oembed_get_data_from_url).returns(response);response.stubs(:header).returns({})
-
-    get :index, params: { url: 'http://meedan.com', format: :oembed }
-    assert_response :success
-    assert_not_nil response.body
   end
 
   test "should create cache file" do
@@ -252,36 +236,6 @@ class MediasControllerTest < ActionController::TestCase
     assert_response 200
   end
 
-  test "should not try to clear upstream cache when generating cache for the first time" do
-    CcDeville.expects(:clear_cache_for_url).never
-    get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
-  end
-
-  test "should not try to clear upstream cache when not asking to" do
-    CcDeville.expects(:clear_cache_for_url).never
-    get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
-    get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
-  end
-
-  test "should try to clear upstream cache when asking to" do
-    config = {'public_url' => 'http://localhost:3200' }
-    stub_configs(config)
-
-    url = 'https://twitter.com/caiosba/status/742779467521773568'
-    encurl = CGI.escape(url)
-    CcDeville.expects(:clear_cache_for_url).with(config['public_url'] + '/api/medias.html?url=' + encurl).once
-    CcDeville.expects(:clear_cache_for_url).with(config['public_url'] + '/api/medias.html?refresh=1&url=' + encurl).once
-    get :index, params: { url: url, format: :html }
-    get :index, params: { url: url, format: :html, refresh: '1' }
-  end
-
-  test "should not try to clear upstream cache when there are no configs" do
-    stub_configs({ 'cc_deville_token' => '', 'cc_deville_host' => '', 'cc_deville_httpauth' => '' }) do
-      CcDeville.expects(:clear_cache_for_url).never
-      get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html, refresh: '1' }
-    end
-  end
-
   test "should return success even if media could not be instantiated" do
     authenticate_with_token
     Media.expects(:new).raises(Net::ReadTimeout)
@@ -300,8 +254,13 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     url1 = 'http://ca.ios.ba'
     url2 = 'https://twitter.com/caiosba/status/742779467521773568'
-    id1 = Media.get_id(url1)
-    id2 = Media.get_id(url2)
+
+    normalized_url1 = 'https://ca.ios.ba/'
+    normalized_url2 = 'https://twitter.com/caiosba/status/742779467521773568'
+
+    id1 = Media.get_id(normalized_url1)
+    id2 = Media.get_id(normalized_url2)
+
     [:html, :json].each do |type|
       [id1, id2].each do |id|
         assert !Pender::Store.current.read(id, type), "#{id}.#{type} should not exist"
@@ -316,49 +275,13 @@ class MediasControllerTest < ActionController::TestCase
       end
     end
 
-    delete :delete, params: { url: [url1, url2], format: 'json' }
+    delete :delete, params: { url: [normalized_url1, normalized_url2], format: 'json' }
     assert_response :success
     [:html, :json].each do |type|
       [id1, id2].each do |id|
         assert !Pender::Store.current.read(id, type), "#{id}.#{type} is missing"
       end
     end
-  end
-
-  test "should return custom oEmbed format for scmp url" do
-    url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
-    get :index, params: { url: url, format: :oembed }
-    assert_response :success
-    assert_not_nil response.body
-    data = JSON.parse(response.body)
-    assert_nil data['error']
-  end
-
-  test "should handle error when calls oembed format" do
-    url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
-    id = Digest::MD5.hexdigest(url)
-    Media.stubs(:as_oembed).raises(StandardError)
-    Pender::Store.current.delete(id, :json)
-    get :index, params: { url: url, format: :oembed }
-    assert_response :success
-    data = JSON.parse(response.body)['data']
-    assert_not_nil data['error']['message']
-  end
-
-  test "should respond to oembed format when data is on cache" do
-    url = 'http://www.scmp.com/news/hong-kong/politics/article/2071886/crucial-next-hong-kong-leader-have-central-governments-trust'
-    id = Digest::MD5.hexdigest(url)
-
-    assert_nil Pender::Store.current.read(id, :json)
-    get :index, params: { url: url, format: :oembed }
-    assert_not_nil assigns(:media)
-    assert_response :success
-    assert_nil JSON.parse(response.body)['error']
-
-    assert_not_nil Pender::Store.current.read(assigns(:id), :json)
-    get :index, params: { url: url, format: :oembed }
-    assert_response :success
-    assert_nil JSON.parse(response.body)['error']
   end
 
   test "should return invalid url when the certificate has error" do
@@ -428,7 +351,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return timeout error with minimal data if cannot parse url" do
-    stub_configs({ 'timeout' => 0.1, 'cloudflare_auth_email' => nil }) do
+    stub_configs({ 'timeout' => 0.1 }) do
       url = 'https://changescamming.net/halalan-2019/maria-ressa-to-bong-go-um-attend-ka-ng-senatorial-debate-di-yung-nagtatapon-ka-ng-pera'
       Airbrake.stubs(:configured?).returns(true)
       Airbrake.stubs(:notify).never
@@ -447,35 +370,38 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should not archive in any archiver when no archiver parameter is sent" do
     Media.any_instance.unstub(:archive_to_archive_org)
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     WebMock.enable!
     allowed_sites = lambda{ |uri| !['web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     authenticate_with_token(a)
     url = 'https://twitter.com/meedan/status/1095693211681673218'
     get :index, params: { url: url, format: :json }
     id = Media.get_id(url)
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives].sort.to_h)
-
+  ensure
     WebMock.disable!
   end
 
   test "should not archive when archiver parameter is none" do
     Media.any_instance.unstub(:archive_to_archive_org)
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     WebMock.enable!
     allowed_sites = lambda{ |uri| !['web.archive.org'].include?(uri.host) }
     WebMock.disable_net_connect!(allow: allowed_sites)
     WebMock.stub_request(:any, /web.archive.org/).to_return(body: '', headers: { 'content-location' => '/web/123456/test' })
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     authenticate_with_token(a)
     url = 'https://twitter.com/meedan/status/1095035775736078341'
     get :index, params: { url: url, archivers: 'none', format: :json }
     id = Media.get_id(url)
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
-
+  ensure
     WebMock.disable!
   end
 
@@ -486,11 +412,12 @@ class MediasControllerTest < ActionController::TestCase
       Media.stubs(:get_available_archive_org_snapshot).returns(nil)
       Media::ARCHIVERS['perma_cc'][:enabled] = true
 
-      a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+      a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' },  'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
       WebMock.enable!
       allowed_sites = lambda{ |uri| !['api.perma.cc', 'web.archive.org'].include?(uri.host) }
       WebMock.disable_net_connect!(allow: allowed_sites)
 
+      WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
       WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
       WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
       WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
@@ -506,15 +433,18 @@ class MediasControllerTest < ActionController::TestCase
         archiver.strip!
         assert_equal(archived[archiver], data[:archives][archiver])
       end
-
+    ensure
       WebMock.disable!
     end
   end
 
   test "should show the urls that couldn't be enqueued when bulk parsing" do
-    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
-    a = create_api_key application_settings: webhook_info
+    WebMock.enable!
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+
+    a = create_api_key application_settings: { 'webhook_url' => 'https://example.com/webhook.php', 'webhook_token' => 'test' }
     authenticate_with_token(a)
+
     url1 = 'https://twitter.com/check/status/1102991340294557696'
     url2 = 'https://twitter.com/dimalb/status/1102928768673423362'
     MediaParserWorker.stubs(:perform_async).with(url1, a.id, false, nil)
@@ -522,10 +452,12 @@ class MediasControllerTest < ActionController::TestCase
     post :bulk, params: { url: [url1, url2], format: :json }
     assert_response :success
     assert_equal({"enqueued"=>[url1], "failed"=>[url2]}, JSON.parse(@response.body)['data'])
+  ensure
+    WebMock.disable!
   end
 
   test "should enqueue, parse and notify with error when invalid url" do
-    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
+    webhook_info = { 'webhook_url' => 'https://example.com/webhook.php', 'webhook_token' => 'test' }
     a = create_api_key application_settings: webhook_info
     authenticate_with_token(a)
     url1 = 'http://invalid-url'
@@ -546,7 +478,9 @@ class MediasControllerTest < ActionController::TestCase
     assert_nil Pender::Store.current.read(id1, :json)
     assert_nil Pender::Store.current.read(id2, :json)
 
-    a = create_api_key application_settings: { 'webhook_url': 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token': 'test' }
+    WebMock.enable!
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     authenticate_with_token(a)
     post :bulk, params: { url: "#{url1}, #{url2}", format: :json }
     assert_response :success
@@ -555,12 +489,14 @@ class MediasControllerTest < ActionController::TestCase
     assert !data1['title'].blank?
     data2 = Pender::Store.current.read(id2, :json)
     assert !data2['title'].blank?
+  ensure
+    WebMock.disable!
   end
 
   test "should enqueue, parse and notify with error when timeout" do
     Sidekiq::Testing.fake!
-    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
-    a = create_api_key application_settings: webhook_info.merge(config: { timeout: '0.001' })
+    a = create_api_key application_settings: { config: { timeout: '0.001' }, 'webhook_url' => 'https://example.com/webhook.php', 'webhook_token' => 'test' }
+
     authenticate_with_token(a)
 
     url = 'https://ca.ios.ba/files/meedan/sleep.php'
@@ -585,7 +521,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return data with error message if can't parse" do
-    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
+    webhook_info = { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     url = 'https://twitter.com/meedan/status/1102990605339316224'
     parse_error = { error: { "message"=>"RuntimeError: RuntimeError", "code"=>5}}
     required_fields = Media.required_fields(OpenStruct.new(url: url))
@@ -593,6 +529,7 @@ class MediasControllerTest < ActionController::TestCase
     Media.stubs(:notify_webhook)
     Media.stubs(:notify_webhook).with('media_parsed', url, parse_error.merge(required_fields).with_indifferent_access, webhook_info)
     Media.any_instance.stubs(:parse).raises(RuntimeError)
+
     a = create_api_key application_settings: webhook_info
     authenticate_with_token(a)
     post :bulk, params: { url: url, format: :json }
@@ -602,13 +539,15 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return data with error message if can't instantiate" do
     Sidekiq::Testing.fake!
-    webhook_info = { 'webhook_url' => 'http://ca.ios.ba/files/meedan/webhook.php', 'webhook_token' => 'test' }
-    url = 'https://twitter.com/meedan/status/1102990605339316224'
+    webhook_info = { 'webhook_url' => 'https://example.com/webhook.php', 'webhook_token' => 'test' }
     a = create_api_key application_settings: webhook_info
     authenticate_with_token(a)
 
     assert_equal 0, MediaParserWorker.jobs.size
+
+    url = 'https://twitter.com/meedan/status/1102990605339316224'
     post :bulk, params: { url: url, format: :json }
+
     assert_response :success
     assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
     assert_equal 1, MediaParserWorker.jobs.size
@@ -663,7 +602,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     url = 'https://twitter.com/meedan/status/1118436001570086912'
     assert !Semaphore.new(url).locked?
-    [:js, :json, :html, :oembed].each do |format|
+    [:js, :json, :html].each do |format|
       @controller.stubs("render_as_#{format}".to_sym).raises(RuntimeError.new('error'))
       get :index, params: { url: url, format: format }
       assert !Semaphore.new(url).locked?
@@ -678,7 +617,7 @@ class MediasControllerTest < ActionController::TestCase
     url = 'https://twitter.com/knowloitering/status/1140462371820826624'
     assert !Semaphore.new(url).locked?
     Pender::Store.any_instance.stubs(:read).raises(RuntimeError.new('error'))
-    [:js, :json, :html, :oembed].each do |format|
+    [:js, :json, :html].each do |format|
       assert_nothing_raised do
         get :index, params: { url: url, format: format }
         assert !Semaphore.new(url).locked?

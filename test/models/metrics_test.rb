@@ -8,16 +8,16 @@ class MetricsIntegrationTest < ActiveSupport::TestCase
       fb_config = PenderConfig.get('facebook_test_app') || PenderConfig.get('facebook_app')
       PenderConfig.current = nil
       key = create_api_key application_settings: { config: { facebook_app: fb_config }}
-  
+
       url = 'https://www.google.com/'
-  
+
       # Make sure we don't send 10 requests to Facebook at once and get rate limited,
       # since Sidekiq otherwise would perform the ten days of updates at once
       Sidekiq::Worker.clear_all
       Sidekiq::Testing.fake! do
         m = create_media url: url, key: key
         m.as_json
-  
+
         # Perform once for each Facebook app we have in the configuration -
         # in case we get rate limited on the first app id but not second
         allowed_attempts = fb_config.split(";").count
@@ -37,10 +37,10 @@ class MetricsIntegrationTest < ActiveSupport::TestCase
           end
         end
         raise AllTestFacebookAppsRateLimited if attempts == allowed_attempts
-  
-        id = Media.get_id(url)
+
+        id = Media.get_id(m.url)
         data = Pender::Store.current.read(id, :json)
-        
+
         assert data['metrics']['facebook']['share_count'] > 0
       end
     rescue AllTestFacebookAppsRateLimited => e
@@ -72,7 +72,7 @@ class MetricsUnitTest < ActiveSupport::TestCase
     isolated_setup
     Semaphore.new(facebook_app_id).unlock
   end
-  
+
   def teardown
     isolated_teardown
     Semaphore.new(facebook_app_id).unlock
@@ -83,7 +83,7 @@ class MetricsUnitTest < ActiveSupport::TestCase
     stub_facebook_metrics_request
 
     current_time = Time.now
-    
+
     assert_difference 'MetricsWorker.jobs.size', 1 do
       Metrics.get_metrics_from_facebook_in_background({}, 'https://example.com/trending-article', key.id)
     end
@@ -98,7 +98,7 @@ class MetricsUnitTest < ActiveSupport::TestCase
     stub_facebook_metrics_request
 
     current_time = Time.now
-    
+
     Metrics.get_metrics_from_facebook_in_background({}, 'http://example.com/trending-article', key.id)
     # Perform one removes the first, immediately enqueued background job
     # and schedules the subsequent one
@@ -172,36 +172,47 @@ class MetricsUnitTest < ActiveSupport::TestCase
     mocked_webhook_method.verify
   end
 
-  test  "should send exception to errbit when fb metrics returns a non-retryable error" do
+  test "should still update cache if notifying webhook causes error" do
     stub_facebook_oauth_request
-    WebMock.stub_request(:get, /graph.facebook.com\/\S*access_token=fake-access-token/).to_return(status: 403, body: "{\"error\":{\"message\":\"Requires Facebook page permissions.\",\"code\":\"10\"}}")
+    stub_facebook_metrics_request
+    Media.stubs(:notify_webhook).raises(StandardError.new("fake error for test"))
 
-    mocked_airbrake = MiniTest::Mock.new
-    mocked_airbrake.expect :call, :return_value do |message, args|
-      message.match(/Facebook metrics error: 10 - Requires Facebook page permissions/) && !args[:retryable]
+    url = 'https://example.com/trending-article'
+    id = Media.get_id(url)
+    Pender::Store.current.write(id, :json, {some: 'value'})
+
+    data = Pender::Store.current.read(id, :json)
+    assert_not data['metrics'].present?
+
+    assert_raises do
+      Metrics.get_metrics_from_facebook(url, key.id)
     end
 
-    PenderAirbrake.stub(:notify, mocked_airbrake) do
-      Metrics.get_metrics_from_facebook('http://example.com/trending-article-123', key.id)
-    end
-    mocked_airbrake.verify
+    data = Pender::Store.current.read(id, :json)
+    assert data['metrics'].present?
   end
 
-  test "should send exception to errbit and raise retry error when fb metrics returns a retryable error" do
+  test "should add error to tracing span and raise retry error when fb metrics returns a retryable error" do
     stub_facebook_oauth_request
-    WebMock.stub_request(:get, /graph.facebook.com\/\S*access_token=fake-access-token/).to_return(status: 400, body: "{\"error\":{\"message\":\"Missing client_id parameter.\",\"code\":\"101\"}}")
+    WebMock.stub_request(:get, /graph.facebook.com\/\S*access_token=fake-access-token/).to_return(status: 400, body: "{\"error\":{\"message\":\"Try again soon.\",\"code\":\"101\"}}")
 
-    mocked_airbrake = MiniTest::Mock.new
-    mocked_airbrake.expect :call, :return_value do |message, args|
-      message.match(/Facebook metrics error: 101 - Missing client_id parameter/) && args[:retryable]
+    mocked_tracer = MiniTest::Mock.new
+    mocked_tracer.expect :call, :return_value do |message, args|
+      message.match(/Facebook metrics error/) &&
+        args.keys.count == 5 &&
+        args[:attributes]['app.api_key'] == key.id &&
+        args[:attributes]['facebook.metrics.error.code'] == "101"
+        args[:attributes]['facebook.metrics.error.message'] == 'Try again soon.' &&
+        args[:attributes]['facebook.metrics.url'] == 'http://example.com/trending-article' &&
+        args[:attributes]['facebook.metrics.retryable']
     end
 
     assert_raises Pender::RetryLater do
-      PenderAirbrake.stub(:notify, mocked_airbrake) do
+      TracingService.stub(:set_error_status, mocked_tracer) do
         Metrics.get_metrics_from_facebook('http://example.com/trending-article', key.id)
       end
     end
-    mocked_airbrake.verify
+    mocked_tracer.verify
   end
 
   test "should lock facebook_app when rate limiting detected, and queue for retry" do
@@ -227,7 +238,7 @@ class MetricsUnitTest < ActiveSupport::TestCase
       to_return(status: 200, body: {access_token: 'fake-access-token-2'}.to_json)
     WebMock.stub_request(:get, /graph.facebook.com\/\S*access_token=fake-access-token-2/).
       to_return(status: 200, body: {engagement: { shares: '123' } }.to_json)
-    
+
     api_key = create_api_key application_settings: { config: { facebook_app: "1111:2222;3333:4444" }}
     app_1_locker = Semaphore.new('1111')
     app_2_locker = Semaphore.new('3333')
@@ -238,7 +249,7 @@ class MetricsUnitTest < ActiveSupport::TestCase
       # Unlocked as part of normal test teardown
       assert_equal true, app_1_locker.locked?
     end
-    
+
     assert_equal false, app_2_locker.locked?
     metrics = Metrics.get_metrics_from_facebook('http://example.com/trending-article', api_key.id)
     # Unlock before we exit function with possible failure, since this
@@ -270,7 +281,7 @@ class MetricsUnitTest < ActiveSupport::TestCase
     }
 
     Metrics.get_metrics_from_facebook('http://example.com/trending-article', api_key.id)
-    
+
     assert_equal api_key, ApiKey.current
     assert_equal api_key.settings[:config][:facebook_app], PenderConfig.current(:facebook_app)
     %w(endpoint access_key secret_key bucket bucket_region video_bucket video_asset_path medias_asset_path).each do |key|

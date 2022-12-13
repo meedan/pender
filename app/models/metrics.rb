@@ -11,11 +11,11 @@ module Metrics
       613, # Calls to graph_url_engagement_count have exceeded the rate of 10 calls per 3600 seconds
     ]
 
-    def get_metrics_from_facebook_in_background(data, original_url, key_id)
+    def get_metrics_from_facebook_in_background(data, url, key_id)
       facebook_id = data['uuid'] if is_a_facebook_post?(data)
       # Delaying a bit to prevent race condition where initial request that creates
       # record on Check API beats our metrics reporting
-      MetricsWorker.perform_in(10.seconds, original_url, key_id, 0, facebook_id)
+      MetricsWorker.perform_in(10.seconds, url, key_id, 0, facebook_id)
     end
 
     def get_metrics_from_facebook(url, key_id, count = 0, facebook_id = nil)
@@ -88,19 +88,28 @@ module Metrics
       is_retryable = (RETRYABLE_FACEBOOK_ERROR_CODES + FACEBOOK_RATE_LIMIT_CODES).include?(error['code'].to_i)
 
       Rails.logger.warn level: 'WARN', message: "Facebook metrics error: #{error['code']} - #{error['message']}", url: url, key_id: ApiKey.current&.id, error: error, retryable: is_retryable
-      PenderAirbrake.notify("Facebook metrics error: #{error['code']} - #{error['message']}", url: url, key_id: ApiKey.current&.id, error: error, retryable: is_retryable)
-      return unless is_retryable
-
-      @locker.lock(3600) if FACEBOOK_RATE_LIMIT_CODES.include?(error['code'].to_i)
-      raise Pender::RetryLater, 'Metrics request failed'
+      TracingService.set_error_status(
+        "Facebook metrics error",
+        attributes: {
+          'app.api_key' => ApiKey.current&.id,
+          'facebook.metrics.error.code' => error['code'],
+          'facebook.metrics.error.message' => error['message'],
+          'facebook.metrics.url' => url,
+          'facebook.metrics.retryable' => is_retryable
+        }
+      )
+      if is_retryable
+        @locker.lock(3600) if FACEBOOK_RATE_LIMIT_CODES.include?(error['code'].to_i)
+        raise Pender::RetryLater, 'Metrics request failed'
+      end
     end
 
     def notify_webhook_and_update_metrics_cache(url, name, value, key_id)
       return if value.nil?
       settings = Media.api_key_settings(key_id)
       data = { 'metrics' => { name => value } }
-      Media.notify_webhook('metrics', url, data, settings)
       Media.update_cache(url, data)
+      Media.notify_webhook('metrics', url, data, settings)
     end
   end
 end

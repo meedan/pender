@@ -73,18 +73,18 @@ class Media
   end
 
   def as_json(options = {})
-    if options.delete(:force) || Pender::Store.current.read(Media.get_id(self.original_url), :json).nil?
+    if options.delete(:force) || Pender::Store.current.read(Media.get_id(self.url), :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
       self.data['title'] = self.url if self.data['title'].blank?
       data = self.data.merge(Media.required_fields(self)).with_indifferent_access
       if data[:error].blank?
-        Pender::Store.current.write(Media.get_id(self.original_url), :json, cleanup_data_encoding(data))
+        Pender::Store.current.write(Media.get_id(self.url), :json, cleanup_data_encoding(data))
       end
       self.upload_images
     end
     self.archive(options.delete(:archivers))
-    Metrics.get_metrics_from_facebook_in_background(self.data, self.original_url, ApiKey.current&.id)
-    Pender::Store.current.read(Media.get_id(self.original_url), :json) || cleanup_data_encoding(data)
+    Metrics.get_metrics_from_facebook_in_background(self.data, self.url, ApiKey.current&.id)
+    Pender::Store.current.read(Media.get_id(self.url), :json) || cleanup_data_encoding(data)
   end
 
   PARSERS = [
@@ -133,7 +133,6 @@ class Media
     data = Pender::Store.current.read(id, :json)
     unless data.blank?
       newdata.each { |key, value| data[key] = data[key].is_a?(Hash) ? data[key].merge(value) : value }
-      data['webhook_called'] = @webhook_called ? 1 : 0
       Pender::Store.current.write(id, :json, data)
     end
     data
@@ -150,8 +149,13 @@ class Media
         http.use_ssl = uri.scheme == 'https'
         request = Net::HTTP::Post.new(uri.request_uri, headers)
         request.body = payload
-        http.request(request)
-        @webhook_called = true
+        response = http.request(request)
+        # .value raises an exception if the response is unsuccessful, but otherwise
+        # returns nil (terribly named method, imo). This is a way to raise that
+        # exception if request failed and still return a successful response if present.
+        response.value || response
+      rescue Net::HTTPExceptions => e
+        raise Pender::RetryLater, "(#{response.code}) #{response.message}"
       rescue StandardError => e
         PenderAirbrake.notify(e, url: url, type: type, webhook_url: settings['webhook_url'])
         Rails.logger.warn level: 'WARN', message: 'Failed to notify webhook', url: url, type: type, error_class: e.class, error_message: e.message, webhook_url: settings['webhook_url']
@@ -159,8 +163,8 @@ class Media
       end
     else
       Rails.logger.warn level: 'WARN', message: 'Webhook settings not configured for API key', url: url, type: type, api_key: ApiKey.current&.id
+      return false
     end
-    true
   end
 
   protected

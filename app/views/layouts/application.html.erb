@@ -8,9 +8,6 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="alternate" type="application/json+oembed" href="<%= @request.original_url.gsub('medias.html', 'medias.oembed') %>"
-        title="<%= content_for(:title) %> oEmbed Profile" />
-
   <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track' => true %>
   <%= javascript_include_tag 'jquery-2.1.3.min', skip_pipeline: true %>
   <%= javascript_include_tag 'md5', skip_pipeline: true %>

@@ -5,15 +5,11 @@ module MediaPermaCcArchiver
     Media.declare_archiver('perma_cc', [/^.*$/], :only)
   end
 
-  def archive_to_perma_cc
-    self.class.send_to_perma_cc_in_background(self.original_url, ApiKey.current&.id)
+  def archive_to_perma_cc(url, key_id)
+    ArchiverWorker.perform_in(30.seconds, url, :perma_cc, key_id)
   end
 
   module ClassMethods
-    def send_to_perma_cc_in_background(url, key_id)
-      ArchiverWorker.perform_async(url, :perma_cc, key_id)
-    end
-
     def send_to_perma_cc(url, key_id, _supported = nil)
       handle_archiving_exceptions('perma_cc', { url: url, key_id: key_id }) do
         perma_cc_key = PenderConfig.get('perma_cc_key')

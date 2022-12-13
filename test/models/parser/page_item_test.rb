@@ -39,7 +39,6 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
   test "should parse url with arabic or already encoded chars" do
     urls = ['http://www.aljazeera.net/news/arabic/2016/10/19/تحذيرات-أممية-من-احتمال-نزوح-مليون-مدني-من-الموصل', 'http://www.aljazeera.net/news/arabic/2016/10/19/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1%D8%A7%D8%AA-%D8%A3%D9%85%D9%85%D9%8A%D8%A9-%D9%85%D9%86-%D8%A7%D8%AD%D8%AA%D9%85%D8%A7%D9%84-%D9%86%D8%B2%D9%88%D8%AD-%D9%85%D9%84%D9%8A%D9%88%D9%86-%D9%85%D8%AF%D9%86%D9%8A-%D9%85%D9%86-%D8%A7%D9%84%D9%85%D9%88%D8%B5%D9%84']
     urls.each do |url|
-      id = Media.get_id url
       m = create_media url: url
       data = m.as_json
       assert_equal 'تحذيرات أممية من احتمال نزوح مليون مدني من الموصل', data['title']
@@ -48,7 +47,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
       assert_equal '', data['username']
       assert_match /^https?:\/\/www\.aljazeera\.net$/, data['author_url']
       assert_nil data['error']
-      assert_match /\/medias\/#{id}\/picture/, data['picture']
+      assert_not_nil data['picture']
     end
   end
 
@@ -101,7 +100,6 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
 
   test "should parse url scheme http" do
     url = 'http://www.theatlantic.com/magazine/archive/2016/11/war-goes-viral/501125/'
-    id = Media.get_id url
     m = create_media url: url
     data = m.as_json
     assert_match 'War Goes Viral', data['title']
@@ -109,7 +107,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     assert !data['published_at'].blank?
     assert_match /Brooking.+Singer/, data['username']
     assert_match /https?:\/\/www.theatlantic.com/, data['author_url']
-    assert_match /\/#{id}\/picture/, data['picture']
+    assert_not_nil data['picture']
   end
 
   test "should parse url scheme https" do
@@ -306,7 +304,7 @@ class PageItemUnitTest < ActiveSupport::TestCase
   end
 
   test "does not set oembed data if there is an issue with returned oembed data" do
-    OembedItem.any_instance.stubs(:get_data).returns( 
+    OembedItem.any_instance.stubs(:get_data).returns(
       {
         raw: {
           oembed: {

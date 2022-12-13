@@ -2,11 +2,6 @@ module MediaOembed
   extend ActiveSupport::Concern
 
   module ClassMethods
-    def as_oembed(data, original_url, maxwidth, maxheight, instance = nil)
-      return instance.send(:get_oembed_data, original_url, maxwidth, maxheight) if instance
-      !Media.valid_raw_oembed?(data) ? Media.default_oembed(data, original_url, maxwidth, maxheight) : data[:oembed].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(original_url, maxwidth, maxheight))
-    end
-
     def default_oembed(data, original_url, maxwidth = nil, maxheight= nil)
       maxwidth ||= 800
       maxheight ||= 200
