@@ -28,7 +28,6 @@ Besides the specific parsers Pender can parse any link with an oEmbed endpoint o
 
 ### Archivers supported
 
-* Archive.is
 * Archive.org
   * This archiver requires `archive_org_access_key` and `archive_org_secret_key` on `config/config.yml` file to be enabled. Get your account’s keys at https://archive.org/account/s3.php
 * Perma.cc
