@@ -78,37 +78,40 @@ class MetricsUnitTest < ActiveSupport::TestCase
     Semaphore.new(facebook_app_id).unlock
   end
 
-  test 'should queue a near-term background job to request initial metrics from facebook' do
+  test 'should queue ten days of metrics updates, including a near-term background job to request initial from facebook' do
     stub_facebook_oauth_request
     stub_facebook_metrics_request
 
     current_time = Time.now
 
-    assert_difference 'MetricsWorker.jobs.size', 1 do
-      Metrics.get_metrics_from_facebook_in_background({}, 'https://example.com/trending-article', key.id)
+    assert_difference 'MetricsWorker.jobs.size', 10 do
+      Metrics.schedule_fetching_metrics_from_facebook({}, 'https://example.com/trending-article', key.id)
     end
-    scheduled_job = MetricsWorker.jobs.first
-    assert Time.at(scheduled_job['at']) > current_time
-    assert Time.at(scheduled_job['at']) < current_time + 10.minutes
-    assert_nil scheduled_job['enqueued_at']
-  end
 
-  test 'should queue follow-up background jobs to request metrics on following days' do
-    stub_facebook_oauth_request
-    stub_facebook_metrics_request
+    first_job = MetricsWorker.jobs.first
+    assert Time.at(first_job['at']) > current_time
+    assert Time.at(first_job['at']) < current_time + 10.minutes
+    assert_nil first_job['enqueued_at']
 
-    current_time = Time.now
-
-    Metrics.get_metrics_from_facebook_in_background({}, 'http://example.com/trending-article', key.id)
-    # Perform one removes the first, immediately enqueued background job
-    # and schedules the subsequent one
     MetricsWorker.perform_one
 
     assert MetricsWorker.jobs.count, 1
-    scheduled_job = MetricsWorker.jobs.first
-    assert Time.at(scheduled_job['at']) > current_time + 12.hours
-    assert Time.at(scheduled_job['at']) < current_time + 36.hours
-    assert_nil scheduled_job['enqueued_at']
+    second_job = MetricsWorker.jobs.first
+    assert Time.at(second_job['at']) > current_time + 12.hours
+    assert Time.at(second_job['at']) < current_time + 36.hours
+    assert_nil second_job['enqueued_at']
+  end
+
+  test 'should retry the scheduled background job on failure' do
+    stub_facebook_oauth_request
+    stub_facebook_metrics_request
+
+    Metrics.stubs(:verify_facebook_metrics_response).raises(Pender::RetryLater)
+    Metrics.schedule_fetching_metrics_from_facebook({}, 'https://example.com/trending-article', key.id)
+
+    assert_raises Pender::RetryLater do
+      MetricsWorker.perform_one
+    end
   end
 
   test "should get metrics from Facebook when URL has non-ascii" do
@@ -143,7 +146,7 @@ class MetricsUnitTest < ActiveSupport::TestCase
 
     Media.stub(:crowdtangle_request, mock_crowdtangle_request) do
       Media.stub(:notify_webhook, mock_notify_webhook) do
-        Metrics.get_metrics_from_facebook_in_background({ 'uuid' => 'uuid-1234', 'provider' => 'facebook', 'type' => 'item' }, 'http://example.com/facebook-trending-article', key)
+        Metrics.schedule_fetching_metrics_from_facebook({ 'uuid' => 'uuid-1234', 'provider' => 'facebook', 'type' => 'item' }, 'http://example.com/facebook-trending-article', key)
         MetricsWorker.perform_one
       end
     end

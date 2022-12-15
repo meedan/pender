@@ -11,19 +11,23 @@ module Metrics
       613, # Calls to graph_url_engagement_count have exceeded the rate of 10 calls per 3600 seconds
     ]
 
-    def get_metrics_from_facebook_in_background(data, url, key_id)
+    NUMBER_OF_DAYS_TO_UPDATE = 9
+
+    def schedule_fetching_metrics_from_facebook(data, url, key_id)
       facebook_id = data['uuid'] if is_a_facebook_post?(data)
-      # Delaying a bit to prevent race condition where initial request that creates
-      # record on Check API beats our metrics reporting
-      MetricsWorker.perform_in(10.seconds, url, key_id, 0, facebook_id)
+
+      MetricsWorker.perform_in(30.seconds, url, key_id, 0, facebook_id)
+      NUMBER_OF_DAYS_TO_UPDATE.times do |index|
+        attempt_num = index + 1
+        MetricsWorker.perform_in(attempt_num * 24.hours, url, key_id, attempt_num, facebook_id)
+      end
     end
 
-    def get_metrics_from_facebook(url, key_id, count = 0, facebook_id = nil)
-      Rails.logger.info level: 'INFO', message: "Requesting metrics from Facebook", url: url, key_id: ApiKey.current&.id, count: count, facebook_id: facebook_id
+    def get_metrics_from_facebook(url, key_id, update_number = 0, facebook_id = nil)
+      Rails.logger.info level: 'INFO', message: "Requesting metrics from Facebook", url: url, key_id: ApiKey.current&.id, update_number: update_number, facebook_id: facebook_id
       ApiKey.current = ApiKey.find_by(id: key_id)
       begin
         value = facebook_id ? crowdtangle_metrics(facebook_id) : request_metrics_from_facebook(url)
-        MetricsWorker.perform_in(24.hours, url, key_id, count + 1, facebook_id) if count < 10
       rescue Pender::RetryLater
         raise Pender::RetryLater, 'Metrics request failed'
       rescue StandardError => e

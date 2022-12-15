@@ -83,7 +83,7 @@ class Media
       self.upload_images
     end
     self.archive(options.delete(:archivers))
-    Metrics.get_metrics_from_facebook_in_background(self.data, self.url, ApiKey.current&.id)
+    Metrics.schedule_fetching_metrics_from_facebook(self.data, self.url, ApiKey.current&.id)
     Pender::Store.current.read(Media.get_id(self.url), :json) || cleanup_data_encoding(data)
   end
 
