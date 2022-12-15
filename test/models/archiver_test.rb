@@ -399,7 +399,7 @@ class ArchiverTest < ActiveSupport::TestCase
   test "should return false and add error to data when video archiving is not supported" do
     Media.unstub(:supported_video?)
     Media.any_instance.stubs(:parse)
-    Metrics.stubs(:get_metrics_from_facebook_in_background)
+    Metrics.stubs(:schedule_fetching_metrics_from_facebook)
 
     WebMock.enable!
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
