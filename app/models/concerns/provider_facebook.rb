@@ -31,7 +31,7 @@ module ProviderFacebook
   end
 
   private
-  
+
   def get_crowdtangle_data(id)
     response_data = {}
     if id.blank?
@@ -80,7 +80,7 @@ module ProviderFacebook
 
     title = get_page_title(html_page)
     return if title.blank?
-    
+
     if page_is_unavailable || ['log in or sign up to view', 'log into facebook', 'log in to facebook'].include?(title.downcase)
       @parsed_data['title'] = @parsed_data['description'] = ''
       @parsed_data['error'] = {

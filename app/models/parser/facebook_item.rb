@@ -6,7 +6,7 @@ module Parser
 
     EVENT_URL = /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>\w+)(?!.*permalink\/)/
     GROUPS_URL = /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/groups\/(?<profile>[^\/]+)\/?(?!.*permalink\/).*/
-  
+
     FACEBOOK_ITEM_URLS = [
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/posts\/(?<id>[0-9]+).*/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/photos\/.*a\.([0-9]+)\.([0-9]+)\.(?<user_id>[0-9]+)\/(?<id>[0-9]+)\/.*/,
@@ -53,7 +53,7 @@ module Parser
         set_data_field('object_id', grabber.post_id)
         set_data_field('uuid', grabber.uuid)
         set_data_field('external_id', grabber.uuid)
-        
+
         @parsed_data['raw']['crowdtangle'] = get_crowdtangle_data(parsed_data['uuid']) || {}
         if has_valid_crowdtangle_data?
           crowdtangle_data = format_crowdtangle_result(parsed_data['raw']['crowdtangle'])
@@ -62,7 +62,7 @@ module Parser
           @parsed_data.merge!(crowdtangle_data)
         else
           @parsed_data.merge!(get_opengraph_metadata.reject{|k,v| v.nil?})
-          @parsed_data['title'] = nil if parsed_data['title'] && NONUNIQUE_TITLES.include?(parsed_data['title'].downcase) 
+          @parsed_data['title'] = nil if parsed_data['title'] && NONUNIQUE_TITLES.include?(parsed_data['title'].downcase)
 
           set_data_field('title', get_unique_facebook_page_title(doc))
           set_data_field('description', doc&.at_css('description')&.content)
