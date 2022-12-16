@@ -49,8 +49,8 @@ gem 'nokogiri', '1.13.10', require: false
 gem 'mida', require: false
 gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
-gem 'loofah', '2.3.1', require: false
-gem 'rails-html-sanitizer', '1.4.3'
+gem 'loofah', '2.19.1', require: false
+gem 'rails-html-sanitizer', '1.4.4'
 gem 'sprockets', '3.7.2'
 gem 'rack', '>= 1.6.11', require: false
 gem 'aws-sdk-s3', require: false

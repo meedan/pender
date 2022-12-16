@@ -146,7 +146,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   def empty_doc
     @empty_doc ||= Nokogiri::HTML('')
   end
-  
+
   def post_doc
     @post_doc ||= response_fixture_from_file('facebook-item-page_ironmaiden.html', parse_as: :html)
   end
@@ -204,6 +204,19 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert Parser::FacebookItem.match?('https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/').is_a?(Parser::FacebookItem)
   end
 
+  test "sends tracing information to honeycomb, including updated URL" do
+    crowdtangle_data = response_fixture_from_file('crowdtangle-response_video.json')
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_data)
+
+    TracingService.expects(:add_attributes_to_current_span).with({
+      'app.parser.type' => 'facebook_item',
+      'app.parser.parsed_url' => 'https://www.facebook.com/144585402276277/posts/1127489833985824/woo',
+      'app.parser.original_url' => 'https://www.facebook.com/fakeaccount/posts/original-123456789'
+    })
+
+    Parser::FacebookItem.new('https://www.facebook.com/144585402276277/posts/1127489833985824').parse_data(empty_doc, 'https://www.facebook.com/fakeaccount/posts/original-123456789')
+  end
+
   test "sets fallbacks from metatags on crowdtangle error, and populates HTML" do
     crowdtangle_error = response_fixture_from_file('crowdtangle-response_not-found.json')
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_error)
@@ -251,7 +264,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     HTML
 
     data = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/123456789').parse_data(doc, 'https://www.facebook.com/fakeaccount/posts/new-123456789')
-    
+
     assert data['error'].blank?
     assert !data['raw']['crowdtangle']['error'].blank?
 
@@ -259,7 +272,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_equal 'also a description', data['description']
     assert_match /data-href="https:\/\/www.facebook.com\/fakeaccount\/posts\/123456789"/, data.dig('html')
   end
-    
+
   test 'sets raw error when issue parsing UUID' do
     Parser::FacebookItem::IdsGrabber.any_instance.stubs(:uuid).returns(nil)
 
@@ -267,7 +280,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert data['error'].blank?
     assert_match /No ID given for Crowdtangle/, data.dig('raw', 'crowdtangle', 'error', 'message')
   end
-  
+
   test 'sets raw error when crowdtangle request fails' do
     crowdtangle_error = response_fixture_from_file('crowdtangle-response_not-found.json')
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_error)
@@ -335,7 +348,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
 
     assert_equal '', data['html']
   end
-  
+
   test "should return empty html when FB url is event and cannot be embedded" do
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: {}.to_json)
 
@@ -363,7 +376,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     HTML
     data = parser.parse_data(doc, throwaway_url)
     assert_nil data['title']
-    
+
     doc = Nokogiri::HTML(<<~HTML)
     <title>Watch</title>
     HTML
@@ -380,7 +393,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     HTML
     data = parser.parse_data(doc, throwaway_url)
     assert_equal "Piglet the Dog's post", data['title']
-    
+
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="Piglet the Dog's post | Facebook" />
     HTML

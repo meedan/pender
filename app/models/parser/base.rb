@@ -6,11 +6,11 @@ module Parser
       def type
         raise NotImplementedError.new("Parser subclasses must implement type")
       end
-  
+
       def patterns
         []
       end
-      
+
       def ignored_urls
         []
       end
@@ -20,7 +20,7 @@ module Parser
         tag = doc.at_css('link[type="application/json+oembed"]')
         tag.attribute('href').to_s unless tag.nil?
       end
-  
+
       def match?(url)
         matched_pattern = false
         patterns.each do |pattern|
@@ -33,14 +33,14 @@ module Parser
     delegate :type, to: :class
     delegate :patterns, to: :class
     delegate :ignored_urls, to: :class
-  
+
     def initialize(url)
       @url = url
       @unavailable_page = ignore_url?(url)
       @parsed_data = {}.with_indifferent_access
       @parsed_data[:raw] = {}
     end
-  
+
     # This is the entry function for the class, which performs
     # any common setup and then calls down to `parse_data_for_parser`
     def parse_data(doc, original_url = nil, jsonld = {})
@@ -48,7 +48,13 @@ module Parser
       set_raw_metatags(doc)
 
       # Parse data (implemented by subclasses)
-      parse_data_for_parser(doc, original_url, jsonld || {})
+      data = parse_data_for_parser(doc, original_url, jsonld || {})
+      TracingService.add_attributes_to_current_span(
+        'app.parser.type' => type,
+        'app.parser.parsed_url' => url,
+        'app.parser.original_url' => original_url
+      )
+      data
     end
 
     # Default implementation, subclasses can override
@@ -57,7 +63,7 @@ module Parser
     end
 
     attr_reader :url, :parsed_data
-    
+
     private
 
     attr_reader :unavailable_page
@@ -75,7 +81,7 @@ module Parser
         config.access_token_secret = PenderConfig.get('twitter_access_token_secret')
       end
     end
-  
+
     def ignore_url?(url)
       self.ignored_urls.each do |item|
         if url.match?(item[:pattern])
@@ -99,7 +105,7 @@ module Parser
         break
       end
     end
-    
+
     def get_metadata_from_tags(select_metatags)
       metadata = {}.with_indifferent_access
       select_metatags.each do |key, value|
@@ -133,7 +139,7 @@ module Parser
       set_raw_metatags(doc) if doc
       doc
     end
-  
+
     def get_opengraph_metadata
       select_metatags = { title: 'og:title', picture: 'og:image', description: 'og:description', username: 'article:author', published_at: 'article:published_time', author_name: 'og:site_name' }
       data = get_metadata_from_tags(select_metatags).with_indifferent_access
@@ -144,7 +150,7 @@ module Parser
       data['published_at'] = parse_published_time(data['published_at'])
       data
     end
-    
+
     def get_twitter_metadata
       select_metatags = { title: 'twitter:title', picture: 'twitter:image', description: 'twitter:description', username: 'twitter:creator', author_name: 'twitter:site' }
       data = get_metadata_from_tags(select_metatags).with_indifferent_access
@@ -192,10 +198,10 @@ module Parser
 
     def get_page_title(html_page)
       return if html_page.nil?
-  
+
       meta_title = html_page.at_css('meta[property="og:title"]')
       html_title = html_page.at_css('title')
-  
+
       meta_title&.attr('content') || html_title&.content
     end
 
