@@ -1,6 +1,6 @@
 require 'opentelemetry/sdk'
 require 'opentelemetry/exporter/otlp'
-require 'opentelemetry/instrumentation/all'
+require 'opentelemetry/instrumentation'
 
 module Pender
   class OpenTelemetryConfig
@@ -46,7 +46,7 @@ module Pender
     end
 
     private
-    
+
     def configure_exporting!
       if exporting_disabled?
         ENV['OTEL_TRACES_EXPORTER'] = 'none'
@@ -67,7 +67,7 @@ module Pender
       additional_attributes = {}
       if sampling_config[:sampler]
         ENV['OTEL_TRACES_SAMPLER'] = sampling_config[:sampler]
-        
+
         begin
           rate_as_ratio = (1 / Float(sampling_config[:rate])).to_s
           additional_attributes.merge!('SampleRate' => sampling_config[:rate])
