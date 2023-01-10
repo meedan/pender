@@ -241,6 +241,9 @@ GEM
       opentelemetry-instrumentation-active_record (~> 0.4.0)
       opentelemetry-instrumentation-active_support (~> 0.2.0)
       opentelemetry-instrumentation-base (~> 0.21.0)
+    opentelemetry-instrumentation-rake (0.1.0)
+      opentelemetry-api (~> 1.0)
+      opentelemetry-instrumentation-base (~> 0.21.0)
     opentelemetry-instrumentation-sidekiq (0.22.0)
       opentelemetry-api (~> 1.0)
       opentelemetry-common (~> 0.19.3)
@@ -442,6 +445,7 @@ DEPENDENCIES
   opentelemetry-instrumentation-net_http
   opentelemetry-instrumentation-rack
   opentelemetry-instrumentation-rails
+  opentelemetry-instrumentation-rake
   opentelemetry-instrumentation-sidekiq
   opentelemetry-sdk
   parallel_tests
