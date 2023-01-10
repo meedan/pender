@@ -1,7 +1,7 @@
 require 'pender_open_telemetry_config'
 require 'pender_open_telemetry_test_config'
 
-# Lines immediately below set any environment config that should 
+# Lines immediately below set any environment config that should
 # be applied to all environments
 ENV['OTEL_LOG_LEVEL'] = PenderConfig.get('otel_log_level')
 
@@ -9,7 +9,8 @@ unless Rails.env.test?
   Pender::OpenTelemetryConfig.new(
     PenderConfig.get('otel_exporter_otlp_endpoint'),
     PenderConfig.get('otel_exporter_otlp_headers'),
-    ENV['PENDER_SKIP_HONEYCOMB']
+    disable_exporting: ENV['PENDER_SKIP_HONEYCOMB'],
+    disable_sampling: ENV['PENDER_SKIP_HONEYCOMB_SAMPLING']
   ).configure!(
     PenderConfig.get('otel_resource_attributes'),
     sampling_config: {
