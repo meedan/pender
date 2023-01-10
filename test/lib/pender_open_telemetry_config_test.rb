@@ -97,6 +97,25 @@ class OpenTelemetryConfigTest < ActiveSupport::TestCase
     env_var_original_state.each{|env_var, original_state| ENV[env_var] = original_state}
   end
 
+  test "does not sample if sampling override given" do
+    env_var_original_state = cache_and_clear_env
+
+    Pender::OpenTelemetryConfig.new(
+      'https://fake.com',
+      'foo=bar',
+      disable_sampling: 'true'
+    ).configure!(
+      {'developer.name' => 'piglet' },
+      sampling_config: { sampler: 'traceidratio', rate: 'asdf' }
+    )
+
+    assert_nil ENV['OTEL_TRACES_SAMPLER']
+    assert_nil ENV['OTEL_TRACES_SAMPLER_ARG']
+    assert_equal 'developer.name=piglet', ENV['OTEL_RESOURCE_ATTRIBUTES']
+  ensure
+    env_var_original_state.each{|env_var, original_state| ENV[env_var] = original_state}
+  end
+
   # exporting_disabled?
   test "should disable exporting if any required config missing" do
     assert Pender::OpenTelemetryConfig.new(nil, nil).send(:exporting_disabled?)
@@ -106,7 +125,7 @@ class OpenTelemetryConfigTest < ActiveSupport::TestCase
   end
 
   test "should disable exporting if override set" do
-    assert Pender::OpenTelemetryConfig.new('https://fake.com', 'foo=bar', 'true').send(:exporting_disabled?)
+    assert Pender::OpenTelemetryConfig.new('https://fake.com', 'foo=bar', disable_exporting: 'true').send(:exporting_disabled?)
   end
 
   # format_attributes

@@ -433,6 +433,14 @@ To enable sampling for Honeycomb, set the following configuration (either in `co
 
 **Note**: If sampling behavior is changed in Pender, we will also need to update the behavior to match in any other application reporting to Honeycomb. More [here](https://docs.honeycomb.io/getting-data-in/opentelemetry/ruby/#sampling)
 
+
+#### Environment overrides
+
+Often for rake tasks or background jobs, we will either want none of the data (skip reporting) or all of the data (skip sampling). For these cases we can set specific environment variables:
+
+* To skip reporting to Honeycomb, set `PENDER_SKIP_HONEYCOMB` to `true`
+* To skip sampling data we want to report to Honeycomb, set `PENDER_SKIP_HONEYCOMB_SAMPLING` to `true`
+
 ## Credits
 
 Meedan (hello@meedan.com)
