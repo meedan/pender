@@ -72,11 +72,11 @@ module Metrics
           next
         end
         api = "https://graph.facebook.com/oauth/access_token?client_id=#{app_id}&client_secret=#{app_secret}&grant_type=client_credentials"
-        response = Net::HTTP.get_response(URI(api))
+        response = Net::HTTP.get_response(RequestHelper.parse_url(api))
         next unless verify_facebook_metrics_response(url, response)
         token = JSON.parse(response.body)['access_token']
         api = "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=#{token}"
-        response = Net::HTTP.get_response(URI(URI.encode(api)))
+        response = Net::HTTP.get_response(RequestHelper.parse_url(api))
         if verify_facebook_metrics_response(url, response)
           engagement = JSON.parse(response.body)['engagement']
           break

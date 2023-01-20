@@ -4,7 +4,7 @@ module Parser
       def type
         'dropbox_item'.freeze
       end
-  
+
       def patterns
         [
           /^https?:\/\/(www\.)?dropbox\.com\/sh?\/([^\/]+)/,
@@ -12,7 +12,7 @@ module Parser
         ]
       end
     end
-    
+
     private
 
     # Main function for class
@@ -25,10 +25,10 @@ module Parser
       end
       parsed_data
     end
-    
+
     def get_title_from_url(url)
-      uri = URI.parse(url)
-      URI.unescape(uri.path.split('/').last)
+      uri = RequestHelper.parse_url(url)
+      RequestHelper.decode_uri(uri.path.split('/').last)
     end
   end
 end

@@ -73,9 +73,9 @@ module MediasHelper
 
   def is_url?(url)
     begin
-      uri = URI.parse(URI.encode(url))
+      uri = RequestHelper.parse_url(url)
       !uri.host.nil? && uri.userinfo.nil?
-    rescue URI::InvalidURIError
+    rescue Addressable::URI::InvalidURIError, TypeError
       false
     end
   end
@@ -102,7 +102,7 @@ module MediasHelper
     if content.is_a?(String)
       content = content.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "�".freeze)
       begin
-        return URI.encode(content) if field == 'raw' && is_url?(content)
+        return RequestHelper.encode_url(content) if field == 'raw' && is_url?(content)
       rescue StandardError => error
         Rails.logger.info level: 'INFO', message: '[Parser] Could not encode URL', url: self.url, content: content, error_class: error.class, error_message: error.message
       end
@@ -141,7 +141,7 @@ module MediasHelper
     extension = '.jpg' if extension.blank? || extension == '.php'
     filename = "#{id}/#{attr}#{extension}"
     begin
-      open(url) do |content|
+      URI.open(url) do |content|
         Pender::Store.current.store_object(filename, content, 'medias/')
       end
       self.data[attr] = "#{Pender::Store.current.storage_path('medias')}/#{filename}"

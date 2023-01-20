@@ -27,7 +27,7 @@ class OembedItem
 
   def get_oembed_data_from_url(uri, attempts: 0)
     response = nil
-    http = Net::HTTP.new(uri.host, uri.port)
+    http = Net::HTTP.new(uri.host, uri.inferred_port)
     http.use_ssl = uri.scheme == 'https'
 
     headers = { 'User-Agent' => 'Mozilla/5.0 (compatible; Pender/0.1; +https://github.com/meedan/pender)' }.merge(RequestHelper.get_cf_credentials(uri))
@@ -65,25 +65,25 @@ class OembedItem
     script_tag = doc.at_css('script')
     return if script_tag.nil? || script_tag.attr('src').nil?
 
-    uri = URI.parse(script_tag.attr('src'))
-    !uri.kind_of?(URI::HTTPS)
+    uri = RequestHelper.parse_url(script_tag.attr('src'))
+    !(uri.scheme == 'https')
   end
 
   def invalid_html_iframe?(doc)
     iframe_tag = doc.at_css('iframe')
     return if iframe_tag.nil? || iframe_tag.attr('src').nil?
 
-    uri = URI.parse(iframe_tag.attr('src'))
+    uri = RequestHelper.parse_url(iframe_tag.attr('src'))
     return if uri.hostname.match(/^(www\.)?youtube\.com/)
-    
+
     response = Net::HTTP.get_response(uri)
     response&.code&.to_s == '200' && ['DENY', 'SAMEORIGIN'].include?(response.header['X-Frame-Options'])
   end
 
   def construct_absolute_path(request_url, _oembed_url)
     begin
-      URI.parse(RequestHelper.absolute_url(request_url, _oembed_url))
-    rescue URI::InvalidURIError => e
+      RequestHelper.parse_url(RequestHelper.absolute_url(request_url, _oembed_url))
+    rescue Addressable::URI::InvalidURIError, TypeError => e
       nil
     end
   end

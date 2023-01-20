@@ -1,8 +1,8 @@
 module Parser
   class InstagramProfile < Base
     include ProviderInstagram
-    
-    INSTAGRAM_PROFILE_URL = /^https?:\/\/(www\.)?instagram\.com\/([^\/]+)/
+
+    INSTAGRAM_PROFILE_URL = /^https?:\/\/(www\.)?instagram\.com\/([^\/\?]+)/
 
     class << self
       def type
@@ -23,7 +23,7 @@ module Parser
         'external_id': username,
         'username': '@' + username,
         'title': username,
-        'description': url,      
+        'description': url,
       })
 
       handle_exceptions(StandardError) do

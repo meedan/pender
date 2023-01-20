@@ -12,7 +12,7 @@ module MediaArchiveOrgArchiver
   module ClassMethods
     def send_to_archive_org(url, key_id, _supported = nil)
       handle_archiving_exceptions('archive_org', { url: url, key_id: key_id }) do
-        encoded_uri = URI.encode(URI.decode(url))
+        encoded_uri = RequestHelper.encode_url(url)
         return if Media.get_available_archive_org_snapshot(encoded_uri, key_id)
         http, request = Media.archive_org_request('https://web.archive.org/save', 'Post')
         request.set_form_data(
@@ -63,8 +63,8 @@ module MediaArchiveOrgArchiver
     end
 
     def archive_org_request(request_url, verb)
-      uri = URI.parse(request_url)
-      http = Net::HTTP.new(uri.host, uri.port)
+      uri = RequestHelper.parse_url(request_url)
+      http = Net::HTTP.new(uri.host, uri.inferred_port)
       http.use_ssl = uri.scheme == "https"
       headers = {
         'Accept' => 'application/json',

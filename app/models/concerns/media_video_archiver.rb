@@ -18,7 +18,7 @@ module MediaVideoArchiver
         return if supported.is_a?(FalseClass) || notify_video_already_archived(url, key_id)
         id = Media.get_id(url)
         local_folder = File.join(Rails.root, 'tmp', 'videos', id)
-        uri = URI.encode(url)
+        uri = RequestHelper.encode_url(url)
         proxy = "--proxy=#{Media.yt_download_proxy(uri)}"
         output = "-o#{local_folder}/#{id}.%(ext)s"
         system('youtube-dl', uri, proxy, output, '--restrict-filenames', '--no-warnings', '-q', '--write-all-thumbnails', '--write-info-json', '--all-subs', '-fogg/mp4/webm')
@@ -44,7 +44,7 @@ module MediaVideoArchiver
     end
 
     def supported_video?(url, key_id = nil)
-      uri = URI.encode url
+      uri = RequestHelper.encode_url(url)
       system('youtube-dl', uri, "--proxy=#{Media.yt_download_proxy(uri)}", '--restrict-filenames', '--no-warnings', '-g', '-q')
       unless $?.success?
         data = { error: { message: "#{$?.exitstatus} Unsupported URL", code: LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA') }}
@@ -54,7 +54,7 @@ module MediaVideoArchiver
     end
 
     def yt_download_proxy(url)
-      uri = URI.parse(url)
+      uri = RequestHelper.parse_url(url)
       return unless uri.host.match(/youtube\.com/)
       proxy = RequestHelper.valid_proxy('ytdl_proxy')
       return nil unless proxy

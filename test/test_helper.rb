@@ -106,7 +106,7 @@ class ActiveSupport::TestCase
 
   def response_fixture_from_file(filename, parse_as: nil)
     fixture_body = ''
-    open("test/data/#{filename}") { |f| fixture_body = f.read }
+    File.open("test/data/#{filename}") { |f| fixture_body = f.read }
 
     case parse_as
     when :html

@@ -6,7 +6,6 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should normalize URL" do
-    expected = 'https://ca.ios.ba/'
     variations = %w(
       https://ca.ios.ba
       ca.ios.ba
@@ -21,12 +20,11 @@ class MediaTest < ActiveSupport::TestCase
     )
     variations.each do |url|
       media = Media.new(url: url)
-      assert_equal expected, media.url
+      assert_equal 'https://ca.ios.ba/', media.url
     end
 
     media = Media.new(url: 'http://ca.ios.ba/a%c3%82/%7Euser?a=b')
     assert_match '//ca.ios.ba/a%C3%82/~user?a=b', media.url
-
   end
 
   test "should not normalize URL" do
@@ -85,7 +83,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should get canonical URL parsed from html tags" do
     doc = ''
-    open('test/data/page-with-url-on-tag.html') { |f| doc = f.read }
+    File.open('test/data/page-with-url-on-tag.html') { |f| doc = f.read }
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
 
     media1 = create_media url: 'http://example.com/2016/08/bom-dia-2.html'
@@ -225,7 +223,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should store json+ld data as a json string" do
     m = create_media url: 'http://www.example.com'
     doc = ''
-    open('test/data/page-with-json-ld.html') { |f| doc = f.read }
+    File.open('test/data/page-with-json-ld.html') { |f| doc = f.read }
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
     m.data = Media.minimal_data(m)
     m.get_jsonld_data(m)
@@ -246,7 +244,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should handle schema when type is an array" do
     doc = ''
-    open('test/data/page-with-schema.html') { |f| doc = f.read }
+    File.open('test/data/page-with-schema.html') { |f| doc = f.read }
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
 
     url = 'https://patents.google.com/patent/US6896907B2/en'
@@ -266,7 +264,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should store all schemas as array" do
     doc = ''
-    open('test/data/page-with-schema.html') { |f| doc = f.read }
+    File.open('test/data/page-with-schema.html') { |f| doc = f.read }
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
 
     url = 'https://g1.globo.com/sp/sao-paulo/noticia/pf-indicia-haddad-por-caixa-2-em-campanha-para-a-prefeitura-de-sp.ghtml'
@@ -303,11 +301,13 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should request URL with User-Agent on header" do
     url = 'https://globalvoices.org/2019/02/16/nigeria-postpones-2019-general-elections-hours-before-polls-open-citing-logistics-and-operations-concerns'
-    uri = RequestHelper.parse_url url
-    Net::HTTP::Get.stubs(:new).with(uri, {'User-Agent' => RequestHelper.html_options(uri)['User-Agent'], 'Accept-Language' => 'en-US;q=0.6,en;q=0.4'}).once.returns({})
-    Net::HTTP.any_instance.stubs(:request).returns('success')
+    uri = RequestHelper.parse_url(url)
+    WebMock.enable!
+    WebMock.stub_request(:get, url).with(headers: {'User-Agent' => RequestHelper.html_options(uri)['User-Agent'], 'Accept-Language' => 'en-US;q=0.6,en;q=0.4'}).to_return(body: 'success', status: 200)
 
-    assert_equal 'success', RequestHelper.request_url(url, 'Get')
+    assert_equal 'success', RequestHelper.request_url(url, 'Get').body
+  ensure
+    WebMock.disable!
   end
 
   test "should add cookie from config on header if domain matches" do
@@ -364,7 +364,7 @@ class MediaTest < ActiveSupport::TestCase
     api_key = create_api_key application_settings: { config: config }
     m = create_media url: 'http://time.com/5058736/climate-change-macron-trump-paris-conference/', key: api_key
 
-    host, user, pass = RequestHelper.get_proxy(URI.parse(m.url))
+    host, user, pass = RequestHelper.get_proxy(RequestHelper.parse_url(m.url))
     assert_match config['proxy_host'], host
     assert_match "#{config['proxy_user_prefix']}#{config['proxy_country_prefix']}#{country}", user
     assert_equal config['proxy_pass'], pass
@@ -381,7 +381,7 @@ class MediaTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { config: { hosts: { 'example.com': { country: 'gb'}}.to_json, proxy_host: 'my-host', proxy_port: '11111', proxy_user_prefix: 'my-user-prefix', proxy_country_prefix: '-cc-', proxy_session_prefix: '-sid-', proxy_pass: 'mypass' }}
 
     m = create_media url: 'http://example.com', key: a
-    host, user, pass = RequestHelper.get_proxy(URI.parse(m.url))
+    host, user, pass = RequestHelper.get_proxy(RequestHelper.parse_url(m.url))
     assert_match 'http://my-host:11111', host
     assert_match 'my-user-prefix-cc-gb', user
     assert_equal 'mypass', pass
@@ -395,7 +395,7 @@ class MediaTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { config: { hosts: { 'example.com': { country: 'gb'}}.to_json, proxy_host: 'my-host', proxy_port: '11111', proxy_user_prefix: '', proxy_country_prefix: '', proxy_session_prefix: '', proxy_pass: '' }}
 
     m = create_media url: 'http://example.com', key: a
-    assert_nil RequestHelper.get_proxy(URI.parse(m.url))
+    assert_nil RequestHelper.get_proxy(RequestHelper.parse_url(m.url))
   end
 
   test "should not replace sharethefacts url if the sharethefacts js is not present" do
@@ -418,12 +418,14 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)
 
+    WebMock.enable!
+    WebMock.stub_request(:get, 'https://dhpikd1t89arn.cloudfront.net/html-0636d2f1-39c5-45b8-b061-db61b4fd0024.html').to_return(body: 'share the facts', status: 200)
+
     m = Media.new url: 'http://www.example.com'
     html = '<a href="https://t.co/tLSGfdxUQr" data-expanded-url="http://factcheck.sharethefacts.co/share/0636d2f1-39c5-45b8-b061-db61b4fd0024" ><span class="tco-ellipsis"></span><span class="invisible">http://</span><span class="js-display-url">factcheck.sharethefacts.co/share/0636d2f1</span><span class="invisible">-39c5-45b8-b061-db61b4fd0024</span><span class="tco-ellipsis"><span class="invisible">&nbsp;</span>…</span></a>'
-    sharethefacts = 'mock'
-    OpenURI.expects(:open_uri).with(URI.parse("https://dhpikd1t89arn.cloudfront.net/html-0636d2f1-39c5-45b8-b061-db61b4fd0024.html")).returns(sharethefacts)
-    sharethefacts.stubs(:read).returns('share the facts')
     assert_equal '<div>share the facts</div>', HtmlPreprocessor.send(:find_sharethefacts_links, html)
+  ensure
+    WebMock.disable!
   end
 
   test "should update media cache" do
@@ -535,7 +537,7 @@ class MediaTest < ActiveSupport::TestCase
     parsed_url = RequestHelper.parse_url(m.url)
     header_options = RequestHelper.html_options(m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(OpenURI::HTTPError.new('','403 Forbidden'))
-    header_with_proxy = { proxy_http_basic_authentication: RequestHelper.get_proxy(URI.parse(m.url), :array, true), 'Accept-Language' => Media::LANG, read_timeout: PenderConfig.get('timeout', 30).to_i }
+    header_with_proxy = { proxy_http_basic_authentication: RequestHelper.get_proxy(RequestHelper.parse_url(m.url), :array, true), 'Accept-Language' => Media::LANG, read_timeout: PenderConfig.get('timeout', 30).to_i }
     OpenURI.stubs(:open_uri).with(parsed_url, header_with_proxy).raises(OpenURI::HTTPError.new('','403 Forbidden'))
     m.send(:get_html, RequestHelper.html_options(m.url))
   end

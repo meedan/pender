@@ -8,9 +8,9 @@ module MediaCrowdtangleItem
     def self.crowdtangle_request(resource, id)
       # Cache to avoid hitting rate limits and to avoid making several requests to Crowdtangle during the same request life cycle
       Rails.cache.fetch("crowdtangle:request:#{resource}:#{id}", expires_in: 1.minute) do
-        uri = URI.parse("https://api.crowdtangle.com/post/#{id}")
+        uri = RequestHelper.parse_url("https://api.crowdtangle.com/post/#{id}")
 
-        http = Net::HTTP.new(uri.host, uri.port)
+        http = Net::HTTP.new(uri.host, uri.inferred_port)
         http.use_ssl = true
         headers = { 'X-API-Token' => PenderConfig.get("crowdtangle_#{resource}_token") }
         request = Net::HTTP::Get.new(uri.request_uri, headers)
