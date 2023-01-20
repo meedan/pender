@@ -26,10 +26,10 @@ module ProviderInstagram
 
   def get_instagram_api_data(api_url, additional_headers: {})
     begin
-      uri = URI.parse(api_url)
-      http = Net::HTTP.new(uri.host, uri.port)
+      uri = RequestHelper.parse_url(api_url)
+      http = Net::HTTP.new(uri.host, uri.inferred_port)
       http.use_ssl = uri.scheme == 'https'
-      
+
       headers = RequestHelper.extended_headers(uri)
       headers.merge!(additional_headers)
 

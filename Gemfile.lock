@@ -413,6 +413,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  addressable
   airbrake (~> 13.0.0)
   awesome_print
   aws-sdk-s3

@@ -27,7 +27,7 @@ module MediaArchiver
     url = self.url
     skip = PenderConfig.get('archiver_skip_hosts')
     unless skip.blank?
-      host = begin URI.parse(url).host rescue '' end
+      host = begin RequestHelper.parse_url(url).host rescue '' end
       update_data_with_archivers_errors(archivers, { type: 'ARCHIVER_HOST_SKIPPED', info: host }) and return true if skip.split(',').include?(host)
     end
     false
