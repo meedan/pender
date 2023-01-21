@@ -1,6 +1,6 @@
 require 'opentelemetry/sdk'
 require 'opentelemetry/exporter/otlp'
-require 'opentelemetry/instrumentation/all'
+require 'opentelemetry/instrumentation'
 
 module Pender
   class OpenTelemetryConfig
@@ -19,14 +19,16 @@ module Pender
         config.use 'OpenTelemetry::Instrumentation::ConcurrentRuby'
         config.use 'OpenTelemetry::Instrumentation::Net::HTTP'
         config.use 'OpenTelemetry::Instrumentation::Rails'
+        config.use 'OpenTelemetry::Instrumentation::Rake'
         config.use 'OpenTelemetry::Instrumentation::Sidekiq'
       end
     end
 
-    def initialize(endpoint, headers, is_disabled = nil)
+    def initialize(endpoint, headers, disable_exporting: false, disable_sampling: false)
       @endpoint = endpoint
       @headers = headers
-      @is_disabled = !!is_disabled
+      @disable_exporting = !!disable_exporting
+      @disable_sampling = !!disable_sampling
     end
 
     def configure!(resource_attributes, sampling_config: nil)
@@ -46,7 +48,7 @@ module Pender
     end
 
     private
-    
+
     def configure_exporting!
       if exporting_disabled?
         ENV['OTEL_TRACES_EXPORTER'] = 'none'
@@ -65,9 +67,9 @@ module Pender
 
     def configure_sampling!(sampling_config)
       additional_attributes = {}
-      if sampling_config[:sampler]
+      if sampling_config[:sampler] && !@disable_sampling
         ENV['OTEL_TRACES_SAMPLER'] = sampling_config[:sampler]
-        
+
         begin
           rate_as_ratio = (1 / Float(sampling_config[:rate])).to_s
           additional_attributes.merge!('SampleRate' => sampling_config[:rate])
@@ -83,7 +85,7 @@ module Pender
     end
 
     def exporting_disabled?
-      @endpoint.blank? || @headers.blank? || @is_disabled
+      @endpoint.blank? || @headers.blank? || @disable_exporting
     end
 
     def format_attributes(hash)

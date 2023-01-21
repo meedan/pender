@@ -99,6 +99,7 @@ class Media
     Parser::DropboxItem,
     Parser::TiktokItem,
     Parser::TiktokProfile,
+    Parser::TelegramItem,
     Parser::KwaiItem,
     Parser::PageItem,
   ]
