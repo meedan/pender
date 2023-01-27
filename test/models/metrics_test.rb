@@ -31,7 +31,7 @@ class MetricsIntegrationTest < ActiveSupport::TestCase
             else
               break
             end
-          rescue Pender::RetryLater => e
+          rescue Pender::Exception::RetryLater => e
             attempts += 1
             next
           end
@@ -106,10 +106,10 @@ class MetricsUnitTest < ActiveSupport::TestCase
     stub_facebook_oauth_request
     stub_facebook_metrics_request
 
-    Metrics.stubs(:verify_facebook_metrics_response).raises(Pender::RetryLater)
+    Metrics.stubs(:verify_facebook_metrics_response).raises(Pender::Exception::RetryLater)
     Metrics.schedule_fetching_metrics_from_facebook({}, 'https://example.com/trending-article', key.id)
 
-    assert_raises Pender::RetryLater do
+    assert_raises Pender::Exception::RetryLater do
       MetricsWorker.perform_one
     end
   end
@@ -210,7 +210,7 @@ class MetricsUnitTest < ActiveSupport::TestCase
         args[:attributes]['facebook.metrics.retryable']
     end
 
-    assert_raises Pender::RetryLater do
+    assert_raises Pender::Exception::RetryLater do
       TracingService.stub(:set_error_status, mocked_tracer) do
         Metrics.get_metrics_from_facebook('http://example.com/trending-article', key.id)
       end
@@ -223,7 +223,7 @@ class MetricsUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, /graph.facebook.com\/\S*access_token=fake-access-token/).to_return(status: 400, body: "{\"error\":{\"message\":\"Application request limit reached.\",\"code\":\"4\"}}")
 
     locker = Semaphore.new(facebook_app_id)
-    assert_raises Pender::RetryLater do
+    assert_raises Pender::Exception::RetryLater do
       assert_equal locker.locked?, false
       Metrics.get_metrics_from_facebook('http://example.com/trending-article', key.id)
       assert_equal locker.locked?, true
@@ -246,7 +246,7 @@ class MetricsUnitTest < ActiveSupport::TestCase
     app_1_locker = Semaphore.new('1111')
     app_2_locker = Semaphore.new('3333')
 
-    assert_raises Pender::RetryLater do
+    assert_raises Pender::Exception::RetryLater do
       assert_equal false, app_1_locker.locked?
       Metrics.get_metrics_from_facebook('http://example.com/trending-article', api_key.id)
       # Unlocked as part of normal test teardown

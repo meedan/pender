@@ -28,7 +28,7 @@ module MediaArchiveOrgArchiver
           Media.delay_for(2.minutes).get_archive_org_status(body['job_id'], url, key_id)
         else
           PenderAirbrake.notify(StandardError.new(body['message']), url: url, response_body: body)
-          data = { error: { message: "(#{body['status_ext']}) #{body['message']}", code: LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR') }}
+          data = { error: { message: "(#{body['status_ext']}) #{body['message']}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }}
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
         end
       end
@@ -58,7 +58,7 @@ module MediaArchiveOrgArchiver
         Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
       else
         message = body['status'] == 'pending' ? 'Capture is pending' : "(#{body['status_ext']}) #{body['message']}"
-        raise Pender::RetryLater, message
+        raise Pender::Exception::RetryLater, message
       end
     end
 

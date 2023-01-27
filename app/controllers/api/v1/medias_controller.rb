@@ -1,5 +1,5 @@
-require 'pender_exceptions'
-require 'pender_store'
+require 'pender/exception'
+require 'pender/store'
 require 'semaphore'
 
 module Api
@@ -83,9 +83,9 @@ module Api
         begin
           Pender::Store.current.delete(@id, :html) if @refresh
           render_timeout(true) { render_media(@media.as_json({ force: @refresh, archivers: @archivers })) and return }
-        rescue Pender::ApiLimitReached => e
+        rescue Pender::Exception::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
-        rescue Pender::UnsafeUrl
+        rescue Pender::Exception::UnsafeUrl
           render_error 'Unsafe URL', 'UNSAFE', 400
         rescue StandardError => e
           data = get_error_data({ message: e.message, code: 'UNKNOWN' }, @media, @url, @id)
@@ -158,10 +158,11 @@ module Api
       end
 
       def generate_media_html(template, locals)
-        av = ActionView::Base.new(Rails.root.join('app', 'views'))
-        av.assign(locals.merge({ request: request, id: @id, media: @media }))
-        ActionView::Base.send :include, MediasHelper
-        av.render(template: "medias/#{template}.html.erb", layout: 'layouts/application.html.erb')
+        ApplicationController.render(
+          template: "medias/#{template}.html.erb",
+          layout: 'layouts/application.html.erb',
+          assigns: locals.merge({ request: request, id: @id, media: @media })
+        )
       end
 
       def should_serve_external_embed?(data)
@@ -212,7 +213,7 @@ module Api
           error_info = { message: e.message }.merge(error_info)
           notify_airbrake(e, error_info)
           Rails.logger.warn level: 'WARN', message: "[Parser] Error on #{caller_locations(2).first.label}", error: error_info
-          if LapisConstants::ErrorCodes::TEMP_ERRORS.include?(error_info.dig(:code))
+          if Lapis::ErrorCodes::TEMP_ERRORS.include?(error_info.dig(:code))
             data = get_error_data(error_info, nil, @url, @id)
             render_media(data)
           else

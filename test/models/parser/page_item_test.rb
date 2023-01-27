@@ -465,7 +465,7 @@ class PageItemUnitTest < ActiveSupport::TestCase
       to_return(status: 200, body: { matches: ['fake match'] }.to_json )
 
     # url
-    assert_raises Pender::UnsafeUrl do
+    assert_raises Pender::Exception::UnsafeUrl do
       Parser::PageItem.new('https://example.com/unsafeurl').parse_data(empty_doc, throwaway_url)
     end
   end
@@ -485,7 +485,7 @@ class PageItemUnitTest < ActiveSupport::TestCase
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="article:author" content="https://example.com/unsafeurl" />
     HTML
-    assert_raises Pender::UnsafeUrl do
+    assert_raises Pender::Exception::UnsafeUrl do
       Parser::PageItem.new('https://example.com/safeurl').parse_data(doc, throwaway_url)
     end
 
@@ -493,7 +493,7 @@ class PageItemUnitTest < ActiveSupport::TestCase
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="article:author" content="https://example.com/unsafeurl" />
     HTML
-    assert_raises Pender::UnsafeUrl do
+    assert_raises Pender::Exception::UnsafeUrl do
       Parser::PageItem.new('https://example.com/safeurl').parse_data(doc, throwaway_url)
     end
 
@@ -501,7 +501,7 @@ class PageItemUnitTest < ActiveSupport::TestCase
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="article:author" content="https://example.com/unsafeurl" />
     HTML
-    assert_raises Pender::UnsafeUrl do
+    assert_raises Pender::Exception::UnsafeUrl do
       Parser::PageItem.new('https://example.com/safeurl').parse_data(doc, throwaway_url)
     end
   end

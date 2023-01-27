@@ -35,7 +35,7 @@ module ProviderYoutube
       Rails.logger.warn level: 'WARN', message: "[Parser] #{error.message}", url: url, error_class: error.class
     rescue Yt::Errors::Forbidden => error
       PenderAirbrake.notify(error, url: url )
-      @parsed_data[:raw][:api] = { error: { url: url, message: "#{error.class}: #{error.message}", code: LapisConstants::ErrorCodes::const_get('UNAUTHORIZED') }}
+      @parsed_data[:raw][:api] = { error: { url: url, message: "#{error.class}: #{error.message}", code: Lapis::ErrorCodes::const_get('UNAUTHORIZED') }}
       Rails.logger.warn level: 'WARN', message: "[Parser] #{error.message}", url: url, error_class: error.class
     end
   end
@@ -44,6 +44,6 @@ module ProviderYoutube
     @parsed_data['username'] = @parsed_data['author_name'] = 'YouTube'
     @parsed_data['title'] = 'Deleted video'
     @parsed_data['description'] = 'This video is unavailable.'
-    @parsed_data[:raw][:api] = { error: { message: error.message, code: LapisConstants::ErrorCodes::const_get('NOT_FOUND') }}
+    @parsed_data[:raw][:api] = { error: { message: error.message, code: Lapis::ErrorCodes::const_get('NOT_FOUND') }}
   end
 end

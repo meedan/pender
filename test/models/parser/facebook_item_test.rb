@@ -78,7 +78,7 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.facebook.com/caiosba/posts/3588207164560845'
     data = m.as_json
     assert_equal 'Login required to see this profile', data[:error][:message]
-    assert_equal LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
+    assert_equal Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
     assert_equal m.url, data[:title]
     assert data[:description].empty?
     assert data[:html].empty?

@@ -1,4 +1,4 @@
-require 'error_codes'
+require 'lapis/error_codes'
 
 module Parser
   class Base
@@ -210,7 +210,7 @@ module Parser
         yield
       rescue exception => error
         PenderAirbrake.notify(error, url: url, parsed_data: parsed_data )
-        code = LapisConstants::ErrorCodes::const_get('UNKNOWN')
+        code = Lapis::ErrorCodes::const_get('UNKNOWN')
         @parsed_data.merge!(error: { message: "#{error.class}: #{error.message}", code: code })
         Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse', url: url, code: code, error_class: error.class, error_message: error.message
         return

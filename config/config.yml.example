@@ -7,6 +7,13 @@ development: &default
   redis_port: 6379
   redis_database: 1
 
+  # Whitelisted requests for hosts, to avoid DNS rebinding
+  # localhost and 0.0.0.0 are allowed by default in development
+  #
+  # https://edgeguides.rubyonrails.org/upgrading_ruby_on_rails.html#new-config-hosts-setting
+  #
+  whitelisted_hosts: 'pender,api'
+
   # File storage on S3 or API equivalent
   #
   # REQUIRED

@@ -1,4 +1,4 @@
-require 'error_codes'
+require 'lapis/error_codes'
 
 module Api
   module V1
@@ -69,7 +69,7 @@ module Api
         render json: { type: 'error',
                        data: {
                          message: message,
-                         code: LapisConstants::ErrorCodes::const_get(code)
+                         code: Lapis::ErrorCodes::const_get(code)
                        }
                      },
                      status: status

@@ -69,4 +69,11 @@ Rails.application.configure do
   config.logger = ActiveSupport::Logger.new(STDOUT)
 
   config.log_level = :debug
+
+  cfg = YAML.load_file("#{Rails.root}/config/config.yml")[Rails.env]
+  if cfg['whitelisted_hosts']
+    config.hosts.concat(cfg['whitelisted_hosts'].split(','))
+  else
+    puts '[WARNING] config.hosts not provided. Only requests from localhost are allowed. To change, update `whitelisted_hosts` in config.yml'
+  end
 end

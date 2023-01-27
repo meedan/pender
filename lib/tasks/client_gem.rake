@@ -39,7 +39,7 @@ namespace :lapis do
       # Copy constants
       const_file = File.join(basedir, 'constants.rb')
       f = File.open(const_file, 'w+')
-      f.puts(File.read(File.join(Rails.root, 'lib', 'error_codes.rb')).gsub('LapisConstants', 'PenderClient'))
+      f.puts(File.read(File.join(Rails.root, 'lib', 'lapis', 'error_codes.rb')).gsub('Lapis', 'PenderClient'))
       f.close
 
       # Update spec (metadata and dependencies)

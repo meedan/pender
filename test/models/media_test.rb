@@ -608,7 +608,7 @@ class MediaUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, /example.com/).and_return(status: 404, body: 'fake response body')
     webhook_info = { 'webhook_url' => 'http://example.com/webhook', 'webhook_token' => 'test' }
 
-    assert_raises Pender::RetryLater do
+    assert_raises Pender::Exception::RetryLater do
       Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
     end
   end

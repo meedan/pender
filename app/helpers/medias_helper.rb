@@ -22,7 +22,7 @@ module MediasHelper
       yield
     rescue exception => error
       PenderAirbrake.notify(error, url: media.url, data: media.data )
-      code = LapisConstants::ErrorCodes::const_get('UNKNOWN')
+      code = Lapis::ErrorCodes::const_get('UNKNOWN')
       media.data.merge!(error: { message: "#{error.class}: #{error.message}", code: code })
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse', url: media.url, code: code, error_class: error.class, error_message: error.message
       return
@@ -75,7 +75,7 @@ module MediasHelper
     begin
       uri = RequestHelper.parse_url(url)
       !uri.host.nil? && uri.userinfo.nil?
-    rescue Addressable::URI::InvalidURIError, TypeError
+    rescue RequestHelper::UrlFormatError
       false
     end
   end
@@ -84,7 +84,7 @@ module MediasHelper
     data = media.nil? ? Media.minimal_data(OpenStruct.new(url: url)) : media.data
     data['title'] = url if data['title'].blank?
     code = error_data[:code]
-    error_data[:code] = LapisConstants::ErrorCodes::const_get(code)
+    error_data[:code] = Lapis::ErrorCodes::const_get(code)
     data.merge(error: error_data)
   end
 

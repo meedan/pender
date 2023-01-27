@@ -1,3 +1,5 @@
+require 'application_record'
+
 class ApiKey < ApplicationRecord
   validates_presence_of :access_token, :expire_at
   validates_uniqueness_of :access_token
@@ -21,7 +23,7 @@ class ApiKey < ApplicationRecord
   def self.current=(api_key)
     RequestStore.store[:api_key] = api_key
   end
-  
+
   validates :application, inclusion: { in: proc { ApiKey.applications } }
 
   def settings

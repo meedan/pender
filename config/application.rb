@@ -8,6 +8,8 @@ Bundler.require(*Rails.groups)
 
 module Pender
   class Application < Rails::Application
+    config.load_defaults 6.0
+
     config.generators do |g|
       g.javascripts false
       g.stylesheets false
@@ -34,7 +36,6 @@ module Pender
       'Access-Control-Request-Method' => '*'
     })
 
-    config.active_record.sqlite3.represent_boolean_as_integer = true
     config.active_record.yaml_column_permitted_classes = [Symbol]
   end
 end
