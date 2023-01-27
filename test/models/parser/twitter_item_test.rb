@@ -161,10 +161,10 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     assert_no_match /&amp;/, data['title']
   end
 
-  test "should throw Pender::ApiLimitReached when Twitter::Error::TooManyRequests is thrown when parsing tweet" do
+  test "should throw Pender::Exception::ApiLimitReached when Twitter::Error::TooManyRequests is thrown when parsing tweet" do
     Twitter::REST::Client.any_instance.stubs(:status).raises(Twitter::Error::TooManyRequests)
 
-    assert_raises Pender::ApiLimitReached do
+    assert_raises Pender::Exception::ApiLimitReached do
       Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data(empty_doc)
     end
   end

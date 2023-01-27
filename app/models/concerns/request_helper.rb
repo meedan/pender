@@ -2,6 +2,7 @@ require 'postrank-uri'
 
 class RequestHelper
   REDIRECT_HTTP_CODES = %w(301 302 307 308).freeze
+  class UrlFormatError < StandardError; end
 
   class << self
     LANG = 'en-US;q=0.6,en;q=0.4'
@@ -21,7 +22,7 @@ class RequestHelper
         if force_proxy
           PenderAirbrake.notify(e, url: url)
           Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
-          set_error_callback.call(message: 'URL Not Found', code: LapisConstants::ErrorCodes::const_get('NOT_FOUND'))
+          set_error_callback.call(message: 'URL Not Found', code: Lapis::ErrorCodes::const_get('NOT_FOUND'))
           return nil
         end
         get_html(url, set_error_callback, header_options, true)
@@ -38,7 +39,11 @@ class RequestHelper
       # This does a more intensive PostRank normalization, including stripping params
       # and pre-pending http/https if needed
       # https://github.com/postrank-labs/postrank-uri/blob/master/lib/postrank-uri.rb#L154
-      PostRank::URI.normalize(url).to_s
+      begin
+        PostRank::URI.normalize(url).to_s
+      rescue Addressable::URI::InvalidURIError, NoMethodError, TypeError => e
+        raise UrlFormatError.new(e)
+      end
     end
 
     def html_options(url)
@@ -56,8 +61,12 @@ class RequestHelper
       # in front of any schemeless URIs, which was giving us problems for canonical urls)
       # Addressable: https://www.rubydoc.info/gems/addressable/Addressable/URI#parse-class_method
       # PostRank: https://github.com/postrank-labs/postrank-uri/blob/master/lib/postrank-uri.rb#L198
-      uri = Addressable::URI.parse(url)
-      uri.normalize!
+      begin
+        uri = Addressable::URI.parse(url)
+        uri.normalize!
+      rescue Addressable::URI::InvalidURIError, NoMethodError, TypeError => e
+        raise UrlFormatError.new(e)
+      end
     end
 
     def extended_headers(uri = nil)
@@ -88,7 +97,7 @@ class RequestHelper
         uri = RequestHelper.parse_url(url)
         return false unless (uri.scheme && uri.scheme.starts_with?('http'))
         self.request_url(url, 'Get')
-      rescue OpenSSL::SSL::SSLError, URI::InvalidURIError, SocketError => e
+      rescue OpenSSL::SSL::SSLError, UrlFormatError, SocketError => e
         PenderAirbrake.notify(e, url: url)
         Rails.logger.warn level: 'WARN', message: '[Parser] Invalid URL', url: url, error_class: e.class, error_message: e.message
         return false
@@ -127,7 +136,11 @@ class RequestHelper
       http = Net::HTTP.new(uri.host, uri.inferred_port)
       http.read_timeout = PenderConfig.get('timeout', 30).to_i
       http.use_ssl = uri.scheme == 'https'.freeze
-      headers = { 'User-Agent' => self.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }.merge(self.get_cf_credentials(uri))
+      headers = {
+        'User-Agent' => self.html_options(uri)['User-Agent'],
+        'Accept-Language' => LANG,
+      }.merge(self.get_cf_credentials(uri))
+
       request = "Net::HTTP::#{verb}".constantize.new(uri.to_s, headers)
       request['Cookie'] = self.set_cookies(uri)
       proxy_config = self.get_proxy(uri, :hash)
@@ -144,7 +157,7 @@ class RequestHelper
     def decode_uri(url)
       begin
         Addressable::URI.unencode(url)
-      rescue Addressable::URI::InvalidURIError, TypeError
+      rescue Addressable::URI::InvalidURIError, NoMethodError, TypeError
         url
       end
     end

@@ -144,7 +144,7 @@ class MediasHelperTest < ActionView::TestCase
 
   test 'should recover from failed url decoding' do
     url = 'https://example.com'
-    Addressable::URI.stubs(:unencode).raises(Addressable::URI::InvalidURIError)
+    Addressable::URI.stubs(:unencode).raises(TypeError)
     assert_equal url, RequestHelper.decode_uri(url)
   end
 

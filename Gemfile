@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
-gem 'rails', '~> 5.2.8'
-gem 'sqlite3', '~> 1.3.6', require: false
+gem 'rails', '~> 6.0.0'
+gem 'sqlite3'
 gem 'pg', '0.20'
 group :development, :test do
   gem 'byebug'
@@ -10,6 +10,7 @@ group :development, :test do
   gem 'rswag-specs', git: 'https://github.com/jetpackworkflow/rswag.git', branch: 'allow_oas3_param_schema_array'
   gem 'get_process_mem'
   gem 'derailed'
+  gem "spring"
 end
 gem 'memory_profiler'
 group :development do
@@ -72,3 +73,6 @@ gem 'opentelemetry-instrumentation-rails'
 gem 'opentelemetry-instrumentation-rake'
 gem 'opentelemetry-instrumentation-sidekiq'
 gem 'addressable'
+# Adding this removes some deprecation warnings, caused by double-loading of the net-protocol library
+# (see https://github.com/ruby/net-imap/issues/16). We *might* be able to remove this after upgrading to Ruby 3
+gem 'net-http'

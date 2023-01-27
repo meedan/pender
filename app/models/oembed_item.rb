@@ -1,4 +1,4 @@
-require 'error_codes'
+require 'lapis/error_codes'
 
 class OembedItem
   def initialize(request_url, oembed_url)
@@ -55,7 +55,7 @@ class OembedItem
         oembed_json['html'] = '' if invalid_html_iframe?(doc)
       end
     rescue JSON::ParserError => error
-      oembed_json.merge!({ error: { message: response.body, code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') } })
+      oembed_json.merge!({ error: { message: response.body, code: Lapis::ErrorCodes::const_get('INVALID_VALUE') } })
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse `oembed` data as JSON', url: request_url, oembed_url: oembed_uri&.to_s, error_class: error.class, error_message: error.message, response_code: response.code
     end
     oembed_json
@@ -76,14 +76,14 @@ class OembedItem
     uri = RequestHelper.parse_url(iframe_tag.attr('src'))
     return if uri.hostname.match(/^(www\.)?youtube\.com/)
 
-    response = Net::HTTP.get_response(uri)
+    response = RequestHelper.request_url(uri)
     response&.code&.to_s == '200' && ['DENY', 'SAMEORIGIN'].include?(response.header['X-Frame-Options'])
   end
 
   def construct_absolute_path(request_url, _oembed_url)
     begin
       RequestHelper.parse_url(RequestHelper.absolute_url(request_url, _oembed_url))
-    rescue Addressable::URI::InvalidURIError, TypeError => e
+    rescue RequestHelper::UrlFormatError
       nil
     end
   end
@@ -93,7 +93,7 @@ class OembedItem
       yield
     rescue exception => error
       PenderAirbrake.notify(error, oembed_url: oembed_uri&.to_s, oembed_data: data )
-      code = LapisConstants::ErrorCodes::const_get('INVALID_VALUE')
+      code = Lapis::ErrorCodes::const_get('INVALID_VALUE')
       @data.merge!(error: { message: "#{error.class}: #{error.message}", code: code })
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse oembed data', oembed_url: oembed_uri&.to_s, code: code, error_class: error.class, error_message: error.message
       return

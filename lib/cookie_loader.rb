@@ -1,4 +1,4 @@
-require 'aws_s3_client'
+require 'pender/aws_s3_client'
 
 class CookieLoader
   class FilePathError < StandardError; end

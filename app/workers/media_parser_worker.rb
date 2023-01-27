@@ -1,4 +1,4 @@
-require 'pender_store'
+require 'pender/store'
 
 class MediaParserWorker
   include Sidekiq::Worker
@@ -33,7 +33,7 @@ class MediaParserWorker
   end
 
   def invalid_url_error
-    { error: { message: 'The URL is not valid', code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') }}
+    { error: { message: 'The URL is not valid', code: Lapis::ErrorCodes::const_get('INVALID_VALUE') }}
   end
 end
 

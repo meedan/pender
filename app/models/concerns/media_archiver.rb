@@ -1,5 +1,5 @@
-require 'error_codes'
-require 'pender_exceptions'
+require 'lapis/error_codes'
+require 'pender/exception'
 
 module MediaArchiver
   extend ActiveSupport::Concern
@@ -39,7 +39,7 @@ module MediaArchiver
     archivers.each do |archiver|
       message = error[:type].titleize
       message += ": #{error[:info]}" if error[:info]
-      data = { error: { message: message, code: LapisConstants::ErrorCodes::const_get(error[:type]) }}
+      data = { error: { message: message, code: Lapis::ErrorCodes::const_get(error[:type]) }}
       self.data['archives'].merge!({"#{archiver}": data })
       Rails.logger.warn level: 'WARN', message: error[:type], url: self.url, archiver: archiver
       Media.notify_webhook_and_update_cache(archiver, url, data, ApiKey.current&.id)
@@ -63,7 +63,7 @@ module MediaArchiver
       url, archiver, key_id = info[:args][0], info[:args][1], info[:args][2]
       PenderAirbrake.notify(StandardError.new(info[:error_message]), info.merge({ url: url, archiver: archiver, key_id: key_id }))
       Rails.logger.warn level: 'WARN', message: "[#{info[:error_class]}] #{info[:error_message]}", url: url, archiver: archiver
-      data = { error: { message: info[:error_message], code: LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE') }}
+      data = { error: { message: info[:error_message], code: Lapis::ErrorCodes::const_get('ARCHIVER_FAILURE') }}
       Media.notify_webhook_and_update_cache(archiver, url, data, key_id)
     end
 
@@ -89,12 +89,12 @@ module MediaArchiver
       begin
         ApiKey.current = ApiKey.find_by(id: params.dig(:key_id))
         yield
-      rescue Pender::RetryLater => error
+      rescue Pender::Exception::RetryLater => error
         retry_archiving_after_failure(archiver, { message: error.message })
       rescue StandardError => error
         error_type = 'ARCHIVER_ERROR'
-        params.merge!({code: LapisConstants::ErrorCodes::const_get(error_type), message: error.message})
-        data = { error: { message: params[:message], code: LapisConstants::ErrorCodes::const_get(error_type) }}
+        params.merge!({code: Lapis::ErrorCodes::const_get(error_type), message: error.message})
+        data = { error: { message: params[:message], code: Lapis::ErrorCodes::const_get(error_type) }}
         Media.notify_webhook_and_update_cache(archiver, params[:url], data, params[:key_id])
         retry_archiving_after_failure(archiver, params)
       end
@@ -102,7 +102,7 @@ module MediaArchiver
 
     def retry_archiving_after_failure(archiver, params)
       Rails.logger.warn level: 'WARN', message: "#{params[:message]}", url: params[:url], archiver: archiver, error_code: params[:code], error_message: params[:message]
-      raise Pender::RetryLater, "[#{archiver}]: #{params[:message]}"
+      raise Pender::Exception::RetryLater, "[#{archiver}]: #{params[:message]}"
     end
   end
 end

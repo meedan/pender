@@ -151,7 +151,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
   test "sets error if login page URL detected" do
     data = Parser::FacebookProfile.new('https://www.facebook.com/login/?next=').parse_data(meedan_doc, 'https://www.facebook.com/login/?next=')
 
-    assert_equal LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
+    assert_equal Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
     assert_match /Login required/, data[:error][:message]
     assert data['title'].empty?
     assert data['description'].empty?
@@ -160,7 +160,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
   test "sets error if login page detected from HTML, but not apparent from URL" do
     data = Parser::FacebookProfile.new('https://facebook.com/fake-ironmaiden').parse_data(login_doc, 'https://facebook.com/fake-ironmaiden')
 
-    assert_equal LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
+    assert_equal Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
     assert_match /Login required/, data[:error][:message]
     assert data['title'].empty?
     assert data['description'].empty?
