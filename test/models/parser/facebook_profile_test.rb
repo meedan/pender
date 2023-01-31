@@ -49,10 +49,6 @@ class FacebookProfileIntegrationTest < ActiveSupport::TestCase
     assert !data['title'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'profile', data['type']
-
-    # Parsed from pageID in HTML (may fail)
-    assert_equal '179240385797', data['id']
-    assert_equal '179240385797', data['external_id']
   end
 
   test "should parse Arabic URLs" do
@@ -124,7 +120,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
     assert_nil Parser::FacebookProfile.match?('https://www.facebook.com/photo.php?story_fbid=10154534111016407&id=54212446406')
     assert_nil Parser::FacebookProfile.match?('https://www.facebook.com/livemap?story_fbid=10154534111016407&id=54212446406')
     assert_nil Parser::FacebookProfile.match?('https://www.facebook.com/watch?story_fbid=10154534111016407&id=54212446406')
-    
+
     assert Parser::FacebookProfile.match?('https://facebook.com/heymeedan').is_a?(Parser::FacebookProfile)
     assert Parser::FacebookProfile.match?('https://m.facebook.com/heymeedan').is_a?(Parser::FacebookProfile)
     assert Parser::FacebookProfile.match?('https://www.facebook.com/heymeedan').is_a?(Parser::FacebookProfile)
@@ -142,7 +138,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
       airbrake_call_count += 1
       assert_equal NoMethodError, e.class
     end
-    
+
     Parser::FacebookProfile.stub(:get_id_from_doc, -> (_) { raise NoMethodError.new('fake for test') }) do
       PenderAirbrake.stub(:notify, arguments_checker) do
         data = Parser::FacebookProfile.new('https://www.facebook.com/fake-account').parse_data(nil, 'https://www.facebook.com/fake-account')
@@ -202,7 +198,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
 
   test "sets external_id from HTML if URL matching does not work, but ID present in doc" do
     parser = Parser::FacebookProfile.new('https://facebook.com/fake-heymeedan')
-    
+
     data = parser.parse_data(meedan_doc,'https://facebook.com/fake-heymeedan')
     assert_equal '54421674438', data['id']
     assert_equal '54421674438', data['external_id']
@@ -220,8 +216,8 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
 
   test "sets pictures from og:image metatag" do
     data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(meedan_doc, throwaway_url)
-    assert_match /scontent-sjc3-1.xx.fbcdn.net\/v\/t1.6435-1\/48405270_10156958756529439_588050386544230400_n.png/, data['picture']
-    assert_match /scontent-sjc3-1.xx.fbcdn.net\/v\/t1.6435-1\/48405270_10156958756529439_588050386544230400_n.png/, data['author_picture']
+    assert_match /scontent-lax3-1.xx.fbcdn.net\/v\/t39.30808-1\/310513247_435753678699138_2623398131510754475_n.png/, data['picture']
+    assert_match /scontent-lax3-1.xx.fbcdn.net\/v\/t39.30808-1\/310513247_435753678699138_2623398131510754475_n.png/, data['author_picture']
   end
 
   test "leaves pictures blank when og:image metatag missing" do
@@ -271,7 +267,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
     HTML
     data = parser.parse_data(doc, throwaway_url)
     assert_equal "Piglet the Dog's post", data['title']
-    
+
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="Piglet the Dog's post | Facebook" />
     HTML
@@ -282,7 +278,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
   test 'sets description from og:description metatag if present' do
     data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(meedan_doc, throwaway_url)
 
-    assert_equal "Meedan. 3,738 likes · 2 talking about this · 72 were here. Make sense of the global web.", data['description']
+    assert_equal "Meedan. 3,783 likes · 65 were here. Make sense of the global web.", data['description']
   end
 
   test 'sets description from description metatag if og:description not present' do
@@ -303,7 +299,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
 
     data = Parser::FacebookProfile.new('https://facebook.com/people/fakeaccount/123456789').parse_data(meedan_doc, throwaway_url)
     assert_equal 'fakeaccount', data['username']
-  
+
     data = Parser::FacebookProfile.new('https://facebook.com/pages/fakeaccount/123456789').parse_data(meedan_doc, throwaway_url)
     assert_equal 'fakeaccount', data['username']
   end
@@ -311,31 +307,31 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
   test 'returns empty username if not clear from URL' do
     data = Parser::FacebookProfile.new('https://facebook.com/events/123456').parse_data(meedan_doc, throwaway_url)
     assert_nil data['username']
-    
-    data = Parser::FacebookProfile.new('https://facebook.com/live/123456').parse_data(meedan_doc, throwaway_url)    
-    assert_nil data['username']
-  
-    data = Parser::FacebookProfile.new('https://facebook.com/livemap/123456').parse_data(meedan_doc, throwaway_url)    
+
+    data = Parser::FacebookProfile.new('https://facebook.com/live/123456').parse_data(meedan_doc, throwaway_url)
     assert_nil data['username']
 
-    data = Parser::FacebookProfile.new('https://facebook.com/watch/123456').parse_data(meedan_doc, throwaway_url)    
+    data = Parser::FacebookProfile.new('https://facebook.com/livemap/123456').parse_data(meedan_doc, throwaway_url)
     assert_nil data['username']
 
-    data = Parser::FacebookProfile.new('https://facebook.com/story.php/123456').parse_data(meedan_doc, throwaway_url)    
+    data = Parser::FacebookProfile.new('https://facebook.com/watch/123456').parse_data(meedan_doc, throwaway_url)
     assert_nil data['username']
 
-    data = Parser::FacebookProfile.new('https://facebook.com/category/123456').parse_data(meedan_doc, throwaway_url)    
+    data = Parser::FacebookProfile.new('https://facebook.com/story.php/123456').parse_data(meedan_doc, throwaway_url)
     assert_nil data['username']
 
-    data = Parser::FacebookProfile.new('https://facebook.com/photo/123456').parse_data(meedan_doc, throwaway_url)    
+    data = Parser::FacebookProfile.new('https://facebook.com/category/123456').parse_data(meedan_doc, throwaway_url)
     assert_nil data['username']
 
-    data = Parser::FacebookProfile.new('https://facebook.com/photo.php/123456').parse_data(meedan_doc, throwaway_url)    
+    data = Parser::FacebookProfile.new('https://facebook.com/photo/123456').parse_data(meedan_doc, throwaway_url)
+    assert_nil data['username']
+
+    data = Parser::FacebookProfile.new('https://facebook.com/photo.php/123456').parse_data(meedan_doc, throwaway_url)
     assert_nil data['username']
 
     # Note: we don't expect to realistically get this URL pattern in the parser because it would be
     # redirected to the human-readable link before we parse data
-    data = Parser::FacebookProfile.new('https://facebook.com/123456789').parse_data(meedan_doc, throwaway_url)    
+    data = Parser::FacebookProfile.new('https://facebook.com/123456789').parse_data(meedan_doc, throwaway_url)
     assert_nil data['username']
   end
 
@@ -345,7 +341,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
 
     data = Parser::FacebookProfile.new('https://facebook.com/people/fakeaccount/123456789').parse_data(meedan_doc, throwaway_url)
     assert_equal 'fakeaccount', data['author_name']
-  
+
     data = Parser::FacebookProfile.new('https://facebook.com/pages/fakeaccount/123456789').parse_data(meedan_doc, throwaway_url)
     assert_equal 'fakeaccount', data['author_name']
   end

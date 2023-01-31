@@ -20,7 +20,7 @@ module ProviderFacebook
       html_string = html_page.to_s
       match = html_string.match(/"entity_id"(\s?):(\s?)"(?<id>\d+)"/) ||
         html_string.match(/"al:ios:url"(\s?)content="fb:\/\/page\/\?id=(?<id>\d+)"/) ||
-        html_string.match(/"pageID"(\s?):(\s?)"(?<id>\d+)"/)
+        html_string.match(/"owning_profile"\s?:\s?{\s?"__typename"\s?:\s?"Page"\s?,\s?"id"\s?:\s?"(?<id>\d+)"/)
 
       match['id'] unless match.nil?
     end
