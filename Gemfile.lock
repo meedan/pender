@@ -16,6 +16,16 @@ GIT
   specs:
     ids_please (2.2.2)
 
+GIT
+  remote: https://github.com/postrank-labs/postrank-uri.git
+  revision: 485ac465f3e989b4a6e52cdd5bf35291d78bd815
+  ref: 485ac46
+  specs:
+    postrank-uri (1.0.24)
+      addressable (>= 2.4.0)
+      nokogiri (>= 1.8.0)
+      public_suffix (>= 4.0.0, < 5)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -74,8 +84,8 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
       zeitwerk (~> 2.2, >= 2.2.2)
-    addressable (2.8.0)
-      public_suffix (>= 2.0.2, < 5.0)
+    addressable (2.8.1)
+      public_suffix (>= 2.0.2, < 6.0)
     airbrake (13.0.3)
       airbrake-ruby (~> 6.0)
     airbrake-ruby (6.2.0)
@@ -289,11 +299,7 @@ GEM
     parallel_tests (3.8.1)
       parallel
     pg (0.20.0)
-    postrank-uri (1.0.24)
-      addressable (>= 2.4.0)
-      nokogiri (>= 1.8.0)
-      public_suffix (>= 2.0.0, < 2.1)
-    public_suffix (2.0.5)
+    public_suffix (4.0.7)
     puma (5.6.4)
       nio4r (~> 2.0)
     racc (1.6.2)
@@ -487,7 +493,7 @@ DEPENDENCIES
   opentelemetry-sdk
   parallel_tests
   pg (= 0.20)
-  postrank-uri
+  postrank-uri!
   puma (= 5.6.4)
   rack (>= 1.6.11)
   rack-cors
