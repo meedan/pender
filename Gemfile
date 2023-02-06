@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-gem 'rails', '~> 6.0.0'
+gem 'rails', '~> 6.1.0'
 gem 'sqlite3'
 gem 'pg', '0.20'
 group :development, :test do
