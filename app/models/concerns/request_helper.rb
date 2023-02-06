@@ -210,7 +210,7 @@ class RequestHelper
     def set_cookies(uri)
       empty = ''.freeze
       begin
-        host = PublicSuffix.parse(uri.host).domain
+        host = uri.domain
         cookies = []
         PenderConfig.get('cookies', {}).each do |domain, content|
           next unless domain.match?(host)
