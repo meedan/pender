@@ -1,7 +1,6 @@
 source 'https://rubygems.org'
 gem 'rails', '~> 6.1.0'
-gem 'sqlite3'
-gem 'pg', '0.20'
+gem 'pg', '1.1'
 group :development, :test do
   gem 'byebug'
   gem 'gem-licenses'

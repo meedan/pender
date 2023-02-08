@@ -10,7 +10,7 @@ ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 
 # install dependencies
-RUN apt-get update -qq && apt-get install -y curl build-essential git graphicsmagick inotify-tools libsqlite3-dev libpq-dev python --no-install-recommends
+RUN apt-get update -qq && apt-get install -y curl build-essential git graphicsmagick inotify-tools libpq-dev python --no-install-recommends
 
 # install our app
 RUN mkdir -p /app
