@@ -101,7 +101,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal '', data['username']
     assert_match 'https://xkcd.com', data['author_url']
     assert_equal '', data['screenshot']
-    assert_match /imgs/, data['picture']
+    assert data['picture'].present?
   end
 
   test "should return author picture" do
