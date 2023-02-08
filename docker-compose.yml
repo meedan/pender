@@ -2,6 +2,7 @@ version: "2.2"
 volumes:
   redis:
   minio:
+  postgres11:
 services:
   redis:
     image: redis:5
@@ -19,6 +20,14 @@ services:
     environment:
       MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
       MINIO_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  postgres:
+    image: postgres:11
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: pender-tests
   pender:
     build: .
     shm_size: 1G
@@ -28,6 +37,7 @@ services:
     volumes:
       - ".:/app"
     depends_on:
+      - postgres
       - redis
       - minio
     environment:
