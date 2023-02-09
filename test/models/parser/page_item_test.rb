@@ -37,12 +37,15 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
   end
 
   test "should parse url with arabic or already encoded chars" do
-    urls = ['http://www.aljazeera.net/news/arabic/2016/10/19/تحذيرات-أممية-من-احتمال-نزوح-مليون-مدني-من-الموصل', 'http://www.aljazeera.net/news/arabic/2016/10/19/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1%D8%A7%D8%AA-%D8%A3%D9%85%D9%85%D9%8A%D8%A9-%D9%85%D9%86-%D8%A7%D8%AD%D8%AA%D9%85%D8%A7%D9%84-%D9%86%D8%B2%D9%88%D8%AD-%D9%85%D9%84%D9%8A%D9%88%D9%86-%D9%85%D8%AF%D9%86%D9%8A-%D9%85%D9%86-%D8%A7%D9%84%D9%85%D9%88%D8%B5%D9%84']
+    urls = [
+      'https://www.aljazeera.net/news/2023/2/9/الشرطة-السويدية-ترفض-منح-إذن-لحرق',
+      'https://www.aljazeera.net/news/2023/2/9/%D8%A7%D9%84%D8%B4%D8%B1%D8%B7%D8%A9-%D8%A7%D9%84%D8%B3%D9%88%D9%8A%D8%AF%D9%8A%D8%A9-%D8%AA%D8%B1%D9%81%D8%B6-%D9%85%D9%86%D8%AD-%D8%A5%D8%B0%D9%86-%D9%84%D8%AD%D8%B1%D9%82'
+    ]
     urls.each do |url|
       m = create_media url: url
       data = m.as_json
-      assert_equal 'تحذيرات أممية من احتمال نزوح مليون مدني من الموصل', data['title']
-      assert_equal 'عبرت الأمم المتحدة عن قلقها البالغ على سلامة 1.5 مليون شخص بالموصل، محذرة من احتمال نزوح مليون منهم، وقالت إن أكثر من 900 نازح فروا إلى سوريا بأول موجة نزوح.', data['description']
+      assert_equal 'الشرطة السويدية ترفض منح إذن جديد لحرق المصحف الشريف أمام السفارة التركية.. فما السبب؟', data['title']
+      assert_equal 'رفضت الشرطة السويدية منح إذن لحرق المصحف الشريف أمام السفارة التركية، قائلة إن ذلك من شأنه “إثارة اضطرابات خطيرة للأمن القومي”.', data['description']
       assert_equal '', data['published_at']
       assert_equal '', data['username']
       assert_match /^https?:\/\/www\.aljazeera\.net$/, data['author_url']
