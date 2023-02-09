@@ -37,9 +37,6 @@ module Pender
     })
 
     config.active_record.yaml_column_permitted_classes = [Symbol]
-
-    # We don't use ActiveStorage, so don't configure it for any env
-    config.active_storage.service = :local
   end
 end
 
