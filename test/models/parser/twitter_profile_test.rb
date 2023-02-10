@@ -119,10 +119,10 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     assert !data['raw']['api'].empty?
   end
 
-  test "should throw Pender::ApiLimitReached when Twitter::Error::TooManyRequests is thrown" do
+  test "should throw Pender::Exception::ApiLimitReached when Twitter::Error::TooManyRequests is thrown" do
     Twitter::REST::Client.any_instance.stubs(:user).raises(Twitter::Error::TooManyRequests)
 
-    assert_raises Pender::ApiLimitReached do
+    assert_raises Pender::Exception::ApiLimitReached do
       Parser::TwitterProfile.new('https://twitter.com/fake-account').parse_data(empty_doc)
     end
   end

@@ -66,7 +66,7 @@ module Parser
     end
 
     def get_username(request_url)
-      username = compare_patterns(RequestHelper.decoded_uri(request_url), self.patterns, 'username')
+      username = compare_patterns(RequestHelper.decode_uri(request_url), self.patterns, 'username')
       return if NONUNIQUE_TITLES.include? username
       return if username.to_i > 0
 

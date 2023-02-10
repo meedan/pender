@@ -20,7 +20,7 @@ module ProviderFacebook
       html_string = html_page.to_s
       match = html_string.match(/"entity_id"(\s?):(\s?)"(?<id>\d+)"/) ||
         html_string.match(/"al:ios:url"(\s?)content="fb:\/\/page\/\?id=(?<id>\d+)"/) ||
-        html_string.match(/"pageID"(\s?):(\s?)"(?<id>\d+)"/)
+        html_string.match(/"owning_profile"\s?:\s?{\s?"__typename"\s?:\s?"Page"\s?,\s?"id"\s?:\s?"(?<id>\d+)"/)
 
       match['id'] unless match.nil?
     end
@@ -35,16 +35,16 @@ module ProviderFacebook
   def get_crowdtangle_data(id)
     response_data = {}
     if id.blank?
-      return { error: { message: 'No ID given for Crowdtangle', code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }}
+      return { error: { message: 'No ID given for Crowdtangle', code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
     end
 
     crowdtangle_data = Media.crowdtangle_request(:facebook, id).with_indifferent_access
     if crowdtangle_data.blank?
-      return { error: { message: "No data received from Crowdtangle", code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }}
+      return { error: { message: "No data received from Crowdtangle", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
     elsif crowdtangle_data.dig('result').blank?
-      return { error: { message: "No results received from Crowdtangle", code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }}
+      return { error: { message: "No results received from Crowdtangle", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
     elsif crowdtangle_data.dig('result', 'posts', 0, 'platformId') != id
-      return { error: { message: "Unexpected platform ID from Crowdtangle", code: LapisConstants::ErrorCodes::const_get('UNKNOWN') }}
+      return { error: { message: "Unexpected platform ID from Crowdtangle", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
     end
 
     crowdtangle_data.dig('result')
@@ -85,7 +85,7 @@ module ProviderFacebook
       @parsed_data['title'] = @parsed_data['description'] = ''
       @parsed_data['error'] = {
         message: 'Login required to see this profile',
-        code: LapisConstants::ErrorCodes::const_get('LOGIN_REQUIRED'),
+        code: Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'),
       }
       return true
     end

@@ -15,7 +15,7 @@ module Parser
     end
 
     private
-    
+
     # Main function for class
     def parse_data_for_parser(doc, _original_url, _jsonld)
       set_data_field('description', url)
@@ -36,10 +36,10 @@ module Parser
       end
       parsed_data
     end
-    
+
     def get_tiktok_api_data(requested_url)
-      uri = URI.parse(oembed_url)
-      http = Net::HTTP.new(uri.host, uri.port)
+      uri = RequestHelper.parse_url(oembed_url)
+      http = Net::HTTP.new(uri.host, uri.inferred_port)
       http.use_ssl = uri.scheme == 'https'
       headers = RequestHelper.extended_headers(uri)
       request = Net::HTTP::Get.new(uri.request_uri, headers)

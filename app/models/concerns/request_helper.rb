@@ -1,12 +1,15 @@
+require 'postrank-uri'
+
 class RequestHelper
   REDIRECT_HTTP_CODES = %w(301 302 307 308).freeze
+  class UrlFormatError < StandardError; end
 
   class << self
     LANG = 'en-US;q=0.6,en;q=0.4'
 
     def get_html(url, set_error_callback, header_options = {}, force_proxy = false)
       begin
-        uri = self.parse_url(self.decoded_uri(url))
+        uri = self.parse_url(url)
         proxy = self.get_proxy(uri, :array, force_proxy)
         options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
         html = ''.freeze
@@ -19,7 +22,7 @@ class RequestHelper
         if force_proxy
           PenderAirbrake.notify(e, url: url)
           Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
-          set_error_callback.call(message: 'URL Not Found', code: LapisConstants::ErrorCodes::const_get('NOT_FOUND'))
+          set_error_callback.call(message: 'URL Not Found', code: Lapis::ErrorCodes::const_get('NOT_FOUND'))
           return nil
         end
         get_html(url, set_error_callback, header_options, true)
@@ -33,7 +36,14 @@ class RequestHelper
     end
 
     def normalize_url(url)
-      PostRank::URI.normalize(url).to_s
+      # This does a more intensive PostRank normalization, including stripping params
+      # and pre-pending http/https if needed
+      # https://github.com/postrank-labs/postrank-uri/blob/master/lib/postrank-uri.rb#L154
+      begin
+        PostRank::URI.normalize(url).to_s
+      rescue Addressable::URI::InvalidURIError, NoMethodError, TypeError => e
+        raise UrlFormatError.new(e)
+      end
     end
 
     def html_options(url)
@@ -41,12 +51,26 @@ class RequestHelper
       uri.host.match?(/twitter\.com/) ? self.extended_headers(url) : { allow_redirections: :safe, proxy: nil, 'User-Agent' => 'Mozilla/5.0 (X11)', 'Accept' => '*/*', 'Accept-Language' => LANG, 'Cookie' => self.set_cookies(uri) }.merge(self.get_cf_credentials(uri))
     end
 
+    def encode_url(url)
+      Addressable::URI.encode(url)
+    end
+
     def parse_url(url)
-      URI.parse(URI.encode(url))
+      # This does basic addressable normalizing, mimicking
+      # what PostRank does in its parsing (except this does not prefix http
+      # in front of any schemeless URIs, which was giving us problems for canonical urls)
+      # Addressable: https://www.rubydoc.info/gems/addressable/Addressable/URI#parse-class_method
+      # PostRank: https://github.com/postrank-labs/postrank-uri/blob/master/lib/postrank-uri.rb#L198
+      begin
+        uri = Addressable::URI.parse(url)
+        uri.normalize!
+      rescue Addressable::URI::InvalidURIError, NoMethodError, TypeError => e
+        raise UrlFormatError.new(e)
+      end
     end
 
     def extended_headers(uri = nil)
-      uri = self.parse_url(self.decoded_uri(uri)) if uri.is_a?(String)
+      uri = self.parse_url(self.decode_uri(uri)) if uri.is_a?(String)
       ({
         'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
         'Accept' =>  'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -70,10 +94,10 @@ class RequestHelper
 
     def validate_url(url)
       begin
-        uri = URI.parse(URI.encode(url))
-        return false unless (uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS))
+        uri = RequestHelper.parse_url(url)
+        return false unless (uri.scheme && uri.scheme.starts_with?('http'))
         self.request_url(url, 'Get')
-      rescue OpenSSL::SSL::SSLError, URI::InvalidURIError, SocketError => e
+      rescue OpenSSL::SSL::SSLError, UrlFormatError, SocketError => e
         PenderAirbrake.notify(e, url: url)
         Rails.logger.warn level: 'WARN', message: '[Parser] Invalid URL', url: url, error_class: e.class, error_message: e.message
         return false
@@ -81,7 +105,7 @@ class RequestHelper
     end
 
     def extended_headers(uri = nil)
-      uri = self.parse_url(decoded_uri(uri)) if uri.is_a?(String)
+      uri = self.parse_url(decode_uri(uri)) if uri.is_a?(String)
       ({
         'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
         'Accept' =>  'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -104,21 +128,25 @@ class RequestHelper
     end
 
     def request_url(url, verb = 'Get')
-      uri = self.parse_url(self.decoded_uri(url))
+      uri = self.parse_url(url)
       self.request_uri(uri, verb)
     end
 
     def request_uri(uri, verb = 'Get')
-      http = Net::HTTP.new(uri.host, uri.port)
+      http = Net::HTTP.new(uri.host, uri.inferred_port)
       http.read_timeout = PenderConfig.get('timeout', 30).to_i
       http.use_ssl = uri.scheme == 'https'.freeze
-      headers = { 'User-Agent' => self.html_options(uri)['User-Agent'], 'Accept-Language' => LANG }.merge(self.get_cf_credentials(uri))
-      request = "Net::HTTP::#{verb}".constantize.new(uri, headers)
+      headers = {
+        'User-Agent' => self.html_options(uri)['User-Agent'],
+        'Accept-Language' => LANG,
+      }.merge(self.get_cf_credentials(uri))
+
+      request = "Net::HTTP::#{verb}".constantize.new(uri.to_s, headers)
       request['Cookie'] = self.set_cookies(uri)
       proxy_config = self.get_proxy(uri, :hash)
       if proxy_config
         proxy = Net::HTTP::Proxy(proxy_config['host'], proxy_config['port'], proxy_config['user'], proxy_config['pass'])
-        proxy.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http2|
+        proxy.start(uri.host, uri.inferred_port, use_ssl: uri.scheme == 'https') do |http2|
           http2.request(request)
         end
       else
@@ -126,24 +154,24 @@ class RequestHelper
       end
     end
 
-    def decoded_uri(url)
+    def decode_uri(url)
       begin
-        URI.decode(url)
-      rescue Encoding::CompatibilityError
+        Addressable::URI.unencode(url)
+      rescue Addressable::URI::InvalidURIError, NoMethodError, TypeError
         url
       end
     end
 
     def top_url(url)
       uri = self.parse_url(url)
-      (uri.port == 80 || uri.port == 443) ? "#{uri.scheme}://#{uri.host}" : "#{uri.scheme}://#{uri.host}:#{uri.port}"
+      (uri.inferred_port == 80 || uri.inferred_port == 443) ? "#{uri.scheme}://#{uri.host}" : "#{uri.scheme}://#{uri.host}:#{uri.inferred_port}"
     end
 
     def add_scheme(url)
       return url if url =~ /^https?:/
       'http://' + url
     end
-      
+
     def redirect_https_to_http?(header_options, message)
       message.match?('redirection forbidden') && header_options[:allow_redirections] != :all
     end
@@ -182,7 +210,7 @@ class RequestHelper
     def set_cookies(uri)
       empty = ''.freeze
       begin
-        host = PublicSuffix.parse(uri.host).domain
+        host = uri.domain
         cookies = []
         PenderConfig.get('cookies', {}).each do |domain, content|
           next unless domain.match?(host)

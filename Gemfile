@@ -1,7 +1,6 @@
 source 'https://rubygems.org'
-gem 'rails', '~> 5.2.8'
-gem 'sqlite3', '~> 1.3.6', require: false
-gem 'pg', '0.20'
+gem 'rails', '~> 6.1.0'
+gem 'pg', '1.1'
 group :development, :test do
   gem 'byebug'
   gem 'gem-licenses'
@@ -10,6 +9,7 @@ group :development, :test do
   gem 'rswag-specs', git: 'https://github.com/jetpackworkflow/rswag.git', branch: 'allow_oas3_param_schema_array'
   gem 'get_process_mem'
   gem 'derailed'
+  gem "spring"
 end
 gem 'memory_profiler'
 group :development do
@@ -38,7 +38,7 @@ gem 'sass-rails'
 gem 'twitter'
 gem 'ids_please', git: 'https://github.com/meedan/ids_please', branch: 'master', ref: '31b9e0', require: false
 gem 'open_uri_redirections', require: false
-gem 'postrank-uri', require: false
+gem 'postrank-uri', git: 'https://github.com/postrank-labs/postrank-uri.git', ref: '485ac46', require: false # Ruby 3.0 support, as of 2/6/23 no gem relaease
 gem 'retryable'
 gem 'puma', '5.6.4'
 gem 'rack-cors', :require => 'rack/cors'
@@ -71,3 +71,7 @@ gem 'opentelemetry-instrumentation-rack'
 gem 'opentelemetry-instrumentation-rails'
 gem 'opentelemetry-instrumentation-rake'
 gem 'opentelemetry-instrumentation-sidekiq'
+gem 'addressable'
+# Adding this removes some deprecation warnings, caused by double-loading of the net-protocol library
+# (see https://github.com/ruby/net-imap/issues/16). We *might* be able to remove this after upgrading to Ruby 3
+gem 'net-http'

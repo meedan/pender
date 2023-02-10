@@ -43,7 +43,6 @@
 #    2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media json data
 
 require 'open_uri_redirections'
-require 'postrank-uri'
 require 'nokogiri'
 
 class Media
@@ -142,11 +141,11 @@ class Media
   def self.notify_webhook(type, url, data, settings)
     if settings['webhook_url'] && settings['webhook_token']
       begin
-        uri = URI.parse(settings['webhook_url'])
+        uri = RequestHelper.parse_url(settings['webhook_url'])
         payload = data.merge({ url: url, type: type }).to_json
         sig = 'sha1=' + OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), settings['webhook_token'], payload)
         headers = { 'Content-Type': 'text/json', 'X-Signature': sig }
-        http = Net::HTTP.new(uri.host, uri.port)
+        http = Net::HTTP.new(uri.host, uri.inferred_port)
         http.use_ssl = uri.scheme == 'https'
         request = Net::HTTP::Post.new(uri.request_uri, headers)
         request.body = payload
@@ -156,7 +155,7 @@ class Media
         # exception if request failed and still return a successful response if present.
         response.value || response
       rescue Net::HTTPExceptions => e
-        raise Pender::RetryLater, "(#{response.code}) #{response.message}"
+        raise Pender::Exception::RetryLater, "(#{response.code}) #{response.message}"
       rescue StandardError => e
         PenderAirbrake.notify(e, url: url, type: type, webhook_url: settings['webhook_url'])
         Rails.logger.warn level: 'WARN', message: 'Failed to notify webhook', url: url, type: type, error_class: e.class, error_message: e.message, webhook_url: settings['webhook_url']
@@ -214,7 +213,7 @@ class Media
   # Update the media `url` with the url found after all redirections
 
   def follow_redirections
-    self.url = RequestHelper.add_scheme(RequestHelper.decoded_uri(self.url.strip))
+    self.url = RequestHelper.add_scheme(RequestHelper.decode_uri(self.url.strip))
     attempts = 0
     code = '301'
     path = []
@@ -259,8 +258,8 @@ class Media
   def try_https
     # Makes modifications to URL behavior
     begin
-      uri = URI.parse(self.url)
-      unless (uri.kind_of?(URI::HTTPS))
+      uri = RequestHelper.parse_url(self.url)
+      unless (uri.scheme == 'https')
         self.url.gsub!(/^http:/i, 'https:')
         RequestHelper.request_url(self.url, 'Get').value
       end

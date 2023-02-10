@@ -92,7 +92,7 @@ class ArchiverTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     url = 'https://www.facebook.com/permalink.php?story_fbid=1649526595359937&id=100009078379548'
 
-    assert_raises Pender::RetryLater do
+    assert_raises Pender::Exception::RetryLater do
       m = Media.new url: url
       m.as_json(archivers: 'none')
       assert_nil m.data.dig('archives', 'archive_org')
@@ -101,7 +101,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
       Media.send_to_archive_org(url.to_s, a.id)
       media_data = Pender::Store.current.read(Media.get_id(url), :json)
-      assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_org', 'error', 'code')
+      assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_org', 'error', 'code')
       assert_equal "#{data[:code]} #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
     end
   ensure
@@ -138,7 +138,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
       Media.send_to_archive_org(url.to_s, a.id)
       media_data = Pender::Store.current.read(Media.get_id(url), :json)
-      assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
+      assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
       assert_equal "(#{data[:status_ext]}) #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
     end
   ensure
@@ -337,13 +337,13 @@ class ArchiverTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     url = 'http://example.com'
 
-    assert_raises Pender::RetryLater do
+    assert_raises Pender::Exception::RetryLater do
       m = Media.new url: url, key: a
       m.as_json
       assert m.data.dig('archives', 'perma_cc').nil?
       Media.send_to_perma_cc(url.to_s, a.id, 20)
       media_data = Pender::Store.current.read(Media.get_id(url), :json)
-      assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'perma_cc', 'error', 'code')
+      assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'perma_cc', 'error', 'code')
       assert_equal "401 Unauthorized", media_data.dig('archives', 'perma_cc', 'error', 'message')
     end
   ensure
@@ -361,7 +361,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m.as_json(archivers: 'perma_cc')
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_match 'missing authentication', cached.dig('perma_cc', 'error', 'message').downcase
-    assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_MISSING_KEY'), cached.dig('perma_cc', 'error', 'code')
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_MISSING_KEY'), cached.dig('perma_cc', 'error', 'code')
   end
 
   test "should return api key settings" do
@@ -420,7 +420,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert !Media.supported_video?(m.url, a.id)
 
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
-    assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA'), media_data.dig('archives', 'video_archiver', 'error', 'code')
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA'), media_data.dig('archives', 'video_archiver', 'error', 'code')
     assert_equal '1 Unsupported URL', media_data.dig('archives', 'video_archiver', 'error', 'message')
   ensure
     WebMock.disable!
@@ -512,7 +512,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.stubs(:notify_video_already_archived).with(not_video_url, a.id).returns(nil)
 
     Media.stubs(:system).returns(`(exit 1)`)
-    assert_raises Pender::RetryLater do
+    assert_raises Pender::Exception::RetryLater do
       Media.send_to_video_archiver(not_video_url, a.id)
     end
   ensure
@@ -530,7 +530,7 @@ class ArchiverTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     url = 'https://example.com'
 
-    assert_raises Pender::RetryLater do
+    assert_raises Pender::Exception::RetryLater do
       m = Media.new url: url
       data = m.as_json
       assert m.data.dig('archives', 'video_archiver').nil?
@@ -538,7 +538,7 @@ class ArchiverTest < ActiveSupport::TestCase
       Media.stubs(:supported_video?).with(url, a.id).raises(error)
       Media.send_to_video_archiver(url, a.id, 20)
       media_data = Pender::Store.current.read(Media.get_id(url), :json)
-      assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'video_archiver', 'error', 'code')
+      assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'video_archiver', 'error', 'code')
       assert_equal "#{error.class} #{error.message}", media_data.dig('archives', 'video_archiver', 'error', 'message')
     end
   ensure
@@ -559,13 +559,13 @@ class ArchiverTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     url = 'https://www.tiktok.com/@scout2015/video/6771039287917038854'
 
-    assert_raises Pender::RetryLater do
+    assert_raises Pender::Exception::RetryLater do
       m = Media.new url: url
       data = m.as_json(archivers: 'none')
       assert_nil m.data.dig('archives', 'video_archiver')
       Media.send_to_video_archiver(url, a.id, 20)
       media_data = Pender::Store.current.read(Media.get_id(url), :json)
-      assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'video_archiver', 'error', 'code')
+      assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'video_archiver', 'error', 'code')
       assert_match 'not available', media_data.dig('archives', 'video_archiver', 'error', 'message').downcase
     end
   ensure
@@ -600,7 +600,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m.data = Media.minimal_data(m)
 
     m.archive('archive_org')
-    assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_HOST_SKIPPED'), m.data.dig('archives', 'archive_org', 'error', 'code')
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_HOST_SKIPPED'), m.data.dig('archives', 'archive_org', 'error', 'code')
     assert_match 'Host Skipped: example.com', m.data.dig('archives', 'archive_org', 'error', 'message')
     ENV['archiver_skip_hosts'] = ''
 
@@ -610,9 +610,9 @@ class ArchiverTest < ActiveSupport::TestCase
 
     m.archive('archive_org,unexistent_archive')
 
-    assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_FOUND'), m.data.dig('archives', 'unexistent_archive', 'error', 'code')
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_NOT_FOUND'), m.data.dig('archives', 'unexistent_archive', 'error', 'code')
     assert_match 'Not Found', m.data.dig('archives', 'unexistent_archive', 'error', 'message')
-    assert_equal LapisConstants::ErrorCodes::const_get('ARCHIVER_DISABLED'), m.data.dig('archives', 'archive_org', 'error', 'code')
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_DISABLED'), m.data.dig('archives', 'archive_org', 'error', 'code')
     assert_match 'Disabled', m.data.dig('archives', 'archive_org', 'error', 'message')
   ensure
     quietly_redefine_constant(Media, :ENABLED_ARCHIVERS, enabled)
@@ -734,7 +734,7 @@ class ArchiverTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     m = Media.new url: 'https://slack.com/intl/en-br/', key: a
     id = Media.get_id(m.url)
-    assert_raises Pender::RetryLater do
+    assert_raises Pender::Exception::RetryLater do
       m.as_json(archivers: 'perma_cc')
     end
 

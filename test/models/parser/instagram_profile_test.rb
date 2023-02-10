@@ -2,7 +2,7 @@ require 'test_helper'
 
 class InstagramProfileIntegrationTest < ActiveSupport::TestCase
   test "should parse Instagram profile link for real" do
-    m = Media.new url: 'https://www.instagram.com/ironmaiden'
+    m = Media.new url: 'https://www.instagram.com/ironmaiden?absolute_url_processed=1'
     data = m.as_json
     assert_equal 'profile', data['type']
     assert_equal 'ironmaiden', data['external_id']
@@ -37,9 +37,12 @@ class InstagramProfileUnitTest < ActiveSupport::TestCase
 
   test "matches known URL patterns, and returns instance on success" do
     assert_nil Parser::InstagramProfile.match?('https://example.com')
-    
+
     match_one = Parser::InstagramProfile.match?('https://www.instagram.com/fake-account')
     assert_equal true, match_one.is_a?(Parser::InstagramProfile)
+
+    match_two = Parser::InstagramProfile.match?('https://www.instagram.com/fake-account?foo=bar')
+    assert_equal true, match_two.is_a?(Parser::InstagramProfile)
   end
 
   test "should set profile defaults upon error" do

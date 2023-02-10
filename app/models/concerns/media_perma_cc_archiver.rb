@@ -15,10 +15,10 @@ module MediaPermaCcArchiver
         perma_cc_key = PenderConfig.get('perma_cc_key')
         return if skip_perma_cc_archiver(perma_cc_key, url, key_id)
 
-        encoded_uri = URI.encode(URI.decode(url))
-        uri = URI.parse("https://api.perma.cc/v1/archives/?api_key=#{perma_cc_key}")
+        encoded_uri = RequestHelper.encode_url(url)
+        uri = RequestHelper.parse_url("https://api.perma.cc/v1/archives/?api_key=#{perma_cc_key}")
         headers = { 'Content-Type': 'application/json' }
-        http = Net::HTTP.new(uri.host, uri.port)
+        http = Net::HTTP.new(uri.host, uri.inferred_port)
         http.use_ssl = true
         request = Net::HTTP::Post.new(uri.request_uri, headers)
         request.body = { url: encoded_uri }.to_json
@@ -30,14 +30,14 @@ module MediaPermaCcArchiver
           data = { location: 'http://perma.cc/' + body['guid'] }
           Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
         else
-          raise Pender::RetryLater, "(#{response.code}) #{response.message}"
+          raise Pender::Exception::RetryLater, "(#{response.code}) #{response.message}"
         end
       end
     end
 
     def skip_perma_cc_archiver(perma_cc_key, url, key_id)
       if perma_cc_key.nil?
-        data = { error: { message: 'Missing authentication key', code: LapisConstants::ErrorCodes::const_get('ARCHIVER_MISSING_KEY') }}
+        data = { error: { message: 'Missing authentication key', code: Lapis::ErrorCodes::const_get('ARCHIVER_MISSING_KEY') }}
         Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
       else
         id = Media.get_id(url)

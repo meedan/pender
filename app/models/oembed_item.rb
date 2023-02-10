@@ -1,4 +1,4 @@
-require 'error_codes'
+require 'lapis/error_codes'
 
 class OembedItem
   def initialize(request_url, oembed_url)
@@ -27,7 +27,7 @@ class OembedItem
 
   def get_oembed_data_from_url(uri, attempts: 0)
     response = nil
-    http = Net::HTTP.new(uri.host, uri.port)
+    http = Net::HTTP.new(uri.host, uri.inferred_port)
     http.use_ssl = uri.scheme == 'https'
 
     headers = { 'User-Agent' => 'Mozilla/5.0 (compatible; Pender/0.1; +https://github.com/meedan/pender)' }.merge(RequestHelper.get_cf_credentials(uri))
@@ -55,7 +55,7 @@ class OembedItem
         oembed_json['html'] = '' if invalid_html_iframe?(doc)
       end
     rescue JSON::ParserError => error
-      oembed_json.merge!({ error: { message: response.body, code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') } })
+      oembed_json.merge!({ error: { message: response.body, code: Lapis::ErrorCodes::const_get('INVALID_VALUE') } })
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse `oembed` data as JSON', url: request_url, oembed_url: oembed_uri&.to_s, error_class: error.class, error_message: error.message, response_code: response.code
     end
     oembed_json
@@ -65,25 +65,25 @@ class OembedItem
     script_tag = doc.at_css('script')
     return if script_tag.nil? || script_tag.attr('src').nil?
 
-    uri = URI.parse(script_tag.attr('src'))
-    !uri.kind_of?(URI::HTTPS)
+    uri = RequestHelper.parse_url(script_tag.attr('src'))
+    !(uri.scheme == 'https')
   end
 
   def invalid_html_iframe?(doc)
     iframe_tag = doc.at_css('iframe')
     return if iframe_tag.nil? || iframe_tag.attr('src').nil?
 
-    uri = URI.parse(iframe_tag.attr('src'))
+    uri = RequestHelper.parse_url(iframe_tag.attr('src'))
     return if uri.hostname.match(/^(www\.)?youtube\.com/)
-    
-    response = Net::HTTP.get_response(uri)
+
+    response = RequestHelper.request_url(uri)
     response&.code&.to_s == '200' && ['DENY', 'SAMEORIGIN'].include?(response.header['X-Frame-Options'])
   end
 
   def construct_absolute_path(request_url, _oembed_url)
     begin
-      URI.parse(RequestHelper.absolute_url(request_url, _oembed_url))
-    rescue URI::InvalidURIError => e
+      RequestHelper.parse_url(RequestHelper.absolute_url(request_url, _oembed_url))
+    rescue RequestHelper::UrlFormatError
       nil
     end
   end
@@ -93,7 +93,7 @@ class OembedItem
       yield
     rescue exception => error
       PenderAirbrake.notify(error, oembed_url: oembed_uri&.to_s, oembed_data: data )
-      code = LapisConstants::ErrorCodes::const_get('INVALID_VALUE')
+      code = Lapis::ErrorCodes::const_get('INVALID_VALUE')
       @data.merge!(error: { message: "#{error.class}: #{error.message}", code: code })
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse oembed data', oembed_url: oembed_uri&.to_s, code: code, error_class: error.class, error_message: error.message
       return

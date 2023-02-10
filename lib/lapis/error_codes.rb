@@ -1,4 +1,4 @@
-module LapisConstants
+module Lapis
   class ErrorCodes
     UNAUTHORIZED = 1
     MISSING_PARAMETERS = 2

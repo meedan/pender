@@ -1,4 +1,4 @@
-require 'pender_store'
+require 'pender/store'
 
 module MediaVideoArchiver
   extend ActiveSupport::Concern
@@ -18,7 +18,7 @@ module MediaVideoArchiver
         return if supported.is_a?(FalseClass) || notify_video_already_archived(url, key_id)
         id = Media.get_id(url)
         local_folder = File.join(Rails.root, 'tmp', 'videos', id)
-        uri = URI.encode(url)
+        uri = RequestHelper.encode_url(url)
         proxy = "--proxy=#{Media.yt_download_proxy(uri)}"
         output = "-o#{local_folder}/#{id}.%(ext)s"
         system('youtube-dl', uri, proxy, output, '--restrict-filenames', '--no-warnings', '-q', '--write-all-thumbnails', '--write-info-json', '--all-subs', '-fogg/mp4/webm')
@@ -26,7 +26,7 @@ module MediaVideoArchiver
         if $?.success?
           Media.store_video_folder(url, local_folder, self.archiving_folder, key_id)
         else
-          raise Pender::RetryLater, "(#{$?.exitstatus}) Requested video not available for download"
+          raise Pender::Exception::RetryLater, "(#{$?.exitstatus}) Requested video not available for download"
         end
       end
     end
@@ -44,17 +44,17 @@ module MediaVideoArchiver
     end
 
     def supported_video?(url, key_id = nil)
-      uri = URI.encode url
+      uri = RequestHelper.encode_url(url)
       system('youtube-dl', uri, "--proxy=#{Media.yt_download_proxy(uri)}", '--restrict-filenames', '--no-warnings', '-g', '-q')
       unless $?.success?
-        data = { error: { message: "#{$?.exitstatus} Unsupported URL", code: LapisConstants::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA') }}
+        data = { error: { message: "#{$?.exitstatus} Unsupported URL", code: Lapis::ErrorCodes::const_get('ARCHIVER_NOT_SUPPORTED_MEDIA') }}
         Media.notify_webhook_and_update_cache('video_archiver', url, data, key_id)
       end
       $?.success?
     end
 
     def yt_download_proxy(url)
-      uri = URI.parse(url)
+      uri = RequestHelper.parse_url(url)
       return unless uri.host.match(/youtube\.com/)
       proxy = RequestHelper.valid_proxy('ytdl_proxy')
       return nil unless proxy

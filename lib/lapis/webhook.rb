@@ -11,8 +11,8 @@ module Lapis
 
     def notify
       payload = @payload.to_json
-      uri = URI(@url)
-      http = Net::HTTP.new(uri.host, uri.port)
+      uri = RequestHelper.parse_url(@url)
+      http = Net::HTTP.new(uri.host, uri.inferred_port)
       http.use_ssl = uri.scheme == 'https'
       request = Net::HTTP::Post.new(uri.path)
       request.body = payload

@@ -1,5 +1,6 @@
-class PenderConfig
+require 'api_key'
 
+class PenderConfig
   def self.current(config_key = nil)
     RequestStore.store[:config] ||= {}.with_indifferent_access
     RequestStore.store[:config][config_key] ||= PenderConfig.load(config_key) if config_key

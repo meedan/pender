@@ -39,7 +39,7 @@ namespace :lapis do
       # Copy constants
       const_file = File.join(basedir, 'constants.rb')
       f = File.open(const_file, 'w+')
-      f.puts(File.read(File.join(Rails.root, 'lib', 'error_codes.rb')).gsub('LapisConstants', 'PenderClient'))
+      f.puts(File.read(File.join(Rails.root, 'lib', 'lapis', 'error_codes.rb')).gsub('Lapis', 'PenderClient'))
       f.close
 
       # Update spec (metadata and dependencies)
@@ -197,7 +197,7 @@ module #{gem_camel_name}
 
     def self.request(method, host, path, params = {}, token = '', headers = {})
       host ||= #{gem_camel_name}.host
-      uri = URI(host + path)
+      uri = RequestHelper.parse_url(host + path)
       klass = 'Net::HTTP::' + method.capitalize
       request = nil
 
@@ -214,7 +214,7 @@ module #{gem_camel_name}
         request['#{CONFIG['authorization_header'] || 'X-Token'}'] = token.to_s
       end
 
-      http = Net::HTTP.new(uri.hostname, uri.port)
+      http = Net::HTTP.new(uri.hostname, uri.inferred_port)
       http.use_ssl = uri.scheme == 'https'
       response = http.request(request)
       if response.code.to_i === 401

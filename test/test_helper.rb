@@ -5,8 +5,8 @@ require File.expand_path('../../config/environment', __FILE__)
 require 'rails/test_help'
 require 'webmock'
 require 'sample_data'
-require 'pender_exceptions'
-require 'pender_store'
+require 'pender/exception'
+require 'pender/store'
 require 'sidekiq/testing'
 require 'minitest/retry'
 require 'minitest/mock'
@@ -106,7 +106,7 @@ class ActiveSupport::TestCase
 
   def response_fixture_from_file(filename, parse_as: nil)
     fixture_body = ''
-    open("test/data/#{filename}") { |f| fixture_body = f.read }
+    File.open("test/data/#{filename}") { |f| fixture_body = f.read }
 
     case parse_as
     when :html

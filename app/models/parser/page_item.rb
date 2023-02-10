@@ -52,7 +52,7 @@ module Parser
       end
 
       urls_to_check = [url, parsed_data['author_url'], parsed_data['author_picture'], parsed_data['picture']].reject(&:blank?)
-      raise Pender::UnsafeUrl if unsafe?(urls_to_check)
+      raise Pender::Exception::UnsafeUrl if unsafe?(urls_to_check)
 
       parsed_data
     end

@@ -1,5 +1,6 @@
-require 'pender_open_telemetry_config'
-require 'pender_open_telemetry_test_config'
+require 'pender_config'
+require 'pender/open_telemetry_config'
+require 'pender/open_telemetry_test_config'
 
 # Lines immediately below set any environment config that should
 # be applied to all environments

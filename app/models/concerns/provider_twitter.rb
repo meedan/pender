@@ -1,4 +1,4 @@
-require 'pender_exceptions'
+require 'pender/exception'
 
 module ProviderTwitter
   extend ActiveSupport::Concern
@@ -13,10 +13,10 @@ module ProviderTwitter
     begin
       yield
     rescue Twitter::Error::TooManyRequests => e
-      raise Pender::ApiLimitReached.new(e.rate_limit.reset_in)
+      raise Pender::Exception::ApiLimitReached.new(e.rate_limit.reset_in)
     rescue Twitter::Error => error
       PenderAirbrake.notify(error, url: url )
-      @parsed_data[:raw][:api] = { error: { message: "#{error.class}: #{error.code} #{error.message}", code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') }}
+      @parsed_data[:raw][:api] = { error: { message: "#{error.class}: #{error.code} #{error.message}", code: Lapis::ErrorCodes::const_get('INVALID_VALUE') }}
       Rails.logger.warn level: 'WARN', message: "[Parser] #{error.message}", url: url, code: error.code, error_class: error.class
       return
     end

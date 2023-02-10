@@ -5,8 +5,6 @@ module Parser
       @original_url = original_url
       @doc = doc
 
-      # Not sure we should parse parseable_url - meant to be a way that we track
-      # what URL gets parsed, but is actually pulling weight of parsing right now
       nonmobile_url = @request_url.gsub(/:\/\/m\.facebook\./, '://www.facebook.')
       @parseable_uri = RequestHelper.parse_url(nonmobile_url)
 
@@ -42,12 +40,12 @@ module Parser
 
       id_from_html = ::Parser::FacebookItem.get_id_from_doc(doc)
       (@user_id = id_from_html and return @user_id) if id_from_html
-      
+
       # May want to try both request_url and original_url for URL parsing
       # Right now we just try request_url, which may be bad redirect
       user_id_from_url = id_from_params(parseable_uri) ||
-        group_id_from_html(doc) || 
-        owner_id_from_html(doc) || 
+        group_id_from_html(doc) ||
+        owner_id_from_html(doc) ||
         user_id_from_html(doc) ||
         set_id_from_params(parseable_uri)
       (@user_id = user_id_from_url and return @user_id) if user_id_from_url
@@ -73,7 +71,7 @@ module Parser
       return unless params['id'].any?
       params['id'].first[/([0-9]+).*/, 1]
     end
-    
+
     def group_id_from_html(html_page)
       html_page.to_s[/"groupID"\s?:\s?"(\d+)"/, 1]
     end

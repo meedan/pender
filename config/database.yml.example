@@ -1,19 +1,23 @@
 default: &default
-  adapter: sqlite3
+  adapter: postgresql
+  encoding: unicode
   pool: 5
-  timeout: 5000
+  timeout: 10000
+  host: postgres
+  username: postgres
+  password: postgres
 
 development:
   <<: *default
-  database: db/development.sqlite3
+  database: pender_development
 
-# Warning: The database(s) defined as "testXXX" will be erased and
+# Warning: The database(s) defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
 # Do not set to the same as development or production.
 test:
   <<: *default
-  database: db/test<%= ENV['TEST_ENV_NUMBER'] %>.sqlite3
+  database: pender_test_<%= ENV['TEST_ENV_NUMBER'] %>_db
 
 production:
   <<: *default
-  database: db/production.sqlite3
+  database: pender_production

@@ -1,4 +1,4 @@
-require 'pender_exceptions'
+require 'pender/exception'
 
 module Metrics
   class << self
@@ -28,8 +28,8 @@ module Metrics
       ApiKey.current = ApiKey.find_by(id: key_id)
       begin
         value = facebook_id ? crowdtangle_metrics(facebook_id) : request_metrics_from_facebook(url)
-      rescue Pender::RetryLater
-        raise Pender::RetryLater, 'Metrics request failed'
+      rescue Pender::Exception::RetryLater
+        raise Pender::Exception::RetryLater, 'Metrics request failed'
       rescue StandardError => e
         value = {}
         Rails.logger.warn level: 'WARN', message: "Metrics request failed: #{e.message}", url: url, key_id: ApiKey.current&.id
@@ -71,12 +71,13 @@ module Metrics
           Rails.logger.warn level: 'WARN', message: "Skipping metrics request, app_id locked: #{app_id}", url: url, key_id: ApiKey.current&.id
           next
         end
-        api = "https://graph.facebook.com/oauth/access_token?client_id=#{app_id}&client_secret=#{app_secret}&grant_type=client_credentials"
-        response = Net::HTTP.get_response(URI(api))
+        uri = RequestHelper.parse_url("https://graph.facebook.com/oauth/access_token?client_id=#{app_id}&client_secret=#{app_secret}&grant_type=client_credentials")
+        response = RequestHelper.request_url(uri)
         next unless verify_facebook_metrics_response(url, response)
+
         token = JSON.parse(response.body)['access_token']
-        api = "https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=#{token}"
-        response = Net::HTTP.get_response(URI(URI.encode(api)))
+        uri = RequestHelper.parse_url("https://graph.facebook.com/?id=#{url}&fields=engagement&access_token=#{token}")
+        response = RequestHelper.request_url(uri)
         if verify_facebook_metrics_response(url, response)
           engagement = JSON.parse(response.body)['engagement']
           break
@@ -104,7 +105,7 @@ module Metrics
       )
       if is_retryable
         @locker.lock(3600) if FACEBOOK_RATE_LIMIT_CODES.include?(error['code'].to_i)
-        raise Pender::RetryLater, 'Metrics request failed'
+        raise Pender::Exception::RetryLater, 'Metrics request failed'
       end
     end
 

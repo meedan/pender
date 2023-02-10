@@ -12,7 +12,7 @@ module MediaArchiveOrgArchiver
   module ClassMethods
     def send_to_archive_org(url, key_id, _supported = nil)
       handle_archiving_exceptions('archive_org', { url: url, key_id: key_id }) do
-        encoded_uri = URI.encode(URI.decode(url))
+        encoded_uri = RequestHelper.encode_url(url)
         return if Media.get_available_archive_org_snapshot(encoded_uri, key_id)
         http, request = Media.archive_org_request('https://web.archive.org/save', 'Post')
         request.set_form_data(
@@ -28,7 +28,7 @@ module MediaArchiveOrgArchiver
           Media.delay_for(2.minutes).get_archive_org_status(body['job_id'], url, key_id)
         else
           PenderAirbrake.notify(StandardError.new(body['message']), url: url, response_body: body)
-          data = { error: { message: "(#{body['status_ext']}) #{body['message']}", code: LapisConstants::ErrorCodes::const_get('ARCHIVER_ERROR') }}
+          data = { error: { message: "(#{body['status_ext']}) #{body['message']}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }}
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
         end
       end
@@ -58,13 +58,13 @@ module MediaArchiveOrgArchiver
         Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
       else
         message = body['status'] == 'pending' ? 'Capture is pending' : "(#{body['status_ext']}) #{body['message']}"
-        raise Pender::RetryLater, message
+        raise Pender::Exception::RetryLater, message
       end
     end
 
     def archive_org_request(request_url, verb)
-      uri = URI.parse(request_url)
-      http = Net::HTTP.new(uri.host, uri.port)
+      uri = RequestHelper.parse_url(request_url)
+      http = Net::HTTP.new(uri.host, uri.inferred_port)
       http.use_ssl = uri.scheme == "https"
       headers = {
         'Accept' => 'application/json',

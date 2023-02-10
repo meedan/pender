@@ -68,7 +68,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_response 200
     data = JSON.parse(@response.body)['data']
     assert_match /Twitter::Error::NotFound: [0-9]+ User not found./, data['raw']['api']['error']['message']
-    assert_equal LapisConstants::ErrorCodes::const_get('INVALID_VALUE'), data['raw']['api']['error']['code']
+    assert_equal Lapis::ErrorCodes::const_get('INVALID_VALUE'), data['raw']['api']['error']['code']
     assert_equal 'twitter', data['provider']
     assert_equal 'profile', data['type']
     assert_not_nil data['embed_tag']
@@ -80,7 +80,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_response 200
     data = JSON.parse(@response.body)['data']
     assert_not_nil data['error']['message']
-    assert_equal LapisConstants::ErrorCodes::const_get('UNKNOWN'), data['error']['code']
+    assert_equal Lapis::ErrorCodes::const_get('UNKNOWN'), data['error']['code']
     assert_equal 'instagram', data['provider']
     assert_equal 'profile', data['type']
     assert_not_nil data['embed_tag']
@@ -124,7 +124,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_response 200
     data = JSON.parse(@response.body)['data']
     assert_match /Twitter::Error::NotFound: [0-9]+/, data['raw']['api']['error']['message']
-    assert_equal LapisConstants::ErrorCodes::const_get('INVALID_VALUE'), data['raw']['api']['error']['code']
+    assert_equal Lapis::ErrorCodes::const_get('INVALID_VALUE'), data['raw']['api']['error']['code']
     assert_equal 'twitter', data['provider']
     assert_equal 'item', data['type']
     assert_not_nil data['embed_tag']
@@ -147,7 +147,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_response 200
     data = JSON.parse(@response.body)['data']
     assert_equal 'RuntimeError', data['error']['message']
-    assert_equal LapisConstants::ErrorCodes::const_get('UNKNOWN'), data['error']['code']
+    assert_equal Lapis::ErrorCodes::const_get('UNKNOWN'), data['error']['code']
   end
 
   test "should not return error message on HTML format response" do
@@ -364,7 +364,7 @@ class MediasControllerTest < ActionController::TestCase
       end
       error = JSON.parse(@response.body)['data']['error']
       assert_equal 'Timeout', error['message']
-      assert_equal LapisConstants::ErrorCodes::const_get('TIMEOUT'), error['code']
+      assert_equal Lapis::ErrorCodes::const_get('TIMEOUT'), error['code']
     end
   end
 
@@ -462,8 +462,8 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token(a)
     url1 = 'http://invalid-url'
     url2 = 'not-url'
-    Media.stubs(:notify_webhook).with('error', url1, { error: { message: 'The URL is not valid', code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') }}, webhook_info)
-    Media.stubs(:notify_webhook).with('error', url2, { error: { message: 'The URL is not valid', code: LapisConstants::ErrorCodes::const_get('INVALID_VALUE') }}, webhook_info)
+    Media.stubs(:notify_webhook).with('error', url1, { error: { message: 'The URL is not valid', code: Lapis::ErrorCodes::const_get('INVALID_VALUE') }}, webhook_info)
+    Media.stubs(:notify_webhook).with('error', url2, { error: { message: 'The URL is not valid', code: Lapis::ErrorCodes::const_get('INVALID_VALUE') }}, webhook_info)
     post :bulk, params: { url: [url1, url2], format: :json }
     assert_response :success
     assert_equal({"enqueued"=>[url1, url2], "failed"=>[]}, JSON.parse(@response.body)['data'])
@@ -501,7 +501,7 @@ class MediasControllerTest < ActionController::TestCase
 
     url = 'https://ca.ios.ba/files/meedan/sleep.php'
     id = Media.get_id(url)
-    timeout_error = {"message" => "Timeout", "code" => LapisConstants::ErrorCodes::const_get('TIMEOUT')}
+    timeout_error = {"message" => "Timeout", "code" => Lapis::ErrorCodes::const_get('TIMEOUT')}
 
     assert_equal 0, MediaParserWorker.jobs.size
     post :bulk, params: { url: url, format: :json, refresh: '1' }
@@ -552,7 +552,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal({"enqueued"=>[url], "failed"=>[]}, JSON.parse(@response.body)['data'])
     assert_equal 1, MediaParserWorker.jobs.size
 
-    parse_error = { error: { "message"=>"OpenSSL::SSL::SSLError", "code"=> LapisConstants::ErrorCodes::const_get('UNKNOWN')}}
+    parse_error = { error: { "message"=>"OpenSSL::SSL::SSLError", "code"=> Lapis::ErrorCodes::const_get('UNKNOWN')}}
     minimal_data = Media.minimal_data(OpenStruct.new(url: url)).merge(title: url)
     Media.stubs(:minimal_data).returns(minimal_data)
     Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(parse_error), webhook_info)
@@ -763,7 +763,7 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: url, format: :json }
     assert_response 200
     assert_equal url, JSON.parse(@response.body)['data']['title']
-    assert_equal LapisConstants::ErrorCodes::const_get('UNKNOWN'), JSON.parse(@response.body)['data']['error']['code']
+    assert_equal Lapis::ErrorCodes::const_get('UNKNOWN'), JSON.parse(@response.body)['data']['error']['code']
   end
 
   test "should return 200 when duplicated url" do
@@ -773,7 +773,7 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: url, format: :json }
     assert_response 200
     assert_equal url, JSON.parse(@response.body)['data']['title']
-    assert_equal LapisConstants::ErrorCodes::const_get('DUPLICATED'), JSON.parse(@response.body)['data']['error']['code']
+    assert_equal Lapis::ErrorCodes::const_get('DUPLICATED'), JSON.parse(@response.body)['data']['error']['code']
   end
 end
 

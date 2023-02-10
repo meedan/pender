@@ -1,7 +1,7 @@
 # meedan/pender
 # https://github.com/meedan/pender
 
-FROM ruby:2.6.6-slim
+FROM ruby:3.0.5-slim
 MAINTAINER sysops@meedan.com
 
 ENV DEPLOYUSER=pender \
@@ -22,7 +22,7 @@ ENV DEPLOYUSER=pender \
 COPY production/bin /opt/bin/
 RUN chmod 755 /opt/bin/*.sh
 
-RUN apt-get update && apt-get install -y curl build-essential git libpq-dev libsqlite3-dev graphicsmagick inotify-tools python --no-install-recommends
+RUN apt-get update && apt-get install -y curl build-essential git libpq-dev graphicsmagick inotify-tools python --no-install-recommends
 
 # install youtube-dl
 RUN curl -L https://youtube-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl \
@@ -31,13 +31,13 @@ RUN curl -L https://youtube-dl.org/downloads/latest/youtube-dl -o /usr/local/bin
 # pender user
 RUN useradd ${DEPLOYUSER} -s /bin/bash -m
 
-# copy and install the gems separately since they take so long to build 
+# copy and install the gems separately since they take so long to build
 # this way we can more easily cache them and allow code changes to be built later
 WORKDIR ${DEPLOYDIR}
 COPY ./Gemfile ${DEPLOYDIR}/Gemfile
 COPY ./Gemfile.lock ${DEPLOYDIR}/Gemfile.lock
 RUN echo "gem: --no-rdoc --no-ri" > ~/.gemrc \
-	&& bundle install --deployment --without development test 
+	&& bundle install --deployment --without development test
 
 COPY . ${DEPLOYDIR}
 
