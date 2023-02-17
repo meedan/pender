@@ -61,11 +61,13 @@ module Parser
           @url = updated_url if updated_url && updated_url != url
           @parsed_data.merge!(crowdtangle_data)
         else
-          @parsed_data.merge!(get_opengraph_metadata.reject{|k,v| v.nil?})
-          @parsed_data['title'] = nil if parsed_data['title'] && NONUNIQUE_TITLES.include?(parsed_data['title'].downcase)
+          og_metadata = get_opengraph_metadata.reject{|k,v| v.nil?}
 
-          set_data_field('title', get_unique_facebook_page_title(doc))
-          set_data_field('description', doc&.at_css('description')&.content)
+          set_data_field('title', og_metadata['description']) unless NONUNIQUE_TITLES.include?(og_metadata['description']&.downcase)
+          set_data_field('description', og_metadata['description'])
+
+          set_data_field('picture', og_metadata['picture'])
+          set_data_field('author_name', og_metadata['title']) unless NONUNIQUE_TITLES.include?(og_metadata['title']&.downcase)
         end
         set_data_field('author_picture', jsonld.dig('creator', 'image'))
         set_data_field('picture', jsonld.dig('thumbnailUrl'))

@@ -151,6 +151,10 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     @post_doc ||= response_fixture_from_file('facebook-item-page_ironmaiden.html', parse_as: :html)
   end
 
+  def pfbid_doc
+    @pfbid_doc ||= response_fixture_from_file('facebook-item-page_pfbid.html', parse_as: :html)
+  end
+
   test "returns provider and type" do
     assert_equal Parser::FacebookItem.type, 'facebook_item'
   end
@@ -223,7 +227,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="this is a page title" />
-      <meta property="og:description" content="also a description" />
+      <meta property="og:description" content="this is the page description" />
       <meta property="og:image" content="https://example.com/image" />
     HTML
 
@@ -232,8 +236,11 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert data['error'].blank?
     assert !data['raw']['crowdtangle']['error'].blank?
 
-    assert_equal 'this is a page title', data['title']
-    assert_equal 'also a description', data['description']
+    # Facebook sets the HTML title to the page title, and the post contents to description
+    assert_equal 'this is the page description', data['title']
+    assert_equal 'this is a page title', data['author_name']
+
+    assert_equal 'this is the page description', data['description']
     assert_equal 'https://example.com/image', data['picture']
     assert_match /data-href="https:\/\/www.facebook.com\/fakeaccount\/posts\/123456789"/, data.dig('html')
   end
@@ -252,25 +259,6 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
       data = Parser::FacebookItem.new('https://www.facebook.com/555555/posts/123456789').parse_data(empty_doc, throwaway_url)
     end
     assert_equal 1, airbrake_call_count
-  end
-
-  test "sets fallbacks from HTML on crowdtangle error, and populates HTML" do
-    crowdtangle_error = response_fixture_from_file('crowdtangle-response_not-found.json')
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_error)
-
-    doc = Nokogiri::HTML(<<~HTML)
-      <title id='pageTitle'>this is a page title</title>
-      <description>also a description</description>
-    HTML
-
-    data = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/123456789').parse_data(doc, 'https://www.facebook.com/fakeaccount/posts/new-123456789')
-
-    assert data['error'].blank?
-    assert !data['raw']['crowdtangle']['error'].blank?
-
-    assert_equal 'this is a page title', data['title']
-    assert_equal 'also a description', data['description']
-    assert_match /data-href="https:\/\/www.facebook.com\/fakeaccount\/posts\/123456789"/, data.dig('html')
   end
 
   test 'sets raw error when issue parsing UUID' do
@@ -384,21 +372,13 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_nil data['title']
   end
 
-  test "should strip '| Facebook' from page titles" do
+  test "sets unique title from page description when FB post ID is obscured in URL" do
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: {}.to_json)
 
-    parser = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/12345')
-    doc = Nokogiri::HTML(<<~HTML)
-      <title>Piglet the Dog's post | Facebook</title>
-    HTML
-    data = parser.parse_data(doc, throwaway_url)
-    assert_equal "Piglet the Dog's post", data['title']
+    parser = Parser::FacebookItem.new('https://www.facebook.com/LittleMix/posts/pfbid0E7xrT6BDrv7r7Ry3kHUSdw2naE6BdFBgH2gTsEY9h1a64DdM3vqPyq8gXaFY5rqhl')
+    data = parser.parse_data(pfbid_doc, throwaway_url)
 
-    doc = Nokogiri::HTML(<<~HTML)
-      <meta property="og:title" content="Piglet the Dog's post | Facebook" />
-    HTML
-    data = parser.parse_data(doc, throwaway_url)
-    assert_equal "Piglet the Dog's post", data['title']
+    assert_match /Nothing comes between us/, data['title']
   end
 
   test "#oembed_url returns URL with the instance URL" do
