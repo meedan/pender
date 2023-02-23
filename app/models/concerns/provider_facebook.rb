@@ -96,4 +96,12 @@ module ProviderFacebook
 
     @parsed_data['title'].gsub!(' | Facebook', '')
   end
+
+  def get_unique_facebook_page_title(html_page)
+    title = get_page_title(html_page)
+    return unless title
+    return if NONUNIQUE_TITLES.include?(title.downcase)
+
+    title
+  end
 end

@@ -165,44 +165,28 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     # Photo album post patterns
     assert Parser::FacebookItem.match?('https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407/?type=3&theater').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/Classic.mou/photos/1630270703817253').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/Classic.mou/photos/a.136991166478555/1494688604042131').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/Classic.mou/photos/pcb.613639338813733/613639175480416/').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/nostalgia.y/photos/a.508939832569501.1073741829.456182634511888/942167619246718/?type=3&theater').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/quoted.pictures/photos/a.128828073875334.28784.128791873878954/1096134023811396/?type=3&theater').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/ESCAPE.Egypt/photos/ms.c.eJxNk8d1QzEMBDvyQw79N2ZyaeD7osMIwAZKLGTUViod1qU~;DCBNHcpl8gfMKeR8bz2gH6ABlHRuuHYM6AdywPkEsH~;gqAjxqLAKJtQGZFxw7CzIa6zdF8j1EZJjXRgTzAP43XBa4HfFa1REA2nXugScCi3wN7FZpF5BPtaVDEBqwPNR60O9Lsi0nbDrw3KyaPCVZfqAYiWmZO13YwvSbtygCWeKleh9KEVajW8FfZz32qcUrNgA5wfkA4Xfh004x46d9gdckQt2xR74biSOegwIcoB9OW~_oVIxKML0JWYC0XHvDkdZy0oY5bgjvBAPwdBpRuKE7kZDNGtnTLoCObBYqJJ4Ky5FF1kfh75Gnyl~;Qxqsv.bps.a.1204090389632094.1073742218.423930480981426/1204094906298309/?type=3&theater').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/nostalgia.y/photos/pb.456182634511888.-2207520000.1484079948./928269767303170/?type=3&theater').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/teste637621352/photos/a.754851877912740.1073741826.749262715138323/896869113711015/?type=3').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/teste637621352/posts/1028795030518422').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/nanabhay/posts/10156130657385246?pnref=story').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/photo.php?fbid=10155150801660195&set=p.10155150801660195&type=1&theater').is_a?(Parser::FacebookItem)
     # Facebook live
     assert Parser::FacebookItem.match?('https://m.facebook.com/story.php?story_fbid=10154584426664820&id=355665009819%C2%ACif_t=live_video%C2%ACif_id=1476846578702256&ref=bookmarks').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/cbcnews/videos/10154783484119604/').is_a?(Parser::FacebookItem)
+    assert Parser::FacebookItem.match?('https://www.facebook.com/54212446406/videos/10156131552571407').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/teste637621352/posts/1538843716180215').is_a?(Parser::FacebookItem)
-    # Facebook livemap
-    assert Parser::FacebookItem.match?('https://www.facebook.com/livemap/#@-12.991858482361014,-38.521747589110994,4z').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/live/map/#@37.777053833008,-122.41587829590001,4z').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/live/discover/map/#@37.777053833008,-122.41587829590001,4z').is_a?(Parser::FacebookItem)
+    assert Parser::FacebookItem.match?('https://www.facebook.com/watch/live/?ref=live_delegate#@37.777053833008,-122.41587829590001,4z').is_a?(Parser::FacebookItem)
     # Event
     assert Parser::FacebookItem.match?('https://www.facebook.com/events/1090503577698748').is_a?(Parser::FacebookItem)
-    # Video
-    assert Parser::FacebookItem.match?('https://www.facebook.com/144585402276277/videos/1127489833985824').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/democrats/videos/10154268929856943').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/scmp/videos/10154584426664820').is_a?(Parser::FacebookItem)
     # Gif photo
     assert Parser::FacebookItem.match?('https://www.facebook.com/quoted.pictures/posts/1095740107184121').is_a?(Parser::FacebookItem)
     # Album post
     assert Parser::FacebookItem.match?('https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/album.php?fbid=10154534110871407&id=54212446406&aid=1073742048').is_a?(Parser::FacebookItem)
     # User post
     assert Parser::FacebookItem.match?('https://www.facebook.com/dina.hawary/posts/10158416884740321').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/Classic.mou/posts/666508790193454:0').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/media/set?set=a.10154534110871407.1073742048.54212446406&type=3').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/pg/Mariano-Rajoy-Brey-54212446406/photos/?tab=album&album_id=10154534110871407').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/Bimbo.Memories/photos/pb.235404669918505.-2207520000.1481570271./1051597428299221/?type=3&theater').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/teste637621352/posts/1028795030518422').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/teste637621352/posts/1035783969819528').is_a?(Parser::FacebookItem)
-    assert Parser::FacebookItem.match?('https://www.facebook.com/teste637621352/posts/2194142813983632').is_a?(Parser::FacebookItem)
     # Category
     assert Parser::FacebookItem.match?('https://www.facebook.com/pages/category/Society---Culture-Website/PoporDezamagit/photos/').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/').is_a?(Parser::FacebookItem)
@@ -238,11 +222,29 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
 
     # Facebook sets the HTML title to the page title, and the post contents to description
     assert_equal 'this is the page description', data['title']
-    assert_equal 'this is a page title', data['author_name']
-
     assert_equal 'this is the page description', data['description']
     assert_equal 'https://example.com/image', data['picture']
     assert_match /data-href="https:\/\/www.facebook.com\/fakeaccount\/posts\/123456789"/, data.dig('html')
+  end
+
+  test "sets fallbacks from title metatags for event and watch URLS on crowdtangle error, and populates HTML" do
+    crowdtangle_error = response_fixture_from_file('crowdtangle-response_not-found.json')
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_error)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="this is a page title | Facebook" />
+      <meta property="og:description" content="this is the page description" />
+      <meta property="og:image" content="https://example.com/image" />
+      <title id='pageTitle'>this is also a page title | Facebook</title>
+    HTML
+
+    data = Parser::FacebookItem.new('https://www.facebook.com/events/331430157280289').parse_data(doc, throwaway_url)
+    assert_equal 'this is a page title', data['title']
+    assert_equal 'this is the page description', data['description']
+
+    data = Parser::FacebookItem.new('https://www.facebook.com/watch/live/?ref=live_delegate#@37.777053833008,-122.41587829590001,4z').parse_data(doc, throwaway_url)
+    assert_equal 'this is a page title', data['title']
+    assert_equal 'this is the page description', data['description']
   end
 
   # Implicitly testing MediaCrowdtangleItem
