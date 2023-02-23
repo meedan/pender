@@ -6,6 +6,7 @@ module Parser
 
     EVENT_URL = /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>\w+)(?!.*permalink\/)/
     GROUPS_URL = /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/groups\/(?<profile>[^\/]+)\/?(?!.*permalink\/).*/
+    WATCH_URL = /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/watch(\/.*)?/
 
     FACEBOOK_ITEM_URLS = [
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/posts\/(?<id>[0-9]+).*/,
@@ -22,7 +23,7 @@ module Parser
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/vb\.([0-9]+)\/(?<id>[0-9]+).*/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/permalink.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/story.php\?story_fbid=(?<id>[0-9]+)&id=(?<user_id>[0-9]+).*/,
-      /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/watch(\/.*)?/,
+      WATCH_URL,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>[0-9]+)\/permalink\/([0-9]+).*/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/groups\/(?<profile>[^\/]+)\/permalink\/(?<id>[0-9]+).*/,
       /^https?:\/\/(www\.)?facebook\.com\/(?<id>[^\/\?]+).*$/,
@@ -60,11 +61,13 @@ module Parser
         else
           og_metadata = get_opengraph_metadata.reject{|k,v| v.nil?}
 
-          set_data_field('title', og_metadata['description']) unless NONUNIQUE_TITLES.include?(og_metadata['description']&.downcase)
+          if should_use_markup_title?
+            set_data_field('title', get_unique_facebook_page_title(doc))
+          else
+            set_data_field('title', og_metadata['description']) unless NONUNIQUE_TITLES.include?(og_metadata['description']&.downcase)
+          end
           set_data_field('description', og_metadata['description'])
-
           set_data_field('picture', og_metadata['picture'])
-          set_data_field('author_name', og_metadata['title']) unless NONUNIQUE_TITLES.include?(og_metadata['title']&.downcase)
         end
         set_data_field('author_picture', jsonld.dig('creator', 'image'))
         set_data_field('picture', jsonld.dig('thumbnailUrl'))
@@ -102,6 +105,15 @@ module Parser
 
     def not_an_event_page
       url.match(EVENT_URL).nil?
+    end
+
+    def should_use_markup_title?
+      [
+        EVENT_URL,
+        WATCH_URL,
+      ].find do |pattern|
+        url.match(pattern)
+      end
     end
   end
 end

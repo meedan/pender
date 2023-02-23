@@ -222,11 +222,29 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
 
     # Facebook sets the HTML title to the page title, and the post contents to description
     assert_equal 'this is the page description', data['title']
-    assert_equal 'this is a page title', data['author_name']
-
     assert_equal 'this is the page description', data['description']
     assert_equal 'https://example.com/image', data['picture']
     assert_match /data-href="https:\/\/www.facebook.com\/fakeaccount\/posts\/123456789"/, data.dig('html')
+  end
+
+  test "sets fallbacks from title metatags for event and watch URLS on crowdtangle error, and populates HTML" do
+    crowdtangle_error = response_fixture_from_file('crowdtangle-response_not-found.json')
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_error)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="this is a page title | Facebook" />
+      <meta property="og:description" content="this is the page description" />
+      <meta property="og:image" content="https://example.com/image" />
+      <title id='pageTitle'>this is also a page title | Facebook</title>
+    HTML
+
+    data = Parser::FacebookItem.new('https://www.facebook.com/events/331430157280289').parse_data(doc, throwaway_url)
+    assert_equal 'this is a page title', data['title']
+    assert_equal 'this is the page description', data['description']
+
+    data = Parser::FacebookItem.new('https://www.facebook.com/watch/live/?ref=live_delegate#@37.777053833008,-122.41587829590001,4z').parse_data(doc, throwaway_url)
+    assert_equal 'this is a page title', data['title']
+    assert_equal 'this is the page description', data['description']
   end
 
   # Implicitly testing MediaCrowdtangleItem
