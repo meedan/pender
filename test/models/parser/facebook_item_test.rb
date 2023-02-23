@@ -245,6 +245,10 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     data = Parser::FacebookItem.new('https://www.facebook.com/watch/live/?ref=live_delegate#@37.777053833008,-122.41587829590001,4z').parse_data(doc, throwaway_url)
     assert_equal 'this is a page title', data['title']
     assert_equal 'this is the page description', data['description']
+
+    data = Parser::FacebookItem.new('https://www.facebook.com/K9Ballistics/videos/upgrade-your-dog-bed/1871564813213101/').parse_data(doc, throwaway_url)
+    assert_equal 'this is a page title', data['title']
+    assert_equal 'this is the page description', data['description']
   end
 
   # Implicitly testing MediaCrowdtangleItem
