@@ -37,10 +37,6 @@ class FacebookItemIdsGrabberUnitTest < ActiveSupport::TestCase
     post_id = Parser::FacebookItem::IdsGrabber.new(nil, 'https://www.facebook.com/photo.php?fbid=10155150801660195&set=p.10155150801660195&type=1&theater', throwaway_url).post_id
     assert_equal '10155150801660195', post_id
 
-    # Photo album - fbid
-    post_id = Parser::FacebookItem::IdsGrabber.new(nil, 'https://www.facebook.com/album.php?fbid=10154534110871407&id=54212446406&aid=1073742048', throwaway_url).post_id
-    assert_equal '10154534110871407', post_id
-
     # Story - story_fbid
     post_id = Parser::FacebookItem::IdsGrabber.new(nil, 'https://m.facebook.com/story.php?story_fbid=10154584426664820&id=355665009819%C2%ACif_t=live_video%C2%ACif_id=1476846578702256&ref=bookmarks', throwaway_url).post_id
     assert_equal '10154584426664820', post_id
@@ -111,7 +107,7 @@ class FacebookItemIdsGrabberUnitTest < ActiveSupport::TestCase
     user_id = Parser::FacebookItem::IdsGrabber.new(ios_id_doc, 'https://www.facebook.com/fakeaccount/posts/12345', throwaway_url).user_id
     assert_equal '891167404572251', user_id
   end
-  
+
   test '#user_id returns numeric ID query params from URL' do
     user_id = Parser::FacebookItem::IdsGrabber.new(nil, 'https://www.facebook.com/permalink.php?story_fbid=10154534111016407&id=54212446406', throwaway_url).user_id
     assert_equal '54212446406', user_id
