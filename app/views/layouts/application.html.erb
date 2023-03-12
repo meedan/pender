@@ -14,8 +14,10 @@
   <%= javascript_include_tag 'embed', skip_pipeline: true %>
 
   <style type="text/css">
-    html {
-      text-align: center;
+    .fb_iframe_widget,
+    .fb_iframe_widget iframe,
+    .fb-post span {
+      width: 100% !important;
     }
 
     .pender-container {
