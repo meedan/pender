@@ -14,18 +14,30 @@
   <%= javascript_include_tag 'embed', skip_pipeline: true %>
 
   <style type="text/css">
-    .fb_iframe_widget,
-    .fb_iframe_widget iframe,
-    .fb-post span {
-      width: 100% !important;
-    }
-
     .pender-container {
       text-align: left;
     }
 
+    .fb_iframe_widget,
+    .fb_iframe_widget iframe,
+    .fb-post span {
+      width: 100% !important;
+      max-width: 100% !important;
+      text-align: center;
+      margin: auto;
+    }
+
     .twitter-tweet {
       display: inline-block !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      text-align: center;
+    }
+
+    #twitter-widget-0 {
+      display: inline-block !important;
+      max-width: 500px !important;
+      width: 100% !important;
     }
   </style>
 </head>
