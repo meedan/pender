@@ -27,13 +27,18 @@
     <script type="text/javascript">
       var picture = document.getElementById('pender-picture');
       var connector = /\?/.test(picture.src) ? '&' : '?';
-      picture.src = picture.src + connector + 'penderVersion=' + new Date().getTime();
+      var pictureUrl = picture.src + connector + 'penderVersion=' + new Date().getTime();
+      picture.src = pictureUrl;
+      picture.onclick = function() { window.open(pictureUrl); };
     </script>
   <% end %>
 
   <div class="pender-info" style="<%= 'padding-left: 0;' if @data['picture'].blank? %>">
-    <h1 class="pender-title"><%= @data['title'].blank? ? @data['url'] : @data['title'] %></h2>
-    <p class="pender-description"><%= @data['description'] %></p>
-    <a class="pender-url" href="<%= @data['url'] %>" target="_blank"><%= @data['url'] %></a>
+    <h1 class="pender-title"><%= @data['title'] if !@data['title'].blank? && @data['title'] != @data['description'] %></h2>
+    <p class="pender-description">
+      <%= @data['description'] %>
+      <br /><br />
+      <a class="pender-url" href="<%= @data['url'] %>" target="_blank" rel="noopener noreferrer"><%= @data['url'] %></a>
+    </p>
   </div>
 </div>

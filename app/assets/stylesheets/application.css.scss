@@ -20,6 +20,7 @@ body {
 .pender-container {
   width: 100%;
   padding: $unit;
+  box-sizing: border-box;
 
   .pender-top {
     font-size: $small;
@@ -36,6 +37,11 @@ body {
     float: left;
     width: $picsize;
     margin-right: $unit;
+    cursor: pointer;
+  }
+
+  .pender-url {
+    color: black;
   }
 
   .pender-info {
@@ -49,6 +55,7 @@ body {
     .pender-description {
       margin: $unit;
       font-size: $medium;
+      line-height: 1.5em;
     }
 
     .pender-more {
