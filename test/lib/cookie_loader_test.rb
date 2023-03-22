@@ -47,7 +47,7 @@ class CookieLoaderTest < ActiveSupport::TestCase
 
     CookieLoader.load_from(cookies_file.path)
     PenderConfig.load('cookies')
-    
+
     cookies = PenderConfig.get('cookies')
     assert_equal 2, cookies.length
     assert_equal cookies['.example.com']['wp_devicetype'], '0'
@@ -56,7 +56,7 @@ class CookieLoaderTest < ActiveSupport::TestCase
     cookies_file.close
     cookies_file.unlink
   end
-  
+
   test 'requests file from S3 if file path begins S3 and loads result into config' do
     mocked_cookie_response = MiniTest::Mock.new
     def mocked_cookie_response.successful?; true; end
@@ -66,7 +66,7 @@ class CookieLoaderTest < ActiveSupport::TestCase
       File.open(args[:response_target], 'w') { |file| file.write(cookie_contents) }
       args[:bucket] == 'fake-bucket' && args[:key] == 'fake-cookies.txt' && args[:response_target].present?
     end
-    
+
     Aws::S3::Client.stub(:new, mocked_s3_client) do
       CookieLoader.load_from('s3://fake-bucket/fake-cookies.txt')
 
@@ -82,33 +82,33 @@ class CookieLoaderTest < ActiveSupport::TestCase
 
   # Error cases:
   test 'keeps cookies as empty and reports error if file path not provided' do
-    mocked_airbrake = MiniTest::Mock.new
-    mocked_airbrake.expect :call, :return_value do |error, args|
-      error.class.to_s.match(/FilePathError/) && 
+    mocked_sentry = MiniTest::Mock.new
+    mocked_sentry.expect :call, :return_value do |error, args|
+      error.class.to_s.match(/FilePathError/) &&
         error.message.match(/Path not provided/) &&
         args[:provided_path].nil?
     end
 
-    PenderAirbrake.stub(:notify, mocked_airbrake) do
+    PenderSentry.stub(:notify, mocked_sentry) do
       CookieLoader.load_from(nil)
-      mocked_airbrake.verify
+      mocked_sentry.verify
     end
-    
+
     PenderConfig.load('cookies')
     assert_equal PenderConfig.get('cookies'), {}
   end
 
   test 'keeps cookies as empty and reports error if file path does not exist' do
-    mocked_airbrake = MiniTest::Mock.new
-    mocked_airbrake.expect :call, :return_value do |error, args|
-      error.class.to_s.match(/FilePathError/) && 
+    mocked_sentry = MiniTest::Mock.new
+    mocked_sentry.expect :call, :return_value do |error, args|
+      error.class.to_s.match(/FilePathError/) &&
         error.message.match(/No file found at path/) &&
         args[:provided_path] == 'totally/fake/path.txt'
     end
 
-    PenderAirbrake.stub(:notify, mocked_airbrake) do
-      CookieLoader.load_from('totally/fake/path.txt')
-      mocked_airbrake.verify
+    PenderSentry.stub(:notify, mocked_sentry) do
+      CookieLoader.load_from("totally/fake/path.txt")
+      mocked_sentry.verify
     end
 
     PenderConfig.load('cookies')
@@ -116,18 +116,18 @@ class CookieLoaderTest < ActiveSupport::TestCase
   end
 
   test 'keeps cookies as empty and reports problem downloading from S3' do
-    mocked_airbrake = MiniTest::Mock.new
-    mocked_airbrake.expect :call, :return_value do |error, args|
-      error.class.to_s.match(/S3DownloadError/) && 
+    mocked_sentry = MiniTest::Mock.new
+    mocked_sentry.expect :call, :return_value do |error, args|
+      error.class.to_s.match(/S3DownloadError/) &&
         error.message.match(/Unsuccessful response from S3/) &&
         args[:provided_path] == 's3://fake-bucket/fake-cookies.txt'
     end
 
     Aws::S3::Client.any_instance.stubs(:get_object).returns(OpenStruct.new(successful?: false))
 
-    PenderAirbrake.stub(:notify, mocked_airbrake) do
-      CookieLoader.load_from('s3://fake-bucket/fake-cookies.txt')
-      mocked_airbrake.verify
+    PenderSentry.stub(:notify, mocked_sentry) do
+      CookieLoader.load_from("s3://fake-bucket/fake-cookies.txt")
+      mocked_sentry.verify
     end
 
     PenderConfig.load('cookies')
@@ -135,9 +135,9 @@ class CookieLoaderTest < ActiveSupport::TestCase
   end
 
   test 'keeps cookies as empty and reports problem if file downloaded from S3 is empty' do
-    mocked_airbrake = MiniTest::Mock.new
-    mocked_airbrake.expect :call, :return_value do |error, args|
-      error.class.to_s.match(/S3DownloadError/) && 
+    mocked_sentry = MiniTest::Mock.new
+    mocked_sentry.expect :call, :return_value do |error, args|
+      error.class.to_s.match(/S3DownloadError/) &&
         error.message.match(/Downloaded file from S3 is empty/) &&
         args[:provided_path] == 's3://fake-bucket/fake-cookies.txt'
     end
@@ -145,9 +145,9 @@ class CookieLoaderTest < ActiveSupport::TestCase
     # Below returns success, but does not write to the tmpfile
     Aws::S3::Client.any_instance.stubs(:get_object).returns(OpenStruct.new(successful?: true))
 
-    PenderAirbrake.stub(:notify, mocked_airbrake) do
-      CookieLoader.load_from('s3://fake-bucket/fake-cookies.txt')
-      mocked_airbrake.verify
+    PenderSentry.stub(:notify, mocked_sentry) do
+      CookieLoader.load_from("s3://fake-bucket/fake-cookies.txt")
+      mocked_sentry.verify
     end
 
     PenderConfig.load('cookies')

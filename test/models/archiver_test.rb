@@ -86,9 +86,6 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:parse)
     Media.any_instance.stubs(:archive)
 
-    Airbrake.stubs(:configured?).returns(true)
-    Airbrake.stubs(:notify)
-
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     url = 'https://www.facebook.com/permalink.php?story_fbid=1649526595359937&id=100009078379548'
 
@@ -119,9 +116,6 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:try_https)
     Media.any_instance.stubs(:parse)
     Media.any_instance.stubs(:archive)
-
-    Airbrake.stubs(:configured?).returns(true)
-    Airbrake.stubs(:notify)
 
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     urls = {

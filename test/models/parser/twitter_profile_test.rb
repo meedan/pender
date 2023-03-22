@@ -73,15 +73,15 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     Twitter::REST::Client.any_instance.stubs(:user).raises(Twitter::Error)
 
     data = {}
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
       assert_equal Twitter::Error, e.class
     end
 
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::TwitterProfile.new('https://www.twitter.com/fakeaccount').parse_data(nil)
-      assert_equal 1, airbrake_call_count
+      assert_equal 1, sentry_call_count
     end
     assert_match /Twitter::Error/, data['error']['message']
     assert_equal "fakeaccount", data['title']

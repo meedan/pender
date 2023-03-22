@@ -143,7 +143,7 @@ class MediaTest < ActiveSupport::TestCase
     OpenURI.unstub(:open_uri)
   end
 
-  test "should not notify Airbrake when it is a redirection from https to http" do
+  test "should not notify Sentry when it is a redirection from https to http" do
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)
@@ -152,15 +152,8 @@ class MediaTest < ActiveSupport::TestCase
     parsed_url = RequestHelper.parse_url(m.url)
     header_options = RequestHelper.html_options(m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
     OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises('redirection forbidden')
-    Airbrake.stubs(:configured?).returns(true)
 
     m.send(:get_html, header_options)
-
-    Media.any_instance.unstub(:follow_redirections)
-    Media.any_instance.unstub(:get_canonical_url)
-    Media.any_instance.unstub(:try_https)
-    OpenURI.unstub(:open_uri)
-    Airbrake.unstub(:configured?)
   end
 
   test "should redirect to HTTPS if available and not already HTTPS" do
@@ -617,17 +610,17 @@ class MediaUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, /example.com/).and_return(status: 200, body: 'fake response body')
     webhook_info = { 'webhook_url' => 'asdfasdf', 'webhook_token' => 'test' }
 
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
     end
 
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       assert_nothing_raised do
         Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
       end
     end
-    assert_equal 1, airbrake_call_count
+    assert_equal 1, sentry_call_count
   end
 
   test "#notify_webhook should return successful response from webhook" do

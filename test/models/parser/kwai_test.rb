@@ -49,15 +49,15 @@ class KwaiUnitTest <  ActiveSupport::TestCase
   end
 
   test "returns a hash with error message and sends error to Errbit if there is an error parsing" do
-    mocked_airbrake = MiniTest::Mock.new
-    mocked_airbrake.expect :call, :return_value, [StandardError, Hash]
-    
+    mocked_sentry = MiniTest::Mock.new
+    mocked_sentry.expect :call, :return_value, [StandardError, Hash]
+
     data = nil
     empty_doc = Nokogiri::HTML('')
-    PenderAirbrake.stub(:notify, mocked_airbrake) do
+    PenderSentry.stub(:notify, mocked_sentry) do
       data = Parser::KwaiItem.new('https://s.kw.ai/p/example').parse_data(empty_doc)
     end
-    mocked_airbrake.verify
+    mocked_sentry.verify
     assert_equal 5, data[:error][:code]
     assert_match /NoMethodError/, data[:error][:message]
   end

@@ -34,7 +34,7 @@ module ProviderYoutube
       set_deleted_info(error)
       Rails.logger.warn level: 'WARN', message: "[Parser] #{error.message}", url: url, error_class: error.class
     rescue Yt::Errors::Forbidden => error
-      PenderAirbrake.notify(error, url: url )
+      PenderSentry.notify(error, url: url )
       @parsed_data[:raw][:api] = { error: { url: url, message: "#{error.class}: #{error.message}", code: Lapis::ErrorCodes::const_get('UNAUTHORIZED') }}
       Rails.logger.warn level: 'WARN', message: "[Parser] #{error.message}", url: url, error_class: error.class
     end

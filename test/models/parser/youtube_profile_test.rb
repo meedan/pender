@@ -149,15 +149,15 @@ class YouTubeProfileUnitTest < ActiveSupport::TestCase
     Yt::Channel.stubs(:new).raises(Yt::Errors::Forbidden)
 
     data = {}
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
       assert_equal Yt::Errors::Forbidden, e.class
     end
 
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::YoutubeProfile.new('https://www.youtube.com/user/fakeaccount/').parse_data(nil)
-      assert_equal 1, airbrake_call_count
+      assert_equal 1, sentry_call_count
     end
     assert_match /Yt::Errors::Forbidden/, data['raw']['api']['error']['message']
     assert_equal "user", data['subtype']
