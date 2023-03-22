@@ -20,7 +20,13 @@ module MediaCrowdtangleItem
           raise CrowdtangleResponseError if response.nil? || response.code != '200' || response.body.blank?
           JSON.parse(response.body)
         rescue CrowdtangleResponseError, JSON::ParserError => error
-          PenderAirbrake.notify(CrowdtangleError.new(error), crowdtangle_url: uri, error_message: error.message, response_code: response.code, response_body: response.body )
+          PenderSentry.notify(
+            CrowdtangleError.new(error),
+            crowdtangle_url: uri,
+            error_message: error.message,
+            response_code: response.code,
+            response_body: response.body
+          )
           Rails.logger.warn level: 'WARN', message: '[Parser] Could not get `crowdtangle` data', crowdtangle_url: uri, error_class: error.class, response_code: response.code, response_body: response.body
           {}
         end

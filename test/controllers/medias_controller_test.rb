@@ -353,8 +353,7 @@ class MediasControllerTest < ActionController::TestCase
   test "should return timeout error with minimal data if cannot parse url" do
     stub_configs({ 'timeout' => 0.1 }) do
       url = 'https://changescamming.net/halalan-2019/maria-ressa-to-bong-go-um-attend-ka-ng-senatorial-debate-di-yung-nagtatapon-ka-ng-pera'
-      Airbrake.stubs(:configured?).returns(true)
-      Airbrake.stubs(:notify).never
+      PenderSentry.stubs(:notify).never
 
       authenticate_with_token
       get :index, params: { url: url, refresh: '1', format: :json }

@@ -21,7 +21,7 @@ module MediasHelper
     begin
       yield
     rescue exception => error
-      PenderAirbrake.notify(error, url: media.url, data: media.data )
+      PenderSentry.notify(error, url: media.url, data: media.data)
       code = Lapis::ErrorCodes::const_get('UNKNOWN')
       media.data.merge!(error: { message: "#{error.class}: #{error.message}", code: code })
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse', url: media.url, code: code, error_class: error.class, error_message: error.message
@@ -147,7 +147,15 @@ module MediasHelper
       self.data[attr] = "#{Pender::Store.current.storage_path('medias')}/#{filename}"
       return true
     rescue StandardError => error
-      PenderAirbrake.notify(StandardError.new("Could not get '#{attr}' image"), url: self.url, img_url: url, error: { class: error.class, message: error.message } )
+      PenderSentry.notify(
+        StandardError.new("Could not get '#{attr}' image"),
+        url: self.url,
+        img_url: url,
+        error: {
+          class: error.class,
+          message: error.message
+        }
+      )
       Rails.logger.warn level: 'WARN', message: "[Parser] Could not get '#{attr}' image", url: self.url, img_url: url, error_class: error.class, error_message: error.message
     end
   end

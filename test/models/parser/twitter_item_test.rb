@@ -174,15 +174,15 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
 
     data = {}
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
       assert_equal Twitter::Error::NotFound, e.class
     end
 
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data(empty_doc)
-      assert_equal 1, airbrake_call_count
+      assert_equal 1, sentry_call_count
     end
     assert_match /Twitter::Error::NotFound/, data['error']['message']
     assert_equal "123456789", data['external_id']
@@ -198,15 +198,15 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     Twitter::REST::Client.any_instance.stubs(:user).raises(Twitter::Error)
 
     data = {}
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
       assert_equal Twitter::Error, e.class
     end
 
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data(empty_doc)
-      assert_equal 1, airbrake_call_count
+      assert_equal 1, sentry_call_count
     end
     assert_nil data['error']
     assert_equal "123456789", data['external_id']

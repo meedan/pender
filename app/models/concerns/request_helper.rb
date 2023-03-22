@@ -20,7 +20,7 @@ class RequestHelper
         Nokogiri::HTML HtmlPreprocessor.preprocess_html(html)
       rescue OpenURI::HTTPError, Errno::ECONNRESET => e
         if force_proxy
-          PenderAirbrake.notify(e, url: url)
+          PenderSentry.notify(e, url: url)
           Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
           set_error_callback.call(message: 'URL Not Found', code: Lapis::ErrorCodes::const_get('NOT_FOUND'))
           return nil
@@ -29,7 +29,9 @@ class RequestHelper
       rescue Zlib::DataError, Zlib::BufError
         get_html(url, set_error_callback, self.html_options(url).merge('Accept-Encoding' => 'identity'))
       rescue RuntimeError => e
-        PenderAirbrake.notify(e, url: url) if !redirect_https_to_http?(header_options, e.message)
+        if !redirect_https_to_http?(header_options, e.message)
+          PenderSentry.notify(e, url: url)
+        end
         Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
         return nil
       end
@@ -98,7 +100,7 @@ class RequestHelper
         return false unless (uri.scheme && uri.scheme.starts_with?('http'))
         self.request_url(url, 'Get')
       rescue OpenSSL::SSL::SSLError, UrlFormatError, SocketError => e
-        PenderAirbrake.notify(e, url: url)
+        PenderSentry.notify(e, url: url)
         Rails.logger.warn level: 'WARN', message: '[Parser] Invalid URL', url: url, error_class: e.class, error_message: e.message
         return false
       end

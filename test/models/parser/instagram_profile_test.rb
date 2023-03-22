@@ -60,15 +60,15 @@ class InstagramProfileUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(status: 404)
 
     data = {}
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
       assert_equal ProviderInstagram::ApiError, e.class
     end
 
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
-      assert_equal 1, airbrake_call_count
+      assert_equal 1, sentry_call_count
     end
     assert_match /ProviderInstagram::ApiResponseCodeError/, data['error']['message']
   end
@@ -77,14 +77,14 @@ class InstagramProfileUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: 'asdf', status: 200)
 
     data = {}
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
       assert_equal ProviderInstagram::ApiError, e.class
     end
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
-      assert_equal 1, airbrake_call_count
+      assert_equal 1, sentry_call_count
     end
     assert_match /ProviderInstagram::ApiError/, data['error']['message']
   end
@@ -93,14 +93,14 @@ class InstagramProfileUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/challenge/?' })
 
     data = {}
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
       assert_equal ProviderInstagram::ApiError, e.class
     end
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
-      assert_equal 1, airbrake_call_count
+      assert_equal 1, sentry_call_count
     end
     assert_match /ProviderInstagram::ApiAuthenticationError/, data['error']['message']
   end

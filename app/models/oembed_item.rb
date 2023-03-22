@@ -92,7 +92,11 @@ class OembedItem
     begin
       yield
     rescue exception => error
-      PenderAirbrake.notify(error, oembed_url: oembed_uri&.to_s, oembed_data: data )
+      PenderSentry.notify(
+        error,
+        oembed_url: oembed_uri&.to_s,
+        oembed_data: data
+      )
       code = Lapis::ErrorCodes::const_get('INVALID_VALUE')
       @data.merge!(error: { message: "#{error.class}: #{error.message}", code: code })
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse oembed data', oembed_url: oembed_uri&.to_s, code: code, error_class: error.class, error_message: error.message

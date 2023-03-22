@@ -256,15 +256,15 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: '')
 
     data = {}
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
       assert_equal MediaCrowdtangleItem::CrowdtangleError, e.class
     end
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::FacebookItem.new('https://www.facebook.com/555555/posts/123456789').parse_data(empty_doc, throwaway_url)
     end
-    assert_equal 1, airbrake_call_count
+    assert_equal 1, sentry_call_count
   end
 
   test 'sets raw error when issue parsing UUID' do

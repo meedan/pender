@@ -38,14 +38,14 @@ development: &default
   # Example: cookies_file_path: 's3://<BUCKET NAME>/<FILE NAME>'
   cookies_file_path: 'config/cookies.txt'
 
-  # Exception reporting using Airbrake or API equivalent https://airbrake.io/
+  # Exception reporting using Sentry
   #
-  # OPTIONAL
+  # REQUIRED for deployed environments
+  # OPTIONAL for development
   #
-  airbrake_host: # '<AIRBRAKE HOST>'
-  airbrake_port: # '<AIRBRAKE PORT>'
-  airbrake_project_key: # '<AIRBRAKE PROJECT KEY>'
-  airbrake_environment: # '<AIRBRAKE ENVIRONMENT>'
+  sentry_dsn: # '<SENTRY_DSN>'
+  sentry_environment: # dev
+  sentry_traces_sample_rate: # 1
 
   # Google API
   #
@@ -141,7 +141,7 @@ test:
   storage_medias_asset_path: 'http://localhost:9000/check-test/medias'
   otel_log_level: off
   otel_traces_sampler:
-  airbrake_host:
+  sentry_dsn:
 
 production:
   <<: *default

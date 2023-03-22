@@ -1,4 +1,5 @@
 require 'sidekiq'
+
 file = File.join(Rails.root, 'config', 'sidekiq.yml')
 
 if File.exist?(file)
@@ -8,6 +9,13 @@ if File.exist?(file)
 
   Sidekiq.configure_server do |config|
     config.redis = redis_config
+
+    config.death_handlers << ->(job, ex) do
+      if ex.is_a?(Pender::Exception::RetryLater)
+        ex = Pender::Exception::RetryLimitHit.new(job)
+      end
+      Sentry.capture_exception(ex)
+    end
   end
 
   Sidekiq.configure_client do |config|
