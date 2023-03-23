@@ -6,6 +6,12 @@ module Parser
 
     EVENT_URL = /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>\w+)(?!.*permalink\/)/
     GROUPS_URL = /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/groups\/(?<profile>[^\/]+)\/?(?!.*permalink\/).*/
+    VIDEO_URLS = [
+      /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/watch(\/.*)?/,
+      /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/(?<id>[0-9]+).*/,
+      /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/[^\/]+\/(?<id>[0-9]+).*/,
+      /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/vb\.([0-9]+)\/(?<id>[0-9]+).*/,
+    ]
 
     FACEBOOK_ITEM_URLS = [
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/posts\/(?<id>[0-9]+).*/,
@@ -18,20 +24,14 @@ module Parser
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/photos\/pcb\.([0-9]+)\/(?<id>[0-9]+).*/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo(.php)?\/?\?fbid=(?<id>[0-9]+)&set=a\.([0-9]+)(\.([0-9]+)\.([0-9]+))?.*/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo(.php)?\?fbid=(?<id>[0-9]+)&set=p\.([0-9]+).*/,
-      /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/album.php?\?fbid=(?<id>[0-9]+).*/,
-      /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/(?<id>[0-9]+).*/,
-      /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/(?<profile>[^\/]+)\/videos\/vb\.([0-9]+)\/(?<id>[0-9]+).*/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/permalink.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/story.php\?story_fbid=(?<id>[0-9]+)&id=(?<user_id>[0-9]+).*/,
-      /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/livemap(\/.*)?/,
-      /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/watch(\/.*)?/,
-      /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/live\/map(\/.*)?/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>[0-9]+)\/permalink\/([0-9]+).*/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/groups\/(?<profile>[^\/]+)\/permalink\/(?<id>[0-9]+).*/,
       /^https?:\/\/(www\.)?facebook\.com\/(?<id>[^\/\?]+).*$/,
       GROUPS_URL,
       EVENT_URL
-    ]
+    ] + VIDEO_URLS
 
     class << self
       def type
@@ -61,11 +61,15 @@ module Parser
           @url = updated_url if updated_url && updated_url != url
           @parsed_data.merge!(crowdtangle_data)
         else
-          @parsed_data.merge!(get_opengraph_metadata.reject{|k,v| v.nil?})
-          @parsed_data['title'] = nil if parsed_data['title'] && NONUNIQUE_TITLES.include?(parsed_data['title'].downcase)
+          og_metadata = get_opengraph_metadata.reject{|k,v| v.nil?}
 
-          set_data_field('title', get_unique_facebook_page_title(doc))
-          set_data_field('description', doc&.at_css('description')&.content)
+          if should_use_markup_title?
+            set_data_field('title', get_unique_facebook_page_title(doc))
+          else
+            set_data_field('title', og_metadata['description']) unless NONUNIQUE_TITLES.include?(og_metadata['description']&.downcase)
+          end
+          set_data_field('description', og_metadata['description'])
+          set_data_field('picture', og_metadata['picture'])
         end
         set_data_field('author_picture', jsonld.dig('creator', 'image'))
         set_data_field('picture', jsonld.dig('thumbnailUrl'))
@@ -103,6 +107,12 @@ module Parser
 
     def not_an_event_page
       url.match(EVENT_URL).nil?
+    end
+
+    def should_use_markup_title?
+      (VIDEO_URLS + [EVENT_URL]).find do |pattern|
+        url.match(pattern)
+      end
     end
   end
 end
