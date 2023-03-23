@@ -13,11 +13,15 @@ module ProviderInstagram
           reason: :login_page
         },
         {
+          pattern: /^https:\/\/www\.instagram\.com\/login\//,
+          reason: :login_page
+        },
+        {
           pattern: /^https:\/\/www\.instagram\.com\/challenge\//,
           reason: :account_challenge_page
         },
         {
-          pattern: /^https:\/\/www\.instagram\.com\/privacy\/checks/, 
+          pattern: /^https:\/\/www\.instagram\.com\/privacy\/checks/,
           reason: :privacy_check_page
         },
       ]

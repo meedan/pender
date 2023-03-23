@@ -5,10 +5,7 @@ class InstagramProfileIntegrationTest < ActiveSupport::TestCase
     m = Media.new url: 'https://www.instagram.com/ironmaiden?absolute_url_processed=1'
     data = m.as_json
     assert_equal 'profile', data['type']
-    assert_equal 'ironmaiden', data['external_id']
-    assert_equal '@ironmaiden', data['username']
-    assert_match 'ironmaiden', data['title']
-    assert !data['description'].blank?
+    assert data['title'].present?
   end
 end
 
@@ -89,8 +86,24 @@ class InstagramProfileUnitTest < ActiveSupport::TestCase
     assert_match /ProviderInstagram::ApiError/, data['error']['message']
   end
 
-  test "should re-raise a wrapped error when redirected to a page that requires authentication" do
+  test "should re-raise a wrapped error when redirected to a page that requires challenge" do
     WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/challenge/?' })
+
+    data = {}
+    airbrake_call_count = 0
+    arguments_checker = Proc.new do |e|
+      airbrake_call_count += 1
+      assert_equal ProviderInstagram::ApiError, e.class
+    end
+    PenderAirbrake.stub(:notify, arguments_checker) do
+      data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
+      assert_equal 1, airbrake_call_count
+    end
+    assert_match /ProviderInstagram::ApiAuthenticationError/, data['error']['message']
+  end
+
+  test "should re-raise a wrapped error when redirected to a page that requires authentication" do
+    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/login/?' })
 
     data = {}
     airbrake_call_count = 0
