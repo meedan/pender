@@ -1,9 +1,9 @@
 require 'pender/exception'
 
 module Metrics
-  class << self
-    class RequestFailedException < StandardError; end
+  class RequestFailedException < StandardError; end
 
+  class << self
     RETRYABLE_FACEBOOK_ERROR_CODES = [
       1, # Error validating client secret
       101, # Missing client_id parameter
