@@ -111,7 +111,7 @@ class InstagramProfileUnitTest < ActiveSupport::TestCase
       airbrake_call_count += 1
       assert_equal ProviderInstagram::ApiError, e.class
     end
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
       assert_equal 1, airbrake_call_count
     end
