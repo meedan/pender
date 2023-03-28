@@ -53,4 +53,13 @@ class BaseApiControllerTest < ActionController::TestCase
 
     get :about, params: { format: :json }
   end
+
+  test "should set API key information in Sentry" do
+    api_key = create_api_key
+    authenticate_with_token(api_key)
+
+    PenderSentry.expects(:set_user_info).with(api_key: api_key.id)
+
+    get :about, params: { format: :json }
+  end
 end
