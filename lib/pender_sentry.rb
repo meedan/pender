@@ -6,5 +6,9 @@ class PenderSentry
         Sentry.capture_exception(e)
       end
     end
+
+    def set_user_info(api_key: nil)
+      Sentry.set_user(id: api_key)
+    end
   end
 end

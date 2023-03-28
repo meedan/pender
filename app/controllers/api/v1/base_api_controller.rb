@@ -36,6 +36,7 @@ module Api
         api_key = ApiKey.valid.where(access_token: token).last
         ApiKey.current = api_key
         TracingService.add_attributes_to_current_span('app.api_key' => api_key&.id)
+        PenderSentry.set_user_info(api_key: api_key&.id)
 
         PenderConfig.reload
         (render_unauthorized and return false) if ApiKey.current.nil?
