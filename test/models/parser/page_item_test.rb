@@ -210,15 +210,15 @@ class PageItemUnitTest < ActiveSupport::TestCase
     RequestHelper.stubs(:get_html).returns(nil)
 
     data = {}
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
       assert_equal Parser::PageItem::HtmlFetchingError, e.class
     end
 
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::PageItem.new('https://example.com').parse_data(nil, throwaway_url)
-      assert_equal 1, airbrake_call_count
+      assert_equal 1, sentry_call_count
     end
 
     assert_match /HtmlFetchingError/, data[:error][:message]

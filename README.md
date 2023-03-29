@@ -406,6 +406,23 @@ _Everytime you make a new request, the results on tmp/profile are overwritten_
 
 We can also run performance tests. It calculates the amount of time taken to validate, instantiate and parse a link for each of the supported types/providers. In order to do that, run: `bundle exec rake test:performance`. It will generate a CSV at `tmp/performance.csv`, so that you can compare the time take for each provider.
 
+## Error reporting
+
+We use Sentry for tracking exceptions in our application.
+
+By default we unset `sentry_dsn` in the `config.yml`, which prevents
+information from being reported to Sentry. If you would like to see data reported from your local machine, set `sentry_dsn` to the value provided for Pender in the Sentry app.
+
+Additional configuration:
+
+**In config.yml**
+  * `sentry_dsn` - the secret that allows us to send information to Sentry, available in the Sentry web app. Scoped to a service (e.g. Pender)
+  * `sentry_environment` - the environment reported to Sentry (e.g. dev, QA, live)
+  * `sentry_traces_sample_rate` - not currently used, since we don't use Sentry for tracing. Set to 0 in config as result.
+
+**In `02_sentry.rb`**
+  * `config.excluded_exceptions` - a list of exception classes that we don't want to send to Sentry
+
 ## Observability
 
 We use Honeycomb for monitoring information about our application. It is currently configured to suppress Honeycomb reporting when the Open Telemetry required config is unset, which we would expect in development; however it is possible to report data from your local environment to either console or remotely to Honeycomb for troubleshooting purposes.

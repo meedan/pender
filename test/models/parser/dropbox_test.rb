@@ -32,7 +32,7 @@ class DropboxUnitTest <  ActiveSupport::TestCase
 
   test "matches known URL patterns, and returns instance on success" do
     assert_nil Parser::DropboxItem.match?('https://example.com')
-    
+
     assert Parser::DropboxItem.match?('https://www.dropbox.com/s/fake-url/example.txt').is_a?(Parser::DropboxItem)
     assert Parser::DropboxItem.match?('https://dropboxusercontent.com/s/fake-url/example.txt').is_a?(Parser::DropboxItem)
 
@@ -63,16 +63,16 @@ class DropboxUnitTest <  ActiveSupport::TestCase
   end
 
   test "returns a hash with error message and sends error to Errbit if there is an error parsing" do
-    mocked_airbrake = MiniTest::Mock.new
-    mocked_airbrake.expect :call, :return_value, [StandardError, Hash]
+    mocked_sentry = MiniTest::Mock.new
+    mocked_sentry.expect :call, :return_value, [StandardError, Hash]
 
     Parser::DropboxItem.any_instance.stubs(:get_metadata_from_tags).raises(NoMethodError.new("Faking in test"))
 
     data = nil
-    PenderAirbrake.stub(:notify, mocked_airbrake) do
+    PenderSentry.stub(:notify, mocked_sentry) do
       data = Parser::DropboxItem.new('https://www.dropbox.com/sh/fake-url/example.txt').parse_data(doc)
     end
-    mocked_airbrake.verify
+    mocked_sentry.verify
     assert_equal 5, data[:error][:code]
     assert_match /NoMethodError/, data[:error][:message]
   end

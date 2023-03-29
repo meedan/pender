@@ -89,8 +89,8 @@ module Api
           render_error 'Unsafe URL', 'UNSAFE', 400
         rescue StandardError => e
           data = get_error_data({ message: e.message, code: 'UNKNOWN' }, @media, @url, @id)
-          notify_airbrake(e, data)
           Rails.logger.warn level: 'WARN', message: '[Rendering] Could not render media JSON data', error_class: e.class, error_message: e.message
+          notify_exception(e, data)
           data.merge!(@data) unless @data.blank?
           data.merge!(@media.data) unless @media.blank?
           render_media(data)
@@ -202,8 +202,8 @@ module Api
         end
       end
 
-      def notify_airbrake(e, extra_info = {})
-        PenderAirbrake.notify(e, {url: @url}.merge(extra_info))
+      def notify_exception(e, extra_info = {})
+        PenderSentry.notify(e, { url: @url }.merge(extra_info))
       end
 
       def handle_exceptions(exception, rescue_block, error_info = {})
@@ -211,7 +211,7 @@ module Api
           yield
         rescue exception => e
           error_info = { message: e.message }.merge(error_info)
-          notify_airbrake(e, error_info)
+          notify_exception(e, error_info)
           Rails.logger.warn level: 'WARN', message: "[Parser] Error on #{caller_locations(2).first.label}", error: error_info
           if Lapis::ErrorCodes::TEMP_ERRORS.include?(error_info.dig(:code))
             data = get_error_data(error_info, nil, @url, @id)

@@ -1,5 +1,5 @@
 require 'pender/aws_s3_client'
-require 'pender_airbrake'
+require 'pender_sentry'
 
 class CookieLoader
   class FilePathError < StandardError; end
@@ -31,7 +31,7 @@ class CookieLoader
         end
         CONFIG['cookies']
       rescue StandardError => error
-        PenderAirbrake.notify(error, provided_path: cookies_path)
+        PenderSentry.notify(error, provided_path: cookies_path)
         Rails.logger.warn(message: 'Problem setting cookies', provided_path: cookies_path, error_class: error.class, error_message: error.message)
         false
       ensure

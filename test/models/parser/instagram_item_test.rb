@@ -91,15 +91,15 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(status: 404)
 
     data = {}
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
       assert_equal ProviderInstagram::ApiError, e.class
     end
 
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
-      assert_equal 1, airbrake_call_count
+      assert_equal 1, sentry_call_count
     end
     assert_match /ProviderInstagram::ApiResponseCodeError/, data['error']['message']
   end
@@ -108,14 +108,14 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: 'asdf', status: 200)
 
     data = {}
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
       assert_equal ProviderInstagram::ApiError, e.class
     end
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
-      assert_equal 1, airbrake_call_count
+      assert_equal 1, sentry_call_count
     end
     assert_match /ProviderInstagram::ApiError/, data['error']['message']
   end
@@ -124,21 +124,21 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/accounts/login/' })
 
     data = {}
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
       assert_equal ProviderInstagram::ApiError, e.class
     end
-    PenderAirbrake.stub(:notify, arguments_checker) do
+    PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
-      assert_equal 1, airbrake_call_count
+      assert_equal 1, sentry_call_count
     end
     assert_match /ProviderInstagram::ApiAuthenticationError/, data['error']['message']
   end
 
   test 'should set item fields from successful api response' do
     WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: graphql, status: 200)
-    
+
     data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
     assert_equal 'fake-post', data['external_id']
     assert_equal '@retrobayarea', data['username']

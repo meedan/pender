@@ -133,16 +133,16 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
 
   test "sets error if problem parsing" do
     data = {}
-    airbrake_call_count = 0
+    sentry_call_count = 0
     arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
+      sentry_call_count += 1
       assert_equal NoMethodError, e.class
     end
 
     Parser::FacebookProfile.stub(:get_id_from_doc, -> (_) { raise NoMethodError.new('fake for test') }) do
-      PenderAirbrake.stub(:notify, arguments_checker) do
+      PenderSentry.stub(:notify, arguments_checker) do
         data = Parser::FacebookProfile.new('https://www.facebook.com/fake-account').parse_data(nil, 'https://www.facebook.com/fake-account')
-        assert_equal 1, airbrake_call_count
+        assert_equal 1, sentry_call_count
       end
     end
     assert_match /NoMethodError/, data[:error][:message]

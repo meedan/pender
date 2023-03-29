@@ -1,6 +1,8 @@
 require 'pender/exception'
 
 module Metrics
+  class RequestFailedException < StandardError; end
+
   class << self
     RETRYABLE_FACEBOOK_ERROR_CODES = [
       1, # Error validating client secret
@@ -33,7 +35,11 @@ module Metrics
       rescue StandardError => e
         value = {}
         Rails.logger.warn level: 'WARN', message: "Metrics request failed: #{e.message}", url: url, key_id: ApiKey.current&.id
-        PenderAirbrake.notify("Facebook metrics: #{e.message}", url: url, key_id: ApiKey.current&.id)
+        PenderSentry.notify(
+          RequestFailedException.new(e),
+          url: url,
+          key_id: ApiKey.current&.id
+        )
       end
       notify_webhook_and_update_metrics_cache(url, 'facebook', value, key_id)
       value
