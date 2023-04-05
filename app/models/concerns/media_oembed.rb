@@ -32,10 +32,10 @@ module MediaOembed
 
   def get_oembed_data(original_url = nil, maxwidth = nil, maxheight= nil)
     url = original_url || self.url
-    if Media.valid_raw_oembed?(self.data)
-      self.data['oembed'] = self.data['raw']['oembed'].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(url, maxwidth, maxheight))
-    elsif self.provider == 'file'
+    if self.provider == 'file'
       self.data['oembed'] = Media.default_oembed(self.data, url, maxwidth, maxheight)
+    elsif Media.valid_raw_oembed?(self.data)
+      self.data['oembed'] = self.data['raw']['oembed'].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(url, maxwidth, maxheight))
     else
       self.as_json if self.data.empty?
       %w(type provider).each { |key| self.data[key] = self.send(key.to_sym) }
