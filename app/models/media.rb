@@ -100,6 +100,7 @@ class Media
     Parser::TiktokProfile,
     Parser::TelegramItem,
     Parser::KwaiItem,
+    Parser::FileItem,
     Parser::PageItem,
   ]
 
