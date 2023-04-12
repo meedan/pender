@@ -49,7 +49,7 @@ gem 'rack-cors', :require => 'rack/cors'
 gem 'rails-perftest'
 gem 'sidekiq'
 gem 'redis', '4.3.1'
-gem 'nokogiri', '1.13.10', require: false
+gem 'nokogiri', '1.14.3', require: false
 gem 'mida', require: false
 gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
