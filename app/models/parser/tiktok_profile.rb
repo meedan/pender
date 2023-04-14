@@ -17,7 +17,7 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, _original_url, _jsonld)
+    def parse_data_for_parser(doc, _original_url, jsonld)
       match = url.match(TIKTOK_PROFILE_URL)
       base_url = match[0] # Should this be set as canonical_url?
       username = match['username']
@@ -26,10 +26,10 @@ module Parser
         doc = reparse_if_default_tiktok_page(doc, base_url) || doc
         set_data_field('title', get_metadata_from_tag('twitter:creator'))
         set_data_field('picture', get_metadata_from_tag('og:image'))
-        set_data_field('description', get_metadata_from_tag('description'))
-        set_data_field('author_name', parsed_data['title'])
+        set_data_field('description', jsonld.dig('description'))
+        set_data_field('author_name', jsonld.dig('name'))
         @parsed_data.merge!({
-          author_name: parsed_data['title'],
+          author_name: jsonld.dig('name'),
           author_picture: parsed_data['picture'],
           author_url: base_url,
           url: base_url
