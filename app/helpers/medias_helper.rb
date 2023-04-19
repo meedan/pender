@@ -51,15 +51,14 @@ module MediasHelper
   end
 
   def jsonld_tag_content(media)
-    tag = media.doc.at_css('script[type="application/ld+json"]')
-    return if tag.blank? || tag.content == 'null'
+    tags = media.doc.css('script[type="application/ld+json"]')
+    return if tags.blank? || tags.all? { |tag| tag.content == 'null' }
     begin
-      data = JSON.parse(tag.content)
-      data = data[0] if data.is_a?(Array)
+      data_array = tags.map { |tag| JSON.parse(tag.content) }
     rescue JSON::ParserError
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse the JSON-LD content', url: media.url
     end
-    data
+    data_array
   end
 
   ##
