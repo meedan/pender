@@ -45,17 +45,15 @@ module MediasHelper
   def get_jsonld_data(media)
     media.data['raw']['json+ld'] = []
     data_array = jsonld_tag_content(media)
-    if data_array
-      data_array.each { |data| media.data['raw']['json+ld'] << data }
-      # media.add_schema_to_data(media, data, data.dig('@type')) if (data.is_a?(Hash) && data.dig('@context')).match?('https?://schema.org')
-    end
+    data_array.each { |data| media.data['raw']['json+ld'] << data }
   end
 
   def jsonld_tag_content(media)
     tags = media.doc.css('script[type="application/ld+json"]')
-    return if tags.blank? || tags.all? { |tag| tag.content == 'null' }
+    tags_with_content = tags.reject{|t| t.content == 'null' }
+    data_array = []
     begin
-      data_array = tags.map { |tag| JSON.parse(tag.content) }
+      data_array = tags_with_content.map { |tag| JSON.parse(tag.content) }
     rescue JSON::ParserError
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not parse the JSON-LD content', url: media.url
     end
