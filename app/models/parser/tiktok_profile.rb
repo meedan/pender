@@ -29,7 +29,6 @@ module Parser
         set_data_field('description', jsonld.dig('description'))
         set_data_field('author_name', jsonld.dig('name'))
         @parsed_data.merge!({
-          author_name: jsonld.dig('name'),
           author_picture: parsed_data['picture'],
           author_url: base_url,
           url: base_url
