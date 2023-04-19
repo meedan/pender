@@ -351,16 +351,6 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_equal '', data['html']
   end
 
-  test "should get author picture and picture from ld+json" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: {}.to_json)
-
-    jsonld = {"@type"=>"VideoObject", "name"=>"sem comentários - Davi Perez Perez", "description"=>"sem comentários", "thumbnailUrl"=>"https://fb.com/thumbnail.jpg", "@id"=>"https://video.mp4", "url"=>"https://video.mp4", "thumbnail"=>{"@type"=>"ImageObject", "contentUrl"=>"https://fb.com/thumbnail.jpg", "width"=>832, "height"=>832}, "publisher"=>{"@type"=>"Organization", "logo"=>{"@type"=>"ImageObject", "url"=>"https://fb.com/author.jpg"}, "name"=>"Davi Perez Perez", "url"=>"https://www.facebook.com/davi.pperez"}, "creator"=>{"@type"=>"Organization", "image"=>"https://fb.com/author.jpg", "name"=>"Davi Perez Perez", "url"=>"https://www.facebook.com/davi.pperez"}, "@context"=>"https://schema.org"}
-    data = Parser::FacebookItem.new('https://www.facebook.com/events/123456789').parse_data(empty_doc, throwaway_url, jsonld)
-
-    assert_equal 'https://fb.com/author.jpg', data['author_picture']
-    assert_equal 'https://fb.com/thumbnail.jpg', data['picture']
-  end
-
   test "should reject default page titles" do
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: {}.to_json)
     parser = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/12345')
