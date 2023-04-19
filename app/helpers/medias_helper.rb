@@ -43,10 +43,11 @@ module MediasHelper
   end
 
   def get_jsonld_data(media)
-    data = jsonld_tag_content(media)
-    if data
-      media.data['raw']['json+ld'] = data
-      media.add_schema_to_data(media, data, data.dig('@type')) if (data.is_a?(Hash) && data.dig('@context')).match?('https?://schema.org')
+    media.data['raw']['json+ld'] = []
+    data_array = jsonld_tag_content(media)
+    if data_array
+      data_array.each { |data| media.data['raw']['json+ld'] << data }
+      # media.add_schema_to_data(media, data, data.dig('@type')) if (data.is_a?(Hash) && data.dig('@context')).match?('https?://schema.org')
     end
   end
 
