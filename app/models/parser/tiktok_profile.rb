@@ -17,10 +17,11 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, _original_url, jsonld)
+    def parse_data_for_parser(doc, _original_url, jsonld_array)
       match = url.match(TIKTOK_PROFILE_URL)
       base_url = match[0] # Should this be set as canonical_url?
       username = match['username']
+      jsonld = jsonld_array.find{|item| item.dig('@type') == 'Person'}
 
       handle_exceptions(StandardError) do
         doc = reparse_if_default_tiktok_page(doc, base_url) || doc
