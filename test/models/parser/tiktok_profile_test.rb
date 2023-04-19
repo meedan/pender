@@ -2,7 +2,7 @@ require 'test_helper'
 
 class TiktokProfileIntegrationTest < ActiveSupport::TestCase
   test "should parse Tiktok profile for real" do
-    m = create_media url: 'https://www.tiktok.com/@scout2015?is_from_webapp=1&sender_device=pc&web_id=7064890017416234497'
+    m = create_media url: 'https://www.tiktok.com/@huxleythepandapuppy'
     data = m.as_json
     assert_equal '@scout2015', data['username']
     assert_equal 'profile', data['type']
@@ -56,6 +56,22 @@ class TiktokProfileUnitTest < ActiveSupport::TestCase
     assert_not_nil data['title']
     assert_not_nil data['author_name']
   end
+  
+  test "assigns values to hash from the HTML doc and json+ld" do
+    jsonld = [{"@context"=>"https://schema.org/", "@type"=>"ItemList", "itemListElement"=>[]}, {"@context"=>"https://schema.org/", "@type"=>"BreadcrumbList", "itemListElement"=>[{"@type"=>"ListItem", "position"=>1, "item"=>{"@type"=>"Thing", "@id"=>"https://www.tiktok.com", "name"=>"TikTok"}}, {"@type"=>"ListItem", "position"=>2, "item"=>{"@type"=>"Thing", "@id"=>"https://www.tiktok.com/@huxleythepandapuppy", "name"=>"Huxley the Panda Puppy🐼🐶(pandaloon (@huxleythepandapuppy) | TikTok"}}]}, {"@context"=>"https://schema.org/", "@type"=>"Person", "name"=>"Huxley the Panda Puppy🐼🐶(pandaloon", "description"=>"CEO of Pandaloon from Shark Tank. Follow for ur dose of serotonin☺️My costumes⬇️", "alternateName"=>"huxleythepandapuppy", "url"=>"https://www.tiktok.com/@huxleythepandapuppy", "interactionStatistic"=>[{"@type"=>"InteractionCounter", "interactionType"=>{"@type"=>"http://schema.org/LikeAction"}, "userInteractionCount"=>110300000}, {"@type"=>"InteractionCounter", "interactionType"=>{"@type"=>"http://schema.org/FollowAction"}, "userInteractionCount"=>6200000}], "reviewedBy"=>{"@type"=>"Organization", "name"=>"TikTok", "url"=>"www.tiktok.com"}, "mainEntityOfPage"=>{"@id"=>"https://www.tiktok.com/@huxleythepandapuppy", "@type"=>"ProfilePage"}}]
+
+    data = Parser::TiktokProfile.new('https://www.tiktok.com/@fakeaccount').parse_data(doc, 'https://www.tiktok.com/@fakeaccount', jsonld)
+
+    assert_equal '@fakeaccount', data['external_id']
+    assert_equal '@fakeaccount', data['username']
+    assert_equal '@fakeaccount', data['title']
+    assert_match 'https://www.tiktok.com/@fakeaccount', data['author_url']
+    assert_match 'https://www.tiktok.com/@fakeaccount', data['url']
+    assert_not_nil data['picture']
+    assert_not_nil data['author_picture']
+    assert_equal 'CEO of Pandaloon from Shark Tank. Follow for ur dose of serotonin☺️My costumes⬇️', data['description']
+    assert_equal 'Huxley the Panda Puppy🐼🐶(pandaloon', data['author_name']
+  end
 
   test "should set profile defaults upon error" do
     Parser::TiktokProfile.any_instance.stubs(:reparse_if_default_tiktok_page).raises(NoMethodError.new("Fake error raised for tests"))
@@ -82,7 +98,6 @@ class TiktokProfileUnitTest < ActiveSupport::TestCase
 
     assert_equal '@fakeaccount', data['external_id']
     assert_equal '@fakeaccount', data['username']
-    assert_match /Huxley the Panda Puppy🐼🐶\(pandaloon \(@huxleythepandapuppy\) on TikTok/, data['description']
     assert_match 'https://www.tiktok.com/@fakeaccount', data['author_url']
     assert_match 'https://www.tiktok.com/@fakeaccount', data['url']
     assert_not_nil data['picture']
