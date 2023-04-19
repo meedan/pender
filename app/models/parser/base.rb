@@ -69,7 +69,7 @@ module Parser
     attr_reader :unavailable_page
 
     # Implemented by subclasses
-    def parse_data_for_parser(doc, original_url, jsonld)
+    def parse_data_for_parser(doc, original_url, jsonld_array)
       raise NotImplementedError.new("Parser subclasses must implement parse_data_for_parser")
     end
 

@@ -46,7 +46,9 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, original_url, jsonld)
+    def parse_data_for_parser(doc, original_url, jsonld_array)
+      jsonld = jsonld_array.find{|item| item.dig('@type') == 'VideoObject'}
+
       handle_exceptions(StandardError) do
         grabber = IdsGrabber.new(doc, url, original_url)
         set_data_field('user_uuid', grabber.user_id)
