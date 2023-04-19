@@ -17,7 +17,7 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, _original_url, _jsonld)
+    def parse_data_for_parser(doc, _original_url, _jsonld_array)
       username = url.match(INSTAGRAM_PROFILE_URL)[2]
       @parsed_data.merge!({
         'external_id': username,

@@ -15,7 +15,7 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, original_url, _jsonld)
+    def parse_data_for_parser(doc, original_url, _jsonld_array)
       doc = refetch_html(url, {allow_redirections: :all}) if doc.nil?
 
       handle_exceptions(StandardError) do
