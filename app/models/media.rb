@@ -106,7 +106,6 @@ class Media
 
   [
     MediaArchiveOrgArchiver,
-    MediaSchemaOrg,
     MediaPermaCcArchiver,
     MediaVideoArchiver,
     MediaCrowdtangleItem
