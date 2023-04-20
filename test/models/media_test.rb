@@ -213,7 +213,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match /\AJames Comey is out as FBI director.\z/, tag_description['content']
   end
 
-  test "should store json+ld data as a json string" do
+  test "should store json+ld data as an array of hashes" do
     m = create_media url: 'http://www.example.com'
     doc = ''
     File.open('test/data/page-with-json-ld.html') { |f| doc = f.read }
@@ -222,7 +222,8 @@ class MediaTest < ActiveSupport::TestCase
     m.get_jsonld_data(m)
 
     assert !m.data['raw']['json+ld'].empty?
-    assert m.data['raw']['json+ld'].is_a? Hash
+    assert m.data['raw']['json+ld'].is_a? Array
+    assert m.data['raw']['json+ld'].first.is_a? Hash
   end
 
   test "should store ClaimReview schema" do
