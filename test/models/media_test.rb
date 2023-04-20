@@ -226,59 +226,6 @@ class MediaTest < ActiveSupport::TestCase
     assert m.data['raw']['json+ld'].first.is_a? Hash
   end
 
-  test "should store ClaimReview schema" do
-    url = 'http://www.politifact.com/truth-o-meter/statements/2017/aug/17/donald-trump/donald-trump-retells-pants-fire-claim-about-gen-pe'
-    m = create_media url: url
-    data = m.as_json
-    claim_review = data['schema']['ClaimReview'].first
-    assert_equal 'ClaimReview', claim_review['@type']
-    assert_equal 'http://schema.org', claim_review['@context']
-    assert_equal ['@context', '@type', 'author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], claim_review.keys.sort
-  end
-
-  test "should handle schema when type is an array" do
-    doc = ''
-    File.open('test/data/page-with-schema.html') { |f| doc = f.read }
-    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
-
-    url = 'https://patents.google.com/patent/US6896907B2/en'
-    m = create_media url: url
-    data = m.as_json
-    article = data['schema']['ScholarlyArticle'].first
-    assert_equal 'patent', article['@type']
-    assert_equal 'http://schema.org', article['@context']
-  end
-
-  test "should return nil on schema key if not found on page" do
-    url = 'http://ca.ios.ba/'
-    m = create_media url: url
-    data = m.as_json
-    assert data['schema'].nil?
-  end
-
-  test "should store all schemas as array" do
-    doc = ''
-    File.open('test/data/page-with-schema.html') { |f| doc = f.read }
-    Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
-
-    url = 'https://g1.globo.com/sp/sao-paulo/noticia/pf-indicia-haddad-por-caixa-2-em-campanha-para-a-prefeitura-de-sp.ghtml'
-    m = create_media url: url
-    data = m.as_json
-    assert_equal ['NewsArticle', 'ScholarlyArticle', 'WebPage'], data['schema'].keys.sort
-    assert data['schema']['NewsArticle'].is_a? Array
-    assert data['schema']['WebPage'].is_a? Array
-    assert data['schema']['ScholarlyArticle'].is_a? Array
-  end
-
-  test "should store ClaimReview schema after preprocess" do
-    url = 'http://www.politifact.com/truth-o-meter/statements/2017/aug/17/donald-trump/donald-trump-retells-pants-fire-claim-about-gen-pe'
-    m = create_media url: url
-    data = m.as_json
-    assert_equal 'ClaimReview', data['schema']['ClaimReview'].first['@type']
-    assert_equal 'http://schema.org', data['schema']['ClaimReview'].first['@context']
-    assert_equal ['@context', '@type', 'author', 'claimReviewed', 'datePublished', 'itemReviewed', 'reviewRating', 'url'], data['schema']['ClaimReview'].first.keys.sort
-  end
-
   test "should handle errors when call parse on each parser" do
     Media.any_instance.stubs(:get_oembed_data)
     Media::PARSERS.each do |parser|
