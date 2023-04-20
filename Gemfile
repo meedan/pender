@@ -50,7 +50,6 @@ gem 'rails-perftest'
 gem 'sidekiq'
 gem 'redis', '4.3.1'
 gem 'nokogiri', '1.13.10', require: false
-gem 'mida', require: false
 gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
 gem 'loofah', '2.19.1', require: false
