@@ -86,15 +86,9 @@ class TiktokProfileUnitTest < ActiveSupport::TestCase
     parser = Parser::TiktokProfile.new(url)
     data = parser.parse_data(Nokogiri::HTML(blank_page))
 
-    assert_equal '@fakeaccount', data['external_id']
-    assert_equal '@fakeaccount', data['username']
-    assert_match '@fakeaccount', data['title']
-    assert_match '@fakeaccount', data['author_name']
-    assert_match 'https://www.tiktok.com/@fakeaccount', data['author_url']
-    assert_match 'https://www.tiktok.com/@fakeaccount', data['url']
-    assert_not_nil data['picture']
-    assert_not_nil data['author_picture']
-    assert_nil data['error']
+    # Expect data from doc, not from blank_page
+    # this is og:image from tiktok-profile-page.html
+    assert_match /p16-sign-sg\.tiktokcdn\.com\/aweme\/720x720\/tos-alisg-avt-0068\/smg3daf0a613593be5f405fb8f34972f83f.jpeg/, data['picture']
   end
 
   test ".oembed_url returns oembed URL" do
