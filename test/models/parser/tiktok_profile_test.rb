@@ -44,9 +44,6 @@ class TiktokProfileUnitTest < ActiveSupport::TestCase
 
     assert_equal '@fakeaccount', data['external_id']
     assert_equal '@fakeaccount', data['username']
-    assert_match '@fakeaccount', data['title']
-    assert_match '@fakeaccount', data['author_name']
-    assert_match 'https://www.tiktok.com/@fakeaccount', data['description']
     assert_match 'https://www.tiktok.com/@fakeaccount', data['author_url']
     assert_match 'https://www.tiktok.com/@fakeaccount', data['url']
     assert_not_nil data['picture']

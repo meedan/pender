@@ -15,7 +15,7 @@ class YoutubeItemIntegrationTest < ActiveSupport::TestCase
   end
 
   test "should store oembed data of a youtube item" do
-    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<link rel='alternate' type='application/json+oembed' href='http://www.youtube.com/oembed?format=json&amp;url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DfHatsiQvDWc' title='RubyConf Portugal 2016 - Best Of'>"))
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<link rel='alternate' type='application/json+oembed' href='https://www.youtube.com/oembed?format=json&url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DfHatsiQvDWc' title='RubyConf Portugal 2016 - Best Of'>"))
     m = create_media url: 'https://www.youtube.com/watch?v=fHatsiQvDWc' 
     data = m.as_json
 
