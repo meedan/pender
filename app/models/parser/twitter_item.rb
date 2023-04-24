@@ -17,7 +17,7 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(_doc, _original_url, _jsonld)
+    def parse_data_for_parser(_doc, _original_url, _jsonld_array)
       @url.gsub!(/(%23|#)!\//, '')
       @url = replace_subdomain_pattern(url)
       parts = url.match(TWITTER_ITEM_URL)

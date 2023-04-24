@@ -236,20 +236,24 @@ class ArchiverTest < ActiveSupport::TestCase
     a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
 
     WebMock.enable!
-    allowed_sites = lambda{ |uri| !['api.perma.cc', 'web.archive.org'].include?(uri.host) }
-    WebMock.disable_net_connect!(allow: allowed_sites)
 
-    url = 'https://edition.cnn.com'
+    url = 'https://fakewebsite.com/'
+    # Our webhook response
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    # A fake website that never redirects us, so that our Media.get_id stays consistent
+    WebMock.stub_request(:get, /fakewebsite.com/).to_return(status: 200, body: '')
+
+    # First archiver request responses
     WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
     WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
-    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json(archivers: 'perma_cc, archive_org')
     assert_equal({'perma_cc' => {'location' => 'http://perma.cc/perma-cc-guid-1'}, 'archive_org' => {'location' => "https://web.archive.org/web/timestamp/#{url}" }}, Pender::Store.current.read(id, :json)[:archives])
 
+    # Second archiver request responses
     WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-2' }.to_json)
     WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp2'}.to_json)

@@ -17,7 +17,7 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, _original_url, _jsonld)
+    def parse_data_for_parser(doc, _original_url, _jsonld_array)
       set_data_field('description', url)
 
       handle_exceptions(StandardError) do

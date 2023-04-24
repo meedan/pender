@@ -17,7 +17,7 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, _original_url, _jsonld)
+    def parse_data_for_parser(doc, _original_url, _jsonld_array)
       match = url.match(URL_REGEX)
       id = match['id']
       username = match['username']
