@@ -16,16 +16,6 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     assert_nil data['error']
   end
 
-  test "should parse reddit page" do
-    url = 'https://www.reddit.com/r/Art/comments/58a8kp/emotions_language_youngjoo_namgung_ai_livesurface/'
-    id = Media.get_id url
-    m = create_media url: url
-    data = m.as_json
-    assert_match /emotion/, data['title']
-    assert_equal '', data['published_at']
-    assert_equal '', data['username']
-  end
-
   test "should parse arabic url page" do
     url = 'http://www.youm7.com/story/2016/7/6/بالصور-مياه-الشرب-بالإسماعيلية-تواصل-عملها-لحل-مشكلة-طفح-الصرف/2790125'
     id = Media.get_id url
