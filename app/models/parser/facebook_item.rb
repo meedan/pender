@@ -1,5 +1,3 @@
-require 'ids_please'
-
 module Parser
   class FacebookItem < Base
     include ProviderFacebook

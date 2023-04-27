@@ -1,5 +1,3 @@
-require 'ids_please'
-
 module Parser
   class FacebookProfile < Base
     include ProviderFacebook
