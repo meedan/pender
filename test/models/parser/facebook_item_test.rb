@@ -155,6 +155,103 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     @pfbid_doc ||= response_fixture_from_file('facebook-item-page_pfbid.html', parse_as: :html)
   end
 
+  def crowdtangle_response
+    <<~JSON
+    {
+      "status": 200,
+      "result": {
+        "posts": [
+          {
+            "platformId": "123456789276277_1127489833985824",
+            "platform": "Facebook",
+            "date": "2016-10-05 11:15:30",
+            "updated": "2022-05-16 04:12:28",
+            "type": "native_video",
+            "message": "MATTHEW YOU ARE DRUNK...GO HOME! Look at what the long range computer models are indicating with Hurricane Matthew. Yes that's right the GFS model along with the ECMWF (European Model) are both showing Matthew looping around the Atlantic and heading back to the west toward Florida. Let's hope this trend changes and this DOES NOT HAPPEN. Let's get through the next 48hrs first...",
+            "expandedLinks": [
+              {
+                "original": "https://www.facebook.com/TrentAricTV/videos/1127489833985824/",
+                "expanded": "https://www.facebook.com/TrentAricTV/videos/1127489833985824/"
+              }
+            ],
+            "link": "https://www.facebook.com/TrentAricTV/videos/1127489833985824/",
+            "postUrl": "https://www.facebook.com/123456789276277/posts/1127489833985824/woo",
+            "subscriberCount": 0,
+            "score": 320.5113636363636,
+            "media": [
+              {
+                "type": "video",
+                "url": "https://video-sea1-1.xx.fbcdn.net/v/t42.1790-2/14611887_638161409698155_4235661386849452032_n.mp4?_nc_cat=109&ccb=1-6&_nc_sid=985c63&efg=eyJybHIiOjcyMywicmxhIjo1MTIsInZlbmNvZGVfdGFnIjoic3ZlX3NkIn0%3D&_nc_ohc=hOgMc6P8lbgAX_okTBW&rl=723&vabr=402&_nc_ht=video-sea1-1.xx&oh=00_AT8zx1iV-_tmlAkletndjbvSFjikw1j3yxZ4JNG33AJGRQ&oe=6283862F",
+                "height": 0,
+                "width": 0
+              },
+              {
+                "type": "photo",
+                "url": "https://scontent-sea1-1.xx.fbcdn.net/v/t15.5256-10/14602101_1127500960651378_1143375978446192640_n.jpg?stp=dst-jpg_s720x720&_nc_cat=107&ccb=1-6&_nc_sid=ad6a45&_nc_ohc=ElhPemC4khoAX-rBExM&_nc_ht=scontent-sea1-1.xx&oh=00_AT_O0XJgewEDqZ55eTyYX7kwt0CmlFX-Ikd-AvCVURY-qw&oe=6287A947",
+                "height": 405,
+                "width": 720,
+                "full": "https://scontent-sea1-1.xx.fbcdn.net/v/t15.5256-10/14602101_1127500960651378_1143375978446192640_n.jpg?_nc_cat=107&ccb=1-6&_nc_sid=ad6a45&_nc_ohc=ElhPemC4khoAX-rBExM&_nc_ht=scontent-sea1-1.xx&oh=00_AT9zKVSCo0kkvuv2jEi4aJhSdyAU56Xcl0bEYU0lSQK19w&oe=6287A947"
+              }
+            ],
+            "statistics": {
+              "actual": {
+                "likeCount": 2327,
+                "shareCount": 18692,
+                "commentCount": 5690,
+                "loveCount": 18,
+                "wowCount": 1110,
+                "hahaCount": 100,
+                "sadCount": 207,
+                "angryCount": 61,
+                "thankfulCount": 0,
+                "careCount": 0
+              },
+              "expected": {
+                "likeCount": 38,
+                "shareCount": 4,
+                "commentCount": 9,
+                "loveCount": 12,
+                "wowCount": 7,
+                "hahaCount": 8,
+                "sadCount": 7,
+                "angryCount": 1,
+                "thankfulCount": 0,
+                "careCount": 2
+              }
+            },
+            "account": {
+              "id": 1612336,
+              "name": "Trent Aric - Meteorologist",
+              "handle": "TrentAricTV",
+              "profileImage": "https://scontent-sea1-1.xx.fbcdn.net/v/t39.30808-1/273572839_489238069228086_8419777016738266396_n.jpg?stp=c184.151.769.769a_cp0_dst-jpg_s50x50&_nc_cat=106&ccb=1-7&_nc_sid=05dcb7&_nc_ohc=MV2d-ud_YnwAX_BySca&_nc_ht=scontent-sea1-1.xx&oh=00_AT9kUPnHwj5_OhDDe3BYUSjiDkz_RSV2dP_qn9frcqISkQ&oe=631CECF7",
+              "subscriberCount": 10922,
+              "url": "https://www.facebook.com/123456789276277",
+              "platform": "Facebook",
+              "platformId": "100044256918130",
+              "accountType": "facebook_page",
+              "pageAdminTopCountry": "US",
+              "pageDescription": "Morning Meteorologist at WFTX Fox 4",
+              "pageCreatedDate": "2011-04-18 14:08:05",
+              "pageCategory": "NEWS_PERSONALITY",
+              "verified": true
+            },
+            "videoLengthMS": 10967,
+            "languageCode": "en",
+            "legacyId": 0,
+            "id": "1612336|1127489833985824"
+          }
+        ]
+      }
+    }
+    JSON
+  end
+
+  def crowdtangle_response_not_found
+    <<~JSON
+      {"status":200,"notes":"Post not found"}
+    JSON
+  end
+
   test "returns provider and type" do
     assert_equal Parser::FacebookItem.type, 'facebook_item'
   end
@@ -193,21 +290,19 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   test "sends tracing information to honeycomb, including updated URL" do
-    crowdtangle_data = response_fixture_from_file('crowdtangle-response_video.json')
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_data)
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
 
     TracingService.expects(:add_attributes_to_current_span).with({
       'app.parser.type' => 'facebook_item',
-      'app.parser.parsed_url' => 'https://www.facebook.com/144585402276277/posts/1127489833985824/woo',
+      'app.parser.parsed_url' => 'https://www.facebook.com/123456789276277/posts/1127489833985824/woo',
       'app.parser.original_url' => 'https://www.facebook.com/fakeaccount/posts/original-123456789'
     })
 
-    Parser::FacebookItem.new('https://www.facebook.com/144585402276277/posts/1127489833985824').parse_data(empty_doc, 'https://www.facebook.com/fakeaccount/posts/original-123456789')
+    Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824').parse_data(empty_doc, 'https://www.facebook.com/fakeaccount/posts/original-123456789')
   end
 
   test "sets fallbacks from metatags on crowdtangle error, and populates HTML" do
-    crowdtangle_error = response_fixture_from_file('crowdtangle-response_not-found.json')
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_error)
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="this is a page title" />
@@ -228,8 +323,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   test "sets fallbacks from title metatags for event and watch URLS on crowdtangle error, and populates HTML" do
-    crowdtangle_error = response_fixture_from_file('crowdtangle-response_not-found.json')
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_error)
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="this is a page title | Facebook" />
@@ -276,9 +370,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   test 'sets raw error when crowdtangle request fails' do
-    crowdtangle_error = response_fixture_from_file('crowdtangle-response_not-found.json')
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_error)
-
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
     data = Parser::FacebookItem.new('https://www.facebook.com/55555/posts/123456789').parse_data(empty_doc, throwaway_url)
 
     assert data['error'].blank?
@@ -286,18 +378,17 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   test "sets information from crowdtangle" do
-    crowdtangle_data = response_fixture_from_file('crowdtangle-response_video.json')
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_data)
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
 
-    parser = Parser::FacebookItem.new('https://www.facebook.com/144585402276277/posts/1127489833985824')
+    parser = Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824')
     data = parser.parse_data(empty_doc, throwaway_url)
 
     assert data['error'].blank?
-    assert_equal '144585402276277_1127489833985824', data['external_id']
+    assert_equal '123456789276277_1127489833985824', data['external_id']
     assert_equal 'Trent Aric - Meteorologist', data['author_name']
     assert_equal 'TrentAricTV', data['username']
     assert_match /273572839_489238069228086_8419777016738266396_n.jpg/, data['author_picture']
-    assert_equal 'https://www.facebook.com/144585402276277', data['author_url']
+    assert_equal 'https://www.facebook.com/123456789276277', data['author_url']
     assert_match /Look at what the long range computer models are indicating/, data['title']
     assert_match /Look at what the long range computer models are indicating/, data['description']
     assert_match /Look at what the long range computer models are indicating/, data['text']
@@ -307,18 +398,16 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   test "updates URL if different than received from crowdtangle" do
-    crowdtangle_data = response_fixture_from_file('crowdtangle-response_video.json')
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_data)
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
 
-    parser = Parser::FacebookItem.new('https://www.facebook.com/144585402276277/posts/1127489833985824')
+    parser = Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824')
     data = parser.parse_data(empty_doc, throwaway_url)
 
-    assert_equal 'https://www.facebook.com/144585402276277/posts/1127489833985824/woo', parser.url
+    assert_equal 'https://www.facebook.com/123456789276277/posts/1127489833985824/woo', parser.url
   end
 
   test 'when crowdtangle returns a different post than we tried to request' do
-    crowdtangle_data = response_fixture_from_file('crowdtangle-response_video.json')
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_data)
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
 
     data = Parser::FacebookItem.new('https://www.facebook.com/12345/posts/55555').parse_data(empty_doc, 'https://www.facebook.com/12345/posts/55555')
 
