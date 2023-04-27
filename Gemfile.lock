@@ -9,14 +9,6 @@ GIT
       railties (>= 3.1, < 7.0)
 
 GIT
-  remote: https://github.com/meedan/ids_please
-  revision: 31b9e03fe7860d57697e9b6deec321bc7d7482f4
-  ref: 31b9e0
-  branch: master
-  specs:
-    ids_please (2.2.2)
-
-GIT
   remote: https://github.com/postrank-labs/postrank-uri.git
   revision: 485ac465f3e989b4a6e52cdd5bf35291d78bd815
   ref: 485ac46
@@ -465,7 +457,6 @@ DEPENDENCIES
   gem-licenses
   get_process_mem
   htmlentities
-  ids_please!
   lograge
   logstash-logger
   loofah (= 2.19.1)

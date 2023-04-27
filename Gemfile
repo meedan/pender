@@ -40,7 +40,6 @@ gem 'rswag-api'
 gem 'rswag-ui'
 gem 'sass-rails'
 gem 'twitter'
-gem 'ids_please', git: 'https://github.com/meedan/ids_please', branch: 'master', ref: '31b9e0', require: false
 gem 'open_uri_redirections', require: false
 gem 'postrank-uri', git: 'https://github.com/postrank-labs/postrank-uri.git', ref: '485ac46', require: false # Ruby 3.0 support, as of 2/6/23 no gem relaease
 gem 'retryable'
