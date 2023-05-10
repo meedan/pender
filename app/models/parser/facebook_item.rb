@@ -1,5 +1,3 @@
-require 'ids_please'
-
 module Parser
   class FacebookItem < Base
     include ProviderFacebook
@@ -46,7 +44,8 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, original_url, jsonld)
+    def parse_data_for_parser(doc, original_url, _jsonld_array)
+
       handle_exceptions(StandardError) do
         grabber = IdsGrabber.new(doc, url, original_url)
         set_data_field('user_uuid', grabber.user_id)
@@ -71,8 +70,6 @@ module Parser
           set_data_field('description', og_metadata['description'])
           set_data_field('picture', og_metadata['picture'])
         end
-        set_data_field('author_picture', jsonld.dig('creator', 'image'))
-        set_data_field('picture', jsonld.dig('thumbnailUrl'))
 
         strip_facebook_from_title!
 

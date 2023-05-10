@@ -40,7 +40,6 @@ gem 'rswag-api'
 gem 'rswag-ui'
 gem 'sass-rails'
 gem 'twitter'
-gem 'ids_please', git: 'https://github.com/meedan/ids_please', branch: 'master', ref: '31b9e0', require: false
 gem 'open_uri_redirections', require: false
 gem 'postrank-uri', git: 'https://github.com/postrank-labs/postrank-uri.git', ref: '485ac46', require: false # Ruby 3.0 support, as of 2/6/23 no gem relaease
 gem 'retryable'
@@ -49,8 +48,7 @@ gem 'rack-cors', :require => 'rack/cors'
 gem 'rails-perftest'
 gem 'sidekiq'
 gem 'redis', '4.3.1'
-gem 'nokogiri', '1.13.10', require: false
-gem 'mida', require: false
+gem 'nokogiri', '1.14.3', require: false
 gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
 gem 'loofah', '2.19.1', require: false

@@ -18,7 +18,7 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, _original_url, _jsonld)
+    def parse_data_for_parser(doc, _original_url, _jsonld_array)
       @url = replace_subdomain_pattern(url)
       username = url.match(/^https?:\/\/(www\.)?twitter\.com\/([^\/]+)$/)[2]
 

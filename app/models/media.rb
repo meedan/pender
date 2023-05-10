@@ -106,7 +106,6 @@ class Media
 
   [
     MediaArchiveOrgArchiver,
-    MediaSchemaOrg,
     MediaPermaCcArchiver,
     MediaVideoArchiver,
     MediaCrowdtangleItem
@@ -178,7 +177,6 @@ class Media
   def parse
     self.data.merge!(Media.minimal_data(self))
     get_jsonld_data(self) unless self.doc.nil?
-    get_schema_data unless self.doc.nil?
     parsed = false
 
     PARSERS.each do |parser|

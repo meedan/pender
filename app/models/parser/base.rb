@@ -43,12 +43,12 @@ module Parser
 
     # This is the entry function for the class, which performs
     # any common setup and then calls down to `parse_data_for_parser`
-    def parse_data(doc, original_url = nil, jsonld = {})
+    def parse_data(doc, original_url = nil, jsonld = [])
       # Shared setup
       set_raw_metatags(doc)
 
       # Parse data (implemented by subclasses)
-      data = parse_data_for_parser(doc, original_url, jsonld || {})
+      data = parse_data_for_parser(doc, original_url, jsonld || [])
       TracingService.add_attributes_to_current_span(
         'app.parser.type' => type,
         'app.parser.parsed_url' => url,
@@ -69,7 +69,7 @@ module Parser
     attr_reader :unavailable_page
 
     # Implemented by subclasses
-    def parse_data_for_parser(doc, original_url, jsonld)
+    def parse_data_for_parser(doc, original_url, jsonld_array)
       raise NotImplementedError.new("Parser subclasses must implement parse_data_for_parser")
     end
 

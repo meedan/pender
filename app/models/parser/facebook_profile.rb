@@ -1,5 +1,3 @@
-require 'ids_please'
-
 module Parser
   class FacebookProfile < Base
     include ProviderFacebook
@@ -28,7 +26,7 @@ module Parser
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, original_url, _jsonld)
+    def parse_data_for_parser(doc, original_url, _jsonld_array)
       parseable_url = unavailable_page ? original_url : url
 
       handle_exceptions(StandardError) do
