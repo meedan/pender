@@ -64,24 +64,6 @@ echo "Starting application configuration. Processing ENV settings."
     fi
   fi
 
-  # Populate production environment config from SSM:
-  WORKTMP=$(mktemp)
-  if [[ -z ${environments_production+x} ]]; then
-    echo "Error: missing environments_production ENV setting. Using defaults."
-    missing_configs="$missing_configs environments_production,"
-  else
-    echo ${environments_production} | base64 -d > $WORKTMP
-    if (( $? != 0 )); then
-      echo "Error: could not decode ENV var: ${environments_production} . Using defaults."
-      missing_configs="$missing_configs environments_production,"
-      rm $WORKTMP
-    else
-      echo "Using decoded environments_production config from ENV var: ${environments_production} ."
-      mv $WORKTMP environments/production.rb
-      sha1sum environments/production.rb
-    fi
-  fi
-
   # As mentioned above, if we are missing required configs in QA or Live environemnts
   # emit an error detailing the omitted configurations and exit with error.
   # This will promptly fail an attempted deployment, rather than deferring to
@@ -91,7 +73,7 @@ echo "Starting application configuration. Processing ENV settings."
       echo "Error: missing required configurations: $missing_configs exiting."
       kill 0
     fi
-  fi 
+  fi
 )
 
 echo "Configuration complete."

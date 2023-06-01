@@ -139,7 +139,7 @@ module MediasHelper
     extension = '.jpg' if extension.blank? || extension == '.php'
     filename = "#{id}/#{attr}#{extension}"
     begin
-      URI.open(url) do |content|
+      URI(url).open do |content|
         Pender::Store.current.store_object(filename, content, 'medias/')
       end
       self.data[attr] = "#{Pender::Store.current.storage_path('medias')}/#{filename}"
