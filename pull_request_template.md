@@ -18,9 +18,11 @@ Please describe parts of the change that require extra attention during code rev
 ## Checklist
 
 - [ ] I have performed a self-review of my own code
+- [ ] I have added unit and feature tests, if the PR implements a new feature or otherwise would benefit from additional testing
+- [ ] I have added regression tests, if the PR fixes a bug
+- [ ] I have added logging, exception reporting, and custom tracing with any additional information required for debugging
 - [ ] I have commented my code in hard-to-understand areas, if any
 - [ ] I have made needed changes to the README
 - [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] If I added a third party module, I included a rationale for doing so and followed our current [guidelines](https://meedan.atlassian.net/wiki/spaces/ENG/overview#Choose-the-%E2%80%9Cright%E2%80%9D-3rd-party-module)
 
