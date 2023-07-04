@@ -21,7 +21,7 @@ services:
       MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
       MINIO_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
   postgres:
-    image: postgres:12
+    image: postgres:12-bullseye
     ports:
       - "5432:5432"
     environment:
