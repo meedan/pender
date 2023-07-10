@@ -13,6 +13,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should ask to refresh cache" do
+    skip("twitter api key is not currently working")
     authenticate_with_token
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json }
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
@@ -29,6 +30,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should not ask to refresh cache" do
+    skip("twitter api key is not currently working")
     authenticate_with_token
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '0', format: :json }
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
@@ -63,6 +65,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return error message on hash if twitter url does not exist" do
+    skip("twitter api key is not currently working")
     authenticate_with_token
     get :index, params: { url: 'https://twitter.com/caiosba32153623', format: :json }
     assert_response 200
@@ -112,6 +115,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return error message on hash if twitter post url does not exist" do
+    skip("twitter api key is not currently working")
     twitter_client, status, user = "" , "", ""
     api={"error"=>{"message"=>"Twitter::Error::NotFound: 144 No status found with that ID.", "code"=>4}}
     Media.any_instance.stubs(:twitter_client).returns(twitter_client)
@@ -216,6 +220,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should render custom HTML if provided by parser" do
+    skip("twitter api key is not currently working")
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
     assert_response :success
     assert_match /twitter-tweet/, response.body
@@ -251,6 +256,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should clear cache for multiple URLs sent as array" do
+    skip("twitter api key is not currently working")
     authenticate_with_token
     url1 = 'http://ca.ios.ba'
     url2 = 'https://twitter.com/caiosba/status/742779467521773568'
@@ -368,6 +374,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should not archive in any archiver when no archiver parameter is sent" do
+    skip("twitter api key is not currently working")
     Media.any_instance.unstub(:archive_to_archive_org)
 
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
@@ -387,6 +394,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should not archive when archiver parameter is none" do
+    skip("twitter api key is not currently working")
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     WebMock.enable!
@@ -584,6 +592,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should add data url when on embed title metatag" do
+    skip("twitter api key is not currently working")
     authenticate_with_token
     twitter_client, status, user = "" , "", ""
     api = {"full_text"=>"@InternetFF Our Meedani @WafHeikal will be joining the amazing line of participants at #IFF, come say hi and get a free trail to our verification tool @check" }
@@ -685,6 +694,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should cache json and html on file" do
+    skip("twitter api key is not currently working")
     authenticate_with_token
     url = 'https://twitter.com/meedan/status/1132948729424691201'
     id = Media.get_id(url)
@@ -733,6 +743,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should return API limit reached error" do
+    skip("twitter api key is not currently working")
     Twitter::REST::Client.any_instance.stubs(:user).raises(Twitter::Error::TooManyRequests)
     Twitter::Error::TooManyRequests.any_instance.stubs(:rate_limit).returns(OpenStruct.new(reset_in: 123))
 
