@@ -3,6 +3,7 @@ require_relative '../test_helper'
 class ArchiverWorkerTest < ActiveSupport::TestCase
 
   test "should update cache when video archiving fails the max retries" do
+    skip("twitter api key is not currently working")
     Metrics.stubs(:schedule_fetching_metrics_from_facebook)
     url = 'https://twitter.com/meedan/status/1202732707597307905'
     m = create_media url: url
@@ -17,6 +18,7 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
   end
 
   test "should update cache when Archive.org fails the max retries" do
+    skip("twitter api key is not currently working")
     Media.any_instance.unstub(:archive_to_archive_org)
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
@@ -43,6 +45,7 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
   end
 
   test "should update cache when Archive.org raises since first attempt" do
+    skip("twitter api key is not currently working")
     Media.any_instance.unstub(:archive_to_archive_org)
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
