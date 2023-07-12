@@ -2,6 +2,7 @@ require 'test_helper'
 
 class TwitterProfileIntegrationTest < ActiveSupport::TestCase
   test "should parse shortened URL" do
+    skip("twitter api key is not currently working")
     m = create_media url: 'http://bit.ly/23qFxCn'
     data = m.as_json
     assert_equal 'https://twitter.com/caiosba', data['url']
@@ -14,6 +15,7 @@ class TwitterProfileIntegrationTest < ActiveSupport::TestCase
   end
 
   test "should store oembed data of a twitter profile" do
+    skip("twitter api key is not currently working")
     m = create_media url: 'https://twitter.com/meedan'
     data = m.as_json
 
