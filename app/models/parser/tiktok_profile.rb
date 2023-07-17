@@ -2,7 +2,7 @@ module Parser
   class TiktokProfile < Base
     include ProviderTiktok
 
-    TIKTOK_PROFILE_URL = /^https?:\/\/(www\.)?tiktok\.com\/(?<username>[^\/\?]+)/
+    TIKTOK_PROFILE_URL = /^https?:\/\/(www\.)?tiktok\.com\/(?<username>@[^\/\?]+)/
 
     class << self
       def type
@@ -46,7 +46,7 @@ module Parser
     end
 
     def reparse_if_default_tiktok_page(doc, base_url)
-      if doc.css('title').text == 'TikTok'
+      if doc&.css('title')&.text == 'TikTok'
         refetch_html(base_url, RequestHelper.html_options(base_url), true)
       end
     end
