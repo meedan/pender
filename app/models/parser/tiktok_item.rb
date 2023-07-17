@@ -3,6 +3,7 @@ module Parser
     include ProviderTiktok
 
     TIKTOK_ITEM_URL = /^https?:\/\/(www\.)?tiktok\.com\/(?<username>[^\/]+)\/video\/(?<id>[^\/|?]+)/
+    TIKTOK_TAG_URL = /^https?:\/\/(www\.)?tiktok\.com\/tag\/(?<tag>[^\/\?]+)/
 
     class << self
       def type
@@ -10,7 +11,7 @@ module Parser
       end
 
       def patterns
-        [TIKTOK_ITEM_URL]
+        [TIKTOK_ITEM_URL, TIKTOK_TAG_URL]
       end
     end
 
@@ -22,10 +23,21 @@ module Parser
 
       handle_exceptions(StandardError) do
         @parsed_data[:raw][:api] = @parsed_data[:raw][:oembed] = get_tiktok_api_data(url)
-        match = url.match(TIKTOK_ITEM_URL)
+        
+        if url.match(TIKTOK_ITEM_URL)
+          match = url.match(TIKTOK_ITEM_URL)
+          username = match['username']
+          external_id = match['id']
+        end
+
+        if url.match(TIKTOK_TAG_URL)  
+          username = ''
+          external_id = ''
+        end
+
         @parsed_data.merge!({
-          username: match['username'],
-          external_id: match['id'],
+          username: username,
+          external_id: external_id,
           description: parsed_data['raw']['api']['title'],
           title: parsed_data['raw']['api']['title'],
           picture: parsed_data['raw']['api']['thumbnail_url'],
