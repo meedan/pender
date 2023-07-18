@@ -46,7 +46,7 @@ gem 'retryable'
 gem 'puma', '5.6.4'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'rails-perftest'
-gem 'sidekiq'
+gem 'sidekiq', '< 7'
 gem 'redis', '4.3.1'
 gem 'nokogiri', '1.14.3', require: false
 gem 'htmlentities', require: false
