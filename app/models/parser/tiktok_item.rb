@@ -23,14 +23,11 @@ module Parser
 
       handle_exceptions(StandardError) do
         @parsed_data[:raw][:api] = @parsed_data[:raw][:oembed] = get_tiktok_api_data(url)
-        
         if url.match(TIKTOK_ITEM_URL)
           match = url.match(TIKTOK_ITEM_URL)
           username = match['username']
           external_id = match['id']
-        end
-
-        if url.match(TIKTOK_TAG_URL)  
+        elsif url.match(TIKTOK_TAG_URL)  
           username = ''
           external_id = ''
         end
