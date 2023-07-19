@@ -25,7 +25,6 @@ module Parser
             return @post_id
           end
         end
-
         if post_id = post_id_from_params(url)
           @post_id = post_id
           return @post_id
@@ -119,9 +118,10 @@ module Parser
         'set' => 'set',
         'photos' => 'album_id'
       }
-      return unless mapping.keys.include?(id)
-      return if (params = parse_uri(uri)).empty?
-
+      params = parse_uri(uri)
+      return if params.empty? 
+      return unless mapping.keys.include?(id) && params.keys.include?(mapping[id])
+      
       # Get relevant info from a.12345 or 12345:0
       slug = params[mapping[id]].first
       slug[/(\d+)/, 1]
