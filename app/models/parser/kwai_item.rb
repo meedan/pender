@@ -30,7 +30,7 @@ module Parser
     end
   
     def get_kwai_text_from_tag(doc, selector)
-      doc&.at_css(selector)&.text&.to_s.strip
+      doc&.at_css(selector)&.text&.to_s&.strip
     end
   end
 end
