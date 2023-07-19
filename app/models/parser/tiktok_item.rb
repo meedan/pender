@@ -27,27 +27,26 @@ module Parser
           match = url.match(TIKTOK_ITEM_URL)
           username = match['username']
           external_id = match['id']
-          tag = ''
+          title = parsed_data['raw']['api']['title']
         elsif url.match(TIKTOK_TAG_URL)  
           username = ''
           external_id = ''
-          tag = url.match(TIKTOK_TAG_URL)['tag']
+          title = "Tag: " + url.match(TIKTOK_TAG_URL)['tag']
         else
           username = ''
           external_id = ''
-          tag = ''
+          title = parsed_data['raw']['api']['title']
         end
 
         @parsed_data.merge!({
           username: username,
           external_id: external_id,
-          description: parsed_data['raw']['api']['title'],
-          title: parsed_data['raw']['api']['title'],
+          description: title,
+          title: title,
           picture: parsed_data['raw']['api']['thumbnail_url'],
           author_url: parsed_data['raw']['api']['author_url'],
           html: parsed_data['raw']['api']['html'],
-          author_name: parsed_data['raw']['api']['author_name'],
-          tag: tag
+          author_name: parsed_data['raw']['api']['author_name']
         })
       end
       parsed_data
