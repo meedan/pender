@@ -32,6 +32,10 @@ module Parser
           username = ''
           external_id = ''
           tag = url.match(TIKTOK_TAG_URL)['tag']
+        else
+          username = ''
+          external_id = ''
+          tag = ''
         end
 
         @parsed_data.merge!({
