@@ -7,13 +7,13 @@ var Pender = {};
   'use strict';
 
   // Add custom CSS
-  var css = document.location.hash.replace('#css=', '');
-  if (css !== '') {
-    $('head').append('<link rel="stylesheet" href="' + css + '" type="text/css" class="pender-custom-css" />');
-    $('meta[name="twitter:image"]').attr('content', function(index, attr) {
-      return attr + '?css=' + css;
-    });
-  }
+  // var css = document.location.hash.replace('#css=', '');
+  // if (css !== '') {
+  //   $('head').append('<link rel="stylesheet" href="' + css + '" type="text/css" class="pender-custom-css" />');
+  //   $('meta[name="twitter:image"]').attr('content', function(index, attr) {
+  //     return attr + '?css=' + css;
+  //   });
+  // }
 
   // Alert parent window when the height changes
   var htmlHeight = 0;
