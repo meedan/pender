@@ -126,6 +126,14 @@ Get parseable data for a given URL, that can be a post or a profile, from differ
   * `none`: the URL will not be archived
   * string with a list of archives separated by commas: the URL will be archived only on specified archivers
 
+**Request Example**
+```bash
+curl \
+-H 'X-Pender-Token: <your_token>' \
+-H 'Content-type: application/json' \
+http://localhost:3200/api/medias.json?url=<your_url>&refresh=1
+```
+
 **Response**
 
 **HTML**
