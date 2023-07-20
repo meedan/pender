@@ -56,6 +56,9 @@ class TiktokItemUnitTest < ActiveSupport::TestCase
     
     match_one = Parser::TiktokItem.match?('https://www.tiktok.com/@fakeaccount/video/abcdef?a=1')
     assert_equal true, match_one.is_a?(Parser::TiktokItem)
+
+    match_one = Parser::TiktokItem.match?('https://www.tiktok.com/tag/randomtag')
+    assert_equal true, match_one.is_a?(Parser::TiktokItem)
   end
 
   test "should set profile defaults upon error" do
