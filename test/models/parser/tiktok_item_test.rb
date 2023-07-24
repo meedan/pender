@@ -70,6 +70,14 @@ class TiktokItemUnitTest < ActiveSupport::TestCase
     assert_equal '', data['username']
   end
 
+  test "adds 'Tag: ' to title when it matches TIKTOK_TAG_URL" do
+    WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_return(status: 200, body: oembed)
+    
+    data = Parser::TiktokItem.new('https://www.tiktok.com/tag/abcdef').parse_data(doc)
+
+    assert_match "Tag: abcdef", data['title']
+  end
+
   test "should set profile defaults upon error" do
     WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_raise(Net::ReadTimeout.new("Raised in test"))
 
