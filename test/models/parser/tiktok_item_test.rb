@@ -61,6 +61,15 @@ class TiktokItemUnitTest < ActiveSupport::TestCase
     assert_equal true, match_one.is_a?(Parser::TiktokItem)
   end
 
+  test "returns empty string for unmatched url" do
+    # https://www.tiktok.com/search?q=steampunk
+    WebMock.stub_request(:any, /tiktok.com\/search\?q=/).to_return(status: 200, body: doc)
+    
+    data = Parser::TiktokItem.new('https://www.tiktok.com/search?q=abcdef').parse_data(doc)
+
+    assert_equal '', data['username']
+  end
+
   test "should set profile defaults upon error" do
     WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_raise(Net::ReadTimeout.new("Raised in test"))
 
