@@ -18,7 +18,7 @@ group :development do
 end
 group :test do
   gem 'parallel_tests'
-  gem "mocha", "~> 1.14.0", require: false
+  gem "mocha", '~> 1.14.0', require: false
   gem 'simplecov', '0.13.0', require: false
   gem 'simplecov-console', require: false
   gem 'codeclimate-test-reporter', '1.0.8', group: :test, require: nil
@@ -46,7 +46,7 @@ gem 'retryable'
 gem 'puma', '5.6.4'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'rails-perftest'
-gem 'sidekiq'
+gem 'sidekiq', '< 7'
 gem 'redis', '4.3.1'
 gem 'nokogiri', '1.14.3', require: false
 gem 'htmlentities', require: false
@@ -73,7 +73,7 @@ gem 'opentelemetry-instrumentation-rack'
 gem 'opentelemetry-instrumentation-rails'
 gem 'opentelemetry-instrumentation-rake'
 gem 'opentelemetry-instrumentation-sidekiq'
-gem 'addressable'
+gem 'addressable', '2.8.1'
 # Adding this removes some deprecation warnings, caused by double-loading of the net-protocol library
 # (see https://github.com/ruby/net-imap/issues/16). We *might* be able to remove this after upgrading to Ruby 3
 gem 'net-http'

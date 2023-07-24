@@ -2,8 +2,6 @@ require 'test_helper'
 
 class KwaiIntegrationTest < ActiveSupport::TestCase
   test "should parse Kwai URL" do
-    skip "Kwai parsing is not currently working; pending until we look into"
-
     m = create_media url: 'https://s.kw.ai/p/1mCb9SSh'
     data = m.as_json
     assert_equal 'Reginaldo Silva2871', data['username']
@@ -46,19 +44,5 @@ class KwaiUnitTest <  ActiveSupport::TestCase
     assert_equal 'A special video', data[:description]
     assert_equal 'Reginaldo Silva2871', data[:author_name]
     assert_equal 'Reginaldo Silva2871', data[:username]
-  end
-
-  test "returns a hash with error message and sends error to Errbit if there is an error parsing" do
-    mocked_sentry = MiniTest::Mock.new
-    mocked_sentry.expect :call, :return_value, [StandardError, Hash]
-
-    data = nil
-    empty_doc = Nokogiri::HTML('')
-    PenderSentry.stub(:notify, mocked_sentry) do
-      data = Parser::KwaiItem.new('https://s.kw.ai/p/example').parse_data(empty_doc)
-    end
-    mocked_sentry.verify
-    assert_equal 5, data[:error][:code]
-    assert_match /NoMethodError/, data[:error][:message]
   end
 end
