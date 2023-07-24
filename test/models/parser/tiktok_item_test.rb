@@ -56,6 +56,26 @@ class TiktokItemUnitTest < ActiveSupport::TestCase
     
     match_one = Parser::TiktokItem.match?('https://www.tiktok.com/@fakeaccount/video/abcdef?a=1')
     assert_equal true, match_one.is_a?(Parser::TiktokItem)
+
+    match_one = Parser::TiktokItem.match?('https://www.tiktok.com/tag/randomtag')
+    assert_equal true, match_one.is_a?(Parser::TiktokItem)
+  end
+
+  test "sets 'external_id' and 'username' as empty string for unmatched URL pattern" do
+    WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_return(status: 200, body: oembed)
+    
+    data = Parser::TiktokItem.new('https://www.tiktok.com/abcdef').parse_data(doc)
+
+    assert_equal '', data['external_id']
+    assert_equal '', data['username']
+  end
+
+  test "adds 'Tag: ' to title when it matches TIKTOK_TAG_URL" do
+    WebMock.stub_request(:any, /tiktok.com\/oembed\?url=/).to_return(status: 200, body: oembed)
+    
+    data = Parser::TiktokItem.new('https://www.tiktok.com/tag/abcdef').parse_data(doc)
+
+    assert_match "Tag: abcdef", data['title']
   end
 
   test "should set profile defaults upon error" do
