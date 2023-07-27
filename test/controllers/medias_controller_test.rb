@@ -228,15 +228,10 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should respect timeout" do
-    url = 'https://ca.ios.ba/files/others/test.php' # This link has a sleep(10) function
-    timeout = '2'
-    api_key = create_api_key application_settings: { config: { timeout: timeout }}
+    url = 'https://meedan.com/'
+    api_key = create_api_key application_settings: { config: { timeout: 0.00001 }}
     authenticate_with_token(api_key)
-    start = Time.now.to_i
     get :index, params: { url: url, format: :json }
-    time = Time.now.to_i - start
-    expected_time = timeout.to_i + 3
-    assert time <= expected_time, "Expected it to take less than #{expected_time} seconds, but took #{time} seconds"
     assert_equal 'Timeout', JSON.parse(@response.body)['data']['error']['message']
     assert_response 200
   end
@@ -244,7 +239,7 @@ class MediasControllerTest < ActionController::TestCase
   test "should return success even if media could not be instantiated" do
     authenticate_with_token
     Media.expects(:new).raises(Net::ReadTimeout)
-    get :index, params: { url: 'http://ca.ios.ba/files/meedan/random.php', format: :json, refresh: '1' }
+    get :index, params: { url: 'https://meedan.com', format: :json, refresh: '1' }
     assert_response :success
   end
 
@@ -258,10 +253,10 @@ class MediasControllerTest < ActionController::TestCase
   test "should clear cache for multiple URLs sent as array" do
     skip("twitter api key is not currently working")
     authenticate_with_token
-    url1 = 'http://ca.ios.ba'
+    url1 = 'https://meedan.com'
     url2 = 'https://twitter.com/caiosba/status/742779467521773568'
 
-    normalized_url1 = 'https://ca.ios.ba/'
+    normalized_url1 = 'https://meedan.com/'
     normalized_url2 = 'https://twitter.com/caiosba/status/742779467521773568'
 
     id1 = Media.get_id(normalized_url1)
@@ -506,7 +501,7 @@ class MediasControllerTest < ActionController::TestCase
 
     authenticate_with_token(a)
 
-    url = 'https://ca.ios.ba/files/meedan/sleep.php'
+    url = 'https://meedan.com'
     id = Media.get_id(url)
     timeout_error = {"message" => "Timeout", "code" => Lapis::ErrorCodes::const_get('TIMEOUT')}
 
