@@ -2,7 +2,6 @@ require 'json'
 require 'net/http'
 
 class TwitterClient
-  # tweet_id = "1684310862842982400"
   BASE_URI = "https://api.twitter.com/2/"
 
   def self.tweet_lookup(tweet_id)
@@ -38,19 +37,25 @@ class TwitterClient
   private
 
   def self.get(path, params)
-    uri = URI(URI.join(BASE_URI, path))
-    uri.query = Rack::Utils.build_query(params)
-    
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
+      uri = URI(URI.join(BASE_URI, path))
+      uri.query = Rack::Utils.build_query(params)
+      
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
 
-    headers = {
-      "Authorization": "Bearer #{PenderConfig.get('twitter_bearer_token')}",
-    }
-    
-    request = Net::HTTP::Get.new(uri.request_uri, headers)
+      headers = {
+        "Authorization": "Bearer #{PenderConfig.get('twitter_bearer_token')}",
+      }
+      
+      request = Net::HTTP::Get.new(uri.request_uri, headers)
 
-    response = http.request(request)
-    JSON.parse(response.body) 
+    begin
+      response = http.request(request)
+      JSON.parse(response.body) 
+    rescue Net::HTTPExceptions => e
+      raise Pender::Exception::RetryLater, "(#{response.code}) #{response.message}"
+    rescue JSON::ParserError => e
+      Rails.logger.warn level: 'WARN', message: '[Parser] Could not get `twitter` data', twitter_url: uri, error_class: error.class, response_code: response.code, response_body: response.body
     end
+  end
 end
