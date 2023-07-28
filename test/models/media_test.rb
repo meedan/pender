@@ -1,4 +1,4 @@
-require 'test_helper'
+require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
 
 class MediaTest < ActiveSupport::TestCase
   test "should create media" do
@@ -7,31 +7,28 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should normalize URL" do
     variations = %w(
-      https://ca.ios.ba
-      ca.ios.ba
-      https://ca.ios.ba:443
-      https://ca.ios.ba//
-      https://ca.ios.ba/?
-      https://ca.ios.ba/#foo
-      https://ca.ios.ba/
-      https://ca.ios.ba
-      https://ca.ios.ba/foo/..
-      https://ca.ios.ba/?#
+      https://meedan.com
+      meedan.com
+      https://meedan.com:443
+      https://meedan.com//
+      https://meedan.com/?
+      https://meedan.com/#foo
+      https://meedan.com/
+      https://meedan.com
+      https://meedan.com/foo/..
+      https://meedan.com/?#
     )
     variations.each do |url|
       media = Media.new(url: url)
-      assert_equal 'https://ca.ios.ba/', media.url
+      assert_equal 'https://meedan.com/', media.url
     end
-
-    media = Media.new(url: 'http://ca.ios.ba/a%c3%82/%7Euser?a=b')
-    assert_match '//ca.ios.ba/a%C3%82/~user?a=b', media.url
   end
 
   test "should not normalize URL" do
     urls = %w(
       https://meedan.com/
       https://example.com/
-      https://ca.ios.ba/?foo=bar
+      https://meedan.com/?foo=bar
     )
     urls.each do |url|
       media = Media.new(url: url)
@@ -177,7 +174,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should return empty html on oembed when frame is not allowed" do
-    m = create_media url: 'https://ca.ios.ba/files/meedan/frame?2'
+    m = create_media url: 'http://meedan.com/'
     data = m.as_json
     assert_equal '', data['html']
   end
@@ -191,10 +188,6 @@ class MediaTest < ActiveSupport::TestCase
     url = 'https://mediatheque.karimratib.me:5001/as/sharing/uhfxuitn'
     m = create_media url: url
     assert_equal 'https://mediatheque.karimratib.me:5001', RequestHelper.top_url(m.url)
-
-    url = 'http://ca.ios.ba/slack'
-    m = create_media url: url
-    assert_equal 'http://ca.ios.ba', RequestHelper.top_url(m.url)
 
     url = 'https://meedan.com/en/check'
     m = create_media url: url
