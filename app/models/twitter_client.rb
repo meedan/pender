@@ -14,7 +14,7 @@ class TwitterClient
       "media.fields": "url",
     }
 
-    get "tweets?#{Rack::Utils.build_nested_query(params)}"
+    get "tweets", params
   end
 
   def self.user_lookup_by_username(username)
@@ -23,7 +23,7 @@ class TwitterClient
       "user.fields": "profile_image_url,name,username,description,created_at,url",
     }
 
-    get "users/by?#{Rack::Utils.build_nested_query(params)}"
+    get "users/by", params
   end
 
   def self.user_lookup_by_id(id)
@@ -32,20 +32,20 @@ class TwitterClient
       "user.fields": "profile_image_url,name,username,description,created_at,url",
     }
 
-    get "users?#{Rack::Utils.build_nested_query(params)}"
+    get "users", params
   end
 
   private
 
-  def self.get(path)
+  def self.get(path, params)
     uri = URI(URI.join(BASE_URI, path))
+    uri.query = Rack::Utils.build_query(params)
     
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
 
     headers = {
       "Authorization": "Bearer #{PenderConfig.get('twitter_bearer_token')}",
-      "Content-Type": "application/json"
     }
     
     request = Net::HTTP::Get.new(uri.request_uri, headers)
