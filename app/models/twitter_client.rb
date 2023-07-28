@@ -5,8 +5,8 @@ class TwitterClient
   # tweet_ids = "1684310862842982400"
   BASE_URI = "https://api.twitter.com/2/"
 
-  def tweet_lookup(tweet_id)
-    get "/tweets?ids=#{tweet_id}&tweet.fields=author_id,created_at,text&expansions=author_id,attachments.media_keys&user.fields=profile_image_url,username,url&media.fields=url"
+  def self.tweet_lookup(tweet_id)
+    get "tweets?ids=#{tweet_id}&tweet.fields=author_id,created_at,text&expansions=author_id,attachments.media_keys&user.fields=profile_image_url,username,url&media.fields=url"
   end
 
   def user_lookup_by_username(username)
@@ -14,15 +14,16 @@ class TwitterClient
   
   private
 
-  def get(path)
-    uri = RequestHelper.parse_url("#{BASE_URI}#{path}")
+  def self.get(path)
+    uri = URI(URI.join(BASE_URI, path))
     
-    http = Net::HTTP.new(uri.host, uri.inferred_port)
-    http.use_ssl = uri.scheme == "https"
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
 
     headers = {
       # "User-Agent": "v2TweetLookupRuby",
-      "Authorization": "Bearer #{PenderConfig.get('twitter_bearer_token')}"
+      "Authorization": "Bearer #{PenderConfig.get('twitter_bearer_token')}",
+      "Content-Type": "application/json"
     }
     
     request = Net::HTTP::Get.new(uri.request_uri, headers)
