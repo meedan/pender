@@ -11,15 +11,30 @@ class TwitterClient
       "tweet.fields": "author_id,created_at,text",
       "expansions": "author_id,attachments.media_keys",
       "user.fields": "profile_image_url,username,url",
-      "media.fields": "url"
+      "media.fields": "url",
     }
 
     get "tweets?#{Rack::Utils.build_nested_query(params)}"
   end
 
-  def user_lookup_by_username(username)
+  def self.user_lookup_by_username(username)
+    params = {
+      "usernames": username,
+      "user.fields": "profile_image_url,name,username,description,created_at,url",
+    }
+
+    get "users/by?#{Rack::Utils.build_nested_query(params)}"
   end
-  
+
+  def self.user_lookup_by_id(id)
+    params = {
+      "ids": id,
+      "user.fields": "profile_image_url,name,username,description,created_at,url",
+    }
+
+    get "users?#{Rack::Utils.build_nested_query(params)}"
+  end
+
   private
 
   def self.get(path)
