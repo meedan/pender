@@ -25,20 +25,20 @@ module Parser
       
       @parsed_data['raw']['api'] = {}
       handle_twitter_exceptions do
-        @parsed_data['raw']['api'] = twitter_client.status(id, tweet_mode: 'extended').as_json
+        @parsed_data['raw']['api'] = TwitterClient.tweet_lookup(id)
       end
       @parsed_data[:error] = parsed_data.dig(:raw, :api, :error)
       @parsed_data.merge!({
         external_id: id,
         username: '@' + user,
-        title: stripped_title(parsed_data),
-        description: parsed_data.dig('raw', 'api', 'text') || parsed_data.dig('raw', 'api', 'full_text'),
-        picture: picture_url(parsed_data),
-        author_picture: author_picture_url(parsed_data),
-        published_at: parsed_data.dig('raw', 'api', 'created_at'),
+        title: parsed_data['raw']['api']['data'][0]['text'] || stripped_title(parsed_data),
+        description: parsed_data['raw']['api']['data'][0]['text'] || parsed_data.dig('raw', 'api', 'text') || parsed_data.dig('raw', 'api', 'full_text'),
+        picture: parsed_data['raw']['api']['description'] || picture_url(parsed_data),
+        author_picture: parsed_data['raw']['api']['includes']['users'][0]['profile_image_url'] || author_picture_url(parsed_data),
+        published_at: parsed_data['raw']['api']['data'][0]['created_at'] || parsed_data.dig('raw', 'api', 'created_at'),
         html: html_for_twitter_item(parsed_data, url),
-        author_name: parsed_data.dig('raw', 'api', 'user', 'name'),
-        author_url: twitter_author_url(user) || RequestHelper.top_url(url)
+        author_name: parsed_data['raw']['api']['includes']['users'][0]['name'] || parsed_data.dig('raw', 'api', 'user', 'name'),
+        author_url: parsed_data['raw']['api']['includes']['users'][0]['url'] || twitter_author_url(user) || RequestHelper.top_url(url)
       })
       parsed_data
     end

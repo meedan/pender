@@ -73,15 +73,6 @@ module Parser
       raise NotImplementedError.new("Parser subclasses must implement parse_data_for_parser")
     end
 
-    def twitter_client
-      @twitter_client ||= Twitter::REST::Client.new do |config|
-        config.consumer_key        = PenderConfig.get('twitter_consumer_key')
-        config.consumer_secret     = PenderConfig.get('twitter_consumer_secret')
-        config.access_token        = PenderConfig.get('twitter_access_token')
-        config.access_token_secret = PenderConfig.get('twitter_access_token_secret')
-      end
-    end
-
     def ignore_url?(url)
       self.ignored_urls.each do |item|
         if url.match?(item[:pattern])
@@ -167,7 +158,7 @@ module Parser
     def twitter_author_url(username)
       return if bad_username?(username)
       begin
-        twitter_client.user(username)&.url&.to_s
+        TwitterClient.user_lookup_by_username(username)&.url&.to_s
       rescue Twitter::Error => e
         PenderSentry.notify(e, url: url, username: username)
         Rails.logger.warn level: 'WARN', message: "[Parser] #{e.message}", username: username, error_class: e.class
