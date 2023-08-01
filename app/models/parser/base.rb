@@ -1,4 +1,5 @@
 require 'lapis/error_codes'
+include ProviderTwitter
 
 module Parser
   class Base
@@ -157,13 +158,7 @@ module Parser
 
     def twitter_author_url(username)
       return if bad_username?(username)
-      begin
-        TwitterClient.user_lookup_by_username(username)&.url&.to_s
-      rescue Twitter::Error => e
-        PenderSentry.notify(e, url: url, username: username)
-        Rails.logger.warn level: 'WARN', message: "[Parser] #{e.message}", username: username, error_class: e.class
-        nil
-      end
+        "https://twitter.com/" + username
     end
 
     def bad_username?(value)
