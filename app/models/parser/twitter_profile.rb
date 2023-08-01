@@ -22,13 +22,13 @@ module Parser
       @url = replace_subdomain_pattern(url)
       username = url.match(/^https?:\/\/(www\.)?twitter\.com\/([^\/]+)$/)[2]
 
-      @parsed_data[:raw][:api] = {}
-      handle_twitter_exceptions do
-        @parsed_data[:raw][:api] = user_lookup_by_username(username)
-        picture_url = parsed_data[:raw][:api]['data'][0]['profile_image_url'].gsub('_normal', '')
-        set_data_field('picture', picture_url)
-        set_data_field('author_picture', picture_url)
-      end
+      @parsed_data[:raw][:api] = {}      
+      @parsed_data[:raw][:api] = user_lookup_by_username(username)
+      
+      picture_url = parsed_data[:raw][:api]['data'][0]['profile_image_url'].gsub('_normal', '')
+      set_data_field('picture', picture_url)
+      set_data_field('author_picture', picture_url)
+
       @parsed_data[:error] = parsed_data.dig(:raw, :api, :error)
       username = parsed_data['raw']['api']['data'][0]['username']
       @parsed_data.merge!({

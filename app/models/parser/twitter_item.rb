@@ -24,38 +24,26 @@ module Parser
       user, id = parts['user'], parts['id']
       
       @parsed_data['raw']['api'] = {}
-      handle_twitter_exceptions do
-        @parsed_data['raw']['api'] = tweet_lookup(id)
-      end
+      @parsed_data['raw']['api'] = tweet_lookup(id)
+
       @parsed_data[:error] = parsed_data.dig(:raw, :api, :error)
       @parsed_data.merge!({
         external_id: id,
         username: '@' + user,
-        title: parsed_data['raw']['api']['data'][0]['text'] || stripped_title(parsed_data),
-        description: parsed_data['raw']['api']['data'][0]['text'] || parsed_data.dig('raw', 'api', 'text') || parsed_data.dig('raw', 'api', 'full_text'),
-        picture: parsed_data['raw']['api']['description'] || picture_url(parsed_data),
-        author_picture: parsed_data['raw']['api']['includes']['users'][0]['profile_image_url'] || author_picture_url(parsed_data),
-        published_at: parsed_data['raw']['api']['data'][0]['created_at'] || parsed_data.dig('raw', 'api', 'created_at'),
+        title: parsed_data['raw']['api']['data'][0]['text'],
+        description: parsed_data['raw']['api']['data'][0]['text'],
+        picture: parsed_data['raw']['api']['includes']['media'][0]['url'],
+        author_picture: parsed_data['raw']['api']['includes']['users'][0]['profile_image_url'].gsub('_normal', ''),
+        published_at: parsed_data['raw']['api']['data'][0]['created_at'],
         html: html_for_twitter_item(parsed_data, url),
-        author_name: parsed_data['raw']['api']['includes']['users'][0]['name'] || parsed_data.dig('raw', 'api', 'user', 'name'),
-        author_url: parsed_data['raw']['api']['includes']['users'][0]['url'] || twitter_author_url(user) || RequestHelper.top_url(url)
+        author_name: parsed_data['raw']['api']['includes']['users'][0]['name'],
+        author_url: author_url(url, user) || parsed_data['raw']['api']['includes']['users'][0]['url']
       })
       parsed_data
     end
 
-    def stripped_title(data)
-      title = (data.dig('raw', 'api', 'text') || data.dig('raw', 'api', 'full_text'))
-      title.gsub(/\s+/, ' ') if title
-    end
-
-    def author_picture_url(data)
-      picture_url = data.dig('raw', 'api', 'user', 'profile_image_url_https')
-      picture_url.gsub('_normal', '') if picture_url
-    end
-
-    def picture_url(data)
-      item_media = data.dig('raw', 'api', 'entities', 'media')
-      (item_media.dig(0, 'media_url_https') || item_media.dig(0, 'media_url')) if item_media
+    def author_url(url, user)
+      URI(url).host + '/' + user
     end
 
     def html_for_twitter_item(data, url)
