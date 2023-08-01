@@ -24,7 +24,7 @@ module Parser
 
       @parsed_data[:raw][:api] = {}
       handle_twitter_exceptions do
-        @parsed_data[:raw][:api] = TwitterClient.user_lookup_by_username(username)
+        @parsed_data[:raw][:api] = user_lookup_by_username(username)
         picture_url = parsed_data[:raw][:api]['data'][0]['profile_image_url'].gsub('_normal', '')
         set_data_field('picture', picture_url)
         set_data_field('author_picture', picture_url)

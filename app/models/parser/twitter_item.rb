@@ -25,7 +25,7 @@ module Parser
       
       @parsed_data['raw']['api'] = {}
       handle_twitter_exceptions do
-        @parsed_data['raw']['api'] = TwitterClient.tweet_lookup(id)
+        @parsed_data['raw']['api'] = tweet_lookup(id)
       end
       @parsed_data[:error] = parsed_data.dig(:raw, :api, :error)
       @parsed_data.merge!({
