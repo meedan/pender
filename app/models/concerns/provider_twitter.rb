@@ -61,12 +61,6 @@ module ProviderTwitter
       raise Pender::Exception::RetryLater, "(#{response.code}) #{response.message}"
     rescue JSON::ParserError => e
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not get `twitter` data', twitter_url: uri, error_class: error.class, response_code: response.code, response_body: response.body
-    end
-  end
-
-  def handle_twitter_exceptions
-    begin
-      yield
     rescue Twitter::Error::TooManyRequests => e
       raise Pender::Exception::ApiLimitReached.new(e.rate_limit.reset_in)
     rescue Twitter::Error => error
@@ -74,7 +68,7 @@ module ProviderTwitter
       @parsed_data[:raw][:api] = { error: { message: "#{error.class}: #{error.code} #{error.message}", code: Lapis::ErrorCodes::const_get('INVALID_VALUE') }}
       Rails.logger.warn level: 'WARN', message: "[Parser] #{error.message}", url: url, code: error.code, error_class: error.class
       return
-    end
+  end
   end
 
   def replace_subdomain_pattern(original_url)
