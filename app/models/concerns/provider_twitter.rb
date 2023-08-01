@@ -3,6 +3,10 @@ require 'pender/exception'
 module ProviderTwitter
   extend ActiveSupport::Concern
 
+  class ApiError < StandardError; end
+  class ApiResponseCodeError < StandardError; end
+  class ApiAuthenticationError < StandardError; end
+
   BASE_URI = "https://api.twitter.com/2/"
 
   def oembed_url(_ = nil)
@@ -56,19 +60,13 @@ module ProviderTwitter
 
     begin
       response = http.request(request)
+      raise ApiResponseCodeError.new("#{response.class}: #{response.message}") unless (RequestHelper::REDIRECT_HTTP_CODES + ['200']).include?(response.code)
       JSON.parse(response.body) 
-    rescue Net::HTTPExceptions => e
-      raise Pender::Exception::RetryLater, "(#{response.code}) #{response.message}"
-    rescue JSON::ParserError => e
-      Rails.logger.warn level: 'WARN', message: '[Parser] Could not get `twitter` data', twitter_url: uri, error_class: error.class, response_code: response.code, response_body: response.body
-    rescue Twitter::Error::TooManyRequests => e
-      raise Pender::Exception::ApiLimitReached.new(e.rate_limit.reset_in)
-    rescue Twitter::Error => error
-      PenderSentry.notify(error, url: url)
-      @parsed_data[:raw][:api] = { error: { message: "#{error.class}: #{error.code} #{error.message}", code: Lapis::ErrorCodes::const_get('INVALID_VALUE') }}
-      Rails.logger.warn level: 'WARN', message: "[Parser] #{error.message}", url: url, code: error.code, error_class: error.class
-      return
-  end
+    rescue JSON::ParserError, ApiResponseCodeError, ApiAuthenticationError => e
+      raise ApiError.new("#{e.class}: #{e.message}")
+      PenderSentry.notify(e, url: url)
+      @parsed_data[:raw][:api] = { error: { message: "#{error.class}: #{error.code} #{error.message}", code: Lapis::ErrorCodes::const_get('INVALID_VALUE') }}    
+    end
   end
 
   def replace_subdomain_pattern(original_url)
