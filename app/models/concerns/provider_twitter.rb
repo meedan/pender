@@ -59,7 +59,7 @@ module ProviderTwitter
 
     begin
       response = http.request(request)
-      raise ApiResponseCodeError.new("#{response.class}: #{response.code} - #{response.message}") unless response.code.to_i < 400
+      raise ApiResponseCodeError.new("#{response.class}: #{response.code} #{response.message} - #{response.body}") unless response.code.to_i < 400
       JSON.parse(response.body) 
     rescue StandardError => e
       raise ApiError.new("#{e.class}: #{e.message}")
