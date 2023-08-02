@@ -1,5 +1,4 @@
 require 'lapis/error_codes'
-include ProviderTwitter
 
 module Parser
   class Base
@@ -158,7 +157,7 @@ module Parser
 
     def twitter_author_url(username)
       return if bad_username?(username)
-        "https://twitter.com/" + username
+        "https://twitter.com/" + username[1..]
     end
 
     def bad_username?(value)
