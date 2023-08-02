@@ -1,6 +1,6 @@
 language: minimal
 before_install:
--  openssl aes-256-cbc -K $encrypted_3491736328a2_key -iv $encrypted_3491736328a2_iv -in config/config.yml.enc -out ./config.yml -d
+-  openssl aes-256-cbc -K $encrypted_3491736328a2_key -iv $encrypted_3491736328a2_iv -in config/config.yml.enc -out config/config.yml -d
 - cp config/database.yml.example config/database.yml
 - cp config/sidekiq.yml.example config/sidekiq.yml
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
