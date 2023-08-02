@@ -5,7 +5,6 @@ module ProviderTwitter
 
   class ApiError < StandardError; end
   class ApiResponseCodeError < StandardError; end
-  class ApiAuthenticationError < StandardError; end
 
   BASE_URI = "https://api.twitter.com/2/"
 
@@ -60,9 +59,9 @@ module ProviderTwitter
 
     begin
       response = http.request(request)
-      raise ApiResponseCodeError.new("#{response.class}: #{response.message}") unless (RequestHelper::REDIRECT_HTTP_CODES + ['200']).include?(response.code)
+      raise ApiResponseCodeError.new("#{response.class}: #{response.code} - #{response.message}") unless response.code.to_i < 400
       JSON.parse(response.body) 
-    rescue JSON::ParserError, ApiResponseCodeError, ApiAuthenticationError => e
+    rescue StandardError => e
       raise ApiError.new("#{e.class}: #{e.message}")
       PenderSentry.notify(e, url: url)
       @parsed_data[:raw][:api] = { error: { message: "#{error.class}: #{error.code} #{error.message}", code: Lapis::ErrorCodes::const_get('INVALID_VALUE') }}    
