@@ -64,7 +64,7 @@ module ProviderTwitter
     rescue StandardError => e
       raise ApiError.new("#{e.class}: #{e.message}")
       PenderSentry.notify(e, url: url)
-      @parsed_data[:raw][:api] = { error: { message: "#{error.class}: #{error.code} #{error.message}", code: Lapis::ErrorCodes::const_get('INVALID_VALUE') }}    
+      @parsed_data[:raw][:api] = { error: { message: "#{e.class}: #{e.code} #{e.message}", code: Lapis::ErrorCodes::const_get('INVALID_VALUE') }}    
     end
   end
 
