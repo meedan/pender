@@ -32,18 +32,23 @@ module Parser
         username: '@' + user,
         title: parsed_data['raw']['api']['data'][0]['text'],
         description: parsed_data['raw']['api']['data'][0]['text'],
-        picture: parsed_data['raw']['api']['includes']['media'][0]['url'],
+        picture: get_twitter_item_picture(parsed_data),
         author_picture: parsed_data['raw']['api']['includes']['users'][0]['profile_image_url'].gsub('_normal', ''),
         published_at: parsed_data['raw']['api']['data'][0]['created_at'],
         html: html_for_twitter_item(parsed_data, url),
         author_name: parsed_data['raw']['api']['includes']['users'][0]['name'],
-        author_url: author_url(url, user) || parsed_data['raw']['api']['includes']['users'][0]['url']
+        author_url: get_author_url(url, user) || parsed_data['raw']['api']['includes']['users'][0]['url']
       })
       parsed_data
     end
 
-    def author_url(url, user)
+    def get_author_url(url, user)
       URI(url).host + '/' + user
+    end
+
+    def get_twitter_item_picture(parsed_data)
+      media = parsed_data['raw']['api']['includes']['media']
+      media.nil? ? '' : media[0]['url']
     end
 
     def html_for_twitter_item(data, url)
