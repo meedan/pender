@@ -26,18 +26,39 @@ module Parser
       @parsed_data['raw']['api'] = {}
       @parsed_data['raw']['api'] = tweet_lookup(id)
 
-      @parsed_data[:error] = parsed_data.dig(:raw, :api, :error)
+      @parsed_data[:error] = parsed_data['raw']['api']['errors']
+
+      if @parsed_data[:error] 
+        title = ''
+        description = ''
+        picture = ''
+        author_picture = ''
+        published_at = ''
+        html = ''
+        author_name = user
+        author_url = get_author_url(url, user) || RequestHelper.top_url(url)
+      elsif @parsed_data[:error].nil?
+        title = parsed_data['raw']['api']['data'][0]['text']
+        description = parsed_data['raw']['api']['data'][0]['text']
+        picture = get_twitter_item_picture(parsed_data)
+        author_picture = parsed_data['raw']['api']['includes']['users'][0]['profile_image_url'].gsub('_normal', '')
+        published_at = parsed_data['raw']['api']['data'][0]['created_at']
+        html = html_for_twitter_item(url)
+        author_name = parsed_data['raw']['api']['includes']['users'][0]['name']
+        author_url = get_author_url(url, user) || parsed_data['raw']['api']['includes']['users'][0]['url'] || RequestHelper.top_url(url)
+      end
+ 
       @parsed_data.merge!({
         external_id: id,
         username: '@' + user,
-        title: parsed_data['raw']['api']['data'][0]['text'],
-        description: parsed_data['raw']['api']['data'][0]['text'],
-        picture: get_twitter_item_picture(parsed_data),
-        author_picture: parsed_data['raw']['api']['includes']['users'][0]['profile_image_url'].gsub('_normal', ''),
-        published_at: parsed_data['raw']['api']['data'][0]['created_at'],
-        html: html_for_twitter_item(parsed_data, url),
-        author_name: parsed_data['raw']['api']['includes']['users'][0]['name'],
-        author_url: get_author_url(url, user) || parsed_data['raw']['api']['includes']['users'][0]['url']
+        title: title,
+        description: description,
+        picture: picture,
+        author_picture: author_picture,
+        published_at: published_at,
+        html: html,
+        author_name: author_name,
+        author_url: author_url
       })
       parsed_data
     end
@@ -51,8 +72,7 @@ module Parser
       media.nil? ? '' : media[0]['url']
     end
 
-    def html_for_twitter_item(data, url)
-      return '' unless data.dig(:raw, :api, :error).blank?
+    def html_for_twitter_item(url)
       '<blockquote class="twitter-tweet">' +
       '<a href="' + url + '"></a>' +
       '</blockquote>' +
