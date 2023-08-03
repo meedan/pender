@@ -69,7 +69,7 @@ module Parser
 
     def get_twitter_item_picture(parsed_data)
       media = parsed_data['raw']['api']['includes']['media']
-      media.nil? ? '' : media[0]['url']
+      media.nil? ? nil : media[0]['url']
     end
 
     def html_for_twitter_item(url)
