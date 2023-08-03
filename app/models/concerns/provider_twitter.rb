@@ -62,8 +62,8 @@ module ProviderTwitter
       raise ApiResponseCodeError.new("#{response.class}: #{response.code} #{response.message} - #{response.body}") unless response.code.to_i < 400
       JSON.parse(response.body) 
     rescue StandardError => e
-      raise ApiError.new("#{e.class}: #{e.code} #{e.message} - #{e.body}")
       PenderSentry.notify(e, url: url)
+      raise ApiError.new("#{e.class}: #{e.message}")
     end
   end
 

@@ -2,7 +2,7 @@ version: "2.2"
 volumes:
   redis:
   minio:
-  postgres12:
+  postgres13:
 services:
   redis:
     image: redis:5
@@ -21,7 +21,7 @@ services:
       MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
       MINIO_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
   postgres:
-    image: postgres:12-bullseye
+    image: postgres:13-buster
     ports:
       - "5432:5432"
     environment:

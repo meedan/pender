@@ -19,8 +19,10 @@ module Parser
     # Main function for class
     def parse_data_for_parser(_doc, _original_url, _jsonld_array)
       @url.gsub!(/(%23|#)!\//, '')
+      @url.gsub!(/\s/, '')
       @url = replace_subdomain_pattern(url)
       parts = url.match(TWITTER_ITEM_URL)
+      
       user, id = parts['user'], parts['id']
       
       @parsed_data['raw']['api'] = {}
@@ -36,16 +38,16 @@ module Parser
         published_at = ''
         html = ''
         author_name = user
-        author_url = get_author_url(url, user) || RequestHelper.top_url(url)
+        author_url = get_author_url(user)
       elsif @parsed_data[:error].nil?
-        title = parsed_data['raw']['api']['data'][0]['text']
-        description = parsed_data['raw']['api']['data'][0]['text']
+        title = parsed_data['raw']['api']['data'][0]['text'].squish
+        description = title
         picture = get_twitter_item_picture(parsed_data)
         author_picture = parsed_data['raw']['api']['includes']['users'][0]['profile_image_url'].gsub('_normal', '')
         published_at = parsed_data['raw']['api']['data'][0]['created_at']
         html = html_for_twitter_item(url)
         author_name = parsed_data['raw']['api']['includes']['users'][0]['name']
-        author_url = get_author_url(url, user) || parsed_data['raw']['api']['includes']['users'][0]['url'] || RequestHelper.top_url(url)
+        author_url = get_author_url(user) || parsed_data['raw']['api']['includes']['users'][0]['url'] || RequestHelper.top_url(url)
       end
  
       @parsed_data.merge!({
@@ -63,8 +65,8 @@ module Parser
       parsed_data
     end
 
-    def get_author_url(url, user)
-      URI(url).host + '/' + user
+    def get_author_url(user)
+      'https://twitter.com/' + user
     end
 
     def get_twitter_item_picture(parsed_data)

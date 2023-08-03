@@ -1,67 +1,5 @@
 require 'test_helper'
 
-class TwitterItemIntegrationTest < ActiveSupport::TestCase
-  test "should parse tweet" do
-    skip("twitter api key is not currently working")
-    m = create_media url: 'https://twitter.com/caiosba/status/742779467521773568'
-    data = m.as_json
-    assert_match 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
-    assert_match 'Caio Almeida', data['author_name']
-    assert_match '@caiosba', data['username']
-    assert_nil data['picture']
-    assert_not_nil data['author_picture']
-  end
-
-  test "should parse valid link with spaces" do
-    skip("twitter api key is not currently working")
-    m = create_media url: ' https://twitter.com/caiosba/status/742779467521773568 '
-    data = m.as_json
-    assert_match 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
-    assert_match 'Caio Almeida', data['author_name']
-    assert_match '@caiosba', data['username']
-    assert_nil data['picture']
-    assert_not_nil data['author_picture']
-  end
-
-  test "should fill in html when html parsing fails but API works" do
-    skip("twitter api key is not currently working")
-    url = 'https://twitter.com/codinghorror/status/1276934067015974912'
-    OpenURI.stubs(:open_uri).raises(OpenURI::HTTPError.new('','429 Too Many Requests'))
-    m = create_media url: url
-    data = m.as_json
-    assert_match /twitter-tweet.*#{url}/, data[:html]
-  end
-  
-  test "should not parse a twitter post when passing the twitter api key or subkey missing" do
-    skip("this might be broke befcause of twitter api changes - needs fixing")
-    key = create_api_key application_settings: { config: { twitter_consumer_key: 'consumer_key', twitter_consumer_secret: '' } }
-    m = create_media url: 'https://twitter.com/cal_fire/status/919029734847025152', key: key
-    assert_equal 'consumer_key', PenderConfig.get(:twitter_consumer_key)
-    assert_equal '', PenderConfig.get(:twitter_consumer_secret)
-    data = m.as_json
-    assert_equal m.url, data['title']
-    assert_match "Twitter::Error::Unauthorized", data['raw']['api']['error']['message']
-    PenderConfig.current = nil
-
-    key = create_api_key application_settings: { config: { twitter_consumer_key: '' } }
-    m = create_media url: 'https://twitter.com/cal_fire/status/919029734847025152' , key: key
-    assert_equal '', PenderConfig.get(:twitter_consumer_key)
-    data = m.as_json
-    assert_equal m.url, data['title']
-    assert_match "Twitter::Error::BadRequest", data['raw']['api']['error']['message']
-  end
-
-  test "should store oembed data of a twitter profile" do
-    skip("twitter api key is not currently working")
-    m = create_media url: 'https://twitter.com/meedan'
-    data = m.as_json
-
-    assert data['raw']['oembed'].is_a? Hash
-    assert_equal "https:\/\/twitter.com", data['raw']['oembed']['provider_url']
-    assert_equal "Twitter", data['raw']['oembed']['provider_name']
-  end
-end
-
 class TwitterItemUnitTest < ActiveSupport::TestCase
   def setup
     isolated_setup
@@ -71,22 +9,32 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     isolated_teardown
   end
 
-  def fake_twitter_user
-    return @fake_twitter_user unless @fake_twitter_user.blank?
-    # https://github.com/sferik/twitter/blob/master/lib/twitter/user.rb
-    api_response = response_fixture_from_file('twitter-profile-response.json', parse_as: :json)
-    @fake_twitter_user = Twitter::User.new(api_response.with_indifferent_access)
-  end
-
-  def fake_tweet
-    return @fake_tweet unless @fake_tweet.blank?
-    # https://github.com/sferik/twitter/blob/master/lib/twitter/tweet.rb
-    api_response = response_fixture_from_file('twitter-item-response.json', parse_as: :json)
-    @fake_tweet = Twitter::Tweet.new(api_response.with_indifferent_access)
-  end
-
   def empty_doc
     Nokogiri::HTML('')
+  end
+
+  def query
+    params = {
+      "ids": "1111111111111111111",
+      "tweet.fields": "author_id,created_at,text",
+      "expansions": "author_id,attachments.media_keys",
+      "user.fields": "profile_image_url,username,url",
+      "media.fields": "url",
+    }
+    Rack::Utils.build_query(params)
+  end
+
+  def twitter_item_response_success
+    JSON.parse(response_fixture_from_file('twitter-item-response-success.json'))
+  end
+
+  def twitter_item_response_error
+    JSON.parse(response_fixture_from_file('twitter-item-response-error.json'))
+  end
+
+  def stub_tweet_lookup
+    Parser::TwitterItem.any_instance.stubs(:tweet_lookup)
+      .with('1111111111111111111')
   end
 
   test "returns provider and type" do
@@ -123,171 +71,112 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     assert_equal true, match_seven.is_a?(Parser::TwitterItem)
   end
 
-  test "assigns values to hash from the API response" do
-    skip("this might be broke befcause of twitter api changes - needs fixing")
-    Twitter::REST::Client.any_instance.stubs(:status).returns(fake_tweet)
-    Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
+  test "it makes a get request to the tweet lookup endpoint successfully" do
+    stub_configs({'twitter_bearer_token' => 'test' })
+    
+    WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
+      .with(query: query)
+      .with(headers: { "Authorization": "Bearer test" })
+      .to_return(status: 200, body: response_fixture_from_file('twitter-item-response-success.json'))
 
-    data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data(empty_doc)
+    data = Parser::TwitterItem.new('https://m.twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
+    
+    assert_equal '1111111111111111111', data['external_id']
+    assert_equal '@fake_user', data['username']
+  end
 
-    assert_equal '123456789', data['external_id']
-    assert_equal '@fakeaccount', data['username']
-    assert_match /I'll be talking in @rubyconfbr this year!/, data['title']
-    assert_match /I'll be talking in @rubyconfbr this year!/, data['description']
-    assert_nil data['picture']
-    assert_match /pbs.twimg.com\/profile_images\/1217299193217388544\/znpkNtDr.jpg/, data['author_picture']
-    assert_match /<blockquote class="twitter-tweet">/, data['html']    
-    assert_match 'Caio Almeida', data['author_name']
-    assert_match /twitter.com\/TEDTalks/, data['author_url']
-    assert_not_nil data['published_at']
+  test "it makes a get request to the tweet lookup endpoint and raises an error when 401 is returned" do
+    stub_configs({'twitter_bearer_token' => 'test' })
 
-    assert_nil data['error']
+    WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
+      .with(query: query)
+      .with(headers: { "Authorization": "Bearer test" })
+      .to_return(status: 401)
+
+    assert_raises ProviderTwitter::ApiError do
+      Parser::TwitterItem.new('https://m.twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
+    end
+  end
+
+  test "it makes a get request to the tweet lookup endpoint, raises an error when 500 is returned and notifies sentry" do
+    stub_configs({'twitter_bearer_token' => 'test' })
+
+    WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
+      .with(query: query)
+      .with(headers: { "Authorization": "Bearer test" })
+      .to_return(status: 500, body: response_fixture_from_file('twitter-item-response-error.json'))
+
+      sentry_call_count = 0
+      arguments_checker = Proc.new do |e|
+        sentry_call_count += 1
+      end
+      
+      PenderSentry.stub(:notify, arguments_checker) do
+        assert_raises ProviderTwitter::ApiError do
+          Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
+        end
+        assert_equal 1, sentry_call_count
+      end        
   end
 
   test "should store data of post returned by twitter API" do
-    skip("this might be broke befcause of twitter api changes - needs fixing")
-    Twitter::REST::Client.any_instance.stubs(:status).returns(fake_tweet)
-    Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
+    stub_tweet_lookup.returns(twitter_item_response_success)
 
-    data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data(empty_doc)
+    data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
 
     assert data['raw']['api'].is_a? Hash
     assert !data['raw']['api'].empty?
   end
 
-  # I'm not confident this is testing anything about HTML decoding as written
-  test "should decode html entities" do
-    skip("this might be broke befcause of twitter api changes - needs fixing")
-    tweet = Twitter::Tweet.new(
-      id: "123",
-      text: " [update] between Calistoga and Santa Rosa (Napa & Sonoma County) is now 35,270 acres and 44% contained. "
-    )
-    Twitter::REST::Client.any_instance.stubs(:status).returns(tweet)
-    Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
+  test "sets the author_url o be https://twitter.com/<user_handle> even if an error is returned" do
+    stub_tweet_lookup.returns(twitter_item_response_error)
 
-    data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data(empty_doc)
-    assert_no_match /&amp;/, data['title']
-  end
-
-  test "should throw Pender::Exception::ApiLimitReached when Twitter::Error::TooManyRequests is thrown when parsing tweet" do
-    skip("this might be broke befcause of twitter api changes - needs fixing")
-    Twitter::REST::Client.any_instance.stubs(:status).raises(Twitter::Error::TooManyRequests)
-
-    assert_raises Pender::Exception::ApiLimitReached do
-      Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data(empty_doc)
-    end
-  end
-
-  test "logs error resulting from non-ratelimit tweet lookup, and return default values with html blank" do
-    skip("this might be broke befcause of twitter api changes - needs fixing")
-    Twitter::REST::Client.any_instance.stubs(:status).raises(Twitter::Error::NotFound)
-    Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
-
-    data = {}
-    sentry_call_count = 0
-    arguments_checker = Proc.new do |e|
-      sentry_call_count += 1
-      assert_equal Twitter::Error::NotFound, e.class
-    end
-
-    PenderSentry.stub(:notify, arguments_checker) do
-      data = Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data(empty_doc)
-      assert_equal 1, sentry_call_count
-    end
-    assert_match /Twitter::Error::NotFound/, data['error']['message']
-    assert_equal "123456789", data['external_id']
-    assert_equal "@fake-account", data['username']
-    assert data['html'].empty?
-  end
-
-  # This swallows rate limiting errors, which we're surfacing in a different
-  # exception catching block in the same class. It also doesn't surface errors.
-  # We may want to reconsider both of these things for consistency.
-  test "logs error resulting from looking up user information, and returns tweet info" do
-    skip("this might be broke befcause of twitter api changes - needs fixing")
-    Twitter::REST::Client.any_instance.stubs(:status).returns(fake_tweet)
-    Twitter::REST::Client.any_instance.stubs(:user).raises(Twitter::Error)
-
-    data = {}
-    sentry_call_count = 0
-    arguments_checker = Proc.new do |e|
-      sentry_call_count += 1
-      assert_equal Twitter::Error, e.class
-    end
-
-    PenderSentry.stub(:notify, arguments_checker) do
-      data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data(empty_doc)
-      assert_equal 1, sentry_call_count
-    end
-    assert_nil data['error']
-    assert_equal "123456789", data['external_id']
-    assert_equal "@fakeaccount", data['username']
-    assert_match /I'll be talking in @rubyconfbr this year!/, data['title']
-  end
-
-  # This is current behavior, but I wonder if we might want something like https://twitter.com/fakeaccount
-  test "falls back to top_url when user information can't be retrieved" do
-    skip("this might be broke befcause of twitter api changes - needs fixing")
-    Twitter::REST::Client.any_instance.stubs(:status).returns(fake_tweet)
-    Twitter::REST::Client.any_instance.stubs(:user).raises(Twitter::Error)
-
-    data = Parser::TwitterItem.new('https://twitter.com/fakeaccount/status/123456789').parse_data(empty_doc)
-    assert_nil data['error']
-    assert_equal 'https://twitter.com', data['author_url']
+    data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
+    
+    assert_not_nil data['error']
+    assert_equal 'https://twitter.com/fake_user', data['author_url']
   end
 
   test "should remove line breaks from Twitter item title" do
-    skip("this might be broke befcause of twitter api changes - needs fixing")
-    tweet = Twitter::Tweet.new(
-      id: '123',
-      text: "LA Times- USC Dornsife Sunday Poll: \n Donald Trump Retains 2 Point \n Lead Over Hillary"
-    )
-    Twitter::REST::Client.any_instance.stubs(:status).returns(tweet)
-    Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
+    stub_tweet_lookup.returns(twitter_item_response_success)
 
-    data = Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data(empty_doc)
-    assert_match 'LA Times- USC Dornsife Sunday Poll: Donald Trump Retains 2 Point Lead Over Hillary', data['title']
+    data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
+
+    assert_match 'Youths! Webb observed galaxy cluster El Gordo', data['title']
   end
 
   test "should parse tweet url with special chars, and strip them" do
-    skip("this might be broke befcause of twitter api changes - needs fixing")
-    Twitter::REST::Client.any_instance.stubs(:status).returns(fake_tweet)
-    Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
+    stub_tweet_lookup.returns(twitter_item_response_success)
 
-    parser = Parser::TwitterItem.new('https://twitter.com/#!/salmaeldaly/status/45532711472992256')
+    parser = Parser::TwitterItem.new('https://twitter.com/#!/fake_user/status/1111111111111111111')
     data = parser.parse_data(empty_doc)
     
-    assert_match 'https://twitter.com/salmaeldaly/status/45532711472992256', parser.url
+    assert_match 'https://twitter.com/fake_user/status/1111111111111111111', parser.url
 
-    parser = Parser::TwitterItem.new('https://twitter.com/%23!/salmaeldaly/status/45532711472992256')
+    parser = Parser::TwitterItem.new('https://twitter.com/%23!/fake_user/status/1111111111111111111')
     data = parser.parse_data(empty_doc)
     
-    assert_match 'https://twitter.com/salmaeldaly/status/45532711472992256', parser.url
-  end
-
-  # I'm not confident this is testing anything about truncation as written
-  test "should get all information of a truncated tweet" do
-    skip("this might be broke befcause of twitter api changes - needs fixing")
-    tweet = Twitter::Tweet.new(
-      id: "123",
-      full_text: "Anti immigrant graffiti in a portajon on a residential construction site in Mtn Brook, AL. Job has about 50% Latino workers. https://t.co/bS5vI4Jq7I",
-      truncated: true,
-      entities:  {
-        media: [
-          { media_url_https: "https://pbs.twimg.com/media/C7dYir1VMAAi46b.jpg" }
-        ]
-      }
-    )
-    Twitter::REST::Client.any_instance.stubs(:status).returns(tweet)
-    Twitter::REST::Client.any_instance.stubs(:user).returns(fake_twitter_user)
-
-    data = Parser::TwitterItem.new('https://twitter.com/fake-account/status/123456789').parse_data(nil)
-
-    assert_equal 'https://pbs.twimg.com/media/C7dYir1VMAAi46b.jpg', data['picture']
+    assert_match 'https://twitter.com/fake_user/status/1111111111111111111', parser.url
   end
 
   test "#oembed_url returns URL with the instance URL" do
     oembed_url = Parser::TwitterItem.new('https://twitter.com/fake-account/status/1234').oembed_url
     assert_equal 'https://publish.twitter.com/oembed?url=https://twitter.com/fake-account/status/1234', oembed_url
+  end
+
+  test "should parse valid link with spaces" do
+    stub_tweet_lookup.returns(twitter_item_response_success)
+
+    data = Parser::TwitterItem.new(' https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
+
+    assert_match 'Youths! Webb observed galaxy cluster El Gordo', data['title']
+  end
+
+  test "should fill in html when html parsing fails but API works" do
+    stub_tweet_lookup.returns(twitter_item_response_success)
+
+    data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
+
+    assert_match "<a href=\"https://twitter.com/fake_user/status/1111111111111111111\"", data[:html]
   end
 end
