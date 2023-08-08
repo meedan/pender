@@ -4,7 +4,6 @@ module ProviderTwitter
   extend ActiveSupport::Concern
 
   class ApiError < StandardError; end
-  class ApiResponseCodeError < StandardError; end
 
   BASE_URI = "https://api.twitter.com/2/"
 
@@ -59,7 +58,7 @@ module ProviderTwitter
 
     begin
       response = http.request(request)
-      raise ApiResponseCodeError.new("#{response.class}: #{response.code} #{response.message} - #{response.body}") unless response.code.to_i < 400
+      raise ApiError.new("#{response.class}: #{response.code} #{response.message} - #{response.body}") unless response.code.to_i < 400
       JSON.parse(response.body) 
     rescue StandardError => e
       PenderSentry.notify(e, url: url)

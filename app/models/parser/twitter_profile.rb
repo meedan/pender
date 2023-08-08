@@ -9,8 +9,8 @@ module Parser
 
       def patterns
         [
-          /^https?:\/\/(www\.)?twitter\.com\/([^\/]+)$/,
-          /^https?:\/\/(0|m|mobile)\.twitter\.com\/([^\/]+)$/
+          /^https?:\/\/(www\.)?twitter\.com\/(?<username>[^\/]+)$/,
+          /^https?:\/\/(0|m|mobile)\.twitter\.com\/(?<username>[^\/]+)$/
         ]
       end
     end
@@ -19,8 +19,9 @@ module Parser
 
     # Main function for class
     def parse_data_for_parser(doc, _original_url, _jsonld_array)
-      @url = replace_subdomain_pattern(url)
-      username = url.match(/^https?:\/\/(www\.)?twitter\.com\/([^\/]+)$/)[2]
+      @url.gsub!(/\s/, '')
+      @url = replace_subdomain_pattern(url)      
+      username = compare_patterns(@url, self.patterns, 'username')
 
       @parsed_data[:raw][:api] = {}      
       @parsed_data[:raw][:api] = user_lookup_by_username(username)
@@ -35,7 +36,7 @@ module Parser
       elsif @parsed_data[:error].nil?
         picture = parsed_data[:raw][:api]['data'][0]['profile_image_url'].gsub('_normal', '')
         author_name = parsed_data['raw']['api']['data'][0]['name']
-        description = parsed_data['raw']['api']['data'][0]['description']
+        description = parsed_data['raw']['api']['data'][0]['description'].squish
         published_at = parsed_data['raw']['api']['data'][0]['created_at']
       end
  
