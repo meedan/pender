@@ -3,9 +3,8 @@ require_relative '../test_helper'
 class ArchiverWorkerTest < ActiveSupport::TestCase
 
   test "should update cache when video archiving fails the max retries" do
-    skip("twitter api key is not currently working")
     Metrics.stubs(:schedule_fetching_metrics_from_facebook)
-    url = 'https://twitter.com/meedan/status/1202732707597307905'
+    url = 'https://meedan.com/post/annual-report-2022'
     m = create_media url: url
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
@@ -18,7 +17,6 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
   end
 
   test "should update cache when Archive.org fails the max retries" do
-    skip("twitter api key is not currently working")
     Media.any_instance.unstub(:archive_to_archive_org)
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
@@ -29,7 +27,7 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    url = 'https://twitter.com/marcouza/status/875424957613920256'
+    url = 'https://meedan.com/post/annual-report-2022'
     m = create_media url: url, key: a
     assert_raises Pender::Exception::RetryLater do
       data = m.as_json(archivers: 'archive_org')
@@ -45,7 +43,6 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
   end
 
   test "should update cache when Archive.org raises since first attempt" do
-    skip("twitter api key is not currently working")
     Media.any_instance.unstub(:archive_to_archive_org)
     WebMock.enable!
     allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
@@ -54,7 +51,7 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    url = 'https://twitter.com/marcouza/status/875424957613920256'
+    url = 'https://meedan.com/post/annual-report-2022'
 
     m = create_media url: url, key: a
     assert_raises Pender::Exception::RetryLater do
