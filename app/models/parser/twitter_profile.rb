@@ -23,7 +23,6 @@ module Parser
       @url = replace_subdomain_pattern(url)      
       username = compare_patterns(@url, self.patterns, 'username')
 
-      @parsed_data[:raw][:api] = {}      
       @parsed_data[:raw][:api] = user_lookup_by_username(username)
       
       @parsed_data[:error] = parsed_data['raw']['api']['errors']
@@ -34,10 +33,12 @@ module Parser
         description = ''
         published_at = ''
       elsif @parsed_data[:error].nil?
-        picture = parsed_data[:raw][:api]['data'][0]['profile_image_url'].gsub('_normal', '')
-        author_name = parsed_data['raw']['api']['data'][0]['name']
-        description = parsed_data['raw']['api']['data'][0]['description'].squish
-        published_at = parsed_data['raw']['api']['data'][0]['created_at']
+        raw_data = parsed_data['raw']['api']['data'][0]
+
+        picture = raw_data['profile_image_url'].gsub('_normal', '')
+        author_name = raw_data['name']
+        description = raw_data['description'].squish
+        published_at = raw_data['created_at']
       end
  
       @parsed_data.merge!({

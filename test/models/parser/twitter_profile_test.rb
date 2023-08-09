@@ -118,12 +118,10 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     assert_match /The world's most powerful space telescope/, data['description']
     assert_match 'fake_user', data['title']
     assert_match 'Fake User', data['author_name']
-    
     assert_match 'https://twitter.com/fake_user', data['url']
     assert_match /pbs.twimg.com\/profile_images\/685182791496134658\/Wmyak8D6.jpg/, data['picture']
     assert_match /pbs.twimg.com\/profile_images\/685182791496134658\/Wmyak8D6.jpg/, data['author_picture']
     assert_not_nil data['published_at']
-    
     assert_nil data['error']
   end  
   

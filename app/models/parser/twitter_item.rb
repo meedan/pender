@@ -21,17 +21,16 @@ module Parser
       @url.gsub!(/(%23|#)!\//, '')
       @url.gsub!(/\s/, '')
       @url = replace_subdomain_pattern(url)
-      parts = url.match(TWITTER_ITEM_URL)
       
+      parts = url.match(TWITTER_ITEM_URL)
       user, id = parts['user'], parts['id']
       
-      @parsed_data['raw']['api'] = {}
       @parsed_data['raw']['api'] = tweet_lookup(id)
 
       @parsed_data[:error] = parsed_data['raw']['api']['errors']
 
       if @parsed_data[:error] 
-        title = ''
+        title = url
         description = ''
         picture = ''
         author_picture = ''
@@ -40,14 +39,17 @@ module Parser
         author_name = user
         author_url = get_author_url(user)
       elsif @parsed_data[:error].nil?
-        title = parsed_data['raw']['api']['data'][0]['text'].squish
+        raw_data = parsed_data['raw']['api']['data'][0]
+        raw_user_data = parsed_data['raw']['api']['includes']['users'][0]
+
+        title = raw_data['text'].squish
         description = title
         picture = get_twitter_item_picture(parsed_data)
-        author_picture = parsed_data['raw']['api']['includes']['users'][0]['profile_image_url'].gsub('_normal', '')
-        published_at = parsed_data['raw']['api']['data'][0]['created_at']
+        author_picture = raw_user_data['profile_image_url'].gsub('_normal', '')
+        published_at = raw_data['created_at']
         html = html_for_twitter_item(url)
-        author_name = parsed_data['raw']['api']['includes']['users'][0]['name']
-        author_url = get_author_url(user) || parsed_data['raw']['api']['includes']['users'][0]['url'] || RequestHelper.top_url(url)
+        author_name = raw_user_data['name']
+        author_url = get_author_url(user) || raw_user_data['url'] || RequestHelper.top_url(url)
       end
  
       @parsed_data.merge!({

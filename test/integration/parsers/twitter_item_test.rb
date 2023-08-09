@@ -2,7 +2,6 @@ require 'test_helper'
 
 class TwitterItemIntegrationTest < ActiveSupport::TestCase
   test "should parse tweet" do
-    # skip("twitter api key is not currently working")
     m = create_media url: 'https://twitter.com/caiosba/status/742779467521773568'
     data = m.as_json
     assert_match 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']

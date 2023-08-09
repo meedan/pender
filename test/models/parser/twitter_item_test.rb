@@ -137,6 +137,15 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     assert_equal 'https://twitter.com/fake_user', data['author_url']
   end
 
+  test "returns an unique title even if an error is returned" do
+    stub_tweet_lookup.returns(twitter_item_response_error)
+
+    data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
+    
+    assert_not_nil data['error']
+    assert_equal 'https://twitter.com/fake_user/status/1111111111111111111', data['title']
+  end
+
   test "should remove line breaks from Twitter item title" do
     stub_tweet_lookup.returns(twitter_item_response_success)
 

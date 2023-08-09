@@ -106,7 +106,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
   end
 
   test "should parse urls without utf encoding" do
-       urls = [
+    urls = [
       'https://www.yallakora.com/epl/2545/News/350853/مصدر-ليلا-كورة-ليفربول-حذر-صلاح-وزملاءه-من-جماهير-فيديو-السيارة',
       'https://www.yallakora.com/epl/2545/News/350853/%D9%85%D8%B5%D8%AF%D8%B1-%D9%84%D9%8A%D9%84%D8%A7-%D9%83%D9%88%D8%B1%D8%A9-%D9%84%D9%8A%D9%81%D8%B1%D8%A8%D9%88%D9%84-%D8%AD%D8%B0%D8%B1-%D8%B5%D9%84%D8%A7%D8%AD-%D9%88%D8%B2%D9%85%D9%84%D8%A7%D8%A1%D9%87-%D9%85%D9%86-%D8%AC%D9%85%D8%A7%D9%87%D9%8A%D8%B1-%D9%81%D9%8A%D8%AF%D9%8A%D9%88-%D8%A7%D9%84%D8%B3%D9%8A%D8%A7%D8%B1%D8%A9',
       'https://www.yallakora.com//News/350853/%25D9%2585%25D8%25B5%25D8%25AF%25D8%25B1-%25D9%2584%25D9%258A%25D9%2584%25D8%25A7-%25D9%2583%25D9%2588%25D8%25B1%25D8%25A9-%25D9%2584%25D9%258A%25D9%2581%25D8%25B1%25D8%25A8%25D9%2588%25D9%2584-%25D8%25AD%25D8%25B0%25D8%25B1-%25D8%25B5%25D9%2584%25D8%25A7%25D8%25AD-%25D9%2588%25D8%25B2%25D9%2585%25D9%2584%25D8%25A7%25D8%25A1%25D9%2587-%25D9%2585%25D9%2586-%25D8%25AC%25D9%2585%25D8%25A7%25D9%2587%25D9%258A%25D8%25B1-%25D9%2581%25D9%258A%25D8%25AF%25D9%258A%25D9%2588-%25D8%25A7%25D9%2584%25D8%25B3%25D9%258A%25D8%25A7%25D8%25B1%25D8%25A9-'
@@ -125,18 +125,6 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal url, data['url']
     assert_nil data['error']
-  end
-
-  test "should handle error when cannot get twitter url" do
-    skip("Update this test to reflect new API usage")
-    # this test actually works, but we are not using the Twitter gem anymore
-    # which makes me wonder about what this is testing
-    # for now I'm leaving this here, but U'm coming back to it
-    Parser::PageItem.stubs(:twitter_client).raises(Twitter::Error::Forbidden)
-    m = create_media url: 'http://example.com'
-    data = m.as_json
-    assert data['error'].nil?
-    Parser::PageItem.unstub(:twitter_client)
   end
 end
 
@@ -527,5 +515,16 @@ class PageItemUnitTest < ActiveSupport::TestCase
   test "#oembed_url returns oembed data from HTML when present" do
     oembed_url = Parser::PageItem.new('https://example.com').oembed_url(oembed_doc)
     assert_equal "https://example.com/oembed", oembed_url
+  end
+
+  test "shouldn't break when cannot get twitter url" do
+  # I'm trying to write a substitute to "should handle error when cannot get twitter url"
+  # Not too sure about this yet
+    Parser::PageItem.stubs(:get_twitter_metadata).returns(nil)
+    
+    data = Parser::PageItem.new('https://random-page.com/page-item').parse_data(empty_doc)
+
+    assert data['error'].nil?
+    assert_equal "https://random-page.com", data['author_url']
   end
 end

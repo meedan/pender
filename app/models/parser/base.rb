@@ -157,6 +157,7 @@ module Parser
 
     def twitter_author_url(username)
       return if bad_username?(username)
+      # username[1..]: remove the @ from the username
         "https://twitter.com/" + username[1..]
     end
 
