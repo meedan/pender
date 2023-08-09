@@ -39,7 +39,6 @@ gem 'yt', '~> 0.25.5'
 gem 'rswag-api'
 gem 'rswag-ui'
 gem 'sass-rails'
-gem 'twitter'
 gem 'open_uri_redirections', require: false
 gem 'postrank-uri', git: 'https://github.com/postrank-labs/postrank-uri.git', ref: '485ac46', require: false # Ruby 3.0 support, as of 2/6/23 no gem relaease
 gem 'retryable'
