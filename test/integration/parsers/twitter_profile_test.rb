@@ -12,4 +12,16 @@ class TwitterProfileIntegrationTest < ActiveSupport::TestCase
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
   end
+
+  test "should return data even if a the twitter profile does not exist" do
+    m = create_media url: 'https://twitter.com/dlihfbfyhugsrb'
+    data = m.as_json
+    assert_equal 'https://twitter.com/dlihfbfyhugsrb', data['url']
+    assert_equal 'dlihfbfyhugsrb', data['title']
+    assert_match '@dlihfbfyhugsrb', data['username']
+    assert_equal 'twitter', data['provider']
+    assert_not_nil data['description']
+    assert_not_nil data['picture']
+    assert_not_nil data['published_at']
+  end
 end
