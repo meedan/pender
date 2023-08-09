@@ -32,7 +32,6 @@ module Parser
       if @parsed_data[:error] 
         title = url
         description = ''
-        picture = ''
         author_picture = ''
         published_at = ''
         html = ''
@@ -44,7 +43,6 @@ module Parser
 
         title = raw_data['text'].squish
         description = title
-        picture = get_twitter_item_picture(parsed_data)
         author_picture = raw_user_data['profile_image_url'].gsub('_normal', '')
         published_at = raw_data['created_at']
         html = html_for_twitter_item(url)
@@ -57,7 +55,7 @@ module Parser
         username: '@' + user,
         title: title,
         description: description,
-        picture: picture,
+        picture: get_twitter_item_picture(parsed_data),
         author_picture: author_picture,
         published_at: published_at,
         html: html,
@@ -72,6 +70,7 @@ module Parser
     end
 
     def get_twitter_item_picture(parsed_data)
+      return unless parsed_data['raw']['api']['includes']
       media = parsed_data['raw']['api']['includes']['media']
       media.nil? ? nil : media[0]['url']
     end
