@@ -32,15 +32,6 @@ module ProviderTwitter
     get "users/by", params
   end
 
-  def user_lookup_by_id(id)
-    params = {
-      "ids": id,
-      "user.fields": "profile_image_url,name,username,description,created_at,url",
-    }
-
-    get "users", params
-  end
-
   private
 
   def get(path, params)
