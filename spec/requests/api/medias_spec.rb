@@ -163,49 +163,6 @@ RSpec.describe 'Medias', type: :request do
         end
       end
 
-      # response '429', 'API limit reached' do
-      #   schema type: :object,
-      #     properties: {
-      #       type: { type: :string },
-      #       data: {
-      #         type: :object,
-      #         properties: {
-      #           message: { type: :integer },
-      #           code: { type: :integer }
-      #         },
-      #         required: [ 'message', 'code' ]
-      #       }
-      #     },
-      #     required: [ 'type', 'data' ]
-
-      #   let(:url) { 'https://twitter.com/anxiaostudio' }
-      #   let(auth_header) { authed }
-
-      #   before do |example|
-      #     allow_any_instance_of(Twitter::REST::Client).to receive(:user).and_raise(Twitter::Error::TooManyRequests)
-      #     allow_any_instance_of(Twitter::Error::TooManyRequests).to receive(:rate_limit).and_return(OpenStruct.new(reset_in: 123))
-
-      #     submit_request(example.metadata)
-      #   end
-
-      #   it 'should return API limit reached error' do |example|
-      #     pending("twitter api key is not currently working")
-      #     assert_response_matches_metadata(example.metadata)
-
-      #     response_body = JSON.parse(response.body)
-      #     expect(response_body).not_to be_nil
-      #     data = response_body['data']
-      #     expect(data['message']).to eq(123)
-      #   end
-
-      #   after do
-      #     allow_any_instance_of(Twitter::REST::Client).to receive(:user).and_call_original
-      #     allow_any_instance_of(Twitter::Error::TooManyRequests).to receive(:rate_limit).and_call_original
-      #   end
-
-      #   include_context 'generate examples'
-      # end
-
       response '409', 'URL already being processed' do
         let(:url) { 'https://www.youtube.com/user/MeedanTube' }
         let(auth_header) { authed }
