@@ -83,28 +83,16 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     
     assert_equal '1111111111111111111', data['external_id']
     assert_equal '@fake_user', data['username']
+    assert_not_nil data['picture']
   end
 
-  test "it makes a get request to the tweet lookup endpoint and raises an error when 401 is returned" do
+  test "it makes a get request to the tweet lookup endpoint,  endpoint and notifies sentry when 500 status is returned" do
     stub_configs({'twitter_bearer_token' => 'test' })
 
     WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
       .with(query: query)
       .with(headers: { "Authorization": "Bearer test" })
-      .to_return(status: 401)
-
-    assert_raises ProviderTwitter::ApiError do
-      Parser::TwitterItem.new('https://m.twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
-    end
-  end
-
-  test "it makes a get request to the tweet lookup endpoint, raises an error when 500 is returned and notifies sentry" do
-    stub_configs({'twitter_bearer_token' => 'test' })
-
-    WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
-      .with(query: query)
-      .with(headers: { "Authorization": "Bearer test" })
-      .to_return(status: 500, body: response_fixture_from_file('twitter-item-response-error.json'))
+      .to_return(status: 500)
 
       sentry_call_count = 0
       arguments_checker = Proc.new do |e|
@@ -112,20 +100,30 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
       end
       
       PenderSentry.stub(:notify, arguments_checker) do
-        assert_raises ProviderTwitter::ApiError do
-          Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
-        end
+        data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
         assert_equal 1, sentry_call_count
+        assert_not_nil data[:error]        
       end        
   end
+  
+  test "it makes a get request to the tweet lookup endpoint, notifies sentry notifies sentry when timeout occurs" do
+    stub_configs({'twitter_bearer_token' => 'test' })
 
-  test "should store data of post returned by twitter API" do
-    stub_tweet_lookup.returns(twitter_item_response_success)
+    WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
+      .with(query: query)
+      .with(headers: { "Authorization": "Bearer test" })
+      .to_raise(Errno::EHOSTUNREACH)
 
-    data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
-
-    assert data['raw']['api'].is_a? Hash
-    assert !data['raw']['api'].empty?
+      sentry_call_count = 0
+      arguments_checker = Proc.new do |e|
+        sentry_call_count += 1
+      end
+      
+      PenderSentry.stub(:notify, arguments_checker) do
+        data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
+        assert_equal 1, sentry_call_count
+        assert_not_nil data[:error]        
+      end        
   end
 
   test "sets the author_url o be https://twitter.com/<user_handle> even if an error is returned" do
@@ -135,16 +133,17 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     
     assert_not_nil data['error']
     assert_equal 'https://twitter.com/fake_user', data['author_url']
+    assert_nil data['picture']
   end
 
-  test "returns an unique title even if an error is returned" do
-    stub_tweet_lookup.returns(twitter_item_response_error)
+  test "should store data of post returned by twitter API" do
+    stub_tweet_lookup.returns(twitter_item_response_success)
 
     data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
-    
-    assert_not_nil data['error']
-    assert_equal 'https://twitter.com/fake_user/status/1111111111111111111', data['title']
-  end
+
+    assert data['raw']['api'].is_a? Hash
+    assert !data['raw']['api'].empty?
+  end  
 
   test "should remove line breaks from Twitter item title" do
     stub_tweet_lookup.returns(twitter_item_response_success)
@@ -158,12 +157,12 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     stub_tweet_lookup.returns(twitter_item_response_success)
 
     parser = Parser::TwitterItem.new('https://twitter.com/#!/fake_user/status/1111111111111111111')
-    data = parser.parse_data(empty_doc)
+    parser.parse_data(empty_doc)
     
     assert_match 'https://twitter.com/fake_user/status/1111111111111111111', parser.url
 
     parser = Parser::TwitterItem.new('https://twitter.com/%23!/fake_user/status/1111111111111111111')
-    data = parser.parse_data(empty_doc)
+    parser.parse_data(empty_doc)
     
     assert_match 'https://twitter.com/fake_user/status/1111111111111111111', parser.url
   end

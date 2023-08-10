@@ -19,39 +19,35 @@ module Parser
 
     # Main function for class
     def parse_data_for_parser(doc, _original_url, _jsonld_array)
-      @url.gsub!(/\s/, '')
-      @url = replace_subdomain_pattern(url)      
-      username = compare_patterns(@url, self.patterns, 'username')
+      handle_exceptions(StandardError) do
+        @url.gsub!(/\s/, '')
+        @url = replace_subdomain_pattern(url)
+        username = compare_patterns(@url, self.patterns, 'username')
+        
+        @parsed_data.merge!(
+          url: url,
+          external_id: username,
+          username: '@' + username,
+          title: username,
+        )
+        
+        @parsed_data[:raw][:api] = user_lookup_by_username(username)
+        @parsed_data[:error] = parsed_data.dig('raw', 'api', 'errors')
+        
+        if @parsed_data[:error] 
+          @parsed_data.merge!(author_name: username)
+        elsif @parsed_data[:error].nil?
+          raw_data = parsed_data.dig('raw', 'api', 'data', 0)
 
-      @parsed_data[:raw][:api] = user_lookup_by_username(username)
-      
-      @parsed_data[:error] = parsed_data['raw']['api']['errors']
-      
-      if @parsed_data[:error] 
-        picture = ''
-        author_name = username
-        description = ''
-        published_at = ''
-      elsif @parsed_data[:error].nil?
-        raw_data = parsed_data['raw']['api']['data'][0]
-
-        picture = raw_data['profile_image_url'].gsub('_normal', '')
-        author_name = raw_data['name']
-        description = raw_data['description'].squish
-        published_at = raw_data['created_at']
-      end
- 
-      @parsed_data.merge!({
-        url: url,
-        external_id: username,
-        username: '@' + username,
-        title: username,
-        description: description,
-        picture: picture,
-        author_picture: picture,
-        published_at: published_at,
-        author_name: author_name,
-      })
+          @parsed_data.merge!({
+            picture: raw_data['profile_image_url'].gsub('_normal', ''),
+            author_name: raw_data['name'],
+            author_picture: raw_data['profile_image_url'].gsub('_normal', ''),
+            description: raw_data['description'].squish,
+            published_at: raw_data['created_at']
+          })
+        end
+      end 
       parsed_data
     end
   end

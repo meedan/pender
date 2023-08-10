@@ -49,11 +49,11 @@ module ProviderTwitter
 
     begin
       response = http.request(request)
-      raise ApiError.new("#{response.class}: #{response.code} #{response.message} - #{response.body}") unless response.code.to_i < 400
+      raise ApiError.new("#{response.code} - #{response.message}") unless response.code.to_i < 400
       JSON.parse(response.body) 
     rescue StandardError => e
-      PenderSentry.notify(e, url: url)
-      raise ApiError.new("#{e.class}: #{e.message}")
+      PenderSentry.notify(e, url: url, response_body: response.body)
+      { 'errors' => ["#{e.class}: #{e.message}"] }
     end
   end
 
