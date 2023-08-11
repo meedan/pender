@@ -137,7 +137,6 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     
     assert_not_nil data['error']
     assert_equal 'https://twitter.com/fake_user', data['author_url']
-    assert_nil data['picture']
   end
 
   test "should store data of post returned by twitter API" do

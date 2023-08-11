@@ -64,7 +64,7 @@ module Parser
     def get_twitter_item_picture(parsed_data)
       return unless parsed_data.dig('raw', 'api', 'includes')
       item_media = parsed_data.dig('raw', 'api', 'includes', 'media')
-      item_media.dig(0, 'url') if item_media
+      item_media ? item_media.dig(0, 'url') : ''
     end
 
     def html_for_twitter_item(url)
