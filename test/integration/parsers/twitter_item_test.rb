@@ -7,7 +7,7 @@ class TwitterItemIntegrationTest < ActiveSupport::TestCase
     assert_match 'I\'ll be talking in @rubyconfbr this year! More details soon...', data['title']
     assert_match 'Caio Almeida', data['author_name']
     assert_match '@caiosba', data['username']
-    assert_nil data['picture']
+    assert_match '', data['picture']
     assert_not_nil data['author_picture']
   end
 
