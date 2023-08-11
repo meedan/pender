@@ -86,24 +86,27 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     assert_not_nil data['picture']
   end
 
-  test "it makes a get request to the tweet lookup endpoint,  endpoint and notifies sentry when 500 status is returned" do
+  test "it makes a get request to the tweet lookup endpoint,  endpoint and notifies sentry when 404 status is returned" do
     stub_configs({'twitter_bearer_token' => 'test' })
 
     WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
       .with(query: query)
       .with(headers: { "Authorization": "Bearer test" })
-      .to_return(status: 500)
+      .to_return(status: 404, body: response_fixture_from_file('twitter-item-response-error.json'))
 
-      sentry_call_count = 0
-      arguments_checker = Proc.new do |e|
-        sentry_call_count += 1
-      end
+    sentry_call_count = 0
+    arguments_checker = Proc.new do |e|
+      sentry_call_count += 1
+    end
       
-      PenderSentry.stub(:notify, arguments_checker) do
-        data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
-        assert_equal 1, sentry_call_count
-        assert_not_nil data[:error]        
-      end        
+    PenderSentry.stub(:notify, arguments_checker) do
+      data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
+      assert_equal 1, sentry_call_count
+      assert_not_nil data[:error]        
+      assert_match /Error/, data[:error][0]['error_class'].to_s      
+      assert_match /404/, data[:error][0]['error_message']  
+      assert_match /Not Found Error/, data[:error][0]['response_body']   
+    end        
   end
   
   test "it makes a get request to the tweet lookup endpoint, notifies sentry notifies sentry when timeout occurs" do
@@ -114,16 +117,19 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
       .with(headers: { "Authorization": "Bearer test" })
       .to_raise(Errno::EHOSTUNREACH)
 
-      sentry_call_count = 0
-      arguments_checker = Proc.new do |e|
-        sentry_call_count += 1
-      end
-      
-      PenderSentry.stub(:notify, arguments_checker) do
-        data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
-        assert_equal 1, sentry_call_count
-        assert_not_nil data[:error]        
-      end        
+    sentry_call_count = 0
+    arguments_checker = Proc.new do |e|
+      sentry_call_count += 1
+    end
+    
+    PenderSentry.stub(:notify, arguments_checker) do
+      data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
+      assert_equal 1, sentry_call_count
+      assert_not_nil data[:error]    
+      assert_match /Errno::EHOSTUNREACH/, data[:error][0]['error_class'].to_s      
+      assert_match /No route to host/, data[:error][0]['error_message']  
+      assert_nil data[:error][0]['response_body']         
+    end        
   end
 
   test "sets the author_url o be https://twitter.com/<user_handle> even if an error is returned" do

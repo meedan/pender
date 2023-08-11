@@ -74,13 +74,13 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     assert_equal '@fake_user', data['username']
   end
 
-  test "it makes a get request to the user lookup by username endpoint and notifies sentry when 500 status is returned" do
+  test "it makes a get request to the user lookup by username endpoint and notifies sentry when 404 status is returned" do
     stub_configs({'twitter_bearer_token' => 'test' })
 
     WebMock.stub_request(:get, "https://api.twitter.com/2/users/by")
       .with(query: query)
       .with(headers: { "Authorization": "Bearer test" })
-      .to_return(status: 500)
+      .to_return(status: 404, body: response_fixture_from_file('twitter-profile-response-error.json'))
 
     sentry_call_count = 0
     arguments_checker = Proc.new do |e|
@@ -90,7 +90,10 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
       assert_equal 1, sentry_call_count
-      assert_not_nil data[:error]        
+      assert_not_nil data[:error] 
+      assert_match /Error/, data[:error][0]['error_class'].to_s      
+      assert_match /404/, data[:error][0]['error_message']  
+      assert_match /Not Found Error/, data[:error][0]['response_body']   
     end
   end
 
@@ -111,6 +114,9 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
       data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
       assert_equal 1, sentry_call_count
       assert_not_nil data[:error]        
+      assert_match /Errno::EHOSTUNREACH/, data[:error][0]['error_class'].to_s      
+      assert_match /No route to host/, data[:error][0]['error_message']  
+      assert_nil data[:error][0]['response_body']   
     end
   end
 
