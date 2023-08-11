@@ -23,5 +23,7 @@ class TwitterProfileIntegrationTest < ActiveSupport::TestCase
     assert_not_nil data['description']
     assert_not_nil data['picture']
     assert_not_nil data['published_at']
+    assert_match /Could not find user/, data['error'][0]['detail']
+    assert_match /Not Found Error/, data['error'][0]['title']
   end
 end

@@ -90,10 +90,9 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
       assert_equal 1, sentry_call_count
-      assert_not_nil data[:error] 
-      assert_match /Error/, data[:error][0]['error_class'].to_s      
-      assert_match /404/, data[:error][0]['error_message']  
-      assert_match /Not Found Error/, data[:error][0]['response_body']   
+      assert_not_nil data['error'] 
+      assert_match /404/, data['error'][0]['title']      
+      assert_match /Not Found Error/, data['error'][0]['detail']   
     end
   end
 
@@ -113,10 +112,9 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
       assert_equal 1, sentry_call_count
-      assert_not_nil data[:error]        
-      assert_match /Errno::EHOSTUNREACH/, data[:error][0]['error_class'].to_s      
-      assert_match /No route to host/, data[:error][0]['error_message']  
-      assert_nil data[:error][0]['response_body']   
+      assert_not_nil data['error']        
+      assert_match /No route to host/, data['error'][0]['title']  
+      assert_nil data['error'][0]['detail']   
     end
   end
 

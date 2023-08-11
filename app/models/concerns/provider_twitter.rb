@@ -54,9 +54,8 @@ module ProviderTwitter
     rescue StandardError => e
       PenderSentry.notify(e, url: url, response_body: response&.body)
       { 'errors' => [{ 
-          error_class: e&.class,
-          error_message: e&.message,
-          response_body: response&.body
+          title: "#{e&.class} - #{e&.message}",
+          detail: response&.body
         }] 
       }
     end

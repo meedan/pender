@@ -17,8 +17,9 @@ class TwitterItemIntegrationTest < ActiveSupport::TestCase
     assert_match 'https://twitter.com/caiosba/status/1111111111111111111', data['title']
     assert_match 'caiosba', data['author_name']
     assert_match '@caiosba', data['username']
-    assert_nil data['picture']
     assert_not_nil data['author_picture']
+    assert_match /Could not find/, data['error'][0]['detail']
+    assert_match /Not Found Error/, data['error'][0]['title']
   end
 end
 
