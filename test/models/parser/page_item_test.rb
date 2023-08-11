@@ -351,6 +351,14 @@ class PageItemUnitTest < ActiveSupport::TestCase
     assert_equal 'https://twitter.com/fakeaccount', data['author_url']
     assert_equal '@fakeaccount', data['username']
   end
+  
+  test "shouldn't error when cannot get twitter author url" do
+    Parser::PageItem.stubs(:twitter_author_url).returns(nil)
+    
+    data = Parser::PageItem.new('https://random-page.com/page-item').parse_data(empty_doc)
+
+    assert data['error'].nil?
+  end
 
   test "does not set author_url from twitter metadata if a default username, instead defaults to top URL" do
     api_response = response_fixture_from_file('twitter-profile-response-success.json', parse_as: :json)
@@ -386,16 +394,5 @@ class PageItemUnitTest < ActiveSupport::TestCase
   test "#oembed_url returns oembed data from HTML when present" do
     oembed_url = Parser::PageItem.new('https://example.com').oembed_url(oembed_doc)
     assert_equal "https://example.com/oembed", oembed_url
-  end
-
-  test "shouldn't break when username is a bad username" do
-  # I'm trying to write a substitute to "should handle error when cannot get twitter url"
-  # Not too sure about this yet
-    Parser::PageItem.stubs(:get_twitter_metadata).returns(nil)
-    
-    data = Parser::PageItem.new('https://random-page.com/page-item').parse_data(empty_doc)
-
-    assert data['error'].nil?
-    assert_equal "https://random-page.com", data['author_url']
   end
 end
