@@ -157,7 +157,7 @@ module Parser
 
     def twitter_author_url(username)
       return if bad_username?(username)
-        "https://twitter.com/" + username.gsub("@","")
+      "https://twitter.com/" + username.gsub("@","")
     end
 
     def bad_username?(value)
