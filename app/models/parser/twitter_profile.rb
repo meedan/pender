@@ -9,8 +9,8 @@ module Parser
 
       def patterns
         [
-          /^https?:\/\/(www\.)?twitter\.com\/([^\/]+)$/,
-          /^https?:\/\/(0|m|mobile)\.twitter\.com\/([^\/]+)$/
+          /^https?:\/\/(www\.)?twitter\.com\/(?<username>[^\/]+)$/,
+          /^https?:\/\/(0|m|mobile)\.twitter\.com\/(?<username>[^\/]+)$/
         ]
       end
     end
@@ -19,26 +19,35 @@ module Parser
 
     # Main function for class
     def parse_data_for_parser(doc, _original_url, _jsonld_array)
-      @url = replace_subdomain_pattern(url)
-      username = url.match(/^https?:\/\/(www\.)?twitter\.com\/([^\/]+)$/)[2]
+      handle_exceptions(StandardError) do
+        @url.gsub!(/\s/, '')
+        @url = replace_subdomain_pattern(url)
+        username = compare_patterns(@url, self.patterns, 'username')
+        
+        @parsed_data.merge!(
+          url: url,
+          external_id: username,
+          username: '@' + username,
+          title: username,
+        )
+        
+        @parsed_data[:raw][:api] = user_lookup_by_username(username)
+        @parsed_data[:error] = parsed_data.dig('raw', 'api', 'errors')
+        
+        if @parsed_data[:error] 
+          @parsed_data.merge!(author_name: username)
+        elsif @parsed_data[:error].nil?
+          raw_data = parsed_data.dig('raw', 'api', 'data', 0)
 
-      @parsed_data[:raw][:api] = {}
-      handle_twitter_exceptions do
-        @parsed_data[:raw][:api] = twitter_client.user(username).as_json
-        picture_url = parsed_data[:raw][:api][:profile_image_url_https].gsub('_normal', '')
-        set_data_field('picture', picture_url)
-        set_data_field('author_picture', picture_url)
-      end
-      @parsed_data[:error] = parsed_data.dig(:raw, :api, :error)
-      set_data_field('title', parsed_data.dig(:raw, :api, :name), username)
-      @parsed_data.merge!({
-        url: url,
-        external_id: username,
-        username: '@' + username,
-        author_name: parsed_data[:title],
-        description: parsed_data.dig(:raw, :api, :description),
-        published_at: parsed_data.dig(:raw, :api, :created_at),
-      })
+          @parsed_data.merge!({
+            picture: raw_data['profile_image_url'].gsub('_normal', ''),
+            author_name: raw_data['name'],
+            author_picture: raw_data['profile_image_url'].gsub('_normal', ''),
+            description: raw_data['description'].squish,
+            published_at: raw_data['created_at']
+          })
+        end
+      end 
       parsed_data
     end
   end

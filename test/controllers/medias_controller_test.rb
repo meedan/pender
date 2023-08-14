@@ -8,41 +8,39 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should be able to fetch HTML without token" do
-    get :index, params: { url: 'http://twitter.com/meedan', format: :html }
+    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', format: :html }
     assert_response :success
   end
 
   test "should ask to refresh cache" do
-    skip("twitter api key is not currently working")
     authenticate_with_token
-    get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json }
+    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', refresh: '1', format: :json }
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
-    get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
-    name = Media.get_id('https://twitter.com/caiosba/status/742779467521773568')
+    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', format: :html }
+    name = Media.get_id('https://meedan.com/post/annual-report-2022')
     [:html, :json].each do |type|
       assert Pender::Store.current.read(name, type), "#{name}.#{type} is missing"
     end
     sleep 1
-    get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '1', format: :json }
+    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', refresh: '1', format: :json }
     assert !Pender::Store.current.read(name, :html), "#{name}.html should not exist"
     second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     assert second_parsed_at > first_parsed_at
   end
 
   test "should not ask to refresh cache" do
-    skip("twitter api key is not currently working")
     authenticate_with_token
-    get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', refresh: '0', format: :json }
+    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', refresh: '0', format: :json }
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     sleep 1
-    get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :json }
+    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', format: :json }
     second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     assert_equal first_parsed_at, second_parsed_at
   end
 
   test "should ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://twitter.com/gyenesnat/status/1220020473955635200'
+    url = 'https://meedan.com/post/annual-report-2022'
     get :index, params: { url: url, refresh: '1', format: :html }
     id = Media.get_id(url)
     first_parsed_at = Pender::Store.current.get(id, :html).last_modified
@@ -54,7 +52,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should not ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://twitter.com/gyenesnat/status/1220020473955635200'
+    url = 'https://meedan.com/post/annual-report-2022'
     id = Media.get_id(url)
     get :index, params: { url: url, refresh: '0', format: :html }
     first_parsed_at = Pender::Store.current.get(id, :html).last_modified
@@ -62,19 +60,6 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: url, format: :html }
     second_parsed_at = Pender::Store.current.get(id, :html).last_modified
     assert_equal first_parsed_at, second_parsed_at
-  end
-
-  test "should return error message on hash if twitter url does not exist" do
-    skip("twitter api key is not currently working")
-    authenticate_with_token
-    get :index, params: { url: 'https://twitter.com/caiosba32153623', format: :json }
-    assert_response 200
-    data = JSON.parse(@response.body)['data']
-    assert_match /Twitter::Error::NotFound: [0-9]+ User not found./, data['raw']['api']['error']['message']
-    assert_equal Lapis::ErrorCodes::const_get('INVALID_VALUE'), data['raw']['api']['error']['code']
-    assert_equal 'twitter', data['provider']
-    assert_equal 'profile', data['type']
-    assert_not_nil data['embed_tag']
   end
 
   test "should return error message on hash if url does not exist" do
@@ -110,36 +95,6 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal 'Parser::PageItem::HtmlFetchingError: Could not parse this media', data['error']['message']
     assert_equal 5, data['error']['code']
     assert_equal 'page', data['provider']
-    assert_equal 'item', data['type']
-    assert_not_nil data['embed_tag']
-  end
-
-  test "should return error message on hash if twitter post url does not exist" do
-    skip("twitter api key is not currently working")
-    twitter_client, status, user = "" , "", ""
-    api={"error"=>{"message"=>"Twitter::Error::NotFound: 144 No status found with that ID.", "code"=>4}}
-    Media.any_instance.stubs(:twitter_client).returns(twitter_client)
-    twitter_client.stubs(:status).returns(status)
-    twitter_client.stubs(:user).returns(user)
-    user.stubs(:url).returns('')
-    status.stubs(:as_json).returns(api)
-    authenticate_with_token
-    get :index, params: { url: 'https://twitter.com/caiosba/status/0000000000000', format: :json }
-    assert_response 200
-    data = JSON.parse(@response.body)['data']
-    assert_match /Twitter::Error::NotFound: [0-9]+/, data['raw']['api']['error']['message']
-    assert_equal Lapis::ErrorCodes::const_get('INVALID_VALUE'), data['raw']['api']['error']['code']
-    assert_equal 'twitter', data['provider']
-    assert_equal 'item', data['type']
-    assert_not_nil data['embed_tag']
-  end
-
-  test "should parse facebook url when fb post url does not exist" do
-    authenticate_with_token
-    get :index, params: { url: 'https://www.facebook.com/ahlam.alialshamsi/posts/000000000000000', format: :json }
-    assert_response 200
-    data = JSON.parse(@response.body)['data']
-    assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
     assert_not_nil data['embed_tag']
   end
@@ -199,28 +154,21 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should render default HTML if not provided by oEmbed" do
-    get :index, params: { url: 'https://twitter.com/check', format: :html }
+    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', format: :html }
     assert_response :success
     assert_match /pender-title/, response.body
-  end
-
-  test "should create cache file" do
-    Media.any_instance.expects(:as_json).once.returns({})
-    get :index, params: { url: 'http://twitter.com/caiosba', format: :html }
-    get :index, params: { url: 'http://twitter.com/caiosba', format: :html }
   end
 
   test "should return timeout error" do
     api_key = create_api_key application_settings: { config: { timeout: '0.001' }}
     authenticate_with_token(api_key)
 
-    get :index, params: { url: 'https://twitter.com/IronMaiden', format: :json }
+    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', format: :json }
     assert_response 200
     assert_equal 'Timeout', JSON.parse(@response.body)['data']['error']['message']
   end
 
   test "should render custom HTML if provided by parser" do
-    skip("twitter api key is not currently working")
     get :index, params: { url: 'https://twitter.com/caiosba/status/742779467521773568', format: :html }
     assert_response :success
     assert_match /twitter-tweet/, response.body
@@ -251,13 +199,12 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should clear cache for multiple URLs sent as array" do
-    skip("twitter api key is not currently working")
     authenticate_with_token
     url1 = 'https://meedan.com'
-    url2 = 'https://twitter.com/caiosba/status/742779467521773568'
+    url2 = 'https://meedan.com/post/annual-report-2022'
 
     normalized_url1 = 'https://meedan.com/'
-    normalized_url2 = 'https://twitter.com/caiosba/status/742779467521773568'
+    normalized_url2 = 'https://meedan.com/post/annual-report-2022'
 
     id1 = Media.get_id(normalized_url1)
     id2 = Media.get_id(normalized_url2)
@@ -327,11 +274,11 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should redirect and remove unsupported parameters if format is HTML and URL is the only supported parameter provided" do
-    url = 'https://twitter.com/caiosba/status/923697122855096320'
+    url = 'https://meedan.com/post/annual-report-2022'
 
     get :index, params: { url: url, foo: 'bar', format: :html }
     assert_response 302
-    assert_equal 'api/medias.html?url=https%3A%2F%2Ftwitter.com%2Fcaiosba%2Fstatus%2F923697122855096320', @response.redirect_url.split('/', 4).last
+    assert_equal 'api/medias.html?url=https%3A%2F%2Fmeedan.com%2Fpost%2Fannual-report-2022', @response.redirect_url.split('/', 4).last
 
     get :index, params: { url: url, foo: 'bar', format: :js }
     assert_response 200
@@ -353,7 +300,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return timeout error with minimal data if cannot parse url" do
     stub_configs({ 'timeout' => 0.1 }) do
-      url = 'https://changescamming.net/halalan-2019/maria-ressa-to-bong-go-um-attend-ka-ng-senatorial-debate-di-yung-nagtatapon-ka-ng-pera'
+      url = 'https://meedan.com/post/annual-report-2022'
       PenderSentry.stubs(:notify).never
 
       authenticate_with_token
@@ -369,7 +316,6 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should not archive in any archiver when no archiver parameter is sent" do
-    skip("twitter api key is not currently working")
     Media.any_instance.unstub(:archive_to_archive_org)
 
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
@@ -380,7 +326,7 @@ class MediasControllerTest < ActionController::TestCase
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     authenticate_with_token(a)
-    url = 'https://twitter.com/meedan/status/1095693211681673218'
+    url = 'https://meedan.com/post/annual-report-2022'
     get :index, params: { url: url, format: :json }
     id = Media.get_id(url)
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives].sort.to_h)
@@ -389,7 +335,6 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should not archive when archiver parameter is none" do
-    skip("twitter api key is not currently working")
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     WebMock.enable!
@@ -399,7 +344,7 @@ class MediasControllerTest < ActionController::TestCase
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     authenticate_with_token(a)
-    url = 'https://twitter.com/meedan/status/1095035775736078341'
+    url = 'https://meedan.com/post/annual-report-2022'
     get :index, params: { url: url, archivers: 'none', format: :json }
     id = Media.get_id(url)
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
@@ -424,7 +369,7 @@ class MediasControllerTest < ActionController::TestCase
       WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
       WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
 
-      url = 'https://www.nytimes.com/section/world/europe'
+      url = 'https://meedan.com/post/annual-report-2022'
       archived = {"perma_cc"=>{"location"=>"http://perma.cc/perma-cc-guid-1"}, "archive_org"=>{"location"=>"https://web.archive.org/web/timestamp/#{url}"}}
 
       authenticate_with_token(a)
@@ -447,8 +392,8 @@ class MediasControllerTest < ActionController::TestCase
     a = create_api_key application_settings: { 'webhook_url' => 'https://example.com/webhook.php', 'webhook_token' => 'test' }
     authenticate_with_token(a)
 
-    url1 = 'https://twitter.com/check/status/1102991340294557696'
-    url2 = 'https://twitter.com/dimalb/status/1102928768673423362'
+    url1 = 'https://meedan.com/post/annual-report-2022'
+    url2 = 'https://meedan.com'
     MediaParserWorker.stubs(:perform_async).with(url1, a.id, false, nil)
     MediaParserWorker.stubs(:perform_async).with(url2, a.id, false, nil).raises(RuntimeError)
     post :bulk, params: { url: [url1, url2], format: :json }
@@ -524,7 +469,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return data with error message if can't parse" do
     webhook_info = { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    url = 'https://twitter.com/meedan/status/1102990605339316224'
+    url = 'https://meedan.com/post/annual-report-2022'
     parse_error = { error: { "message"=>"RuntimeError: RuntimeError", "code"=>5}}
     required_fields = Media.required_fields(OpenStruct.new(url: url))
     Media.stubs(:required_fields).returns(required_fields)
@@ -547,7 +492,7 @@ class MediasControllerTest < ActionController::TestCase
 
     assert_equal 0, MediaParserWorker.jobs.size
 
-    url = 'https://twitter.com/meedan/status/1102990605339316224'
+    url = 'https://meedan.com/post/annual-report-2022'
     post :bulk, params: { url: url, format: :json }
 
     assert_response :success
@@ -586,24 +531,9 @@ class MediasControllerTest < ActionController::TestCase
     assert_match /v1$/, @response.headers['Accept']
   end
 
-  test "should add data url when on embed title metatag" do
-    skip("twitter api key is not currently working")
-    authenticate_with_token
-    twitter_client, status, user = "" , "", ""
-    api = {"full_text"=>"@InternetFF Our Meedani @WafHeikal will be joining the amazing line of participants at #IFF, come say hi and get a free trail to our verification tool @check" }
-    Media.any_instance.stubs(:twitter_client).returns(twitter_client)
-    twitter_client.stubs(:status).returns(status)
-    twitter_client.stubs(:user).returns(user)
-    user.stubs(:url).returns('')
-    status.stubs(:as_json).returns(api)
-    get :index, params: { url: 'https://twitter.com/meedan/status/1110219801295765504', format: :html }
-    assert_response :success
-    assert_match("<title>@InternetFF Our Meedani @WafHeikal will be...</title>", response.body)
-  end
-
   test "should rescue and unlock url when raises error" do
     authenticate_with_token
-    url = 'https://twitter.com/meedan/status/1118436001570086912'
+    url = 'https://meedan.com/post/annual-report-2022'
     assert !Semaphore.new(url).locked?
     [:js, :json, :html].each do |format|
       @controller.stubs("render_as_#{format}".to_sym).raises(RuntimeError.new('error'))
@@ -617,7 +547,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should rescue and unlock url when raises error on store" do
     authenticate_with_token
-    url = 'https://twitter.com/knowloitering/status/1140462371820826624'
+    url = 'https://meedan.com/post/annual-report-2022'
     assert !Semaphore.new(url).locked?
     Pender::Store.any_instance.stubs(:read).raises(RuntimeError.new('error'))
     [:js, :json, :html].each do |format|
@@ -632,7 +562,7 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should unlock url after timeout" do
-    url = 'https://twitter.com/knowloitering/'
+    url = 'https://meedan.com/post/annual-report-2022'
     s = Semaphore.new(url)
     assert !s.locked?
 
@@ -689,9 +619,8 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should cache json and html on file" do
-    skip("twitter api key is not currently working")
     authenticate_with_token
-    url = 'https://twitter.com/meedan/status/1132948729424691201'
+    url = 'https://meedan.com/post/annual-report-2022'
     id = Media.get_id(url)
     [:html, :json].each do |type|
       assert !Pender::Store.current.read(id, type), "#{id}.#{type} should not exist"
@@ -710,18 +639,6 @@ class MediasControllerTest < ActionController::TestCase
     assert_match /fishermen/, JSON.parse(@response.body)['data']['title'].downcase
   end
 
-  test "should parse suspended Twitter profile" do
-    authenticate_with_token
-
-    url = 'https://twitter.com/g9wuortn6sve9fn/status/940956917010259970'
-    get :index, params: { url: url, format: 'json' }
-    assert_response :success
-
-    url = 'https://twitter.com/account/suspended'
-    get :index, params: { url: url, format: 'json' }
-    assert_response :success
-  end
-
   test "should get config from api key if defined" do
     @controller.stubs(:unload_current_config)
     api_key = create_api_key application_settings: { config: { }}
@@ -735,17 +652,6 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'http://meedan.com', format: :json }
     assert_response 200
     assert_equal 'api_config_value', PenderConfig.get('key_for_test')
-  end
-
-  test "should return API limit reached error" do
-    skip("twitter api key is not currently working")
-    Twitter::REST::Client.any_instance.stubs(:user).raises(Twitter::Error::TooManyRequests)
-    Twitter::Error::TooManyRequests.any_instance.stubs(:rate_limit).returns(OpenStruct.new(reset_in: 123))
-
-    authenticate_with_token
-    get :index, params: { url: 'http://twitter.com/meedan', format: :json }
-    assert_response 429
-    assert_equal 123, JSON.parse(@response.body)['data']['message']
   end
 
   test "should add url on title when timeout" do
