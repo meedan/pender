@@ -21,7 +21,7 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert !data['published_at'].blank?
   end
 
-  test "should set title to URL and error if crowdtangle fails" do
+  test "should set title to URL if an item is unavailable" do
     # This URL requires login to see
     m = create_media url: 'https://www.facebook.com/caiosba/posts/8457689347638947'
     data = m.as_json
@@ -29,7 +29,6 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
     assert_equal 'https://www.facebook.com/caiosba/posts/8457689347638947', data['title']
-    assert !data['error'].blank?
   end
 
   # Previous integration tests
@@ -112,12 +111,12 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert_equal 'item', data['type']
   end
 
-  test "should return empty html when FB url is private and cannot be embedded" do
+  test "should return html even when FB url is private" do
     url = 'https://www.facebook.com/caiosba/posts/1913749825339929'
     m = create_media url: url
     data = m.as_json
     assert_equal 'facebook', data['provider']
-    assert_equal '', data['html']
+    assert_match "<div class=\"fb-post\" data-href=\"https://www.facebook.com/caiosba/posts/1913749825339929\">", data['html']
   end
 
   test "should store oembed data of a facebook post" do
