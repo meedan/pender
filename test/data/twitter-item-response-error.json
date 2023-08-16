@@ -1,0 +1,13 @@
+{
+  "errors": [
+    {
+      "value": "1111111111111111111",
+      "detail": "Could not find tweet with ids: [1111111111111111111].",
+      "title": "Not Found Error",
+      "resource_type": "tweet",
+      "parameter": "ids",
+      "resource_id": "1111111111111111111",
+      "type": "https://api.twitter.com/2/problems/resource-not-found"
+    }
+  ]
+}

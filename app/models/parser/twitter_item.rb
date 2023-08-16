@@ -18,48 +18,56 @@ module Parser
 
     # Main function for class
     def parse_data_for_parser(_doc, _original_url, _jsonld_array)
-      @url.gsub!(/(%23|#)!\//, '')
-      @url = replace_subdomain_pattern(url)
-      parts = url.match(TWITTER_ITEM_URL)
-      user, id = parts['user'], parts['id']
-      
-      @parsed_data['raw']['api'] = {}
-      handle_twitter_exceptions do
-        @parsed_data['raw']['api'] = twitter_client.status(id, tweet_mode: 'extended').as_json
+      handle_exceptions(StandardError) do
+        @url.gsub!(/(%23|#)!\//, '')
+        @url.gsub!(/\s/, '')
+        @url = replace_subdomain_pattern(url)
+        
+        parts = url.match(TWITTER_ITEM_URL)
+        user, id = parts['user'], parts['id']
+        
+        @parsed_data.merge!(          
+          external_id: id,
+          username: '@' + user,
+          author_url: get_author_url(user)
+        )
+          
+        @parsed_data['raw']['api'] = tweet_lookup(id)
+        @parsed_data[:error] = parsed_data.dig('raw', 'api', 'errors')
+        
+        if @parsed_data[:error] 
+          @parsed_data.merge!(
+            author_name: user,
+          )
+        elsif @parsed_data[:error].nil?
+          raw_data = parsed_data.dig('raw','api','data',0)
+          raw_user_data = parsed_data.dig('raw','api','includes','users',0)
+          
+          @parsed_data.merge!({
+            picture: get_twitter_item_picture(parsed_data),
+            title: raw_data['text'].squish,
+            description: raw_data['text'].squish,
+            author_picture: raw_user_data['profile_image_url'].gsub('_normal', ''),
+            published_at: raw_data['created_at'],
+            html: html_for_twitter_item(url),
+            author_name: raw_user_data['name'],
+          })  
+        end
       end
-      @parsed_data[:error] = parsed_data.dig(:raw, :api, :error)
-      @parsed_data.merge!({
-        external_id: id,
-        username: '@' + user,
-        title: stripped_title(parsed_data),
-        description: parsed_data.dig('raw', 'api', 'text') || parsed_data.dig('raw', 'api', 'full_text'),
-        picture: picture_url(parsed_data),
-        author_picture: author_picture_url(parsed_data),
-        published_at: parsed_data.dig('raw', 'api', 'created_at'),
-        html: html_for_twitter_item(parsed_data, url),
-        author_name: parsed_data.dig('raw', 'api', 'user', 'name'),
-        author_url: twitter_author_url(user) || RequestHelper.top_url(url)
-      })
       parsed_data
     end
 
-    def stripped_title(data)
-      title = (data.dig('raw', 'api', 'text') || data.dig('raw', 'api', 'full_text'))
-      title.gsub(/\s+/, ' ') if title
+    def get_author_url(user)
+      'https://twitter.com/' + user
     end
 
-    def author_picture_url(data)
-      picture_url = data.dig('raw', 'api', 'user', 'profile_image_url_https')
-      picture_url.gsub('_normal', '') if picture_url
+    def get_twitter_item_picture(parsed_data)
+      return unless parsed_data.dig('raw', 'api', 'includes')
+      item_media = parsed_data.dig('raw', 'api', 'includes', 'media')
+      item_media ? item_media.dig(0, 'url') : ''
     end
 
-    def picture_url(data)
-      item_media = data.dig('raw', 'api', 'entities', 'media')
-      (item_media.dig(0, 'media_url_https') || item_media.dig(0, 'media_url')) if item_media
-    end
-
-    def html_for_twitter_item(data, url)
-      return '' unless data.dig(:raw, :api, :error).blank?
+    def html_for_twitter_item(url)
       '<blockquote class="twitter-tweet">' +
       '<a href="' + url + '"></a>' +
       '</blockquote>' +

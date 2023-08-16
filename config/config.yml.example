@@ -59,10 +59,7 @@ development: &default
   #
   # REQUIRED for Twitter posts
   #
-  twitter_consumer_key: # '<TWITTER APP CONSUMER KEY>'
-  twitter_consumer_secret: # '<TWITTER APP CONSUMER SECRET>'
-  twitter_access_token: # '<TWITTER APP ACCESS TOKEN>'
-  twitter_access_token_secret: # '<TWITTER APP ACCESS TOKEN SECRET>'
+  twitter_bearer_token: # '<TWITTER API BEARER TOKEN>'
 
   # Facebook API
   #
