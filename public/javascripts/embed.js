@@ -3,9 +3,9 @@
 // This happens on the child window
 var Pender = {};
 
-(function($) {
+(function() {
   'use strict';
-
+  
   // Alert parent window when the height changes
   var htmlHeight = 0;
   if (!Pender.id) {
@@ -23,9 +23,9 @@ var Pender = {};
   var isElementOnViewPort = function(el, data) {
     var rect = el.getBoundingClientRect(),
         h = data[0], w = data[1], tp = data[2], left = data[3];
-
+  
     var offset = 500;
-
+  
     return (
       rect.top + tp >= 0 &&
       rect.left + left >= 0 &&
@@ -79,4 +79,4 @@ var Pender = {};
     }
     window.addEventListener('load', checkHTMLHeight, false);
   }
-}(jQuery));
+}())
