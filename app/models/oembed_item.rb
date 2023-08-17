@@ -42,11 +42,11 @@ class OembedItem
 
   def parse_oembed_response(response)
     return if response.nil? || response.body.blank?
-
     oembed_json = {}
     begin
       oembed_json = JSON.parse(response.body)
-      if oembed_json['html'].present?
+      return unless oembed_json.is_a?(Hash)
+      if oembed_json['html'].present? 
         doc = Nokogiri::HTML oembed_json['html']
         # Discard the oEmbed's HTML fragment in the following cases:
         # - The script.src URL is not HTTPS
