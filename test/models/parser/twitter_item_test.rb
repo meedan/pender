@@ -86,7 +86,7 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     assert_not_nil data['picture']
   end
 
-  test "it makes a get request to the tweet lookup endpoint,  endpoint and notifies sentry when 404 status is returned" do
+  test "it makes a get request to the tweet lookup endpoint, and notifies sentry when 404 status is returned" do
     stub_configs({'twitter_bearer_token' => 'test' })
 
     WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
@@ -128,6 +128,20 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
       assert_match /No route to host/, data['error'][0]['title']  
       assert_nil data['error'][0]['detail']   
     end        
+  end
+
+  test "it returns a response when 429 is returned" do
+    stub_configs({'twitter_bearer_token' => 'test' })
+
+    WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
+    .with(query: query)
+    .with(headers: { "Authorization": "Bearer test" })
+    .to_return(status: 429, body: "{'title':'Too Many Requests','detail':'Too Many Requests','type':'about:blank','status':429}")
+
+    data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
+    
+    assert_not_nil data['error']
+    assert_equal 'https://twitter.com/fake_user', data['author_url']  
   end
 
   test "sets the author_url o be https://twitter.com/<user_handle> even if an error is returned" do
