@@ -101,7 +101,7 @@ module ProviderFacebook
     title = get_page_title(html_page)
     return unless title
     return if NONUNIQUE_TITLES.include?(title.downcase)
-
+    
     title
   end
 end

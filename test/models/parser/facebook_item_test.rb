@@ -286,6 +286,8 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     # Category
     assert Parser::FacebookItem.match?('https://www.facebook.com/pages/category/Society---Culture-Website/PoporDezamagit/photos/').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/').is_a?(Parser::FacebookItem)
+    # Story
+    assert Parser::FacebookItem.match?('https://m.facebook.com/story.php?story_fbid=pfbid0213Dz5MyduLTHpELPoRmop9E7zj3Ed163P7djxSWbkfvaMSBrjNYTY9BFx6h7i3zWl&id=100054495283578').is_a?(Parser::FacebookItem)
   end
 
   test "sends tracing information to honeycomb, including updated URL" do
@@ -468,5 +470,14 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   test "#oembed_url returns URL with the instance URL" do
     oembed_url = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/1234').oembed_url
     assert_equal 'https://www.facebook.com/plugins/post/oembed.json/?url=https://www.facebook.com/fakeaccount/posts/1234', oembed_url
+  end
+
+  test "should return default data if login page" do
+    #not finished, to do
+    parser = Parser::FacebookItem.new('https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/')
+    data = parser.parse_data(empty_doc, throwaway_url)
+
+    assert_match '', data['title']
+    assert_match '', data['description']
   end
 end
