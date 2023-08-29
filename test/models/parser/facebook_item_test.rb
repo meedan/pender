@@ -472,10 +472,16 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_equal 'https://www.facebook.com/plugins/post/oembed.json/?url=https://www.facebook.com/fakeaccount/posts/1234', oembed_url
   end
 
-  test "should return default data if login page" do
-    #not finished, to do
+  test "should return default data when redirected to login page" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="Log into Facebook | Facebook" />
+      <meta property="og:description" content="Log into Facebook to start sharing and connecting with your friends, family, and people you know." />
+    HTML
+
     parser = Parser::FacebookItem.new('https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/')
-    data = parser.parse_data(empty_doc, throwaway_url)
+    data = parser.parse_data(doc, throwaway_url)
 
     assert_match 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/', data['title']
     assert_match '', data['description']
