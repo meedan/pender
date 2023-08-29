@@ -477,7 +477,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     parser = Parser::FacebookItem.new('https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/')
     data = parser.parse_data(empty_doc, throwaway_url)
 
-    assert_match '', data['title']
+    assert_match 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/', data['title']
     assert_match '', data['description']
   end
 end

@@ -75,12 +75,15 @@ module Parser
 
         @parsed_data['html'] = html_for_facebook_post(parsed_data.dig('username'), doc, url) || ''
         
-        if (@parsed_data['title'].downcase).include?('log in')
-          @parsed_data.merge!(
-            title: url,
-            description: '',
-          )
+        ['log in or sign up to view', 'log into facebook', 'log in to facebook'].each do |login|
+          if (@parsed_data[:title].downcase).include?(login)
+            @parsed_data.merge!(
+              title: url,
+              description: '',
+            )
+          end
         end
+
       end
       
       parsed_data
