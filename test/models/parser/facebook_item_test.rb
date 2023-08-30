@@ -286,6 +286,8 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     # Category
     assert Parser::FacebookItem.match?('https://www.facebook.com/pages/category/Society---Culture-Website/PoporDezamagit/photos/').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222/').is_a?(Parser::FacebookItem)
+    # Story
+    assert Parser::FacebookItem.match?('https://m.facebook.com/story.php?story_fbid=pfbid0213Dz5MyduLTHpELPoRmop9E7zj3Ed163P7djxSWbkfvaMSBrjNYTY9BFx6h7i3zWl&id=100054495283578').is_a?(Parser::FacebookItem)
   end
 
   test "sends tracing information to honeycomb, including updated URL" do
@@ -345,7 +347,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   # Implicitly testing MediaCrowdtangleItem
-  test "sends error to errbit when we receive unexpected response from crowdtangle API" do
+  test "sends error to sentry when we receive unexpected response from crowdtangle API" do
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: '')
 
     data = {}
@@ -468,5 +470,20 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   test "#oembed_url returns URL with the instance URL" do
     oembed_url = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/1234').oembed_url
     assert_equal 'https://www.facebook.com/plugins/post/oembed.json/?url=https://www.facebook.com/fakeaccount/posts/1234', oembed_url
+  end
+
+  test "should return default data when redirected to login page" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="Log into Facebook | Facebook" />
+      <meta property="og:description" content="Log into Facebook to start sharing and connecting with your friends, family, and people you know." />
+    HTML
+
+    parser = Parser::FacebookItem.new('https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/')
+    data = parser.parse_data(doc, throwaway_url)
+
+    assert_match 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/', data['title']
+    assert_match '', data['description']
   end
 end

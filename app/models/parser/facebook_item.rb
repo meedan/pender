@@ -23,7 +23,7 @@ module Parser
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo(.php)?\/?\?fbid=(?<id>[0-9]+)&set=a\.([0-9]+)(\.([0-9]+)\.([0-9]+))?.*/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/photo(.php)?\?fbid=(?<id>[0-9]+)&set=p\.([0-9]+).*/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/permalink.php\?story_fbid=(?<id>[0-9]+)&id=([0-9]+).*/,
-      /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/story.php\?story_fbid=(?<id>[0-9]+)&id=(?<user_id>[0-9]+).*/,
+      /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/story.php\?story_fbid=(?<id>[0-9a-zA-Z]+)&id=(?<user_id>[0-9]+).*/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/events\/(?<id>[0-9]+)\/permalink\/([0-9]+).*/,
       /^https?:\/\/(?<subdomain>[^\.]+\.)?facebook\.com\/groups\/(?<profile>[^\/]+)\/permalink\/(?<id>[0-9]+).*/,
       /^https?:\/\/(www\.)?facebook\.com\/(?<id>[^\/\?]+).*$/,
@@ -74,8 +74,18 @@ module Parser
         strip_facebook_from_title!
 
         @parsed_data['html'] = html_for_facebook_post(parsed_data.dig('username'), doc, url) || ''
-      end
+        
+        ['log in or sign up to view', 'log into facebook', 'log in to facebook'].each do |login|
+          if @parsed_data[:title] && (@parsed_data[:title].downcase).include?(login)
+            @parsed_data.merge!(
+              title: url,
+              description: '',
+            )
+          end
+        end
 
+      end
+      
       parsed_data
     end
 
