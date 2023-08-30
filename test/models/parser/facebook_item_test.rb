@@ -347,7 +347,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   # Implicitly testing MediaCrowdtangleItem
-  test "sends error to errbit when we receive unexpected response from crowdtangle API" do
+  test "sends error to sentry when we receive unexpected response from crowdtangle API" do
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: '')
 
     data = {}
