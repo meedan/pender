@@ -74,15 +74,6 @@ module Parser
         strip_facebook_from_title!
 
         @parsed_data['html'] = html_for_facebook_post(parsed_data.dig('username'), doc, url) || ''
-        
-        ['log in or sign up to view', 'log into facebook', 'log in to facebook'].each do |login|
-          if @parsed_data[:title] && (@parsed_data[:title].downcase).include?(login)
-            @parsed_data.merge!(
-              title: url,
-              description: '',
-            )
-          end
-        end
 
       end
       

@@ -480,10 +480,12 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
       <meta property="og:description" content="Log into Facebook to start sharing and connecting with your friends, family, and people you know." />
     HTML
 
-    parser = Parser::FacebookItem.new('https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/')
-    data = parser.parse_data(doc, throwaway_url)
+    WebMock.stub_request(:any, 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/').to_return(status: 200, body: doc.to_s)
 
-    assert_match 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/', data['title']
+    media = Media.new(url: 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/')
+    data = media.as_json
+
+    assert_equal 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988', data['title']
     assert_match '', data['description']
   end
 end

@@ -81,13 +81,16 @@ module ProviderFacebook
     title = get_page_title(html_page)
     return if title.blank?
 
-    if page_is_unavailable || ['log in or sign up to view', 'log into facebook', 'log in to facebook'].include?(title.downcase)
-      @parsed_data['title'] = @parsed_data['description'] = ''
-      @parsed_data['error'] = {
-        message: 'Login required to see this profile',
-        code: Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'),
-      }
+    ['log in or sign up to view', 'log into facebook', 'log in to facebook'].each do |login|
+      if page_is_unavailable || title.downcase.include?(login)
+        @parsed_data['title'] = nil
+        @parsed_data['description'] = ''
+        @parsed_data['error'] = {
+          message: 'Login required to see this profile',
+          code: Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'),
+        }
       return true
+      end
     end
   end
 
