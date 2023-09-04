@@ -69,18 +69,19 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert_equal url, m.url
   end
 
-  test "should add login required error and return empty html and description" do
+  test "should add login required error, return html and empty description" do
     html = "<title id='pageTitle'>Log in or sign up to view</title><meta property='og:description' content='See posts, photos and more on Facebook.'>"
     RequestHelper.stubs(:get_html).returns(Nokogiri::HTML(html))
     Media.any_instance.stubs(:follow_redirections)
 
     m = create_media url: 'https://www.facebook.com/caiosba/posts/3588207164560845'
     data = m.as_json
+    
     assert_equal 'Login required to see this profile', data[:error][:message]
     assert_equal Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
     assert_equal m.url, data[:title]
     assert data[:description].empty?
-    assert data[:html].empty?
+    assert_match "<div class=\"fb-post\" data-href=\"https://www.facebook.com/caiosba/posts/3588207164560845\"></div>", data['html']
   end
 
   test "should get canonical URL parsed from facebook html when it is relative" do

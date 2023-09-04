@@ -52,7 +52,7 @@ module Parser
         set_data_field('object_id', grabber.post_id)
         set_data_field('uuid', grabber.uuid)
         set_data_field('external_id', grabber.uuid)
-
+        
         @parsed_data['raw']['crowdtangle'] = get_crowdtangle_data(parsed_data['uuid']) || {}
         if has_valid_crowdtangle_data?
           crowdtangle_data = format_crowdtangle_result(parsed_data['raw']['crowdtangle'])
@@ -61,7 +61,7 @@ module Parser
           @parsed_data.merge!(crowdtangle_data)
         else
           og_metadata = get_opengraph_metadata.reject{|k,v| v.nil?}
-
+          
           if should_use_markup_title?
             set_data_field('title', get_unique_facebook_page_title(doc))
           else
@@ -70,11 +70,11 @@ module Parser
           set_data_field('description', og_metadata['description'])
           set_data_field('picture', og_metadata['picture'])
         end
+        set_facebook_privacy_error(doc, unavailable_page)
 
         strip_facebook_from_title!
-
+        
         @parsed_data['html'] = html_for_facebook_post(parsed_data.dig('username'), doc, url) || ''
-
       end
       
       parsed_data
@@ -82,7 +82,6 @@ module Parser
 
     def html_for_facebook_post(username, html_page, request_url)
       return unless html_page
-      return if set_facebook_privacy_error(html_page, unavailable_page)
       return if username && !['groups', 'flx'].include?(username)
       return unless not_an_event_page && not_a_group_post
 
