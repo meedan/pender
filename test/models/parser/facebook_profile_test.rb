@@ -153,7 +153,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
 
     assert_equal Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
     assert_match /Login required/, data[:error][:message]
-    assert data['title'].empty?
+    assert data['title'].nil?
     assert data['description'].empty?
   end
 
@@ -162,7 +162,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
 
     assert_equal Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
     assert_match /Login required/, data[:error][:message]
-    assert data['title'].empty?
+    assert data['title'].nil?
     assert data['description'].empty?
   end
 
