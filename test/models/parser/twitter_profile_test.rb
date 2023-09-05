@@ -51,6 +51,10 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     match_one = Parser::TwitterProfile.match?('https://twitter.com/meedan')
     assert_equal true, match_one.is_a?(Parser::TwitterProfile)
 
+    # Profile with query
+    match_one = Parser::TwitterProfile.match?('https://twitter.com/meedan?ref_src=twsrc%5Etfw')
+    assert_equal true, match_one.is_a?(Parser::TwitterProfile)
+
     # Mobile patterns
     match_two = Parser::TwitterProfile.match?('https://0.twitter.com/meedan')
     assert_equal true, match_two.is_a?(Parser::TwitterProfile)
@@ -58,6 +62,8 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     assert_equal true, match_three.is_a?(Parser::TwitterProfile)
     match_four = Parser::TwitterProfile.match?('https://mobile.twitter.com/meedan')
     assert_equal true, match_four.is_a?(Parser::TwitterProfile)
+    match_five = Parser::TwitterProfile.match?('https://mobile.twitter.com/meedan?ref_src=twsrc%5Etfw')
+    assert_equal true, match_five.is_a?(Parser::TwitterProfile)
   end
 
   test "it makes a get request to the user lookup by username endpoint successfully" do
@@ -192,5 +198,14 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
   test "#oembed_url returns URL with the instance URL" do
     oembed_url = Parser::TwitterProfile.new('https://twitter.com/fake-account').oembed_url
     assert_equal 'https://publish.twitter.com/oembed?url=https://twitter.com/fake-account', oembed_url
+  end
+
+  test "should parse tweet profile with a query on the url" do
+    stub_profile_lookup.returns(twitter_profile_response_success)
+
+    data = Parser::TwitterProfile.new('https://www.twitter.com/fake_user?ref_src=twsrc%5Etfw').parse_data(empty_doc)
+
+    assert_equal 'fake_user', data['external_id']
+    assert_equal '@fake_user', data['username']
   end
 end
