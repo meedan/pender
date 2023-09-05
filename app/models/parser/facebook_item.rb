@@ -70,20 +70,11 @@ module Parser
           set_data_field('description', og_metadata['description'])
           set_data_field('picture', og_metadata['picture'])
         end
+        set_facebook_privacy_error(doc, unavailable_page)
 
         strip_facebook_from_title!
-
-        @parsed_data['html'] = html_for_facebook_post(parsed_data.dig('username'), doc, url) || ''
         
-        ['log in or sign up to view', 'log into facebook', 'log in to facebook'].each do |login|
-          if @parsed_data[:title] && (@parsed_data[:title].downcase).include?(login)
-            @parsed_data.merge!(
-              title: url,
-              description: '',
-            )
-          end
-        end
-
+        @parsed_data['html'] = html_for_facebook_post(parsed_data.dig('username'), doc, url) || ''
       end
       
       parsed_data
@@ -91,7 +82,6 @@ module Parser
 
     def html_for_facebook_post(username, html_page, request_url)
       return unless html_page
-      return if set_facebook_privacy_error(html_page, unavailable_page)
       return if username && !['groups', 'flx'].include?(username)
       return unless not_an_event_page && not_a_group_post
 

@@ -69,18 +69,19 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert_equal url, m.url
   end
 
-  test "should add login required error and return empty html and description" do
+  test "should add login required error, return html and empty description" do
     html = "<title id='pageTitle'>Log in or sign up to view</title><meta property='og:description' content='See posts, photos and more on Facebook.'>"
     RequestHelper.stubs(:get_html).returns(Nokogiri::HTML(html))
     Media.any_instance.stubs(:follow_redirections)
 
     m = create_media url: 'https://www.facebook.com/caiosba/posts/3588207164560845'
     data = m.as_json
+    
     assert_equal 'Login required to see this profile', data[:error][:message]
     assert_equal Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
     assert_equal m.url, data[:title]
     assert data[:description].empty?
-    assert data[:html].empty?
+    assert_match "<div class=\"fb-post\" data-href=\"https://www.facebook.com/caiosba/posts/3588207164560845\"></div>", data['html']
   end
 
   test "should get canonical URL parsed from facebook html when it is relative" do
@@ -480,10 +481,12 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
       <meta property="og:description" content="Log into Facebook to start sharing and connecting with your friends, family, and people you know." />
     HTML
 
-    parser = Parser::FacebookItem.new('https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/')
-    data = parser.parse_data(doc, throwaway_url)
+    WebMock.stub_request(:any, 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/').to_return(status: 200, body: doc.to_s)
 
-    assert_match 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/', data['title']
+    media = Media.new(url: 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/')
+    data = media.as_json
+
+    assert_equal 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988', data['title']
     assert_match '', data['description']
   end
 end
