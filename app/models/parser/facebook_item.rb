@@ -52,7 +52,7 @@ module Parser
         set_data_field('object_id', grabber.post_id)
         set_data_field('uuid', grabber.uuid)
         set_data_field('external_id', grabber.uuid)
-        
+
         @parsed_data['raw']['crowdtangle'] = get_crowdtangle_data(parsed_data['uuid']) || {}
         if has_valid_crowdtangle_data?
           crowdtangle_data = format_crowdtangle_result(parsed_data['raw']['crowdtangle'])
@@ -61,7 +61,7 @@ module Parser
           @parsed_data.merge!(crowdtangle_data)
         else
           og_metadata = get_opengraph_metadata.reject{|k,v| v.nil?}
-          
+
           if should_use_markup_title?
             set_data_field('title', get_unique_facebook_page_title(doc))
           else
