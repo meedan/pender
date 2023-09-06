@@ -477,7 +477,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_equal 'https://www.facebook.com/plugins/post/oembed.json/?url=https://www.facebook.com/fakeaccount/posts/1234', oembed_url
   end
 
-  test "should return default data when redirected to login page" do
+  test "should return default data (set title to URL and descrption to empty string) when redirected to login page" do
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
@@ -492,5 +492,25 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
 
     assert_equal 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988', data['title']
     assert_match '', data['description']
+  end
+
+  test "should get canonical URL from facebook object 3 / integration original" do
+    url = 'https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407/?type=3&theater'
+    media = Media.new(url: url)
+    media.as_json({ force: 1 })
+    assert_match 'https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407', media.url
+  end
+
+  test "should get canonical URL from facebook object 3" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:url" content="https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407" />
+    HTML
+
+    parser = Parser::FacebookItem.new('https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407/?type=3&theater')
+    data = parser.parse_data(doc, throwaway_url)
+
+    assert_match 'https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407', data['url']
   end
 end
