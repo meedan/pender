@@ -47,7 +47,15 @@ class KwaiUnitTest <  ActiveSupport::TestCase
     assert_equal 'Reginaldo Silva2871', data[:username]
   end
 
-  test "assigns values to hash from ldjson" do
-    
+  test "assigns values to hash from the json+ld" do
+    empty_doc = Nokogiri::HTML('')
+
+    jsonld = [{"url"=>"https://www.kwai.com/@fakeuser/video/5221229445268222050", "name"=>"Fake User. Áudio original criado por Fake User.", "description"=>"#tag1 #tag2 #tag3", "transcript"=>"video transcript", "creator"=>{"name"=>"Fake User", "description"=>"Fake User Description", "alternateName"=>"fakeuser", "url"=>"https://www.kwai.com/@fakeuser"}, "@context"=>"https://schema.org/", "@type"=>"VideoObject"}]
+
+    data = Parser::KwaiItem.new('https://www.kwai.com/fakelink').parse_data(empty_doc, 'https://www.kwai.com/fakelink', jsonld)
+
+    assert_equal 'video transcript', data['description']
+    assert_equal 'Fake User. Áudio original criado por Fake User.', data['title']
+    assert_equal 'Fake User', data['author_name']
   end
 end
