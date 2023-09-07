@@ -21,7 +21,7 @@ module Parser
 
         title = get_kwai_text_from_tag(doc, '.info .title') || jsonld.dig('name')
         name = get_kwai_text_from_tag(doc, '.name') || jsonld.dig('creator','name')
-        description = jsonld.dig('transcript') || jsonld.dig('description')
+        description = get_kwai_text_from_tag(doc, '.info .title') || jsonld.dig('transcript') || jsonld.dig('description')
         @parsed_data.merge!({
           title: title,
           description: description,
