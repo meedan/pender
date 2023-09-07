@@ -2,14 +2,15 @@ require 'test_helper'
 
 class KwaiIntegrationTest < ActiveSupport::TestCase
   test "should parse Kwai URL" do
-    m = create_media url: 'https://s.kw.ai/p/1mCb9SSh'
+    m = create_media url: 'https://kwai-video.com/p/md02RsCS'
     data = m.as_json
-    assert_equal 'Reginaldo Silva2871', data['username']
+
+    assert_equal 'Arthur Virgilio', data['username']
     assert_equal 'item', data['type']
     assert_equal 'kwai', data['provider']
-    assert_equal 'Reginaldo Silva2871', data['author_name']
-    assert_equal 'F. Francisco', data['title']
-    assert_equal 'F. Francisco', data['description']
+    assert_equal 'Arthur Virgilio', data['author_name']
+    assert_match 'Presidente Zelensky foi consagrado numa sala de reuniões', data['title']
+    assert_match 'foi consagrado numa sala de reuniões do G7', data['description']
     assert_nil data['error']
   end
 end
@@ -44,5 +45,9 @@ class KwaiUnitTest <  ActiveSupport::TestCase
     assert_equal 'A special video', data[:description]
     assert_equal 'Reginaldo Silva2871', data[:author_name]
     assert_equal 'Reginaldo Silva2871', data[:username]
+  end
+
+  test "assigns values to hash from ldjson" do
+    
   end
 end
