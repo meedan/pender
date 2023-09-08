@@ -477,7 +477,9 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_equal 'https://www.facebook.com/plugins/post/oembed.json/?url=https://www.facebook.com/fakeaccount/posts/1234', oembed_url
   end
 
-  test "should return default data (set title to URL and descrption to empty string) when redirected to login page" do
+  test "should return default data (set title to URL and description to empty string) when redirected to login page" do
+    url = 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988'
+    
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
@@ -485,32 +487,206 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
       <meta property="og:description" content="Log into Facebook to start sharing and connecting with your friends, family, and people you know." />
     HTML
 
-    WebMock.stub_request(:any, 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/').to_return(status: 200, body: doc.to_s)
+    WebMock.stub_request(:any, url).to_return(status: 200, body: doc.to_s)
 
-    media = Media.new(url: 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/')
+    media = Media.new(url: url)
     data = media.as_json
 
-    assert_equal 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988', data['title']
+    assert_equal url, data['title']
     assert_match '', data['description']
   end
 
-  test "should get canonical URL from facebook object 3 / integration original" do
-    url = 'https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407/?type=3&theater'
-    media = Media.new(url: url)
-    media.as_json({ force: 1 })
-    assert_match 'https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407', media.url
-  end
-
   test "should get canonical URL from facebook object 3" do
+    url_from_facebook_object_3 = 'https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407/?type=3&theater'
+    canonical_url = "https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407"
+
     WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:url" content="https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407" />
     HTML
 
-    parser = Parser::FacebookItem.new('https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407/?type=3&theater')
-    data = parser.parse_data(doc, throwaway_url)
+    WebMock.stub_request(:any, url_from_facebook_object_3).to_return(status: 200, body: doc.to_s)
+    WebMock.stub_request(:any, canonical_url).to_return(status: 200)
+    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{canonical_url}").to_return(status: 200)
 
-    assert_match 'https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407', data['url']
+    media = Media.new(url: url_from_facebook_object_3)
+    data = media.as_json
+
+    assert_match canonical_url, data['url']
+  end
+
+  test "should create Facebook post from mobile URL" do
+    url = 'https://m.facebook.com/KIKOLOUREIROofficial/photos/a.10150618138397252/10152555300292252/?type=3&theater'
+
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+
+    WebMock.stub_request(:any, url).to_return(status: 200)
+    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?theater&url=https://m.facebook.com/KIKOLOUREIROofficial/photos/a.10150618138397252/10152555300292252?type=3").to_return(status: 200)
+
+    media = Media.new(url: url)
+    data = media.as_json
+
+    assert !data['title'].blank?
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
+  end
+
+  test "should not use Facebook embed if is a link to redirect" do
+    # not sure about keeping this test, it has a few issues: 1. it's hiting profile not item 2. this link doesn't redirect from FB to a different site, it hits a 'post doesn't exist' sort of message 3. I tried looking for a post that did re-redirect but I think that behavior might no longer exist
+    # I'll leave this here for now and come back to it to decide what to do with this
+    url = 'https://l.facebook.com/l.php?u=https://hindi.indiatvnews.com/paisa/business-1-07-cr-new-taxpayers-added-dropped-filers-down-at-25-22-lakh-in-fy18-630914&h=AT1WAU-mDHKigOgFNrUsxsS2doGO0_F5W9Yck7oYUx-IsYAHx8JqyHwO02-N0pX8UOlcplZO50px8mkTA1XNyKig8Z2CfX6t3Sh0bHtO9MYPtWqacCm6gOXs5lbC6VGMLjDALNXZ6vg&s=1'
+    
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="some page title" />
+      <meta property="og:description" content="this is the page description" />
+      <title id="pageTitle">this is also a page title</title>
+    HTML
+
+    WebMock.stub_request(:any, url).to_return(status: 200, body: doc.to_s)
+    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
+
+    media = Media.new(url: url)
+    data = media.as_json
+
+    assert !data['title'].blank?
+    assert_equal '', data['html']
+  end
+
+  test "should return canonical url when redirected to login page" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+
+    url = 'https://www.facebook.com/ugmhmyanmar/posts/2850282508516442'
+    canonical_url = 'https://www.facebook.com/ugmhmyanmar/posts/ugmh-%E1%80%80%E1%80%95%E1%80%BC%E1%80%B1%E1%80%AC%E1%80%90%E1%80%B2%E1%80%B7-ugmh-%E1%80%A1%E1%80%80%E1%80%BC%E1%80%B1%E1%80%AC%E1%80%84%E1%80%BA%E1%80%B8%E1%80%A1%E1%80%95%E1%80%AD%E1%80%AF%E1%80%84%E1%80%BA%E1%80%B8-%E1%81%84%E1%80%80%E1%80%90%E1%80%AD%E1%80%99%E1%80%90%E1%80%8A%E1%80%BA%E1%80%81%E1%80%BC%E1%80%84%E1%80%BA%E1%80%B8-%E1%80%80%E1%80%9C%E1%80%AD%E1%80%94%E1%80%BA%E1%80%80%E1%80%BB%E1%80%85%E1%80%BA%E1%80%80%E1%80%BB%E1%80%81%E1%80%BC%E1%80%84%E1%80%BA%E1%80%B8%E1%80%9B%E1%80%B2%E1%80%B7-%E1%80%A1%E1%80%80%E1%80%BB%E1%80%AD%E1%80%AF%E1%80%B8%E1%80%86%E1%80%80%E1%80%BA%E1%80%9F%E1%80%AC/2850282508516442/'
+    redirection_to_login_page = 'https://www.facebook.com/login/'
+    
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:url" content="#{canonical_url}"/>
+    HTML
+    
+    response = 'mock'; response.stubs(:code).returns('302')
+    response.stubs(:header).returns({ 'location' => redirection_to_login_page })
+    response_login_page = 'mock'; response_login_page.stubs(:code).returns('200')
+    
+    RequestHelper.stubs(:request_url).with(url, 'Get').returns(response)
+    RequestHelper.stubs(:request_url).with(canonical_url, 'Get').returns(response)
+    RequestHelper.stubs(:request_url).with(redirection_to_login_page, 'Get').returns(response_login_page)
+    RequestHelper.stubs(:request_url).with(redirection_to_login_page + '?next=https%3A%2F%2Fwww.facebook.com%2Fugmhmyanmar%2Fposts%2F2850282508516442', 'Get').returns(response_login_page)
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
+    
+    media = Media.new(url: url)
+
+    assert_equal canonical_url, media.url 
+    assert_equal url, media.original_url 
+  end
+
+  test "should add login required error, return html and empty description" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+
+    url = 'https://www.facebook.com/caiosba/posts/3588207164560845'
+
+    html = "<title id='pageTitle'>Log in or sign up to view</title><meta property='og:description' content='See posts, photos and more on Facebook.'>"
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML(html))
+    Media.any_instance.stubs(:follow_redirections)
+
+    WebMock.stub_request(:get, url).to_return(status: 200)
+
+    m = Media.new(url: url)
+    data = m.as_json
+    
+    assert_equal 'Login required to see this profile', data[:error][:message]
+    assert_equal Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
+    assert_equal m.url, data[:title]
+    assert data[:description].empty?
+    assert_match "<div class=\"fb-post\" data-href=\"#{url}\"></div>", data['html']
+  end
+
+  test "should get canonical URL parsed from facebook html when it is relative" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+
+    relative_url = '/dina.samak/posts/10153679232246949'
+    url = "https://www.facebook.com#{relative_url}"
+
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='#{relative_url}'>"))
+    Media.any_instance.stubs(:follow_redirections)
+
+    WebMock.stub_request(:get, url).to_return(status: 200)
+
+    m = Media.new(url: url)
+    assert_equal url, m.url
+  end
+
+  test "should get canonical URL parsed from facebook html when it is a page" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+
+    canonical_url = 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479'
+    url = 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479?pnref=story.unseen-section'
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property='og:url' content="#{canonical_url}">
+    HTML
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
+    WebMock.stub_request(:get, canonical_url).to_return(status: 200)
+
+    m = Media.new(url: url)
+    assert_equal canonical_url, m.url
+  end
+
+  test "should get the group name when parsing group post" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+
+    url = 'https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222'
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="Welcome! This group is a gathering for those interested in exploring belief systems" />
+    HTML
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
+    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
+
+    m = Media.new(url: url)
+    data = m.as_json
+
+    assert_match /(memetics.hacking|exploring belief systems)/, data['title']
+    assert_match /permalink\/1580570905320222/, data['url']
+    assert_equal 'facebook', data['provider']
+    assert_equal 'item', data['type']
+  end
+
+  test "should return html even when FB url is private" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+
+    url = 'https://www.facebook.com/caiosba/posts/1913749825339929'
+
+    html = "<title id='pageTitle'>Log in or sign up to view</title><meta property='og:description' content='See posts, photos and more on Facebook.'>"
+    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML(html))
+
+    WebMock.stub_request(:get, url).to_return(status: 200)
+
+    m = Media.new(url: url)
+    data = m.as_json
+    
+    assert_equal 'facebook', data['provider']
+    assert_match "<div class=\"fb-post\" data-href=\"https://www.facebook.com/caiosba/posts/1913749825339929\">", data['html']
+  end
+
+  test "should store oembed data of a facebook post" do
+    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+
+    url = 'https://www.facebook.com/144585402276277/posts/1127489833985824'
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: empty_doc.to_s)
+    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
+    
+    m = Media.new(url: url)
+    data = m.as_json
+
+    assert data['oembed'].is_a? Hash
+    assert_match /facebook.com/, data['oembed']['provider_url']
+    assert_equal "facebook", data['oembed']['provider_name'].downcase
   end
 end
