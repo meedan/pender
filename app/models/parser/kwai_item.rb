@@ -19,7 +19,7 @@ module Parser
       handle_exceptions(StandardError) do
         jsonld = (jsonld_array.find{|item| item.dig('@type') == 'VideoObject'} || {})
 
-        title = get_kwai_text_from_tag(doc, '.info .title') || jsonld.dig('name')
+        title = get_kwai_text_from_tag(doc, '.info .title') 
         name = get_kwai_text_from_tag(doc, '.name') || jsonld.dig('creator','name')
         description = get_kwai_text_from_tag(doc, '.info .title') || jsonld.dig('transcript') || jsonld.dig('description')
         @parsed_data.merge!({
