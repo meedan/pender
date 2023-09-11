@@ -58,15 +58,19 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
 
   test "should not change url when redirected to login page" do
     url = 'https://www.facebook.com/ugmhmyanmar/posts/2850282508516442'
+    canonical_url = 'https://www.facebook.com/ugmhmyanmar/posts/ugmh-%E1%80%80%E1%80%95%E1%80%BC%E1%80%B1%E1%80%AC%E1%80%90%E1%80%B2%E1%80%B7-ugmh-%E1%80%A1%E1%80%80%E1%80%BC%E1%80%B1%E1%80%AC%E1%80%84%E1%80%BA%E1%80%B8%E1%80%A1%E1%80%95%E1%80%AD%E1%80%AF%E1%80%84%E1%80%BA%E1%80%B8-%E1%81%84%E1%80%80%E1%80%90%E1%80%AD%E1%80%99%E1%80%90%E1%80%8A%E1%80%BA%E1%80%81%E1%80%BC%E1%80%84%E1%80%BA%E1%80%B8-%E1%80%80%E1%80%9C%E1%80%AD%E1%80%94%E1%80%BA%E1%80%80%E1%80%BB%E1%80%85%E1%80%BA%E1%80%80%E1%80%BB%E1%80%81%E1%80%BC%E1%80%84%E1%80%BA%E1%80%B8%E1%80%9B%E1%80%B2%E1%80%B7-%E1%80%A1%E1%80%80%E1%80%BB%E1%80%AD%E1%80%AF%E1%80%B8%E1%80%86%E1%80%80%E1%80%BA%E1%80%9F%E1%80%AC/2850282508516442/'
     redirection_to_login_page = 'https://www.facebook.com/login/'
     response = 'mock'; response.stubs(:code).returns('302')
     response.stubs(:header).returns({ 'location' => redirection_to_login_page })
     response_login_page = 'mock'; response_login_page.stubs(:code).returns('200')
     RequestHelper.stubs(:request_url).with(url, 'Get').returns(response)
+    RequestHelper.stubs(:request_url).with(canonical_url, 'Get').returns(response)
     RequestHelper.stubs(:request_url).with(redirection_to_login_page, 'Get').returns(response_login_page)
     RequestHelper.stubs(:request_url).with(redirection_to_login_page + '?next=https%3A%2F%2Fwww.facebook.com%2Fugmhmyanmar%2Fposts%2F2850282508516442', 'Get').returns(response_login_page)
+    
     m = create_media url: url
-    assert_equal url, m.url
+    assert_equal canonical_url, m.url 
+    assert_equal url, m.original_url 
   end
 
   test "should add login required error, return html and empty description" do
