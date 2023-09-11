@@ -15,17 +15,21 @@ module Parser
     private    
 
     # Main function for class
-    def parse_data_for_parser(doc, _original_url, _jsonld_array)
+    def parse_data_for_parser(doc, _original_url, jsonld_array)
       handle_exceptions(StandardError) do
-        title = get_kwai_text_from_tag(doc, '.info .title')
-        name = get_kwai_text_from_tag(doc, '.name')
+        jsonld = (jsonld_array.find{|item| item.dig('@type') == 'VideoObject'} || {})
+
+        title = get_kwai_text_from_tag(doc, '.info .title') 
+        name = get_kwai_text_from_tag(doc, '.name') || jsonld.dig('creator','name').strip
+        description = get_kwai_text_from_tag(doc, '.info .title') || jsonld.dig('transcript').strip || jsonld.dig('description').strip
         @parsed_data.merge!({
           title: title,
-          description: title,
+          description: description,
           author_name: name,
           username: name
         })
       end
+
       parsed_data
     end
   
