@@ -81,4 +81,12 @@ class KwaiUnitTest <  ActiveSupport::TestCase
     assert_equal 'https://www.kwai.com/@fakeuser/111111111', data['title']
     assert_equal 'Fake User', data['author_name']
   end
+
+  test "fallbacks to the username on the url when doc and json+ld are not present, if name is present in the url" do
+    empty_doc = Nokogiri::HTML('')
+
+    data = Parser::KwaiItem.new('https://www.kwai.com/@fakeuser/111111111').parse_data(empty_doc, 'https://www.kwai.com/@fakeuser/111111111')
+
+    assert_equal 'fakeuser', data['author_name']
+  end
 end
