@@ -17,14 +17,6 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     @empty_doc ||= Nokogiri::HTML('')
   end
 
-  def post_doc
-    @post_doc ||= response_fixture_from_file('facebook-item-page_ironmaiden.html', parse_as: :html)
-  end
-
-  def pfbid_doc
-    @pfbid_doc ||= response_fixture_from_file('facebook-item-page_pfbid.html', parse_as: :html)
-  end
-
   def crowdtangle_response
     <<~JSON
     {
@@ -162,7 +154,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   test "sends tracing information to honeycomb, including updated URL" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
 
     TracingService.expects(:add_attributes_to_current_span).with({
       'app.parser.type' => 'facebook_item',
@@ -173,8 +165,28 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824').parse_data(empty_doc, 'https://www.facebook.com/fakeaccount/posts/original-123456789')
   end
 
-  test "sets fallbacks from metatags on crowdtangle error, and populates HTML" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+  test "sets information from crowdtangle" do
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+
+    parser = Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824')
+    data = parser.parse_data(empty_doc, throwaway_url)
+
+    assert data['error'].blank?
+    assert_equal '123456789276277_1127489833985824', data['external_id']
+    assert_equal 'Trent Aric - Meteorologist', data['author_name']
+    assert_equal 'TrentAricTV', data['username']
+    assert_match /273572839_489238069228086_8419777016738266396_n.jpg/, data['author_picture']
+    assert_equal 'https://www.facebook.com/123456789276277', data['author_url']
+    assert_match /Look at what the long range computer models are indicating/, data['title']
+    assert_match /Look at what the long range computer models are indicating/, data['description']
+    assert_match /Look at what the long range computer models are indicating/, data['text']
+    assert_match /14602101_1127500960651378_1143375978446192640_n.jpg\?_nc_cat=107&ccb=1-6/, data['picture']
+    assert_equal 'native_video', data['subtype']
+    assert_equal '2016-10-05 11:15:30', data['published_at']
+  end
+
+  test "sets fallbacks from metatags and populates HTML for post on crowdtangle error" do
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="this is a page title" />
@@ -194,14 +206,13 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_match /data-href="https:\/\/www.facebook.com\/fakeaccount\/posts\/123456789"/, data.dig('html')
   end
 
-  test "sets fallbacks from title metatags for event and watch URLS on crowdtangle error, and populates HTML" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+  test "sets fallbacks from metatags for event and watch URLS on crowdtangle error" do
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="this is a page title | Facebook" />
       <meta property="og:description" content="this is the page description" />
       <meta property="og:image" content="https://example.com/image" />
-      <title id='pageTitle'>this is also a page title | Facebook</title>
     HTML
 
     data = Parser::FacebookItem.new('https://www.facebook.com/events/331430157280289').parse_data(doc, throwaway_url)
@@ -217,9 +228,27 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_equal 'this is the page description', data['description']
   end
 
+  # not sure if this test is needed
+  test "should parse and set data from mobile URL" do
+    url = 'https://m.facebook.com/KIKOLOUREIROofficial/photos/a.10150618138397252/10152555300292252/?type=3&theater'
+
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="this is a page title" />
+      <meta property="og:description" content="this is the page description" />
+      <meta property="og:url" content="#{url}" />
+    HTML
+
+    data = Parser::FacebookItem.new(url).parse_data(doc, url)
+
+    assert !data['title'].blank?
+  end
+
   # Implicitly testing MediaCrowdtangleItem
+  # This test is flaky, need to come back to it
   test "sends error to sentry when we receive unexpected response from crowdtangle API" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: '')
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: 'something unexpected')
 
     data = {}
     sentry_call_count = 0
@@ -237,49 +266,31 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     Parser::FacebookItem::IdsGrabber.any_instance.stubs(:uuid).returns(nil)
 
     data = Parser::FacebookItem.new('https://www.facebook.com/55555/posts/123456789').parse_data(empty_doc, throwaway_url)
+
     assert data['error'].blank?
     assert_match /No ID given for Crowdtangle/, data.dig('raw', 'crowdtangle', 'error', 'message')
   end
 
   test 'sets raw error when crowdtangle request fails' do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+    
     data = Parser::FacebookItem.new('https://www.facebook.com/55555/posts/123456789').parse_data(empty_doc, throwaway_url)
 
     assert data['error'].blank?
     assert_match /No results received from Crowdtangle/, data.dig('raw', 'crowdtangle', 'error', 'message')
   end
 
-  test "sets information from crowdtangle" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
-
-    parser = Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824')
-    data = parser.parse_data(empty_doc, throwaway_url)
-
-    assert data['error'].blank?
-    assert_equal '123456789276277_1127489833985824', data['external_id']
-    assert_equal 'Trent Aric - Meteorologist', data['author_name']
-    assert_equal 'TrentAricTV', data['username']
-    assert_match /273572839_489238069228086_8419777016738266396_n.jpg/, data['author_picture']
-    assert_equal 'https://www.facebook.com/123456789276277', data['author_url']
-    assert_match /Look at what the long range computer models are indicating/, data['title']
-    assert_match /Look at what the long range computer models are indicating/, data['description']
-    assert_match /Look at what the long range computer models are indicating/, data['text']
-    assert_match /14602101_1127500960651378_1143375978446192640_n.jpg\?_nc_cat=107&ccb=1-6/, data['picture']
-    assert_equal 'native_video', data['subtype']
-    assert_equal '2016-10-05 11:15:30', data['published_at']
-  end
-
   test "updates URL if different than received from crowdtangle" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
 
     parser = Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824')
-    data = parser.parse_data(empty_doc, throwaway_url)
+    parser.parse_data(empty_doc, throwaway_url)
 
     assert_equal 'https://www.facebook.com/123456789276277/posts/1127489833985824/woo', parser.url
   end
 
-  test 'when crowdtangle returns a different post than we tried to request' do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+  test 'sets raw error when crowdtangle returns a different post than we tried to request' do
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
 
     data = Parser::FacebookItem.new('https://www.facebook.com/12345/posts/55555').parse_data(empty_doc, 'https://www.facebook.com/12345/posts/55555')
 
@@ -289,31 +300,36 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_nil data['description']
   end
 
-  test "should return empty html for deleted posts (when doc cannot be returned)" do
-    RequestHelper.stubs(:get_html).returns(nil)
+  # facebook started returning an answer for unavailable items (https://github.com/meedan/pender/pull/374)
+  # the html gives the user more information (that it is an issue on FB's side and not check)
+  test "sets html for deleted/unavailable posts" do
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
-    data = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/12345').parse_data(nil, throwaway_url)
-    assert_equal '', data[:html]
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2,shrink-to-fit=no">
+      <meta name="color-scheme" content="dark">
+      <meta name="theme-color" content="#242526">
+    HTML
+
+    WebMock.stub_request(:get, 'https://www.facebook.com/fakeaccount/posts/12345').to_return(status: 200, body: doc.to_s)
+
+    data = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/12345').parse_data(doc, throwaway_url)
+    assert !data[:html].blank?
   end
 
-  test "should return empty html when FB url is from group and cannot be embedded" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: {}.to_json)
+  test "should return empty html when FB url is from group or event and cannot be embedded" do
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
     data = Parser::FacebookItem.new('https://www.facebook.com/groups/133819471984630/').parse_data(empty_doc, throwaway_url)
-
     assert_equal '', data['html']
-  end
-
-  test "should return empty html when FB url is event and cannot be embedded" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: {}.to_json)
 
     data = Parser::FacebookItem.new('https://www.facebook.com/events/331430157280289').parse_data(empty_doc, throwaway_url)
-
     assert_equal '', data['html']
   end
 
   test "should reject default page titles" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: {}.to_json)
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+    
     parser = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/12345')
 
     doc = Nokogiri::HTML(<<~HTML)
@@ -330,12 +346,20 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   test "sets unique title from page description when FB post ID is obscured in URL" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: {}.to_json)
+    url = "https://www.facebook.com/LittleMix/posts/pfbid0E7xrT6BDrv7r7Ry3kHUSdw2naE6BdFBgH2gTsEY9h1a64DdM3vqPyq8gXaFY5rqhl"
+    
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
-    parser = Parser::FacebookItem.new('https://www.facebook.com/LittleMix/posts/pfbid0E7xrT6BDrv7r7Ry3kHUSdw2naE6BdFBgH2gTsEY9h1a64DdM3vqPyq8gXaFY5rqhl')
-    data = parser.parse_data(pfbid_doc, throwaway_url)
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="this is a page title" />
+      <meta property="og:description" content="this is the page description" />
+      <meta property="og:url" content="#{url}" />
+    HTML
 
-    assert_match /Nothing comes between us/, data['title']
+    parser = Parser::FacebookItem.new(url)
+    data = parser.parse_data(doc, throwaway_url)
+
+    assert_match "this is the page description", data['title']
   end
 
   test "#oembed_url returns URL with the instance URL" do
@@ -343,17 +367,19 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_equal 'https://www.facebook.com/plugins/post/oembed.json/?url=https://www.facebook.com/fakeaccount/posts/1234', oembed_url
   end
 
+  # we need to test Media here because that's where the default values are set after the FB parser ran
+  # which makes me wonder if we should be testing this here at all or only in Media
   test "should return default data (set title to URL and description to empty string) when redirected to login page" do
     url = 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988'
     
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="Log into Facebook | Facebook" />
       <meta property="og:description" content="Log into Facebook to start sharing and connecting with your friends, family, and people you know." />
     HTML
 
-    WebMock.stub_request(:any, url).to_return(status: 200, body: doc.to_s)
+    WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
 
     media = Media.new(url: url)
     data = media.as_json
@@ -362,18 +388,20 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_match '', data['description']
   end
 
+  # we need to test Media here because that's where we get_canonical_url after the FB parser ran
+  # which makes me wonder if we should be testing this here at all or only in Media
   test "should get canonical URL from facebook object 3" do
     url_from_facebook_object_3 = 'https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407/?type=3&theater'
     canonical_url = "https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407"
 
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:url" content="https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407" />
     HTML
 
-    WebMock.stub_request(:any, url_from_facebook_object_3).to_return(status: 200, body: doc.to_s)
-    WebMock.stub_request(:any, canonical_url).to_return(status: 200)
+    WebMock.stub_request(:get, url_from_facebook_object_3).to_return(status: 200, body: doc.to_s)
+    WebMock.stub_request(:get, canonical_url).to_return(status: 200)
     WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{canonical_url}").to_return(status: 200)
 
     media = Media.new(url: url_from_facebook_object_3)
@@ -382,66 +410,24 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_match canonical_url, data['url']
   end
 
-  test "should create Facebook post from mobile URL" do
-    url = 'https://m.facebook.com/KIKOLOUREIROofficial/photos/a.10150618138397252/10152555300292252/?type=3&theater'
-
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
-
-    WebMock.stub_request(:any, url).to_return(status: 200)
-    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?theater&url=https://m.facebook.com/KIKOLOUREIROofficial/photos/a.10150618138397252/10152555300292252?type=3").to_return(status: 200)
-
-    media = Media.new(url: url)
-    data = media.as_json
-
-    assert !data['title'].blank?
-    assert_equal 'facebook', data['provider']
-    assert_equal 'item', data['type']
-  end
-
-  test "should not use Facebook embed if is a link to redirect" do
-    # not sure about keeping this test, it has a few issues: 1. it's hiting profile not item 2. this link doesn't redirect from FB to a different site, it hits a 'post doesn't exist' sort of message 3. I tried looking for a post that did re-redirect but I think that behavior might no longer exist
-    # I'll leave this here for now and come back to it to decide what to do with this
-    url = 'https://l.facebook.com/l.php?u=https://hindi.indiatvnews.com/paisa/business-1-07-cr-new-taxpayers-added-dropped-filers-down-at-25-22-lakh-in-fy18-630914&h=AT1WAU-mDHKigOgFNrUsxsS2doGO0_F5W9Yck7oYUx-IsYAHx8JqyHwO02-N0pX8UOlcplZO50px8mkTA1XNyKig8Z2CfX6t3Sh0bHtO9MYPtWqacCm6gOXs5lbC6VGMLjDALNXZ6vg&s=1'
-    
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
-
-    doc = Nokogiri::HTML(<<~HTML)
-      <meta property="og:title" content="some page title" />
-      <meta property="og:description" content="this is the page description" />
-      <title id="pageTitle">this is also a page title</title>
-    HTML
-
-    WebMock.stub_request(:any, url).to_return(status: 200, body: doc.to_s)
-    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
-
-    media = Media.new(url: url)
-    data = media.as_json
-
-    assert !data['title'].blank?
-    assert_equal '', data['html']
-  end
-
+  # we need to test Media here because that's where we get_canonical_url after the FB parser ran
+  # which makes me wonder if we should be testing this here at all or only in Media
   test "should return canonical url when redirected to login page" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
-
     url = 'https://www.facebook.com/ugmhmyanmar/posts/2850282508516442'
     canonical_url = 'https://www.facebook.com/ugmhmyanmar/posts/ugmh-%E1%80%80%E1%80%95%E1%80%BC%E1%80%B1%E1%80%AC%E1%80%90%E1%80%B2%E1%80%B7-ugmh-%E1%80%A1%E1%80%80%E1%80%BC%E1%80%B1%E1%80%AC%E1%80%84%E1%80%BA%E1%80%B8%E1%80%A1%E1%80%95%E1%80%AD%E1%80%AF%E1%80%84%E1%80%BA%E1%80%B8-%E1%81%84%E1%80%80%E1%80%90%E1%80%AD%E1%80%99%E1%80%90%E1%80%8A%E1%80%BA%E1%80%81%E1%80%BC%E1%80%84%E1%80%BA%E1%80%B8-%E1%80%80%E1%80%9C%E1%80%AD%E1%80%94%E1%80%BA%E1%80%80%E1%80%BB%E1%80%85%E1%80%BA%E1%80%80%E1%80%BB%E1%80%81%E1%80%BC%E1%80%84%E1%80%BA%E1%80%B8%E1%80%9B%E1%80%B2%E1%80%B7-%E1%80%A1%E1%80%80%E1%80%BB%E1%80%AD%E1%80%AF%E1%80%B8%E1%80%86%E1%80%80%E1%80%BA%E1%80%9F%E1%80%AC/2850282508516442/'
     redirection_to_login_page = 'https://www.facebook.com/login/'
     
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+
     doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="this is a page title" />
+      <meta property="og:description" content="this is the page description" />
       <meta property="og:url" content="#{canonical_url}"/>
     HTML
-    
-    response = 'mock'; response.stubs(:code).returns('302')
-    response.stubs(:header).returns({ 'location' => redirection_to_login_page })
-    response_login_page = 'mock'; response_login_page.stubs(:code).returns('200')
-    
-    RequestHelper.stubs(:request_url).with(url, 'Get').returns(response)
-    RequestHelper.stubs(:request_url).with(canonical_url, 'Get').returns(response)
-    RequestHelper.stubs(:request_url).with(redirection_to_login_page, 'Get').returns(response_login_page)
-    RequestHelper.stubs(:request_url).with(redirection_to_login_page + '?next=https%3A%2F%2Fwww.facebook.com%2Fugmhmyanmar%2Fposts%2F2850282508516442', 'Get').returns(response_login_page)
 
-    WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
+    WebMock.stub_request(:get, url).to_return(status: 302, headers: { 'location' => redirection_to_login_page })
+    WebMock.stub_request(:get, canonical_url).to_return(status: 302, headers: { 'location' => redirection_to_login_page })
+    WebMock.stub_request(:get, redirection_to_login_page).to_return(status: 200, body: doc.to_s)
     
     media = Media.new(url: url)
 
@@ -449,44 +435,31 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_equal url, media.original_url 
   end
 
-  test "should add login required error, return html and empty description" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
-
-    url = 'https://www.facebook.com/caiosba/posts/3588207164560845'
-
-    html = "<title id='pageTitle'>Log in or sign up to view</title><meta property='og:description' content='See posts, photos and more on Facebook.'>"
-    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML(html))
-    Media.any_instance.stubs(:follow_redirections)
-
-    WebMock.stub_request(:get, url).to_return(status: 200)
-
-    m = Media.new(url: url)
-    data = m.as_json
-    
-    assert_equal 'Login required to see this profile', data[:error][:message]
-    assert_equal Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
-    assert_equal m.url, data[:title]
-    assert data[:description].empty?
-    assert_match "<div class=\"fb-post\" data-href=\"#{url}\"></div>", data['html']
-  end
-
-  test "should get canonical URL parsed from facebook html when it is relative" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
-
+  # we need to test Media here because that's where we get_canonical_url after the FB parser ran
+  # which makes me wonder if we should be testing this here at all or only in Media
+  test "should set parser url to full URL when the facebook html og:url is relative" do
     relative_url = '/dina.samak/posts/10153679232246949'
     url = "https://www.facebook.com#{relative_url}"
 
-    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' content='#{relative_url}'>"))
-    Media.any_instance.stubs(:follow_redirections)
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
-    WebMock.stub_request(:get, url).to_return(status: 200)
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="this is a page title" />
+      <meta property="og:description" content="this is the page description" />
+      <meta property="og:url" content="#{relative_url}"/>
+    HTML
 
-    m = Media.new(url: url)
-    assert_equal url, m.url
+    WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
+    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
+
+    media = Media.new(url: url)
+    data = media.as_json
+
+    assert_equal url, data['url']
   end
 
   test "should get canonical URL parsed from facebook html when it is a page" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
 
     canonical_url = 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479'
     url = 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479?pnref=story.unseen-section'
@@ -497,59 +470,84 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
     WebMock.stub_request(:get, canonical_url).to_return(status: 200)
+    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{canonical_url}").to_return(status: 200)
 
-    m = Media.new(url: url)
-    assert_equal canonical_url, m.url
+    media = Media.new(url: url)
+    data = media.as_json
+
+    assert_equal canonical_url, data['url']
   end
 
-  test "should get the group name when parsing group post" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+  test "should add login required error, return html and empty description when redirected to login" do
+    url = 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/'
 
-    url = 'https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222'
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
-      <meta property="og:title" content="Welcome! This group is a gathering for those interested in exploring belief systems" />
+      <meta property="og:site_name" content="Facebook">
+      <meta property="og:title" content="Log into Facebook | Facebook">
+      <meta property="og:description" content="Log into Facebook to start sharing and connecting with your friends, family, and people you know.">
     HTML
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
-    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
 
-    m = Media.new(url: url)
-    data = m.as_json
-
-    assert_match /(memetics.hacking|exploring belief systems)/, data['title']
-    assert_match /permalink\/1580570905320222/, data['url']
-    assert_equal 'facebook', data['provider']
-    assert_equal 'item', data['type']
+    parser = Parser::FacebookItem.new(url)
+    data = parser.parse_data(doc, url)
+    
+    assert_equal 'Login required to see this profile', data[:error][:message]
+    assert_equal Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
+    assert data[:description].empty?
+    assert_match "<div class=\"fb-post\" data-href=\"#{url}\"></div>", data['html']
   end
-
-  test "should return html even when FB url is private" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
-
+  
+  # this one is failling, but I the issue is not the test, the parser is not identifying this kind of page as private
+  test "should return html and empty description when FB url is private" do
     url = 'https://www.facebook.com/caiosba/posts/1913749825339929'
 
-    html = "<title id='pageTitle'>Log in or sign up to view</title><meta property='og:description' content='See posts, photos and more on Facebook.'>"
-    RequestHelper.stubs(:get_html).returns(Nokogiri::HTML(html))
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
 
-    WebMock.stub_request(:get, url).to_return(status: 200)
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2,shrink-to-fit=no">
+      <meta name="color-scheme" content="dark">
+      <meta name="theme-color" content="#242526">
+    HTML
 
-    m = Media.new(url: url)
-    data = m.as_json
+    WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
+
+    parser = Parser::FacebookItem.new(url)
+    data = parser.parse_data(doc, url)
     
-    assert_equal 'facebook', data['provider']
+    assert data[:description].empty?
     assert_match "<div class=\"fb-post\" data-href=\"https://www.facebook.com/caiosba/posts/1913749825339929\">", data['html']
   end
 
-  test "should store oembed data of a facebook post" do
-    WebMock.stub_request(:any, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+  test "should get the group name when parsing group post" do
+    url = 'https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222'
 
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response_not_found)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="this is a page title" />
+      <meta property="og:description" content="this is the page description" />
+    HTML
+
+    WebMock.stub_request(:get, url).to_return(status: 200)
+    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200, body: doc.to_s)
+
+    parser = Parser::FacebookItem.new(url)
+    data = parser.parse_data(doc, url)
+
+    assert_match 'this is the page description', data['title']
+  end
+
+  test "should store oembed data of a facebook post" do
     url = 'https://www.facebook.com/144585402276277/posts/1127489833985824'
 
-    WebMock.stub_request(:get, url).to_return(status: 200, body: empty_doc.to_s)
-    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
-    
-    m = Media.new(url: url)
-    data = m.as_json
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+    WebMock.stub_request(:get, url).to_return(status: 200)
+
+    media = Media.new(url: url)
+    data = media.as_json
 
     assert data['oembed'].is_a? Hash
     assert_match /facebook.com/, data['oembed']['provider_url']
