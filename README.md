@@ -335,18 +335,21 @@ There are rake tasks for a few tasks (besides Rails' default ones). Run them thi
 
 ```ruby
 module Parser
-  class <Provider><Type> < Base  
+  class <Provider><Type> < Base
     class << self
       def type
         '<provider>_<type>'.freeze
       end
-  
+
       def patterns
+        # A list of regex that tell us when we've landed on a URL for this parser, eg facebook.com
         [<list of URL patterns>]
       end
-            
+
       def ignored_urls
-        # Optional method to specify disallowed URLs
+        # Optional method to specify disallowed URLs. We generally use this to detect
+        # when we've been redirected to a dead end, like a login page.
+        #
         # Should return an array in format:
         # [
         #   {

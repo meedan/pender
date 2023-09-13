@@ -58,29 +58,34 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
 
   test "should not change url when redirected to login page" do
     url = 'https://www.facebook.com/ugmhmyanmar/posts/2850282508516442'
+    canonical_url = 'https://www.facebook.com/ugmhmyanmar/posts/ugmh-%E1%80%80%E1%80%95%E1%80%BC%E1%80%B1%E1%80%AC%E1%80%90%E1%80%B2%E1%80%B7-ugmh-%E1%80%A1%E1%80%80%E1%80%BC%E1%80%B1%E1%80%AC%E1%80%84%E1%80%BA%E1%80%B8%E1%80%A1%E1%80%95%E1%80%AD%E1%80%AF%E1%80%84%E1%80%BA%E1%80%B8-%E1%81%84%E1%80%80%E1%80%90%E1%80%AD%E1%80%99%E1%80%90%E1%80%8A%E1%80%BA%E1%80%81%E1%80%BC%E1%80%84%E1%80%BA%E1%80%B8-%E1%80%80%E1%80%9C%E1%80%AD%E1%80%94%E1%80%BA%E1%80%80%E1%80%BB%E1%80%85%E1%80%BA%E1%80%80%E1%80%BB%E1%80%81%E1%80%BC%E1%80%84%E1%80%BA%E1%80%B8%E1%80%9B%E1%80%B2%E1%80%B7-%E1%80%A1%E1%80%80%E1%80%BB%E1%80%AD%E1%80%AF%E1%80%B8%E1%80%86%E1%80%80%E1%80%BA%E1%80%9F%E1%80%AC/2850282508516442/'
     redirection_to_login_page = 'https://www.facebook.com/login/'
     response = 'mock'; response.stubs(:code).returns('302')
     response.stubs(:header).returns({ 'location' => redirection_to_login_page })
     response_login_page = 'mock'; response_login_page.stubs(:code).returns('200')
     RequestHelper.stubs(:request_url).with(url, 'Get').returns(response)
+    RequestHelper.stubs(:request_url).with(canonical_url, 'Get').returns(response)
     RequestHelper.stubs(:request_url).with(redirection_to_login_page, 'Get').returns(response_login_page)
     RequestHelper.stubs(:request_url).with(redirection_to_login_page + '?next=https%3A%2F%2Fwww.facebook.com%2Fugmhmyanmar%2Fposts%2F2850282508516442', 'Get').returns(response_login_page)
+    
     m = create_media url: url
-    assert_equal url, m.url
+    assert_equal canonical_url, m.url 
+    assert_equal url, m.original_url 
   end
 
-  test "should add login required error and return empty html and description" do
+  test "should add login required error, return html and empty description" do
     html = "<title id='pageTitle'>Log in or sign up to view</title><meta property='og:description' content='See posts, photos and more on Facebook.'>"
     RequestHelper.stubs(:get_html).returns(Nokogiri::HTML(html))
     Media.any_instance.stubs(:follow_redirections)
 
     m = create_media url: 'https://www.facebook.com/caiosba/posts/3588207164560845'
     data = m.as_json
+    
     assert_equal 'Login required to see this profile', data[:error][:message]
     assert_equal Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'), data[:error][:code]
     assert_equal m.url, data[:title]
     assert data[:description].empty?
-    assert data[:html].empty?
+    assert_match "<div class=\"fb-post\" data-href=\"https://www.facebook.com/caiosba/posts/3588207164560845\"></div>", data['html']
   end
 
   test "should get canonical URL parsed from facebook html when it is relative" do
@@ -480,10 +485,12 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
       <meta property="og:description" content="Log into Facebook to start sharing and connecting with your friends, family, and people you know." />
     HTML
 
-    parser = Parser::FacebookItem.new('https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/')
-    data = parser.parse_data(doc, throwaway_url)
+    WebMock.stub_request(:any, 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/').to_return(status: 200, body: doc.to_s)
 
-    assert_match 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/', data['title']
+    media = Media.new(url: 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/')
+    data = media.as_json
+
+    assert_equal 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988', data['title']
     assert_match '', data['description']
   end
 end
