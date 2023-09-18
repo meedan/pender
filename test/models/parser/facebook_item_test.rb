@@ -500,7 +500,6 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_match "<div class=\"fb-post\" data-href=\"#{url}\"></div>", data['html']
   end
   
-  # this one is failling, but I the issue is not the test, the parser is not identifying this kind of page as private
   test "should return html and empty description when FB url is private" do
     url = 'https://www.facebook.com/caiosba/posts/1913749825339929'
 
@@ -513,9 +512,10 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     HTML
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
+    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
 
-    parser = Parser::FacebookItem.new(url)
-    data = parser.parse_data(doc, url)
+    media = Media.new(url: url)
+    data = media.as_json
     
     assert data[:description].empty?
     assert_match "<div class=\"fb-post\" data-href=\"https://www.facebook.com/caiosba/posts/1913749825339929\">", data['html']
@@ -545,6 +545,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
     WebMock.stub_request(:get, url).to_return(status: 200)
+    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
 
     media = Media.new(url: url)
     data = media.as_json
