@@ -40,6 +40,8 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
 
   test "matches known URL patterns, and returns instance on success" do
     # Standard profile
+    match_zero = Parser::TwitterProfile.match?('https://twitter.com/username/')
+    assert_equal true, match_zero.is_a?(Parser::TwitterProfile)
     match_one = Parser::TwitterProfile.match?('https://twitter.com/username')
     assert_equal true, match_one.is_a?(Parser::TwitterProfile)
     match_two = Parser::TwitterProfile.match?('https://twitter.com/user_name')
@@ -76,6 +78,12 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     assert_nil Parser::TwitterProfile.match?('https://twitter.com/user-–dash—')
     assert_nil Parser::TwitterProfile.match?('https://twitter.com/userwithareallylongusername')
     assert_nil Parser::TwitterProfile.match?('https://twitter.com/me')
+  end
+
+  test "matches and extracts username correctly even with a trailing slash" do
+    match = 'https://twitter.com/username/'.match(Parser::TwitterProfile.patterns[0])
+    username = match['username']
+    assert_equal username, 'username'
   end
 
   test "it makes a get request to the user lookup by username endpoint successfully" do
