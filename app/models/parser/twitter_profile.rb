@@ -11,8 +11,8 @@ module Parser
         [
           /^https?:\/\/(www\.)?twitter\.com\/(?<username>[\w\d]+)(\?+.*)$/,
           /^https?:\/\/(0|m|mobile)\.twitter\.com\/(?<username>[\w\d]+)(\?+.*)$/,
-          /^https?:\/\/(www\.)?twitter\.com\/(?<username>[^\/]+)$/,
-          /^https?:\/\/(0|m|mobile)\.twitter\.com\/(?<username>[^\/]+)$/
+          /^https?:\/\/(www\.)?twitter\.com\/(?<username>[\w\d]{4,15})$/,
+          /^https?:\/\/(0|m|mobile)\.twitter\.com\/(?<username>[\w\d]{4,15})$/
         ]
       end
     end

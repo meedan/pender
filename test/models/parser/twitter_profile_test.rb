@@ -39,6 +39,28 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
   end
 
   test "matches known URL patterns, and returns instance on success" do
+    # Standard profile
+    match_one = Parser::TwitterProfile.match?('https://twitter.com/username')
+    assert_equal true, match_one.is_a?(Parser::TwitterProfile)
+    match_two = Parser::TwitterProfile.match?('https://twitter.com/user_name')
+    assert_equal true, match_two.is_a?(Parser::TwitterProfile)
+    
+    # Profile with query
+    match_three = Parser::TwitterProfile.match?('https://twitter.com/username?ref_src=twsrc%5Etfw')
+    assert_equal true, match_three.is_a?(Parser::TwitterProfile)
+
+    # Mobile patterns
+    match_four = Parser::TwitterProfile.match?('https://0.twitter.com/username')
+    assert_equal true, match_four.is_a?(Parser::TwitterProfile)
+    match_five = Parser::TwitterProfile.match?('https://m.twitter.com/username')
+    assert_equal true, match_five.is_a?(Parser::TwitterProfile)
+    match_six = Parser::TwitterProfile.match?('https://mobile.twitter.com/username')
+    assert_equal true, match_six.is_a?(Parser::TwitterProfile)
+    match_seven = Parser::TwitterProfile.match?('https://mobile.twitter.com/username?ref_src=twsrc%5Etfw')
+    assert_equal true, match_seven.is_a?(Parser::TwitterProfile)
+  end
+
+  test "does not match pages that should be parsed by pages" do
     assert_nil Parser::TwitterProfile.match?('https://example.com')
 
     # Blog posts -> should beparsed as pages
@@ -46,24 +68,14 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     assert_nil Parser::TwitterProfile.match?('https://blog.twitter.com/official/en_us/topics/events/2018/Embrace-Ramadan-with-various-Twitter-only-activations.html')
     assert_nil Parser::TwitterProfile.match?('https://business.twitter.com')
     assert_nil Parser::TwitterProfile.match?('https://business.twitter.com/en/blog/4-tips-Tweeting-live-events.html')
+  end
 
-    # Standard profile
-    match_one = Parser::TwitterProfile.match?('https://twitter.com/meedan')
-    assert_equal true, match_one.is_a?(Parser::TwitterProfile)
-
-    # Profile with query
-    match_one = Parser::TwitterProfile.match?('https://twitter.com/meedan?ref_src=twsrc%5Etfw')
-    assert_equal true, match_one.is_a?(Parser::TwitterProfile)
-
-    # Mobile patterns
-    match_two = Parser::TwitterProfile.match?('https://0.twitter.com/meedan')
-    assert_equal true, match_two.is_a?(Parser::TwitterProfile)
-    match_three = Parser::TwitterProfile.match?('https://m.twitter.com/meedan')
-    assert_equal true, match_three.is_a?(Parser::TwitterProfile)
-    match_four = Parser::TwitterProfile.match?('https://mobile.twitter.com/meedan')
-    assert_equal true, match_four.is_a?(Parser::TwitterProfile)
-    match_five = Parser::TwitterProfile.match?('https://mobile.twitter.com/meedan?ref_src=twsrc%5Etfw')
-    assert_equal true, match_five.is_a?(Parser::TwitterProfile)
+  test "does not match patterns with usernames that are not permitted by twitter" do
+    assert_nil Parser::TwitterProfile.match?('https://twitter.com/user whitespace')
+    assert_nil Parser::TwitterProfile.match?('https://twitter.com/user*@symbols$')
+    assert_nil Parser::TwitterProfile.match?('https://twitter.com/user-–dash—')
+    assert_nil Parser::TwitterProfile.match?('https://twitter.com/userwithareallylongusername')
+    assert_nil Parser::TwitterProfile.match?('https://twitter.com/me')
   end
 
   test "it makes a get request to the user lookup by username endpoint successfully" do
