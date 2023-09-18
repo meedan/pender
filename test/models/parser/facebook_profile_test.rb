@@ -63,6 +63,59 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
     assert Parser::FacebookProfile.match?('https://www.facebook.com/profile.php?id=105510962816034').is_a?(Parser::FacebookProfile)
   end
 
+  test "should parse Facebook page" do
+    data = Parser::FacebookProfile.new('https://facebook.com/fakeaccount').parse_data(meedan_doc, throwaway_url)
+
+    assert_equal 'Meedan', data['title']
+    assert_equal 'fakeaccount', data['username']
+    assert_equal 'Meedan. 3,783 likes · 65 were here. Make sense of the global web.', data['description']
+    assert_equal '54421674438', data['external_id']
+    assert_equal '54421674438', data['id']
+  end
+
+  test "should parse Facebook with numeric id" do
+    url = 'https://facebook.com/513415662050479'
+    canonical_url = 'https://www.facebook.com/heymeedan'
+    picture_url = 'https://scontent-lax3-1.xx.fbcdn.net/v/t39.30808-1/310513247_435753678699138_2623398131510754475_n.png?_nc_cat=110&_nc_ht=scontent-lax3-1.xx&_nc_ohc=d6UgzKKHMJ8AX9tPN2o&_nc_sid=d36de4&ccb=1-7&oe=63DDB83C&oh=00_AfDH7lP98qp_etN0a2ZMms1tp6vx51198IAobPHbRLnSyA'
+    
+    WebMock.stub_request(:get, url).to_return(status: 200, body: meedan_doc.to_s)
+    WebMock.stub_request(:get, canonical_url).to_return(status: 200)
+    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{canonical_url}").to_return(status: 200)
+    WebMock.stub_request(:get, picture_url).to_return(status: 200)
+
+    m = create_media url: url
+    data = m.as_json
+
+    assert_equal canonical_url, data['url']
+    assert_equal 'Meedan', data['title']
+    assert_equal 'facebook', data['provider']
+    assert_equal 'profile', data['type']
+
+    # Parsed from URL
+    assert_equal '513415662050479', data['id']
+    assert_equal '513415662050479', data['external_id']
+  end
+
+  test "should parse Arabic Facebook page" do
+    data = Parser::FacebookProfile.new('https://www.facebook.com/%D8%A7%D9%84%D9%85%D8%B1%D9%83%D8%B2-%D8%A7%D9%84%D8%AB%D9%82%D8%A7%D9%81%D9%8A-%D8%A7%D9%84%D9%82%D8%A8%D8%B7%D9%8A-%D8%A7%D9%84%D8%A3%D8%B1%D8%AB%D9%88%D8%B0%D9%83%D8%B3%D9%8A-%D8%A8%D8%A7%D9%84%D9%85%D8%A7%D9%86%D9%8A%D8%A7-179240385797/').parse_data(arabic_doc, throwaway_url)
+  
+    assert_equal 'المركز الثقافي القبطي الأرثوذكسي بالمانيا', data['title']
+    assert_equal 'المركز-الثقافي-القبطي-الأرثوذكسي-بالمانيا-179240385797', data['username']
+    assert_match /Bad Kreuznach/ , data['description']
+    assert_equal '179240385797', data['external_id']
+    assert_equal '179240385797', data['id']
+  end
+
+  test "should parse Arabic URLs" do
+    data = Parser::FacebookProfile.new('https://www.facebook.com/إدارة-تموين-أبنوب-217188161807938/').parse_data(arabic_doc, throwaway_url)
+  
+    assert_equal 'المركز الثقافي القبطي الأرثوذكسي بالمانيا', data['title']
+    assert_equal 'إدارة-تموين-أبنوب-217188161807938', data['username']
+    assert_match /Bad Kreuznach/ , data['description']
+    assert_equal '179240385797', data['external_id']
+    assert_equal '179240385797', data['id']
+  end
+
   test "sets error if problem parsing" do
     data = {}
     sentry_call_count = 0
@@ -305,5 +358,23 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
   test "#oembed_url returns URL with the instance URL" do
     oembed_url = Parser::FacebookProfile.new('https://www.facebook.com/fakeaccount').oembed_url
     assert_equal 'https://www.facebook.com/plugins/post/oembed.json/?url=https://www.facebook.com/fakeaccount', oembed_url
+  end
+
+  test "should store oembed data of a public facebook page" do
+    url = 'https://facebook.com/513415662050479'
+    canonical_url = 'https://www.facebook.com/heymeedan'
+    picture_url = 'https://scontent-lax3-1.xx.fbcdn.net/v/t39.30808-1/310513247_435753678699138_2623398131510754475_n.png?_nc_cat=110&_nc_ht=scontent-lax3-1.xx&_nc_ohc=d6UgzKKHMJ8AX9tPN2o&_nc_sid=d36de4&ccb=1-7&oe=63DDB83C&oh=00_AfDH7lP98qp_etN0a2ZMms1tp6vx51198IAobPHbRLnSyA'
+    
+    WebMock.stub_request(:get, url).to_return(status: 200, body: meedan_doc.to_s)
+    WebMock.stub_request(:get, canonical_url).to_return(status: 200)
+    WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{canonical_url}").to_return(status: 200)
+    WebMock.stub_request(:get, picture_url).to_return(status: 200)
+
+    m = create_media url: url
+    data = m.as_json
+
+    assert data['oembed'].is_a?(Hash), "Expected #{data['oembed']} to be a Hash"
+    assert_equal 'heymeedan', data['oembed']['author_name']
+    assert_equal 'Meedan', data['oembed']['title']
   end
 end
