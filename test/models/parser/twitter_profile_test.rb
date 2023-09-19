@@ -50,16 +50,18 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     # Profile with query
     match_three = Parser::TwitterProfile.match?('https://twitter.com/username?ref_src=twsrc%5Etfw')
     assert_equal true, match_three.is_a?(Parser::TwitterProfile)
+    match_four = Parser::TwitterProfile.match?('https://twitter.com/username/?t=1')
+    assert_equal true, match_four.is_a?(Parser::TwitterProfile)
 
     # Mobile patterns
-    match_four = Parser::TwitterProfile.match?('https://0.twitter.com/username')
-    assert_equal true, match_four.is_a?(Parser::TwitterProfile)
-    match_five = Parser::TwitterProfile.match?('https://m.twitter.com/username')
+    match_five = Parser::TwitterProfile.match?('https://0.twitter.com/username')
     assert_equal true, match_five.is_a?(Parser::TwitterProfile)
-    match_six = Parser::TwitterProfile.match?('https://mobile.twitter.com/username')
+    match_six = Parser::TwitterProfile.match?('https://m.twitter.com/username')
     assert_equal true, match_six.is_a?(Parser::TwitterProfile)
-    match_seven = Parser::TwitterProfile.match?('https://mobile.twitter.com/username?ref_src=twsrc%5Etfw')
+    match_seven = Parser::TwitterProfile.match?('https://mobile.twitter.com/username')
     assert_equal true, match_seven.is_a?(Parser::TwitterProfile)
+    match_eight = Parser::TwitterProfile.match?('https://mobile.twitter.com/username?ref_src=twsrc%5Etfw')
+    assert_equal true, match_eight.is_a?(Parser::TwitterProfile)
   end
 
   test "does not match pages that should be parsed by pages" do
