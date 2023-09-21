@@ -14,7 +14,7 @@ if File.exist?(file)
       if ex.is_a?(Pender::Exception::RetryLater)
         ex = Pender::Exception::RetryLimitHit.new(ex)
       end
-      Sentry.capture_exception(ex)
+      PenderSentry.notify(ex, {job: job})
     end
   end
 

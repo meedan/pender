@@ -742,4 +742,36 @@ class ArchiverTest < ActiveSupport::TestCase
   ensure
     WebMock.disable!
   end
+
+  test "MediaArchiver should not notify Sentry when the worker hits the maximum number of retries" do
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    Media.any_instance.stubs(:archive)
+
+    a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
+    url = 'http://example.com'
+
+    data = {}
+    sentry_call_count = 0
+    arguments_checker = Proc.new do |e|
+      sentry_call_count += 1
+      assert_equal StandardError, e.class
+    end
+    
+    assert_raises StandardError do
+      Media.new(url: url, key: a).as_json(archivers: 'perma_cc')
+    end
+
+    PenderSentry.stub(:notify, arguments_checker) do
+      Media.give_up({ args: [url, 'perma_cc', nil], error_message: 'Test Archiver' })
+    end      
+
+    assert_equal 0, sentry_call_count
+    ensure
+      WebMock.disable!
+  end
 end

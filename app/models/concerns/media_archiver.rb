@@ -61,10 +61,6 @@ module MediaArchiver
 
     def give_up(info = {})
       url, archiver, key_id = info[:args][0], info[:args][1], info[:args][2]
-      PenderSentry.notify(
-        StandardError.new(info[:error_message]),
-        info.merge({ url: url, archiver: archiver, key_id: key_id })
-      )
       Rails.logger.warn level: 'WARN', message: "[#{info[:error_class]}] #{info[:error_message]}", url: url, archiver: archiver
       data = { error: { message: info[:error_message], code: Lapis::ErrorCodes::const_get('ARCHIVER_FAILURE') }}
       Media.notify_webhook_and_update_cache(archiver, url, data, key_id)
