@@ -12,9 +12,9 @@ if File.exist?(file)
 
     config.death_handlers << ->(job, ex) do
       if ex.is_a?(Pender::Exception::RetryLater)
-        ex = Pender::Exception::RetryLimitHit.new(ex, {job: job})
+        ex = Pender::Exception::RetryLimitHit.new(ex)
       end
-      Sentry.capture_exception(ex)
+      PenderSentry.notify(ex, {job: job})
     end
   end
 
