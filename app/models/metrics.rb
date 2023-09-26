@@ -97,21 +97,22 @@ module Metrics
 
       error = JSON.parse(response.body)['error']
       is_retryable = (RETRYABLE_FACEBOOK_ERROR_CODES + FACEBOOK_RATE_LIMIT_CODES).include?(error['code'].to_i)
+      fb_error_hash = {
+        'app.api_key' => ApiKey.current&.id,
+        'facebook.metrics.error.code' => error['code'],
+        'facebook.metrics.error.message' => error['message'],
+        'facebook.metrics.url' => url,
+        'facebook.metrics.retryable' => is_retryable
+      }
 
       Rails.logger.warn level: 'WARN', message: "Facebook metrics error: #{error['code']} - #{error['message']}", url: url, key_id: ApiKey.current&.id, error: error, retryable: is_retryable
       TracingService.set_error_status(
         "Facebook metrics error",
-        attributes: {
-          'app.api_key' => ApiKey.current&.id,
-          'facebook.metrics.error.code' => error['code'],
-          'facebook.metrics.error.message' => error['message'],
-          'facebook.metrics.url' => url,
-          'facebook.metrics.retryable' => is_retryable
-        }
+        attributes: fb_error_hash
       )
       if is_retryable
         @locker.lock(3600) if FACEBOOK_RATE_LIMIT_CODES.include?(error['code'].to_i)
-        raise Pender::Exception::RetryLater, 'Metrics request failed'
+        raise Pender::Exception::RetryLater, "Metrics request failed.\n#{fb_error_hash.to_json}"
       end
     end
 
