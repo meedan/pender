@@ -10,4 +10,7 @@ Sentry.init do |config|
 
   # Any exceptions we want to prevent sending to Sentry
   config.excluded_exceptions += ['Pender::Exception::RetryLater']
+
+  # report_after_job_retries when turned on, the SDK will only report the exception after all retries have failed.
+  config.sidekiq.report_after_job_retries = true
 end
