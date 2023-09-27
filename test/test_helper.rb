@@ -12,7 +12,7 @@ require 'minitest/retry'
 require 'minitest/mock'
 require 'mocha/minitest'
 
-Minitest::Retry.use!(retry_count: 5)
+Minitest::Retry.use!(retry_count: ENV['TEST_RETRY_COUNT'].to_i || 0)
 
 Minitest::Retry.on_failure do |_klass, _test_name|
   sleep 10

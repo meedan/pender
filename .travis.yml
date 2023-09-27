@@ -10,8 +10,8 @@ before_install:
 before_script:
 - docker-compose exec pender test/setup-parallel
 script:
-- docker-compose exec pender bundle exec rake "parallel:test[3]"
-- docker-compose exec pender bundle exec rake parallel:spec
+- docker-compose exec -e TEST_RETRY_COUNT=5 pender bundle exec rake "parallel:test[3]"
+- docker-compose exec -e TEST_RETRY_COUNT=5 pender bundle exec rake parallel:spec
 after_script:
 - docker-compose exec pender cat tmp/performance.csv
 - docker-compose exec -e TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST -e TRAVIS_TEST_RESULT=$TRAVIS_TEST_RESULT -e TRAVIS_BRANCH=$TRAVIS_BRANCH -e CC_TEST_REPORTER_ID=$CC_TEST_REPORTER_ID -e GIT_COMMIT_SHA=$GIT_COMMIT_SHA -e GIT_COMMITTED_AT=$GIT_COMMITTED_AT pender test/test-coverage
