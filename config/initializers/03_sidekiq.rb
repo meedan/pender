@@ -10,11 +10,11 @@ if File.exist?(file)
   Sidekiq.configure_server do |config|
     config.redis = redis_config
 
-    config.death_handlers << ->(job, ex) do
-      if ex.is_a?(Pender::Exception::RetryLater)
-        ex = Pender::Exception::RetryLimitHit.new(ex)
+    config.death_handlers << ->(job, original_exception) do
+      if original_exception.is_a?(Pender::Exception::RetryLater)
+        limit_hit_exception = Pender::Exception::RetryLimitHit.new(original_exception)
       end
-      Sentry.capture_exception(ex)
+      PenderSentry.notify(limit_hit_exception, {job: job, original_exception: original_exception.cause})
     end
   end
 
