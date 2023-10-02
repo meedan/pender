@@ -577,4 +577,24 @@ class MediaUnitTest < ActiveSupport::TestCase
     assert_equal "201", response.code
     assert_equal 'fake response body', response.body
   end
+
+  test "should update media cache if refresh == 1" do
+    url = 'https://www.meedan.org/blog'
+
+    WebMock.stub_request(:get, url).and_return(status: 200, body: '<html><meta property="og:title" content="a title" /></html>')
+    Parser::PageItem.any_instance.stubs(:parse_data).returns({title: 'a title'})    
+    media = Media.new(url: url)
+    data = media.as_json
+    assert_equal data[:title], 'a title'
+
+    WebMock.stub_request(:get, url).and_return(status: 200, body: '<html><meta property="og:title" content="a new title" /></html>')
+    Parser::PageItem.any_instance.stubs(:parse_data).returns({title: 'a new title'})
+    media = Media.new(url: url)
+    data = media.as_json({ force: true })
+    assert_equal data[:title], 'a new title'
+
+    id = Media.get_id(media.url)
+    Pender::Store.current.delete(id, :json)
+    assert Pender::Store.current.read(id, :json).blank?
+  end
 end
