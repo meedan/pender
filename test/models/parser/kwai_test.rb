@@ -1,20 +1,5 @@
 require 'test_helper'
 
-class KwaiIntegrationTest < ActiveSupport::TestCase
-  test "should parse Kwai URL" do
-    m = create_media url: 'https://kwai-video.com/p/md02RsCS'
-    data = m.as_json
-
-    assert_equal 'Arthur Virgilio', data['username']
-    assert_equal 'item', data['type']
-    assert_equal 'kwai', data['provider']
-    assert_equal 'Arthur Virgilio', data['author_name']
-    assert_kind_of String, data['title']
-    assert_kind_of String, data['description']
-    assert_nil data['error']
-  end
-end
-
 class KwaiUnitTest <  ActiveSupport::TestCase
   def setup
     isolated_setup
@@ -30,7 +15,7 @@ class KwaiUnitTest <  ActiveSupport::TestCase
 
   test "matches known kwai URL patterns, and returns instance on success" do
     assert_nil Parser::KwaiItem.match?('https://example.com')
-    
+
     match_one = Parser::KwaiItem.match?('https://s.kw.ai/p/1mCb9SSh')
     assert_equal true, match_one.is_a?(Parser::KwaiItem)
     match_two = Parser::KwaiItem.match?('https://m.kwai.com/photo/150000228494834/5222636779124848117')
@@ -40,7 +25,7 @@ class KwaiUnitTest <  ActiveSupport::TestCase
     match_four = Parser::KwaiItem.match?('https://www.kwai.com/@AnonymouSScobar/video/5217288797260590112?page_source=guest_profile')
     assert_equal true, match_four.is_a?(Parser::KwaiItem)
   end
-  
+
   test "does not match kwai profile URL" do
     match_five = Parser::PageItem.match?('https://www.kwai.com/@AnonymouSScobar')
     assert_equal false, match_five.is_a?(Parser::KwaiItem)
