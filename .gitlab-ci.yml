@@ -35,10 +35,7 @@ deploy_qa:
     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
   script:
     - apk add --no-cache curl jq python3 py3-pip git
-    - pip install awscli==1.18.194
-    - pip install botocore==1.17.47
-    - pip install boto3==1.14.47
-    - pip install ecs-deploy==1.11.0
+    - pip install ecs-deploy
     - aws ssm get-parameters-by-path --region $AWS_DEFAULT_REGION --path /qa/pender/ --recursive --with-decryption --output text --query "Parameters[].[Name]" | sed -E 's#/qa/pender/##' > env.qa.names
     - rm -f qa-pender-c.env.args; for NAME in `cat env.qa.names`; do echo -n "-s qa-pender-c $NAME /qa/pender/$NAME " >> qa-pender-c.env.args; done
     - ecs deploy ecs-qa  qa-pender --image qa-pender-c $ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA --exclusive-env -e qa-pender-c APP pender -e qa-pender-c DEPLOY_ENV qa -e qa-pender-c AWS_REGION $AWS_DEFAULT_REGION --timeout 3600 --exclusive-secrets `cat qa-pender-c.env.args`
@@ -82,10 +79,7 @@ deploy_live:
     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
   script:
     - apk add --no-cache curl jq python3 py3-pip git
-    - pip install awscli==1.18.194
-    - pip install botocore==1.17.47
-    - pip install boto3==1.14.47
-    - pip install ecs-deploy==1.11.0
+    - pip install ecs-deploy
     - aws ssm get-parameters-by-path --region $AWS_DEFAULT_REGION --path /live/pender/ --recursive --with-decryption --output text --query "Parameters[].[Name]" | sed -E 's#/live/pender/##' > env.live.names
     - rm -f live-pender-c.env.args; for NAME in `cat env.live.names`; do echo -n "-s live-pender-c $NAME /live/pender/$NAME " >> live-pender-c.env.args; done
     - ecs deploy ecs-live  live-pender --image live-pender-c $ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA --exclusive-env -e live-pender-c APP pender -e live-pender-c DEPLOY_ENV live -e live-pender-c AWS_REGION $AWS_DEFAULT_REGION --timeout 3600 --exclusive-secrets `cat live-pender-c.env.args`
