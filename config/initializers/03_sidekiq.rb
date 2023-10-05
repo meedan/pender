@@ -14,7 +14,7 @@ if File.exist?(file)
       if original_exception.is_a?(Pender::Exception::RetryLater)
         limit_hit_exception = Pender::Exception::RetryLimitHit.new(original_exception)
       end
-      PenderSentry.notify(limit_hit_exception, {job: job, original_exception: original_exception.cause})
+      PenderSentry.notify(limit_hit_exception, {job: job, original_exception: original_exception.cause.inspect})
     end
   end
 
