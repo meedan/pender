@@ -690,7 +690,7 @@ class MediasControllerTest < ActionController::TestCase
   test "should refresh cache even if ID changes" do
     WebMock.enable!
     WebMock.disable_net_connect!(allow: [/minio/])
-    WebMock.stub_request(:get, /.*/).to_return(status: 200, body: '<html><title>Test</title></html>')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     Media.stubs(:get_id).returns('foo', 'bar', 'foo', 'bar')
     Pender::Store.current.write('foo', :json, { title: 'Meedan 1' })
     Pender::Store.current.write('bar', :json, { title: 'Meedan 2' })
