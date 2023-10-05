@@ -31,7 +31,7 @@ module Metrics
       begin
         value = facebook_id ? crowdtangle_metrics(facebook_id) : request_metrics_from_facebook(url)
       rescue Pender::Exception::RetryLater
-        raise Pender::Exception::RetryLater, 'Metrics request failed'
+        raise Pender::Exception::RetryLater, message: 'Metrics request failed'
       rescue StandardError => e
         value = {}
         Rails.logger.warn level: 'WARN', message: "Metrics request failed: #{e.message}", url: url, key_id: ApiKey.current&.id
