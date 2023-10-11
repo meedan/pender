@@ -686,6 +686,23 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal url, JSON.parse(@response.body)['data']['title']
     assert_equal Lapis::ErrorCodes::const_get('DUPLICATED'), JSON.parse(@response.body)['data']['error']['code']
   end
+
+  test "should refresh cache even if ID changes" do
+    WebMock.enable!
+    WebMock.disable_net_connect!(allow: [/minio/])
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+    Media.stubs(:get_id).returns('foo', 'bar', 'foo', 'bar')
+    Pender::Store.current.write('foo', :json, { title: 'Meedan 1' })
+    Pender::Store.current.write('bar', :json, { title: 'Meedan 2' })
+
+    url = 'https://meedan.com'
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html><title>Meedan 1</title></html>')
+
+    authenticate_with_token
+
+    get :index, params: { url: url, format: :json, refresh: 1 }
+    assert_equal 'Meedan 1', JSON.parse(@response.body)['data']['title']
+  end
 end
 
 class MediasControllerUnitTest < ActionController::TestCase
