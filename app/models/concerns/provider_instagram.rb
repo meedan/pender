@@ -9,6 +9,10 @@ module ProviderInstagram
     def ignored_urls
       [
         {
+          pattern: /^https:\/\/(www\.)?instagram\.com/,
+          reason: :login_page
+        },
+        {
           pattern: /^https:\/\/www\.instagram\.com\/accounts\/login/,
           reason: :login_page
         },
