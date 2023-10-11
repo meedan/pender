@@ -3,6 +3,7 @@ module Parser
     include ProviderInstagram
 
     INSTAGRAM_ITEM_URL = /^https?:\/\/(www\.)?instagram\.com\/(p|tv|reel)\/([^\/]+)/
+    INSTAGRAM_HOME_URL = /^https?:\/\/(www\.)?instagram\.com\/?$/
     
     class << self
       def type
@@ -10,14 +11,14 @@ module Parser
       end
 
       def patterns
-        [INSTAGRAM_ITEM_URL]
+        [INSTAGRAM_ITEM_URL, INSTAGRAM_HOME_URL]
       end
     end
     
     private
 
     # Main function for class
-    def parse_data_for_parser(doc, _original_url, _jsonld_array)
+    def parse_data_for_parser(doc, original_url, _jsonld_array)
       id = url.match(INSTAGRAM_ITEM_URL)[3]
       @parsed_data.merge!(external_id: id)
 
