@@ -77,12 +77,12 @@ class Media
       handle_exceptions(self, StandardError) { self.parse }
       self.data['title'] = self.url if self.data['title'].blank?
       data = self.data.merge(Media.required_fields(self)).with_indifferent_access
+      self.archive(options.delete(:archivers))
       if data[:error].blank?
         Pender::Store.current.write(id, :json, cleanup_data_encoding(data))
       end
       self.upload_images
     end
-    self.archive(options.delete(:archivers))
     Metrics.schedule_fetching_metrics_from_facebook(self.data, self.url, ApiKey.current&.id)
     Pender::Store.current.read(id, :json) || cleanup_data_encoding(data)
   end
