@@ -9,6 +9,13 @@ class InstagramItemIntegrationTest < ActiveSupport::TestCase
     assert !data['title'].blank?
   end
 
+  test "should parse Instagram item when the final url is instagram.com" do
+    m = Media.new url: 'https://instagram.com/'
+    data = m.as_json
+    assert_equal 'instagram', data['provider']
+    assert_equal 'https://instagram.com/', data['title']
+  end
+
   test "should get canonical URL parsed from html tags" do
     media1 = create_media url: 'https://www.instagram.com/p/CAdW7PMlTWc/?taken-by=kikoloureiro'
     assert_match /https:\/\/www.instagram.com\/p\/CAdW7PMlTWc/, media1.url
@@ -50,6 +57,9 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     
     match_three = Parser::InstagramItem.match?('https://www.instagram.com/reel/CAdW7PMlTWc')
     assert_equal true, match_three.is_a?(Parser::InstagramItem)
+    
+    match_four = Parser::InstagramItem.match?('https://www.instagram.com/')
+    assert_equal true, match_four.is_a?(Parser::InstagramItem)
   end
 
   test "should set profile defaults to URL upon error" do
@@ -157,5 +167,21 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
     assert data['raw']['metatags'].present?
     assert data['raw']['api'].present?
+  end
+
+  test "should return url as title when redirected to instagram main page" do
+    url = 'https://www.instagram.com/p/CdOk-lLKmyH/'
+    instagram_main_page = 'https://instagram.com/'
+    
+    WebMock.stub_request(:get, url).to_return(status: 302, headers: { 'location' => instagram_main_page })
+    WebMock.stub_request(:get, instagram_main_page).to_return(status: 200, body: '<html>Instagram</html>')
+    WebMock.stub_request(:get, "https://www.instagram.com/p/CdOk-lLKmyH/?__a=1&__d=a").to_return(status: 200)
+
+    media = Media.new(url: url)
+    data = media.as_json
+
+    assert_equal 'https://www.instagram.com/p/CdOk-lLKmyH', data['title']
+    assert_equal 'instagram', data['provider']
+    assert_equal 'item', data['type']
   end
 end
