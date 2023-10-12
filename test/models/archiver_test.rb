@@ -168,11 +168,11 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should not archive in any archiver if none is requested" do
-    Media.any_instance.unstub(:archive_to_archive_org)
-    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    
     WebMock.enable!
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     url = 'https://example.com/'
+    
+    Media.any_instance.unstub(:archive_to_archive_org)
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
@@ -200,19 +200,46 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  test "should archive only on new archivers if media on cache, not a refresh and specific archiver" do
+  test "should not archive if archive is present in cache and a refresh is not requested" do
+    skip("wip: test is not working yet, but I think something like this should be added")
+    WebMock.enable!
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
+    url = 'https://example.com/'
+    
+    Media.any_instance.unstub(:archive_to_archive_org)
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
+    WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'archive-timestamp'}.to_json)
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+
+    id = Media.get_id(url)
+    m = create_media url: url, key: a
+
+    m.stubs(as_json(archivers: 'archive_org')).returns({'parsed_at' => 'first', 'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://example.com/'}})
+    assert_equal({'parsed_at' => 'first', 'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://example.com/'}}, Pender::Store.current.read(id, :json)[:archives])
+
+    m.stubs(as_json(archivers: 'archive_org')).returns({'parsed_at' => 'second', 'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://example.com/'}})
+    assert_equal({'parsed_at' => 'first', 'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://example.com/'}}, Pender::Store.current.read(id, :json)[:archives])
+
+  ensure
+    WebMock.disable!
+  end
+
+  test "should update cache when a new archiver is requested without the need to request for a refresh" do
+    WebMock.enable!
+    a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
+    url = 'https://example.com/'
+
     Media.any_instance.unstub(:archive_to_perma_cc)
     Media.any_instance.unstub(:archive_to_archive_org)
     Media.stubs(:get_available_archive_org_snapshot).returns(nil)
 
-    WebMock.enable!
-    allowed_sites = lambda{ |uri| !['api.perma.cc', 'web.archive.org'].include?(uri.host) }
-    WebMock.disable_net_connect!(allow: allowed_sites)
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
-    a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    url = 'https://hacktoberfest.com'
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json(archivers: 'perma_cc')
@@ -227,7 +254,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  test "should not archive again if media on cache have both archivers" do
+  test "should not archive again if media on cache has both archivers" do
     Media.any_instance.unstub(:archive_to_archive_org)
     Media.any_instance.unstub(:archive_to_perma_cc)
     Media.stubs(:get_available_archive_org_snapshot).returns(nil)
@@ -303,6 +330,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
+  # this test isn't asserting anything, come back to this one
   test "should not try to archive on Perma.cc if already archived on it" do
     WebMock.enable!
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
