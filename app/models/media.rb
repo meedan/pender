@@ -73,18 +73,22 @@ class Media
 
   def as_json(options = {})
     id = Media.get_id(self.url)
-    if options.delete(:force) || Pender::Store.current.read(id, :json).nil?
+    cache = Pender::Store.current
+    if options.delete(:force) || cache.read(id, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
       self.data['title'] = self.url if self.data['title'].blank?
       data = self.data.merge(Media.required_fields(self)).with_indifferent_access
-      self.archive(options.delete(:archivers))
       if data[:error].blank?
-        Pender::Store.current.write(id, :json, cleanup_data_encoding(data))
+        cache.write(id, :json, cleanup_data_encoding(data))
       end
       self.upload_images
+      self.archive(options.delete(:archivers))
+    end
+    if cache.read(id, :json)&.dig('archives')&.empty?
+      self.archive(options.delete(:archivers))
     end
     Metrics.schedule_fetching_metrics_from_facebook(self.data, self.url, ApiKey.current&.id)
-    Pender::Store.current.read(id, :json) || cleanup_data_encoding(data)
+    cache.read(id, :json) || cleanup_data_encoding(data)
   end
 
   PARSERS = [

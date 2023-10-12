@@ -167,19 +167,19 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  test "should not archive in any archiver if don't send or it's none" do
+  test "should not archive in any archiver if none is requested" do
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-
+    
     WebMock.enable!
-    allowed_sites = lambda{ |uri| !['archive.org'].include?(uri.host) }
-    WebMock.disable_net_connect!(allow: allowed_sites)
+    url = 'https://example.com/'
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
     WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'archive-timestamp'}.to_json)
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
-    url = 'https://health-desk.org/'
     id = Media.get_id(url)
     m = create_media url: url, key: a
     m.as_json
@@ -195,7 +195,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
 
     m.as_json(archivers: 'archive_org')
-    assert_equal({'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://health-desk.org/'}}, Pender::Store.current.read(id, :json)[:archives])
+    assert_equal({'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://example.com/'}}, Pender::Store.current.read(id, :json)[:archives])
   ensure
     WebMock.disable!
   end
