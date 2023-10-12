@@ -37,11 +37,10 @@ class ArchiverTest < ActiveSupport::TestCase
   test "should archive to Archive.org" do
     Media.any_instance.unstub(:archive_to_archive_org)
     Media.stubs(:get_available_archive_org_snapshot).returns(nil)
-    url = 'https://g1.globo.com/'
     WebMock.enable!
-    allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
-    WebMock.disable_net_connect!(allow: allowed_sites)
+    url = 'https://example.com/'
 
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
     WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
