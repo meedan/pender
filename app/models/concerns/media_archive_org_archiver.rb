@@ -47,9 +47,17 @@ module MediaArchiveOrgArchiver
         location = body.dig('archived_snapshots', 'closest', 'url')
         data = { location: location }
         Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
+<<<<<<< HEAD
         return true
       end
       nil
+=======
+        data
+      else
+        Rails.logger.info level: 'INFO', message: '[archive_org] no available snapshot', url: url
+        nil
+      end
+>>>>>>> d4b52df (return the closest snapshot and error if requests errors)
     end
 
     def get_archive_org_status(job_id, url, key_id)
