@@ -713,32 +713,29 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  test "should return true and get available snapshot if page was already archived on Archive.org" do
-    url = 'https://example.com/'
-    m = Media.new url: url
-    m.as_json
-
+  test "should get and return the available snapshot if page was already archived on Archive.org" do
     WebMock.enable!
-    allowed_sites = lambda{ |uri| uri.host != 'archive.org' }
-    WebMock.disable_net_connect!(allow: allowed_sites)
+    url = 'https://example.com/'
+    api_key = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
+    encoded_uri = RequestHelper.encode_url(url)
 
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
     WebMock.stub_request(:get, /archive.org\/wayback\/available?.+url=#{url}/).to_return(body: {"archived_snapshots":{ closest: { available: true, url: 'http://web.archive.org/web/20210223111252/http://example.com/' }}}.to_json)
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
-    assert_equal true, Media.get_available_archive_org_snapshot(url, nil)
-    data = m.as_json
-    assert_equal 'http://web.archive.org/web/20210223111252/http://example.com/' , data['archives']['archive_org']['location']
+    snapshot = Media.get_available_archive_org_snapshot(encoded_uri, api_key)
+    assert_equal 'http://web.archive.org/web/20210223111252/http://example.com/' , snapshot[:location]
   ensure
     WebMock.disable!
   end
 
   test "should return nil if page was not previously archived on Archive.org" do
     WebMock.enable!
-    allowed_sites = lambda{ |uri| uri.host != 'archive.org' }
-    WebMock.disable_net_connect!(allow: allowed_sites)
+    url = 'https://example.com/'
 
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json)
 
-    url = 'https://example.com/'
     assert_nil Media.get_available_archive_org_snapshot(url, nil)
   ensure
     WebMock.disable!
