@@ -84,7 +84,7 @@ class Media
       self.upload_images
     end
     archive_if_conditions_are_met(options, id, cache)
-    Metrics.schedule_fetching_metrics_from_facebook(self.data, self.url, ApiKey.current&.id)
+    # Metrics.schedule_fetching_metrics_from_facebook(self.data, self.url, ApiKey.current&.id)
     cache.read(id, :json) || cleanup_data_encoding(data)
   end
 
@@ -284,14 +284,11 @@ class Media
   end
 
   def archive_if_conditions_are_met(options, id, cache)
-    total_of_archivers_in_options = options&.dig(:archivers)&.split(',')&.size.to_i
-    total_of_archivers_in_cache = cache.read(id, :json)['archives']&.size.to_i
-
     if options.delete(:force) || 
       cache.read(id, :json).nil? ||
       cache.read(id, :json).dig('archives').blank? ||
-      # if the user adds a new archiver, and the cache exists only for the old archiver it refreshes the cache
-      !options&.dig(:archivers).nil? && (total_of_archivers_in_options > total_of_archivers_in_cache)
+      # if the user adds a new  or changes the archiver, and the cache exists only for the old archiver it refreshes the cache
+      options&.dig(:archivers) != cache.read(id, :json)['archives'].keys.join
         self.archive(options.delete(:archivers))
     end
   end
