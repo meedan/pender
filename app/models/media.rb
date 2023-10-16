@@ -289,7 +289,8 @@ class Media
 
     if options.delete(:force) || 
       cache.read(id, :json).nil? ||
-      cache.read(id, :json)&.dig('archives')&.empty? ||
+      cache.read(id, :json).dig('archives').blank? ||
+      # if the user adds a new archiver, and the cache exists only for the old archiver it refreshes the cache
       !options&.dig(:archivers).nil? && (total_of_archivers_in_options > total_of_archivers_in_cache)
         self.archive(options.delete(:archivers))
     end
