@@ -310,15 +310,15 @@ class ArchiverTest < ActiveSupport::TestCase
 
   test "should archive to perma.cc and store the URL on archives if perma_cc_key is present" do
     Media.any_instance.unstub(:archive_to_perma_cc)
-
+    
     WebMock.enable!
-    allowed_sites = lambda{ |uri| uri.host != 'api.perma.cc' }
-    WebMock.disable_net_connect!(allow: allowed_sites)
+    url = 'https://example.com'
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
     WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    url = 'https://slack.com/intl/en-br/'
     m = Media.new url: url, key: a
     id = Media.get_id(m.url)
     m.as_json(archivers: 'perma_cc')
@@ -330,21 +330,62 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  # this test isn't asserting anything, come back to this one
-  test "should not try to archive on Perma.cc if already archived on it" do
+  test "should not try to archive on Perma.cc if already present in cache and no refresh is requested" do
+    Media.any_instance.unstub(:archive_to_perma_cc)
+    
     WebMock.enable!
+    url = 'https://example.com'
+    a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
+    m = Media.new url: url, key: a
+    id = Media.get_id(m.url)
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
+    WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-FIRST' }.to_json)
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
-    a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    url = 'https://www.washingtonpost.com/'
-    m = Media.new url: url, key: a
-    m.as_json
-    Media.update_cache(m.url, { archives: { 'perma_cc' => { location: 'http://perma.cc/AUA8-QNGH'}}})
+    m.as_json(archivers: 'perma_cc')
 
+    cached = Pender::Store.current.read(id, :json)[:archives]
+    assert_equal ['perma_cc'], cached.keys
+    assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-FIRST'}, cached['perma_cc'])
+
+    WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-SECOND' }.to_json)
+
+    m.as_json(force: true, archivers: 'perma_cc')
+
+    cached = Pender::Store.current.read(id, :json)[:archives]
+    assert_equal ['perma_cc'], cached.keys
+    assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-FIRST'}, cached['perma_cc'])
+  ensure
+    WebMock.disable!
+  end
+
+  test "should try to archive on Perma.cc if already present in cache and but refresh is requested" do
     Media.any_instance.unstub(:archive_to_perma_cc)
-    Media.stubs(:notify_webhook_and_update_cache).with('perma_cc', m.url, { location: 'http://perma.cc/AUA8-QNGH'}, a.id).never
+    
+    WebMock.enable!
+    url = 'https://example.com'
+    a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
+    m = Media.new url: url, key: a
+    id = Media.get_id(m.url)
 
-    m.archive_to_perma_cc(m.url, a.id)
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
+    WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-FIRST' }.to_json)
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+
+    m.as_json(archivers: 'perma_cc')
+
+    cached = Pender::Store.current.read(id, :json)[:archives]
+    assert_equal ['perma_cc'], cached.keys
+    assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-FIRST'}, cached['perma_cc'])
+
+    WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-SECOND' }.to_json)
+
+    m.as_json(force: true, archivers: 'perma_cc')
+
+    cached = Pender::Store.current.read(id, :json)[:archives]
+    assert_equal ['perma_cc'], cached.keys
+    assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-SECOND'}, cached['perma_cc'])
   ensure
     WebMock.disable!
   end
@@ -376,17 +417,24 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should add disabled Perma.cc archiver error message if perma_key is not present" do
+    WebMock.enable!
+    url = 'https://example.com/'
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
     Media.any_instance.unstub(:archive_to_perma_cc)
     Media.stubs(:available_archivers).returns(['perma_cc'])
 
-    url = 'https://www.foxnews.com/'
     id = Media.get_id(url)
 
-    m = Media.new url: url, key: create_api_key
-    m.as_json(archivers: 'perma_cc')
+    assert_raises Pender::Exception::RetryLater do
+      m = Media.new url: url, key: nil
+      m.as_json(archivers: 'perma_cc')
+    end
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_match 'missing authentication', cached.dig('perma_cc', 'error', 'message').downcase
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_MISSING_KEY'), cached.dig('perma_cc', 'error', 'code')
+  ensure
+    WebMock.disable!
   end
 
   test "should return api key settings" do
