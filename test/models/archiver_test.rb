@@ -283,7 +283,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
   test "should archive to perma.cc and store the URL on archives if perma_cc_key is present" do
     Media.any_instance.unstub(:archive_to_perma_cc)
-    
+
     WebMock.enable!
     url = 'https://example.com'
 
