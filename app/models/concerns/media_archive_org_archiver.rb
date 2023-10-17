@@ -25,10 +25,8 @@ module MediaArchiveOrgArchiver
         Rails.logger.info level: 'INFO', message: '[archive_org] Sent URL to archive', url: url, code: response.code, response: response.message
         body = JSON.parse(response.body)
         if body['job_id']
-          puts "#{url} archive_org / body id present"
           Media.delay_for(2.minutes).get_archive_org_status(body['job_id'], url, key_id)
         else
-          puts "#{url} archive_org / no body id"
           PenderSentry.notify(
             Pender::Exception::TooManyCaptures.new(body["message"]),
             url: url,
