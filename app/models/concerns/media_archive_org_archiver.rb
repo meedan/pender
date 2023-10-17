@@ -27,8 +27,12 @@ module MediaArchiveOrgArchiver
         if body['job_id']
           Media.delay_for(2.minutes).get_archive_org_status(body['job_id'], url, key_id)
         else
+          klass = Pender::Exception::ArchiveOrgError
+          if body['message']&.include?('The same snapshot') || body['status_ext'] == 'error:too-many-daily-captures'
+            klass = Pender::Exception::TooManyCaptures
+          end
           PenderSentry.notify(
-            StandardError.new(body["message"]),
+            klass.new(body["message"]),
             url: url,
             response_body: body
           )
