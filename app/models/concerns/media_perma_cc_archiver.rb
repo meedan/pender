@@ -40,14 +40,8 @@ module MediaPermaCcArchiver
         data = { error: { message: 'Missing authentication key', code: Lapis::ErrorCodes::const_get('ARCHIVER_MISSING_KEY') }}
         Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
       else
-        id = Media.get_id(url)
-        data = Pender::Store.current.read(id, :json)
-        return if data.nil? || data.dig(:archives, :perma_cc).nil?
-
-        settings = Media.api_key_settings(key_id)
-        Media.notify_webhook('perma_cc', url, data, settings)
+        return false
       end
-      return true
     end
   end
 end
