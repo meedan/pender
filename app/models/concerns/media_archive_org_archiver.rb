@@ -32,7 +32,7 @@ module MediaArchiveOrgArchiver
             url: url,
             response_body: body
           )
-          data = snapshot_data.merge({ error: { message: "(#{body['status_ext']}) #{body['message']}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }})
+          data = snapshot_data.to_h.merge({ error: { message: "(#{body['status_ext']}) #{body['message']}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }})
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
         end
       end
