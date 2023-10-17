@@ -200,33 +200,6 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  test "should not archive if archive is present in cache and a refresh is not requested" do
-    skip("wip: test is not working yet, but I think something like this should be added")
-    WebMock.enable!
-    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    url = 'https://example.com/'
-    
-    Media.any_instance.unstub(:archive_to_archive_org)
-
-    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
-    WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
-    WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
-    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'archive-timestamp'}.to_json)
-    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-
-    id = Media.get_id(url)
-    m = create_media url: url, key: a
-
-    m.stubs(as_json(archivers: 'archive_org')).returns({'parsed_at' => 'first', 'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://example.com/'}})
-    assert_equal({'parsed_at' => 'first', 'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://example.com/'}}, Pender::Store.current.read(id, :json)[:archives])
-
-    m.stubs(as_json(archivers: 'archive_org')).returns({'parsed_at' => 'second', 'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://example.com/'}})
-    assert_equal({'parsed_at' => 'first', 'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://example.com/'}}, Pender::Store.current.read(id, :json)[:archives])
-
-  ensure
-    WebMock.disable!
-  end
-
   test "should update cache when a new archiver is requested without the need to request for a refresh" do
     WebMock.enable!
     a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
@@ -330,9 +303,75 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
+  test "should not archive on Archive.org if archive is present in cache and a refresh is not requested" do
+    Media.any_instance.unstub(:archive_to_archive_org)
+
+    WebMock.enable!
+    url = 'https://example.com/'
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
+    m = Media.new url: url, key: a
+    id = Media.get_id(m.url)
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
+    WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'archive-timestamp-FIRST'}.to_json)
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+
+    m.as_json(archivers: 'archive_org')
+
+    cached = Pender::Store.current.read(id, :json)[:archives]
+    assert_equal ['archive_org'], cached.keys
+    assert_equal({ 'location' => 'https://web.archive.org/web/archive-timestamp-FIRST/https://example.com/'}, cached['archive_org'])
+
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'archive-timestamp-SECOND'}.to_json)
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+
+    m.as_json(archivers: 'archive_org')
+
+    cached = Pender::Store.current.read(id, :json)[:archives]
+    assert_equal ['archive_org'], cached.keys
+    assert_equal({ 'location' => 'https://web.archive.org/web/archive-timestamp-FIRST/https://example.com/'}, cached['archive_org'])
+  ensure
+    WebMock.disable!
+  end
+
+  test "should try to archive on Archive.org even if already present in cache if refresh is requested" do
+    Media.any_instance.unstub(:archive_to_archive_org)
+
+    WebMock.enable!
+    url = 'https://example.com/'
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
+    m = Media.new url: url, key: a
+    id = Media.get_id(m.url)
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
+    WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'archive-timestamp-FIRST'}.to_json)
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+
+    m.as_json(archivers: 'archive_org')
+
+    cached = Pender::Store.current.read(id, :json)[:archives]
+    assert_equal ['archive_org'], cached.keys
+    assert_equal({ 'location' => 'https://web.archive.org/web/archive-timestamp-FIRST/https://example.com/'}, cached['archive_org'])
+
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'archive-timestamp-SECOND'}.to_json)
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+
+    m.as_json(force: true, archivers: 'archive_org')
+
+    cached = Pender::Store.current.read(id, :json)[:archives]
+    assert_equal ['archive_org'], cached.keys
+    assert_equal({ 'location' => 'https://web.archive.org/web/archive-timestamp-SECOND/https://example.com/'}, cached['archive_org'])
+  ensure
+    WebMock.disable!
+  end
+
   test "should not try to archive on Perma.cc if already present in cache and no refresh is requested" do
     Media.any_instance.unstub(:archive_to_perma_cc)
-    
+
     WebMock.enable!
     url = 'https://example.com'
     a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
@@ -351,7 +390,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:any, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-SECOND' }.to_json)
 
-    m.as_json(force: true, archivers: 'perma_cc')
+    m.as_json(archivers: 'perma_cc')
 
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
@@ -360,9 +399,9 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  test "should try to archive on Perma.cc if already present in cache and but refresh is requested" do
+  test "should try to archive on Perma.cc even if already present in cache if refresh is requested" do
     Media.any_instance.unstub(:archive_to_perma_cc)
-    
+
     WebMock.enable!
     url = 'https://example.com'
     a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
