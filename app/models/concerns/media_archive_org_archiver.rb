@@ -58,16 +58,20 @@ module MediaArchiveOrgArchiver
     end
 
     def get_archive_org_status(job_id, url, key_id)
-      http, request = Media.archive_org_request("https://web.archive.org/save/status/#{job_id}", 'Get')
-      response = http.request(request)
-      body = JSON.parse(response.body)
-      if body['status'] == 'success'
-        location = "https://web.archive.org/web/#{body['timestamp']}/#{url}"
-        data = { location: location }
-        Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
-      else
-        message = body['status'] == 'pending' ? 'Capture is pending' : "(#{body['status_ext']}) #{body['message']}"
-        raise Pender::Exception::RetryLater, message
+      begin
+        http, request = Media.archive_org_request("https://web.archive.org/save/status/#{job_id}", 'Get')
+        response = http.request(request)
+        body = JSON.parse(response.body)
+        if body['status'] == 'success'
+          location = "https://web.archive.org/web/#{body['timestamp']}/#{url}"
+          data = { location: location }
+          Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
+        else
+          message = body['status'] == 'pending' ? 'Capture is pending' : "(#{body['status_ext']}) #{body['message']}"
+          raise Pender::Exception::RetryLater, message
+        end
+      rescue StandardError => error
+        raise Pender::Exception::RetryLater, error.message
       end
     end
 
