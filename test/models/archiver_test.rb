@@ -2,9 +2,7 @@ require 'test_helper'
 
 class ArchiverTest < ActiveSupport::TestCase
   def teardown
-    super
-
-    FileUtils.rm_rf(File.join(Rails.root, 'tmp', 'videos'))
+    isolated_teardown
   end
 
   def quietly_redefine_constant(klass, constant, new_value)
@@ -784,7 +782,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     assert_match /#{PenderConfig.get('storage_endpoint')}\/default-bucket\d*\/video/, Media.archiving_folder
 
-    api_key.application_settings[:config][:storage_video_bucket] = 'bucket-for-videos'; api_keya.save
+    api_key.application_settings[:config][:storage_video_bucket] = 'bucket-for-videos'; api_key.save
     ApiKey.current = api_key
     Pender::Store.current = nil
     PenderConfig.current = nil
