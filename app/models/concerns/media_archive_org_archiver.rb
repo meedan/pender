@@ -36,7 +36,7 @@ module MediaArchiveOrgArchiver
               response_body: body
             )
           else
-            raise Pender::Exception::ArchiveOrgError, message = "(#{body['status_ext']}) #{body['message']}"
+            raise Pender::Exception::ArchiveOrgError, "(#{body['status_ext']}) #{body['message']}"
           end
         end
       end
