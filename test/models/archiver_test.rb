@@ -53,30 +53,6 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  test "when archive.org fails to archive, it should add to data the available archive.org snapshot and the error" do
-    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    url = 'https://example.com/'
-
-    Media.any_instance.unstub(:archive_to_archive_org)
-    Media.stubs(:get_available_archive_org_snapshot).returns({ location: "https://web.archive.org/web/timestamp/#{url}" })
-    WebMock.enable!
-
-    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
-    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(status: 200, body: { message: 'The same snapshot had been made 12 hours, 13 minutes ago. You can make new capture of this URL after 24 hours.', url: url}.to_json)
-    
-    media = create_media url: url, key: a
-    id = Media.get_id(media.url)
-    data = media.as_json(archivers: 'archive_org')
-
-    cached = Pender::Store.current.read(id, :json)[:archives]
-
-    assert_match /The same snapshot/, data.dig('archives', 'archive_org', 'error', 'message') 
-    assert_equal "https://web.archive.org/web/timestamp/#{url}", data.dig('archives', 'archive_org', 'location') 
-  ensure
-    WebMock.disable!
-  end
-
   test "should archive Arabics url to Archive.org" do
     Media.any_instance.unstub(:archive_to_archive_org)
     a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
@@ -93,6 +69,66 @@ class ArchiverTest < ActiveSupport::TestCase
       m = create_media url: url, key: a
       data = m.as_json
     end
+  ensure
+    WebMock.disable!
+  end
+
+  test "when archive.org fails to archive, it should add to data the available archive.org snapshot (if available) and the error" do
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
+    url = 'https://example.com/'
+
+    Media.any_instance.unstub(:archive_to_archive_org)
+    Media.stubs(:get_available_archive_org_snapshot).returns({ location: "https://web.archive.org/web/timestamp/#{url}" })
+    WebMock.enable!
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(status: 200, body: { message: 'The same snapshot had been made 12 hours, 13 minutes ago. You can make new capture of this URL after 24 hours.', url: url}.to_json)
+
+    media = create_media url: url, key: a
+    id = Media.get_id(media.url)
+    data = media.as_json(archivers: 'archive_org')
+
+    cached = Pender::Store.current.read(id, :json)[:archives]
+
+    assert_match /The same snapshot/, data.dig('archives', 'archive_org', 'error', 'message') 
+    assert_equal "https://web.archive.org/web/timestamp/#{url}", data.dig('archives', 'archive_org', 'location') 
+  ensure
+    WebMock.disable!
+  end
+
+  test "should update media with error when Archive.org can't archive the url" do
+    WebMock.enable!
+    allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
+    WebMock.disable_net_connect!(allow: allowed_sites)
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+
+    Media.any_instance.stubs(:follow_redirections)
+    Media.any_instance.stubs(:get_canonical_url).returns(true)
+    Media.any_instance.stubs(:try_https)
+    Media.any_instance.stubs(:parse)
+    Media.any_instance.stubs(:archive)
+
+    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
+    urls = {
+      'http://localhost:3333/unreachable-url' => {status_ext: 'error:invalid-url-syntax', message: 'URL syntax is not valid'},
+      'http://www.dutertenewsupdate.info/2018/01/duterte-turned-philippines-into.html' => {status_ext: 'error:invalid-host-resolution', message: 'Cannot resolve host'},
+    }
+
+      urls.each_pair do |url, data|
+        m = Media.new url: url
+        m.as_json(archivers: 'none')
+        assert_nil m.data.dig('archives', 'archive_org')
+        WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {status: 'error', status_ext: data[:status_ext], message: data[:message]}.to_json)
+        WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
+
+        assert_raises Pender::Exception::RetryLater do
+          Media.send_to_archive_org(url.to_s, a.id)
+        end
+        media_data = Pender::Store.current.read(Media.get_id(url), :json)
+        assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
+        assert_equal "(#{data[:status_ext]}) #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
+      end
   ensure
     WebMock.disable!
   end
@@ -123,40 +159,6 @@ class ArchiverTest < ActiveSupport::TestCase
       media_data = Pender::Store.current.read(Media.get_id(url), :json)
       assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_org', 'error', 'code')
       assert_equal "#{data[:code]} #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
-    end
-  ensure
-    WebMock.disable!
-  end
-
-  test "should update media with error when Archive.org can't archive the url" do
-    WebMock.enable!
-    allowed_sites = lambda{ |uri| uri.host != 'web.archive.org' }
-    WebMock.disable_net_connect!(allow: allowed_sites)
-    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-
-    Media.any_instance.stubs(:follow_redirections)
-    Media.any_instance.stubs(:get_canonical_url).returns(true)
-    Media.any_instance.stubs(:try_https)
-    Media.any_instance.stubs(:parse)
-    Media.any_instance.stubs(:archive)
-
-    a = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    urls = {
-      'http://localhost:3333/unreachable-url' => {status_ext: 'error:invalid-url-syntax', message: 'URL syntax is not valid'},
-      'http://www.dutertenewsupdate.info/2018/01/duterte-turned-philippines-into.html' => {status_ext: 'error:invalid-host-resolution', message: 'Cannot resolve host'},
-    }
-
-    urls.each_pair do |url, data|
-      m = Media.new url: url
-      m.as_json(archivers: 'none')
-      assert_nil m.data.dig('archives', 'archive_org')
-      WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {status: 'error', status_ext: data[:status_ext], message: data[:message]}.to_json)
-      WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
-
-      Media.send_to_archive_org(url.to_s, a.id)
-      media_data = Pender::Store.current.read(Media.get_id(url), :json)
-      assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
-      assert_equal "(#{data[:status_ext]}) #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
     end
   ensure
     WebMock.disable!
