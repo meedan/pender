@@ -541,6 +541,7 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should call youtube-dl and call video upload when archive video" do
+    skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
     WebMock.enable!
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
@@ -562,6 +563,10 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should return false and add error to data when video archiving is not supported" do
+    skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
+    WebMock.enable!
+    api_key = create_api_key_with_webhook
+    
     Media.unstub(:supported_video?)
     Media.any_instance.stubs(:parse)
     Metrics.stubs(:schedule_fetching_metrics_from_facebook)
@@ -592,11 +597,13 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should check if non-ascii URL support video download" do
+    skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
     Media.unstub(:supported_video?)
     assert !Media.supported_video?('http://example.com/pages/category/Musician-Band/चौधरी-कमला-बाड़मेर-108960273957085')
   end
 
   test "should notify if URL was already parsed and has a location on data when archive video" do
+    skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
     WebMock.enable!
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
@@ -621,6 +628,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
   # FIXME Mocking Youtube-DL to avoid `HTTP Error 429: Too Many Requests`
   test "should archive video info subtitles, thumbnails and update cache" do
+    skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
     WebMock.enable!
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
@@ -659,6 +667,8 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should raise retry error when video archiving fails" do
+    skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
+    WebMock.enable!
     Sidekiq::Testing.fake!
     WebMock.enable!
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
@@ -685,6 +695,8 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should update media with error when supported video call raises on video archiving" do
+    skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
+    WebMock.enable!
     Sidekiq::Testing.fake!
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
@@ -711,6 +723,7 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should update media with error when video download fails when video archiving" do
+    skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
     WebMock.enable!
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
@@ -738,8 +751,9 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should generate the public archiving folder for videos" do
-    a = create_api_key application_settings: { config: { storage_endpoint: 'http://minio:9000', storage_bucket: 'default-bucket', storage_video_asset_path: nil, storage_video_bucket: nil }}
-    ApiKey.current = a
+    skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
+    api_key = create_api_key application_settings: { config: { storage_endpoint: 'http://minio:9000', storage_bucket: 'default-bucket', storage_video_asset_path: nil, storage_video_bucket: nil }}
+    ApiKey.current = api_key
 
     assert_match /#{PenderConfig.get('storage_endpoint')}\/default-bucket\d*\/video/, Media.archiving_folder
 
@@ -785,6 +799,7 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should send to video archiver when call archive to video" do
+    skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
     Media.any_instance.unstub(:archive_to_video)
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
@@ -800,6 +815,7 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should get proxy to download video from api key if present" do
+    skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
     WebMock.enable!
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
@@ -818,6 +834,7 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should use api key config when archiving video if present" do
+    skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
     WebMock.enable!
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
