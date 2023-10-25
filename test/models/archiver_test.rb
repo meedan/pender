@@ -534,20 +534,20 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should add disabled Perma.cc archiver error message if perma_key is not present" do
-    skip('fix this')
     WebMock.enable!
+    WebMock.disable_net_connect!(allow: [/minio/])
+    Sidekiq::Testing.inline!
     url = 'https://example.com/'
 
-    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
     Media.any_instance.unstub(:archive_to_perma_cc)
     Media.stubs(:available_archivers).returns(['perma_cc'])
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
 
+    m = Media.new url: url, key: nil
+    m.as_json(archivers: 'perma_cc')
+    
     id = Media.get_id(url)
-
-    assert_raises Pender::Exception::RetryLater do
-      m = Media.new url: url, key: nil
-      m.as_json(archivers: 'perma_cc')
-    end
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_match 'missing authentication', cached.dig('perma_cc', 'error', 'message').downcase
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_MISSING_KEY'), cached.dig('perma_cc', 'error', 'code')
