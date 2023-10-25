@@ -39,6 +39,7 @@ module MediaPermaCcArchiver
       if perma_cc_key.nil?
         data = { error: { message: 'Missing authentication key', code: Lapis::ErrorCodes::const_get('ARCHIVER_MISSING_KEY') }}
         Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
+        return true
       else
         return false
       end
