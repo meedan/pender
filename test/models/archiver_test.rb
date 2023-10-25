@@ -61,9 +61,9 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
-    WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
-    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+    WebMock.stub_request(:get, /archive.org\/wayback/).to_return_json(body: {"archived_snapshots":{}}, headers: {})
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'timestamp'})
 
     media = create_media url: url, key: api_key
     data = media.as_json(archivers: 'archive_org')
@@ -85,8 +85,8 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>صفحة باللغة العربية</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
-    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'timestamp'})
 
     assert_nothing_raised do
       m = create_media url: url, key: api_key
@@ -108,7 +108,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid' }.to_json)
+    WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid' })
 
     media = create_media url: url, key: api_key
     data = media.as_json(archivers: 'perma_cc')
@@ -131,7 +131,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(status: 200, body: { message: 'The same snapshot had been made 12 hours, 13 minutes ago. You can make new capture of this URL after 24 hours.', url: url}.to_json)
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(status: 200, body: { message: 'The same snapshot had been made 12 hours, 13 minutes ago. You can make new capture of this URL after 24 hours.', url: url})
 
     media = create_media url: url, key: api_key
     data = media.as_json(archivers: 'archive_org')
@@ -197,7 +197,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /api.perma.cc/).to_return(status: [400, 'Bad Request'], body: { 'error': "Perma can't create this link. You've reached your usage limit. Visit your Usage Plan page for information and plan options." }.to_json)
+    WebMock.stub_request(:post, /api.perma.cc/).to_return_json(status: [400, 'Bad Request'], body: { 'error': "Perma can't create this link. You've reached your usage limit. Visit your Usage Plan page for information and plan options." })
 
     m = Media.new url: url
     data = m.as_json(archivers: 'none')
@@ -224,7 +224,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /api.perma.cc/).to_return(status: [400, 'Bad Request'], body: { 'error': "Perma can't create this link. You've reached your usage limit. Visit your Usage Plan page for information and plan options." }.to_json)
+    WebMock.stub_request(:post, /api.perma.cc/).to_return_json(status: [400, 'Bad Request'], body: { 'error': "Perma can't create this link. You've reached your usage limit. Visit your Usage Plan page for information and plan options." })
 
     m = Media.new url: url, key: api_key
     assert_raises StandardError do
@@ -257,9 +257,9 @@ class ArchiverTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0'}.to_json)
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0'})
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
-    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'error', status_ext: 'error:not-found', message: 'The server cannot find the requested resource'}.to_json)
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'error', status_ext: 'error:not-found', message: 'The server cannot find the requested resource'})
 
     assert_raises Pender::Exception::RetryLater do
       Media.send_to_archive_org(url.to_s, api_key.id)
@@ -286,8 +286,8 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(m.url)
 
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
-    WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
-    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'archive-timestamp-FIRST'}.to_json)
+    WebMock.stub_request(:any, /web.archive.org\/save/).to_return_json(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'archive-timestamp-FIRST'})
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     m.as_json(archivers: 'archive_org')
@@ -296,7 +296,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal ['archive_org'], cached.keys
     assert_equal({ 'location' => 'https://web.archive.org/web/archive-timestamp-FIRST/https://example.com/'}, cached['archive_org'])
 
-    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'archive-timestamp-SECOND'}.to_json)
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'archive-timestamp-SECOND'})
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     m.as_json(archivers: 'archive_org')
@@ -323,8 +323,8 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(m.url)
 
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
-    WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
-    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'archive-timestamp-FIRST'}.to_json)
+    WebMock.stub_request(:any, /web.archive.org\/save/).to_return_json(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'archive-timestamp-FIRST'})
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     m.as_json(archivers: 'archive_org')
@@ -333,7 +333,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal ['archive_org'], cached.keys
     assert_equal({ 'location' => 'https://web.archive.org/web/archive-timestamp-FIRST/https://example.com/'}, cached['archive_org'])
 
-    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'archive-timestamp-SECOND'}.to_json)
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'archive-timestamp-SECOND'})
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     m.as_json(force: true, archivers: 'archive_org')
@@ -359,7 +359,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m = Media.new url: url, key: api_key
     id = Media.get_id(m.url)
 
-    WebMock.stub_request(:post, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-FIRST' }.to_json)
+    WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid-FIRST' })
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     m.as_json(archivers: 'perma_cc')
@@ -368,7 +368,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal ['perma_cc'], cached.keys
     assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-FIRST'}, cached['perma_cc'])
 
-    WebMock.stub_request(:post, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-SECOND' }.to_json)
+    WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid-SECOND' })
 
     m.as_json(archivers: 'perma_cc')
 
@@ -394,7 +394,7 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(m.url)
 
     Media.any_instance.unstub(:archive_to_perma_cc)
-    WebMock.stub_request(:post, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-FIRST' }.to_json)
+    WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid-FIRST' })
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     m.as_json(archivers: 'perma_cc')
@@ -403,7 +403,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal ['perma_cc'], cached.keys
     assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-FIRST'}, cached['perma_cc'])
 
-    WebMock.stub_request(:post, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-SECOND' }.to_json)
+    WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid-SECOND' })
 
     m.as_json(force: true, archivers: 'perma_cc')
 
@@ -426,8 +426,8 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
-    WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
-    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'archive-timestamp'}.to_json)
+    WebMock.stub_request(:any, /web.archive.org\/save/).to_return_json(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'archive-timestamp'})
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     id = Media.get_id(url)
@@ -462,7 +462,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
-    WebMock.stub_request(:post, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
+    WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid-1' })
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     id = Media.get_id(url)
@@ -471,8 +471,8 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal({'perma_cc' => {"location" => 'http://perma.cc/perma-cc-guid-1'}}, Pender::Store.current.read(id, :json)[:archives])
 
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
-    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'timestamp'})
 
     m.as_json(archivers: 'perma_cc, archive_org')
     assert_equal({'perma_cc' => {'location' => 'http://perma.cc/perma-cc-guid-1'}, 'archive_org' => {'location' => "https://web.archive.org/web/timestamp/#{url}" }}, Pender::Store.current.read(id, :json)[:archives])
@@ -499,9 +499,9 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
 
     # First archiver request responses
-    WebMock.stub_request(:post, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
-    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
+    WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid-1' })
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'timestamp'})
 
     id = Media.get_id(url)
     m = create_media url: url, key: api_key
@@ -509,9 +509,9 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal({'perma_cc' => {'location' => 'http://perma.cc/perma-cc-guid-1'}, 'archive_org' => {'location' => "https://web.archive.org/web/timestamp/#{url}" }}, Pender::Store.current.read(id, :json)[:archives])
 
     # Second archiver request responses
-    WebMock.stub_request(:post, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-2' }.to_json)
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
-    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp2'}.to_json)
+    WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid-2' })
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'timestamp2'})
 
     m.as_json
     assert_equal({'location' => 'http://perma.cc/perma-cc-guid-1'}, Pender::Store.current.read(id, :json)[:archives][:perma_cc])
@@ -547,7 +547,7 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.unstub(:archive_to_perma_cc)
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
-    WebMock.stub_request(:post, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
+    WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid-1' })
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     m = Media.new url: url, key: api_key
@@ -948,7 +948,7 @@ class ArchiverTest < ActiveSupport::TestCase
     encoded_uri = RequestHelper.encode_url(url)
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
-    WebMock.stub_request(:get, /archive.org\/wayback\/available?.+url=#{url}/).to_return(body: {"archived_snapshots":{ closest: { available: true, url: 'http://web.archive.org/web/20210223111252/http://example.com/' }}}.to_json)
+    WebMock.stub_request(:get, /archive.org\/wayback\/available?.+url=#{url}/).to_return_json(body: {"archived_snapshots":{ closest: { available: true, url: 'http://web.archive.org/web/20210223111252/http://example.com/' }}})
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     snapshot = Media.get_available_archive_org_snapshot(encoded_uri, api_key)
@@ -964,7 +964,7 @@ class ArchiverTest < ActiveSupport::TestCase
     url = 'https://example.com/'
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
-    WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json)
+    WebMock.stub_request(:get, /archive.org\/wayback/).to_return_json(body: {"archived_snapshots":{}})
 
     assert_nil Media.get_available_archive_org_snapshot(url, nil)
   ensure
@@ -982,7 +982,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
-    WebMock.stub_request(:post, /api.perma.cc/).to_return(body: { guid: 'perma-cc-guid-1' }.to_json)
+    WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid-1' })
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 425, body: '')
 
     m = Media.new url: url, key: api_key
