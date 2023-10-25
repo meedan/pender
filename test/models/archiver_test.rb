@@ -533,18 +533,21 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  test "should add disabled Perma.cc archiver error message if perma_key is not present" do
+  test "should add disabled Perma.cc archiver error message if perma_key is not defined" do
     WebMock.enable!
     WebMock.disable_net_connect!(allow: [/minio/])
     Sidekiq::Testing.inline!
+    api_key = create_api_key_with_webhook
     url = 'https://example.com/'
 
     Media.any_instance.unstub(:archive_to_perma_cc)
     Media.stubs(:available_archivers).returns(['perma_cc'])
+    Metrics.stubs(:schedule_fetching_metrics_from_facebook).returns(nil)    
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+    WebMock.stub_request(:post, "https://example.com/webhook.php").to_return(status: 200, body: '')
 
-    m = Media.new url: url, key: nil
+    m = Media.new url: url, key: api_key
     m.as_json(archivers: 'perma_cc')
     
     id = Media.get_id(url)
