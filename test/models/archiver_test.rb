@@ -168,10 +168,10 @@ class ArchiverTest < ActiveSupport::TestCase
 
       WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
       WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-      WebMock.stub_request(:any, /web.archive.org\/save/).to_return(body: {status: 'error', status_ext: data[:status_ext], message: data[:message]}.to_json)
-      WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
+      WebMock.stub_request(:any, /web.archive.org\/save/).to_return_json(body: { status: 'error', status_ext: data[:status_ext], message: data[:message] })
+      WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: { "archived_snapshots": {} }.to_json, headers: {})
 
-      assert_raises Pender::Exception::RetryLater do
+      assert_raises StandardError do
         Media.send_to_archive_org(url.to_s, api_key.id)
       end
       media_data = Pender::Store.current.read(Media.get_id(url), :json)
@@ -183,9 +183,11 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should update media with error when archive to Perma.cc fails" do
-    skip('fix this')
     WebMock.enable!
-    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.disable_net_connect!(allow: [/minio/])
+    Sidekiq::Testing.inline!
+    api_key = create_api_key_with_webhook_for_perma_cc
+    url = 'https://example.com'
 
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
@@ -193,18 +195,44 @@ class ArchiverTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:parse)
     Media.any_instance.stubs(:archive)
 
-    a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    url = 'http://example.com'
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /api.perma.cc/).to_return(status: [400, 'Bad Request'], body: { 'error': "Perma can't create this link. You've reached your usage limit. Visit your Usage Plan page for information and plan options." }.to_json)
 
-    assert_raises Pender::Exception::RetryLater do
-      m = Media.new url: url, key: a
-      m.as_json
-      assert m.data.dig('archives', 'perma_cc').nil?
-      Media.send_to_perma_cc(url.to_s, a.id, 20)
-      media_data = Pender::Store.current.read(Media.get_id(url), :json)
-      assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'perma_cc', 'error', 'code')
-      assert_equal "401 Unauthorized", media_data.dig('archives', 'perma_cc', 'error', 'message')
+    m = Media.new url: url
+    data = m.as_json(archivers: 'none')
+    assert_nil data.dig('archives', 'perma_cc')
+
+    assert_raises StandardError do
+      Media.send_to_perma_cc(url.to_s, api_key.id)
     end
+    media_data = Pender::Store.current.read(Media.get_id(url), :json)
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'perma_cc', 'error', 'code')
+    assert_equal '(400) Bad Request', media_data.dig('archives', 'perma_cc', 'error', 'message')
+  ensure
+    WebMock.disable!
+  end
+
+  test "should update media with error when archive to Perma.cc fails2" do
+    WebMock.enable!
+    WebMock.disable_net_connect!(allow: [/minio/])
+    Sidekiq::Testing.inline!
+    api_key = create_api_key_with_webhook_for_perma_cc
+    url = 'https://example.com'
+
+    Media.any_instance.unstub(:archive_to_perma_cc)
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /api.perma.cc/).to_return(status: [400, 'Bad Request'], body: { 'error': "Perma can't create this link. You've reached your usage limit. Visit your Usage Plan page for information and plan options." }.to_json)
+
+    m = Media.new url: url, key: api_key
+    assert_raises StandardError do
+      m.as_json(archivers: 'perma_cc')
+    end
+    media_data = Pender::Store.current.read(Media.get_id(url), :json)
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'perma_cc', 'error', 'code')
+    assert_equal '(400) Bad Request', media_data.dig('archives', 'perma_cc', 'error', 'message')
   ensure
     WebMock.disable!
   end
@@ -351,7 +379,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  test "if a refresh is requested it should try to archive on Perma.cc" do
+  test "if a refresh is requested it should try to create a new archive on Perma.cc" do
     WebMock.enable!
     WebMock.disable_net_connect!(allow: [/minio/])
     Sidekiq::Testing.inline!

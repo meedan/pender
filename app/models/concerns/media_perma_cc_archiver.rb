@@ -30,7 +30,7 @@ module MediaPermaCcArchiver
           data = { location: 'http://perma.cc/' + body['guid'] }
           Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
         else
-          raise Pender::Exception::RetryLater, "(#{response.code}) #{response.message}"
+          raise Pender::Exception::PermaCcError, "(#{response.code}) #{response.message}"
         end
       end
     end
