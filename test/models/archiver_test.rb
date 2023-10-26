@@ -455,28 +455,26 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  test "should update media with error when archive to Perma.cc fails" do
+  test "when Perma.cc fails with Pender::Exception::PermaCcError it should update media with error and retry" do
     WebMock.enable!
+    WebMock.disable_net_connect!(allow: [/minio/])
+    Sidekiq::Testing.inline!
+    api_key = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
+    url = 'https://example.com'
+
+    Media.any_instance.unstub(:archive_to_perma_cc)
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /api.perma.cc/).to_return(status: [400, 'Bad Request'], body: { 'error': "A random error." }.to_json)
 
-    Media.any_instance.stubs(:follow_redirections)
-    Media.any_instance.stubs(:get_canonical_url).returns(true)
-    Media.any_instance.stubs(:try_https)
-    Media.any_instance.stubs(:parse)
-    Media.any_instance.stubs(:archive)
-
-    a = create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
-    url = 'http://example.com'
-
-    assert_raises Pender::Exception::RetryLater do
-      m = Media.new url: url, key: a
-      m.as_json
-      assert m.data.dig('archives', 'perma_cc').nil?
-      Media.send_to_perma_cc(url.to_s, a.id, 20)
-      media_data = Pender::Store.current.read(Media.get_id(url), :json)
-      assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'perma_cc', 'error', 'code')
-      assert_equal "401 Unauthorized", media_data.dig('archives', 'perma_cc', 'error', 'message')
+    m = Media.new url: url, key: api_key
+    assert_raises StandardError do
+      m.as_json(archivers: 'perma_cc')
     end
+    media_data = Pender::Store.current.read(Media.get_id(url), :json)
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'perma_cc', 'error', 'code')
+    assert_equal '(400) Bad Request', media_data.dig('archives', 'perma_cc', 'error', 'message')
   ensure
     WebMock.disable!
   end
