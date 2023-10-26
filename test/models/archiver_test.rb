@@ -259,36 +259,30 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  test "should update media with error when archive to Archive.org fails too many times" do
-    skip('fix this')
+  test "should update media with error when archive to Archive.org hits the limit of retries" do
     WebMock.enable!
     WebMock.disable_net_connect!(allow: [/minio/])
     Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook
     url = 'https://example.com/'
 
-    Media.any_instance.stubs(:follow_redirections)
-    Media.any_instance.stubs(:get_canonical_url).returns(true)
-    Media.any_instance.stubs(:try_https)
-    Media.any_instance.stubs(:parse)
-    Media.any_instance.stubs(:archive)
-
-    m = Media.new url: url
-    m.as_json(archivers: 'none')
-    assert_nil m.data.dig('archives', 'archive_org')
+    Media.any_instance.unstub(:archive_to_archive_org)
+    Media.stubs(:get_available_archive_org_snapshot).returns({ location: "https://web.archive.org/web/timestamp/#{url}" })
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0'})
-    WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
-    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'error', status_ext: 'error:not-found', message: 'The server cannot find the requested resource'})
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(status: 500, body: { status_ext: '500', message: 'Random Error.', url: url})
 
-    assert_raises Pender::Exception::RetryLater do
-      Media.send_to_archive_org(url.to_s, api_key.id)
+    media = Media.new url: url, key: api_key
+    assert_raises StandardError do
+      media.as_json(archivers: 'archive_org')
     end
-      media_data = Pender::Store.current.read(Media.get_id(url), :json)
-      assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_org', 'error', 'code')
-      assert_equal "#{data[:code]} #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
+    Media.give_up({ args: [url, 'archive_org', api_key], error_message: 'Gave Up', error_class: 'error class'})
+
+    media_data = Pender::Store.current.read(Media.get_id(url), :json)
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_org', 'error', 'code')
+    assert_equal "Gave Up", media_data.dig('archives', 'archive_org', 'error', 'message')
   ensure
     WebMock.disable!
   end
