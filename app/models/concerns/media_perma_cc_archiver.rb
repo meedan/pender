@@ -30,7 +30,15 @@ module MediaPermaCcArchiver
           data = { location: 'http://perma.cc/' + body['guid'] }
           Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
         else
-          raise Pender::Exception::PermaCcError, "(#{response.code}) #{response.message}"
+          if response&.body.include?("You've reached your usage limit")
+            PenderSentry.notify(
+              Pender::Exception::TooManyCaptures.new(response.message),
+              url: url,
+              response_body: response.body
+            )
+          else  
+            raise Pender::Exception::PermaCcError, "(#{response.code}) #{response.message}"
+          end
         end
       end
     end
