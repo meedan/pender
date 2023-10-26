@@ -93,8 +93,6 @@ module MediaArchiver
       rescue StandardError => error
         error_type = 'ARCHIVER_ERROR'
         params.merge!({code: Lapis::ErrorCodes::const_get(error_type), message: error.message})
-        data = { error: { message: params[:message], code: Lapis::ErrorCodes::const_get(error_type) }}
-        Media.notify_webhook_and_update_cache(archiver, params[:url], data, params[:key_id])
         retry_archiving_after_failure(archiver, params)
       end
     end

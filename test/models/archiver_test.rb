@@ -175,7 +175,6 @@ class ArchiverTest < ActiveSupport::TestCase
       media.as_json(archivers: 'archive_org')
     end
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
-    
     assert_equal '(500) Random Error.', media_data.dig('archives', 'archive_org', 'error', 'message') 
     assert_equal "https://web.archive.org/web/timestamp/#{url}", media_data.dig('archives', 'archive_org', 'location') 
   ensure
@@ -254,7 +253,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'perma_cc', 'error', 'code')
-    assert_equal 'Bad Request', media_data.dig('archives', 'perma_cc', 'error', 'message')
+    assert_equal '(400) Bad Request', media_data.dig('archives', 'perma_cc', 'error', 'message')
   ensure
     WebMock.disable!
   end

@@ -30,7 +30,7 @@ module MediaPermaCcArchiver
           data = { location: 'http://perma.cc/' + body['guid'] }
           Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
         else
-          data = { error: { message: response.message, code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }}
+          data = { error: { message: "(#{response.code}) #{response.message}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }}
           Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
           if response&.body.include?("You've reached your usage limit")
             PenderSentry.notify(
