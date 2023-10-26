@@ -30,16 +30,14 @@ module MediaPermaCcArchiver
           data = { location: 'http://perma.cc/' + body['guid'] }
           Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
         else
+          data = { error: { message: response.message, code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }}
+          Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
           if response&.body.include?("You've reached your usage limit")
             PenderSentry.notify(
               Pender::Exception::TooManyCaptures.new(response.message),
               url: url,
               response_body: response.body
             )
-            error_type = 'ARCHIVER_ERROR'
-            { url: url, key_id: key_id }.merge!({code: Lapis::ErrorCodes::const_get(error_type), message: response.message})
-            data = { error: { message: response.message, code: Lapis::ErrorCodes::const_get(error_type) }}
-            Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
           else  
             raise Pender::Exception::PermaCcError, "(#{response.code}) #{response.message}"
           end
