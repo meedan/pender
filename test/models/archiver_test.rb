@@ -118,30 +118,6 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.disable!
   end
 
-  test "when archive.org fails to archive, it should add to data the available archive.org snapshot (if available) and the error" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
-    api_key = create_api_key_with_webhook
-    url = 'https://example.com/'
-
-    Media.any_instance.unstub(:archive_to_archive_org)
-    Media.stubs(:get_available_archive_org_snapshot).returns({ location: "https://web.archive.org/web/timestamp/#{url}" })
-
-    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
-    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
-    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(status: 200, body: { message: 'The same snapshot had been made 12 hours, 13 minutes ago. You can make new capture of this URL after 24 hours.', url: url})
-
-    media = create_media url: url, key: api_key
-    data = media.as_json(archivers: 'archive_org')
-    
-    assert_match /The same snapshot/, data.dig('archives', 'archive_org', 'error', 'message') 
-    assert_equal "https://web.archive.org/web/timestamp/#{url}", data.dig('archives', 'archive_org', 'location') 
-  ensure
-    WebMock.disable!
-  end
-
   test "should update media with error when Archive.org can't archive the url" do
     WebMock.enable!
     WebMock.disable_net_connect!(allow: [/minio/])
@@ -175,6 +151,61 @@ class ArchiverTest < ActiveSupport::TestCase
       assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
       assert_equal "(#{data[:status_ext]}) #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
       end
+  ensure
+    WebMock.disable!
+  end
+
+  test "when Archive.org fails with Pender::Exception::ArchiveOrgError it should retry, update data with snapshot (if available) and error" do
+    WebMock.enable!
+    WebMock.disable_net_connect!(allow: [/minio/])
+    Sidekiq::Testing.inline!
+    api_key = create_api_key_with_webhook
+    url = 'https://example.com/'
+
+    Media.any_instance.unstub(:archive_to_archive_org)
+    Media.stubs(:get_available_archive_org_snapshot).returns({ location: "https://web.archive.org/web/timestamp/#{url}" })
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(status: 500, body: { status_ext: '500', message: 'Random Error.', url: url})
+
+    media = create_media url: url, key: api_key
+    assert_raises StandardError do
+      media.as_json(archivers: 'archive_org')
+    end
+    media_data = Pender::Store.current.read(Media.get_id(url), :json)
+    
+    assert_equal '(500) Random Error.', media_data.dig('archives', 'archive_org', 'error', 'message') 
+    assert_equal "https://web.archive.org/web/timestamp/#{url}", media_data.dig('archives', 'archive_org', 'location') 
+  ensure
+    WebMock.disable!
+  end
+
+  test "when Archive.org fails with Pender::Exception::TooManyCaptures it should NOT retry, it should update data with snapshot (if available) and error" do
+    WebMock.enable!
+    WebMock.disable_net_connect!(allow: [/minio/])
+    Sidekiq::Testing.inline!
+    api_key = create_api_key_with_webhook
+    url = 'https://example.com/'
+
+    Media.any_instance.unstub(:archive_to_archive_org)
+    Media.stubs(:get_available_archive_org_snapshot).returns({ location: "https://web.archive.org/web/timestamp/#{url}" })
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(status: 200, body: { message: 'The same snapshot had been made 12 hours, 13 minutes ago. You can make new capture of this URL after 24 hours.', url: url})
+
+    m = Media.new url: url, key: api_key
+    assert_nothing_raised do
+      m.as_json(archivers: 'archive_org')
+    end
+
+    media_data = Pender::Store.current.read(Media.get_id(url), :json)
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
+    assert_match /The same snapshot/, media_data.dig('archives', 'archive_org', 'error', 'message')
+    assert_equal "https://web.archive.org/web/timestamp/#{url}", media_data.dig('archives', 'archive_org', 'location') 
   ensure
     WebMock.disable!
   end
