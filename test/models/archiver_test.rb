@@ -136,9 +136,6 @@ class ArchiverTest < ActiveSupport::TestCase
     media = create_media url: url, key: api_key
     data = media.as_json(archivers: 'archive_org')
     
-    id = Media.get_id(media.url)
-    cached = Pender::Store.current.read(id, :json)[:archives]
-
     assert_match /The same snapshot/, data.dig('archives', 'archive_org', 'error', 'message') 
     assert_equal "https://web.archive.org/web/timestamp/#{url}", data.dig('archives', 'archive_org', 'location') 
   ensure
