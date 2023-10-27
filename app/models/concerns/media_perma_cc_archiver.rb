@@ -6,7 +6,7 @@ module MediaPermaCcArchiver
   end
 
   def archive_to_perma_cc(url, key_id)
-    ArchiverWorker.perform_in(30.seconds, url, :perma_cc, key_id)
+    ArchiverWorker.perform_in(30.seconds, url, 'perma_cc', key_id)
   end
 
   module ClassMethods
