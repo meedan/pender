@@ -30,6 +30,7 @@ class ArchiverTest < ActiveSupport::TestCase
     create_api_key application_settings: { config: { 'perma_cc_key': 'my-perma-key' }, 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
   end
 
+  # I don't really understand what this test is doing
   test "should skip screenshots" do
     stub_configs({'archiver_skip_hosts' => '' })
 
