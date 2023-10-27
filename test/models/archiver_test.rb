@@ -125,7 +125,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
       WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
       WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-      WebMock.stub_request(:any, /web.archive.org\/save/).to_return_json(body: { status: 'error', status_ext: data[:status_ext], message: data[:message] })
+      WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: { status: 'error', status_ext: data[:status_ext], message: data[:message] })
       WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: { "archived_snapshots": {} }.to_json, headers: {})
 
       assert_raises StandardError do
@@ -181,6 +181,26 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal "https://web.archive.org/web/timestamp/#{url}", media_data.dig('archives', 'archive_org', 'location') 
   end
 
+  test "when Archive.org fails to make/complete a request it should retry and update data with error" do
+    api_key = create_api_key_with_webhook
+    url = 'https://meedan.com/post/annual-report-2022'
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+    WebMock.stub_request(:any, /archive.org/).to_raise(Net::ReadTimeout.new('Exception from WebMock'))
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+
+    m = create_media url: url, key: api_key
+    assert_raises StandardError do
+      data = m.as_json(archivers: 'archive_org')
+      assert_nil data.dig('archives', 'archive_org')
+    end
+
+    data = m.as_json
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), data.dig('archives', 'archive_org', 'error', 'code')
+    assert_equal 'Net::ReadTimeout with "Exception from WebMock"', data.dig('archives', 'archive_org', 'error', 'message')
+  end
+
   test "when Perma.cc fails with Pender::Exception::PermaCcError it should update media with error and retry" do
     api_key = create_api_key_with_webhook_for_perma_cc
     url = 'https://example.com'
@@ -220,6 +240,26 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal '(400) Bad Request', media_data.dig('archives', 'perma_cc', 'error', 'message')
   end
 
+  test "when Perma.cc fails to make/complete a request it should retry and update data with error" do
+    api_key = create_api_key_with_webhook_for_perma_cc
+    url = 'https://meedan.com/post/annual-report-2022'
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /api.perma.cc/).to_raise(Net::ReadTimeout.new('Exception from WebMock'))
+
+    m = create_media url: url, key: api_key
+    assert_raises StandardError do
+      data = m.as_json(archivers: 'perma_cc')
+      assert_nil data.dig('archives', 'perma_cc')
+    end
+
+    data = m.as_json
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), data.dig('archives', 'perma_cc', 'error', 'code')
+    assert_equal 'Net::ReadTimeout with "Exception from WebMock"', data.dig('archives', 'perma_cc', 'error', 'message')
+  end
+
   test "should update media with error when archive to Archive.org hits the limit of retries" do
     api_key = create_api_key_with_webhook
     url = 'https://example.com/'
@@ -255,7 +295,7 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(m.url)
 
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
-    WebMock.stub_request(:any, /web.archive.org\/save/).to_return_json(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'archive-timestamp-FIRST'})
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
@@ -287,7 +327,7 @@ class ArchiverTest < ActiveSupport::TestCase
     id = Media.get_id(m.url)
 
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
-    WebMock.stub_request(:any, /web.archive.org\/save/).to_return_json(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'archive-timestamp-FIRST'})
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
@@ -375,7 +415,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
-    WebMock.stub_request(:any, /web.archive.org\/save/).to_return_json(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: 'archive_org/first_archiving', job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'archive-timestamp'})
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
