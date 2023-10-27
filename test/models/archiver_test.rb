@@ -1,6 +1,14 @@
 require 'test_helper'
 
 class ArchiverTest < ActiveSupport::TestCase
+  def setup
+    WebMock.enable!
+    WebMock.disable_net_connect!(allow: [/minio/])
+    Sidekiq::Testing.inline!
+    Metrics.stubs(:request_metrics_from_facebook).returns({ 'share_count' => 123 })
+    clear_bucket
+  end
+  
   def teardown
     isolated_teardown
   end
@@ -23,9 +31,6 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should skip screenshots" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     stub_configs({'archiver_skip_hosts' => '' })
 
     api_key = create_api_key
@@ -33,7 +38,6 @@ class ArchiverTest < ActiveSupport::TestCase
     url = 'https://checkmedia.org/caio-screenshots/project/1121/media/8390'
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
-    id = Media.get_id(url)
     m = create_media url: url, key: api_key
     data = m.as_json
 
@@ -42,17 +46,11 @@ class ArchiverTest < ActiveSupport::TestCase
     url = 'https://checkmedia.org/caio-screenshots/project/1121/media/8390?hide_tasks=1'
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
-    id = Media.get_id(url)
     m = create_media url: url, key: api_key
     data = m.as_json
-  ensure
-    WebMock.disable!
   end
 
   test "should archive to Archive.org" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook
     url = 'https://example.com/'
 
@@ -69,14 +67,9 @@ class ArchiverTest < ActiveSupport::TestCase
     data = media.as_json(archivers: 'archive_org')
 
     assert_equal "https://web.archive.org/web/timestamp/#{url}", data.dig('archives', 'archive_org', 'location') 
-  ensure
-    WebMock.disable!
   end
   
   test "should archive Arabics url to Archive.org" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook
     url = 'https://www.yallakora.com/ar/news/342470/%D8%A7%D8%AA%D8%AD%D8%A7%D8%AF-%D8%A7%D9%84%D9%83%D8%B1%D8%A9-%D8%B9%D9%86-%D8%A3%D8%B2%D9%85%D8%A9-%D8%A7%D9%84%D8%B3%D8%B9%D9%8A%D8%AF-%D9%84%D8%A7%D8%A8%D8%AF-%D9%85%D9%86-%D8%AD%D9%84-%D9%85%D8%B9-%D8%A7%D9%84%D8%B2%D9%85%D8%A7%D9%84%D9%83/2504'
 
@@ -90,16 +83,11 @@ class ArchiverTest < ActiveSupport::TestCase
 
     assert_nothing_raised do
       m = create_media url: url, key: api_key
-      data = m.as_json
+      m.as_json
     end
-  ensure
-    WebMock.disable!
   end
 
   test "should archive to Perma.cc" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook_for_perma_cc
     url = 'https://example.com/'
 
@@ -114,14 +102,9 @@ class ArchiverTest < ActiveSupport::TestCase
     data = media.as_json(archivers: 'perma_cc')
 
     assert_equal "http://perma.cc/perma-cc-guid", data.dig('archives', 'perma_cc', 'location') 
-  ensure
-    WebMock.disable!
   end
 
   test "should update media with error when Archive.org can't archive the url" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook
     urls = {
       'http://localhost:3333/unreachable-url' => {status_ext: 'error:invalid-url-syntax', message: 'URL syntax is not valid'},
@@ -151,14 +134,9 @@ class ArchiverTest < ActiveSupport::TestCase
       assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
       assert_equal "(#{data[:status_ext]}) #{data[:message]}", media_data.dig('archives', 'archive_org', 'error', 'message')
       end
-  ensure
-    WebMock.disable!
   end
 
   test "when Archive.org fails with Pender::Exception::ArchiveOrgError it should retry, update data with snapshot (if available) and error" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook
     url = 'https://example.com/'
 
@@ -177,14 +155,9 @@ class ArchiverTest < ActiveSupport::TestCase
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
     assert_equal '(500) Random Error.', media_data.dig('archives', 'archive_org', 'error', 'message') 
     assert_equal "https://web.archive.org/web/timestamp/#{url}", media_data.dig('archives', 'archive_org', 'location') 
-  ensure
-    WebMock.disable!
   end
 
   test "when Archive.org fails with Pender::Exception::TooManyCaptures it should NOT retry, it should update data with snapshot (if available) and error" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook
     url = 'https://example.com/'
 
@@ -205,14 +178,9 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
     assert_match /The same snapshot/, media_data.dig('archives', 'archive_org', 'error', 'message')
     assert_equal "https://web.archive.org/web/timestamp/#{url}", media_data.dig('archives', 'archive_org', 'location') 
-  ensure
-    WebMock.disable!
   end
 
   test "when Perma.cc fails with Pender::Exception::PermaCcError it should update media with error and retry" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook_for_perma_cc
     url = 'https://example.com'
 
@@ -229,14 +197,9 @@ class ArchiverTest < ActiveSupport::TestCase
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'perma_cc', 'error', 'code')
     assert_equal '(400) Bad Request', media_data.dig('archives', 'perma_cc', 'error', 'message')
-  ensure
-    WebMock.disable!
   end
 
   test "when Perma.cc fails with Pender::Exception::TooManyCaptures it should update media with error and not retry" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook_for_perma_cc
     url = 'https://example.com'
 
@@ -254,14 +217,9 @@ class ArchiverTest < ActiveSupport::TestCase
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'perma_cc', 'error', 'code')
     assert_equal '(400) Bad Request', media_data.dig('archives', 'perma_cc', 'error', 'message')
-  ensure
-    WebMock.disable!
   end
 
   test "should update media with error when archive to Archive.org hits the limit of retries" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook
     url = 'https://example.com/'
 
@@ -282,14 +240,9 @@ class ArchiverTest < ActiveSupport::TestCase
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_FAILURE'), media_data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal "Gave Up", media_data.dig('archives', 'archive_org', 'error', 'message')
-  ensure
-    WebMock.disable!
   end
 
   test "if a refresh is not requested and archive is present in cache should not archive on Archive.org" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     url = 'https://example.com/'
     api_key = create_api_key_with_webhook
 
@@ -319,14 +272,9 @@ class ArchiverTest < ActiveSupport::TestCase
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['archive_org'], cached.keys
     assert_equal({ 'location' => 'https://web.archive.org/web/archive-timestamp-FIRST/https://example.com/'}, cached['archive_org'])
-  ensure
-    WebMock.disable!
   end
 
   test "if a refresh is requested it should try to archive on Archive.org" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     url = 'https://example.com/'
     api_key = create_api_key_with_webhook
     
@@ -356,14 +304,9 @@ class ArchiverTest < ActiveSupport::TestCase
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['archive_org'], cached.keys
     assert_equal({ 'location' => 'https://web.archive.org/web/archive-timestamp-SECOND/https://example.com/'}, cached['archive_org'])
-  ensure
-    WebMock.disable!
   end
 
   test "if a refresh is not requested and archive is present in cache it should not try to archive on Perma.cc" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     url = 'https://example.com'
     api_key = create_api_key_with_webhook_for_perma_cc
 
@@ -390,14 +333,9 @@ class ArchiverTest < ActiveSupport::TestCase
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
     assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-FIRST'}, cached['perma_cc'])
-  ensure
-    WebMock.disable!
   end
 
   test "if a refresh is requested it should try to create a new archive on Perma.cc" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     url = 'https://example.com'
     api_key = create_api_key_with_webhook_for_perma_cc
 
@@ -425,14 +363,9 @@ class ArchiverTest < ActiveSupport::TestCase
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
     assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-SECOND'}, cached['perma_cc'])
-  ensure
-    WebMock.disable!
   end
 
   test "should not archive in any archiver if none is requested" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook
     url = 'https://example.com/'
     
@@ -461,14 +394,9 @@ class ArchiverTest < ActiveSupport::TestCase
 
     m.as_json(archivers: 'archive_org')
     assert_equal({'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://example.com/'}}, Pender::Store.current.read(id, :json)[:archives])
-  ensure
-    WebMock.disable!
   end
 
   test "should update cache when a new archiver is requested without the need to request for a refresh" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook_for_perma_cc
     url = 'https://example.com/'
 
@@ -491,14 +419,9 @@ class ArchiverTest < ActiveSupport::TestCase
 
     m.as_json(archivers: 'perma_cc, archive_org')
     assert_equal({'perma_cc' => {'location' => 'http://perma.cc/perma-cc-guid-1'}, 'archive_org' => {'location' => "https://web.archive.org/web/timestamp/#{url}" }}, Pender::Store.current.read(id, :json)[:archives])
-  ensure
-    WebMock.disable!
   end
 
   test "should not archive again if media on cache has both archivers" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook_for_perma_cc
     url = 'https://fakewebsite.com/'
     
@@ -535,8 +458,6 @@ class ArchiverTest < ActiveSupport::TestCase
     m.as_json(archivers: 'none')
     assert_equal({'location' => 'http://perma.cc/perma-cc-guid-1'}, Pender::Store.current.read(id, :json)[:archives][:perma_cc])
     assert_equal({'location' => "https://web.archive.org/web/timestamp/#{url}" }, Pender::Store.current.read(id, :json)[:archives][:archive_org])
-  ensure
-    WebMock.disable!
   end
 
   test "return the enabled archivers" do
@@ -553,9 +474,6 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "should archive to perma.cc and store the URL on archives if perma_cc_key is present" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook_for_perma_cc
     url = 'https://example.com'
     
@@ -572,14 +490,9 @@ class ArchiverTest < ActiveSupport::TestCase
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
     assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-1'}, cached['perma_cc'])
-  ensure
-    WebMock.disable!
   end
 
   test "should add disabled Perma.cc archiver error message if perma_key is not defined" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook
     url = 'https://example.com/'
 
@@ -597,8 +510,6 @@ class ArchiverTest < ActiveSupport::TestCase
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_match 'missing authentication', cached.dig('perma_cc', 'error', 'message').downcase
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_MISSING_KEY'), cached.dig('perma_cc', 'error', 'code')
-  ensure
-    WebMock.disable!
   end
 
   test "should return api key settings" do
@@ -676,7 +587,6 @@ class ArchiverTest < ActiveSupport::TestCase
   test "should notify if URL was already parsed and has a location on data when archive video" do
     skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
     WebMock.enable!
-    api_key = create_api_key_with_webhook
     url = 'https://www.bbc.com/news/av/world-us-canada-57176620'
 
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
@@ -747,7 +657,6 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     Media.stubs(:supported_video?).with(url, api_key.id).returns(true)
-    id = Media.get_id url
     m = create_media url: url, key: api_key
     data = m.as_json
     assert_nil data.dig('archives', 'video_archiver')
@@ -780,7 +689,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     assert_raises Pender::Exception::RetryLater do
       m = Media.new url: url
-      data = m.as_json
+      m.as_json
       assert m.data.dig('archives', 'video_archiver').nil?
       error = StandardError.new('some error')
       Media.stubs(:supported_video?).with(url, api_key.id).raises(error)
@@ -810,7 +719,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     assert_raises Pender::Exception::RetryLater do
       m = Media.new url: url
-      data = m.as_json(archivers: 'none')
+      m.as_json(archivers: 'none')
       assert_nil m.data.dig('archives', 'video_archiver')
       Media.send_to_video_archiver(url, api_key.id, 20)
       media_data = Pender::Store.current.read(Media.get_id(url), :json)
@@ -918,9 +827,6 @@ class ArchiverTest < ActiveSupport::TestCase
   end
 
   test "include error on data when cannot use archiver" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     skip = ENV['archiver_skip_hosts']
     ENV['archiver_skip_hosts'] = 'example.com'
 
@@ -948,13 +854,9 @@ class ArchiverTest < ActiveSupport::TestCase
   ensure
     quietly_redefine_constant(Media, :ENABLED_ARCHIVERS, enabled)
     ENV['archiver_skip_hosts'] = skip
-    WebMock.disable!
   end
 
   test "should get and return the available snapshot if page was already archived on Archive.org" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     url = 'https://example.com/'
     api_key = create_api_key_with_webhook
 
@@ -968,28 +870,18 @@ class ArchiverTest < ActiveSupport::TestCase
 
     snapshot = Media.get_available_archive_org_snapshot(encoded_uri, api_key)
     assert_equal 'http://web.archive.org/web/20210223111252/http://example.com/' , snapshot[:location]
-  ensure
-    WebMock.disable!
   end
 
   test "should return nil if page was not previously archived on Archive.org" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     url = 'https://example.com/'
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return_json(body: {"archived_snapshots":{}})
 
     assert_nil Media.get_available_archive_org_snapshot(url, nil)
-  ensure
-    WebMock.disable!
   end
 
   test "should still cache data if notifying webhook fails" do
-    WebMock.enable!
-    WebMock.disable_net_connect!(allow: [/minio/])
-    Sidekiq::Testing.inline!
     api_key = create_api_key_with_webhook_for_perma_cc
     url = 'https://example.com/'
 
@@ -1009,7 +901,5 @@ class ArchiverTest < ActiveSupport::TestCase
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
     assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-1'}, cached['perma_cc'])
-  ensure
-    WebMock.disable!
   end
 end
