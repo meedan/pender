@@ -81,7 +81,8 @@ module MediaArchiveOrgArchiver
       http.use_ssl = uri.scheme == "https"
       headers = {
         'Accept' => 'application/json',
-        'Authorization' => "LOW #{PenderConfig.get('archive_org_access_key')}:#{PenderConfig.get('archive_org_secret_key')}"
+        'Authorization' => "LOW #{PenderConfig.get('archive_org_access_key')}:#{PenderConfig.get('archive_org_secret_key')}",
+        'X-Priority-Reduced' => '1'
       }
       [http, "Net::HTTP::#{verb}".constantize.new(uri, headers)]
     end
