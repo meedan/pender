@@ -6,7 +6,7 @@ module MediaArchiveOrgArchiver
   end
 
   def archive_to_archive_org(url, key_id)
-    ArchiverWorker.perform_in(30.seconds, url, :archive_org, key_id)
+    ArchiverWorker.perform_in(30.seconds, url, 'archive_org', key_id)
   end
 
   module ClassMethods
