@@ -24,8 +24,10 @@ module MediaArchiveOrgArchiver
         response = http.request(request)
         Rails.logger.info level: 'INFO', message: '[archive_org] Sent URL to archive', url: url, code: response.code, response: response.message
         body = JSON.parse(response.body)
-        if body['job_id']
-          Media.delay_for(2.minutes).get_archive_org_status(body['job_id'], url, key_id)
+        job_id = body[job_id]
+        if job_id
+          # Media.delay_for(2.minutes).get_archive_org_status(job_id, url, key_id)
+          ArchiverStatusWorker.perform_in(2.minutes, job_id, url, key_id)
         else
           data = snapshot_data.to_h.merge({ error: { message: "(#{body['status_ext']}) #{body['message']}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }})
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
