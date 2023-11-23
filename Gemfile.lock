@@ -313,6 +313,8 @@ GEM
       thor (~> 1.0)
     rake (13.0.6)
     redis (4.3.1)
+    redis-client (0.18.0)
+      connection_pool
     request_store (1.5.1)
       rack (>= 1.4)
     responders (3.1.0)
@@ -362,10 +364,11 @@ GEM
     sentry-sidekiq (5.10.0)
       sentry-ruby (~> 5.10.0)
       sidekiq (>= 3.0)
-    sidekiq (6.5.1)
-      connection_pool (>= 2.2.2)
-      rack (~> 2.0)
-      redis (>= 4.2.0)
+    sidekiq (7.2.0)
+      concurrent-ruby (< 2)
+      connection_pool (>= 2.3.0)
+      rack (>= 2.2.4)
+      redis-client (>= 0.14.0)
     simplecov (0.13.0)
       docile (~> 1.1.0)
       json (>= 1.8, < 3)
@@ -470,7 +473,7 @@ DEPENDENCIES
   sentry-rails
   sentry-ruby
   sentry-sidekiq
-  sidekiq (< 7)
+  sidekiq (< 8)
   simplecov (= 0.13.0)
   simplecov-console
   spring
