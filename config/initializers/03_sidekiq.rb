@@ -26,4 +26,3 @@ if File.exist?(file)
 else
   SIDEKIQ_CONFIG = nil
 end
-Sidekiq::Extensions.enable_delay!
