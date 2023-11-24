@@ -17,6 +17,7 @@ module MediaCrowdtangleItem
 
         begin
           response = http.request(request)
+          Rails.logger.info level: 'INFO', message: '[Parser] Requesting data from Crowdtangle', url: uri.to_s
           raise CrowdtangleResponseError if response.nil? || response.code != '200' || response.body.blank?
           JSON.parse(response.body)
         rescue CrowdtangleResponseError, JSON::ParserError => error
