@@ -13,21 +13,6 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
     isolated_teardown
   end
 
-  test "should update cache when video archiving fails the max retries" do
-    skip('we are not supporting archiving videos with youtube-dl anymore, will remove this on a separate ticket')
-    Metrics.stubs(:schedule_fetching_metrics_from_facebook)
-    url = 'https://meedan.com/post/annual-report-2022'
-    m = create_media url: url
-    data = m.as_json
-    assert_nil data.dig('archives', 'video_archiver')
-    Media.send_to_video_archiver(url, nil)
-    ArchiverWorker.retries_exhausted_callback({ 'args' => [url, 'video_archiver', nil], 'error_message' => 'Test Archiver' }, StandardError.new)
-    data = m.as_json
-    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_FAILURE'), data.dig('archives', 'video_archiver', 'error', 'code')
-    assert_equal 'Test Archiver', data.dig('archives', 'video_archiver', 'error', 'message')
-    Metrics.unstub(:schedule_fetching_metrics_from_facebook)
-  end
-
   test "should update cache when Archive.org fails the max retries" do
     url = 'https://meedan.com/post/annual-report-2022'
     api_key = create_api_key application_settings: { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }

@@ -109,7 +109,6 @@ class Media
   [
     MediaArchiveOrgArchiver,
     MediaPermaCcArchiver,
-    MediaVideoArchiver,
     MediaCrowdtangleItem
   ].each { |concern| include concern }
 
