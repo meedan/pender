@@ -19,10 +19,6 @@ COPY Gemfile Gemfile.lock /app/
 RUN gem install bundler -v "2.3.5" --no-document && bundle install --jobs 20 --retry 5
 COPY . /app/
 
-# install youtube-dl
-RUN curl -L https://youtube-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl \
-  && chmod a+rx /usr/local/bin/youtube-dl
-
 # startup
 RUN chmod +x /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-background.sh
