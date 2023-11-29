@@ -47,29 +47,22 @@ class MediasHelperTest < ActionView::TestCase
 
   test 'should validate proxies subkeys' do
     proxy_keys = [ 'host', 'port', 'user_prefix', 'pass', 'country_prefix', 'session_prefix' ]
-    video_proxy_keys = [ 'host', 'port', 'user_prefix', 'pass' ]
 
     api_key = create_api_key
 
     proxy = { 'proxy_host' => 'my-proxy.mine', 'proxy_port' => '1111', 'proxy_user_prefix' => 'my-user-prefix', 'proxy_pass' => '12345', 'proxy_country_prefix' => '-cc-', 'proxy_session_prefix' => '-ss-' }
-    video_proxy = { 'ytdl_proxy_host' => 'my-video-proxy.mine', 'ytdl_proxy_port' => '1111', 'ytdl_proxy_user_prefix' => 'my-user-prefix', 'ytdl_proxy_pass' => '12345' }
-    api_key.application_settings = { config: proxy.merge(video_proxy) }; api_key.save
+    api_key.application_settings = { config: proxy}; api_key.save
     ApiKey.current = api_key
     PenderConfig.current = nil
     proxy_keys.each do |key|
       assert_equal proxy["proxy_#{key}"], RequestHelper.valid_proxy('proxy')[key]
     end
-    video_proxy_keys.each do |key|
-      assert_equal video_proxy["ytdl_proxy_#{key}"], RequestHelper.valid_proxy('ytdl_proxy')[key]
-    end
 
     proxy_with_empty_values = { 'proxy_host' => 'my-proxy.mine', 'proxy_port' => '1111', 'proxy_user_prefix' => '', 'proxy_pass' => nil, 'proxy_session_prefix' => '-ss-' }
-    video_proxy_with_empty_values= { 'ytdl_proxy_host' => 'my-video-proxy.mine', 'ytdl_proxy_user_prefix' => '', 'ytdl_proxy_pass' => nil }
-    api_key.application_settings = { config: proxy_with_empty_values.merge(video_proxy_with_empty_values) }; api_key.save
+    api_key.application_settings = { config: proxy_with_empty_values }; api_key.save
     ApiKey.current = api_key
     PenderConfig.current = nil
     assert_nil RequestHelper.valid_proxy('proxy')
-    assert_nil RequestHelper.valid_proxy('ytdl_proxy')
   end
 
   test 'should upload images to s3 and update media data' do

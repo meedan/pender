@@ -73,18 +73,19 @@ class Media
 
   def as_json(options = {})
     id = Media.get_id(self.url)
-    if options.delete(:force) || Pender::Store.current.read(id, :json).nil?
+    cache = Pender::Store.current
+    if options.delete(:force) || cache.read(id, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
       self.data['title'] = self.url if self.data['title'].blank?
       data = self.data.merge(Media.required_fields(self)).with_indifferent_access
       if data[:error].blank?
-        Pender::Store.current.write(id, :json, cleanup_data_encoding(data))
+        cache.write(id, :json, cleanup_data_encoding(data))
       end
       self.upload_images
     end
-    self.archive(options.delete(:archivers))
+    archive_if_conditions_are_met(options, id, cache)
     Metrics.schedule_fetching_metrics_from_facebook(self.data, self.url, ApiKey.current&.id)
-    Pender::Store.current.read(id, :json) || cleanup_data_encoding(data)
+    cache.read(id, :json) || cleanup_data_encoding(data)
   end
 
   PARSERS = [
@@ -108,7 +109,6 @@ class Media
   [
     MediaArchiveOrgArchiver,
     MediaPermaCcArchiver,
-    MediaVideoArchiver,
     MediaCrowdtangleItem
   ].each { |concern| include concern }
 
@@ -280,5 +280,15 @@ class Media
   def set_error(**error_hash)
     return if error_hash.empty?
     self.data[:error] = error_hash
+  end
+
+  def archive_if_conditions_are_met(options, id, cache)
+    if options.delete(:force) || 
+      cache.read(id, :json).nil? ||
+      cache.read(id, :json).dig('archives').blank? ||
+      # if the user adds a new  or changes the archiver, and the cache exists only for the old archiver it refreshes the cache
+      options&.dig(:archivers) != cache.read(id, :json)['archives'].keys.join
+        self.archive(options.delete(:archivers))
+    end
   end
 end

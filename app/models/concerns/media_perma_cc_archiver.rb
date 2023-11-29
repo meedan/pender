@@ -6,7 +6,7 @@ module MediaPermaCcArchiver
   end
 
   def archive_to_perma_cc(url, key_id)
-    ArchiverWorker.perform_in(30.seconds, url, :perma_cc, key_id)
+    ArchiverWorker.perform_in(30.seconds, url, 'perma_cc', key_id)
   end
 
   module ClassMethods
@@ -30,7 +30,17 @@ module MediaPermaCcArchiver
           data = { location: 'http://perma.cc/' + body['guid'] }
           Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
         else
-          raise Pender::Exception::RetryLater, "(#{response.code}) #{response.message}"
+          data = { error: { message: "(#{response.code}) #{response.message}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }}
+          Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
+          if response&.body.include?("You've reached your usage limit")
+            PenderSentry.notify(
+              Pender::Exception::TooManyCaptures.new(response.message),
+              url: url,
+              response_body: response.body
+            )
+          else  
+            raise Pender::Exception::PermaCcError, "(#{response.code}) #{response.message}"
+          end
         end
       end
     end
@@ -39,15 +49,10 @@ module MediaPermaCcArchiver
       if perma_cc_key.nil?
         data = { error: { message: 'Missing authentication key', code: Lapis::ErrorCodes::const_get('ARCHIVER_MISSING_KEY') }}
         Media.notify_webhook_and_update_cache('perma_cc', url, data, key_id)
+        return true
       else
-        id = Media.get_id(url)
-        data = Pender::Store.current.read(id, :json)
-        return if data.nil? || data.dig(:archives, :perma_cc).nil?
-
-        settings = Media.api_key_settings(key_id)
-        Media.notify_webhook('perma_cc', url, data, settings)
+        return false
       end
-      return true
     end
   end
 end
