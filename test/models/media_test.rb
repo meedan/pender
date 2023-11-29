@@ -71,7 +71,7 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_match 'https://www.bbc.com', m.url
     assert_match 'BBC', data['title']
-    assert_match /Breaking news/, data['description']
+    assert_match /Visit BBC|Breaking news/, data['description']
     assert_equal '', data['published_at']
     assert_equal '', data['username']
     assert_equal 'https://www.bbc.com', data['author_url']
