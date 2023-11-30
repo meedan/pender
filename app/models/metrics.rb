@@ -18,16 +18,16 @@ module Metrics
     def schedule_fetching_metrics_from_facebook(data, url, key_id)
       facebook_id = data['uuid'] if is_a_facebook_post?(data)
 
-      MetricsWorker.perform_in(30.seconds, url, key_id, 0, facebook_id)
+      MetricsWorker.perform_in(30.seconds, url, key_id.to_s, '0', facebook_id)
       NUMBER_OF_DAYS_TO_UPDATE.times do |index|
         attempt_num = index + 1
-        MetricsWorker.perform_in(attempt_num * 24.hours, url, key_id, attempt_num, facebook_id)
+        MetricsWorker.perform_in(attempt_num * 24.hours, url, key_id.to_s, attempt_num.to_s, facebook_id)
       end
     end
 
-    def get_metrics_from_facebook(url, key_id, update_number = 0, facebook_id = nil)
+    def get_metrics_from_facebook(url, key_id, update_number = '0', facebook_id = nil)
       Rails.logger.info level: 'INFO', message: "Requesting metrics from Facebook", url: url, key_id: ApiKey.current&.id, update_number: update_number, facebook_id: facebook_id
-      ApiKey.current = ApiKey.find_by(id: key_id)
+      ApiKey.current = ApiKey.find_by(id: key_id.to_i)
       begin
         value = facebook_id ? crowdtangle_metrics(facebook_id) : request_metrics_from_facebook(url)
       rescue Pender::Exception::RetryLater
