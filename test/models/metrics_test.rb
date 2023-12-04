@@ -5,7 +5,7 @@ class MetricsIntegrationTest < ActiveSupport::TestCase
 
   test "should get metrics from Facebook" do
     begin
-      fb_config = PenderConfig.get('facebook_test_app') || PenderConfig.get('facebook_app')
+      fb_config = PenderConfig.get('facebook_app')
       PenderConfig.current = nil
       key = create_api_key application_settings: { config: { facebook_app: fb_config }}
 
