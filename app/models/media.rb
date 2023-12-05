@@ -91,6 +91,7 @@ class Media
   PARSERS = [
     Parser::YoutubeProfile,
     Parser::YoutubeItem,
+    Parser::TwitterSearchItem,
     Parser::TwitterProfile,
     Parser::TwitterItem,
     Parser::FacebookProfile,
