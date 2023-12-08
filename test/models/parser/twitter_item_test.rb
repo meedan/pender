@@ -204,9 +204,9 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
   test "should parse valid search url" do
     stub_tweet_lookup.returns(twitter_item_response_success)
 
-    data = Parser::TwitterSearchItem.new('https://twitter.com/search?q=@Space_Station&src=typed_query&f=top').parse_data(empty_doc)
+    data = Parser::TwitterSearchItem.new('https://twitter.com/search?q=ISS%20from:@Space_Station&src=typed_query&f=live').parse_data(empty_doc)
 
-    assert_match '@Space_Station', data['title']
+    assert_match 'ISS from:@Space_Station', data['title']
   end
 
   test "should fill in html when html parsing fails but API works" do

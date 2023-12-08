@@ -19,8 +19,8 @@ module Parser
     # Main function for class
     def parse_data_for_parser(_doc, _original_url, _jsonld_array)
       handle_exceptions(StandardError) do
-        uri = RequestHelper.parse_url(url)
-        params = uri.query.split('&').map { |pair| pair.split('=') }.to_h
+        uri = URI.parse @url
+        params = Hash[URI.decode_www_form uri.query]
         src = params['src']
         search_term = params['q']
 
