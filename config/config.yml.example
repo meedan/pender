@@ -43,7 +43,7 @@ development: &default
   # REQUIRED for deployed environments
   # OPTIONAL for development
   #
-  sentry_dsn: # '<SENTRY_DSN>'
+  sentry_dsn: '# '<SENTRY_DSN>''
   sentry_environment: # dev
   sentry_traces_sample_rate: # 1
 
@@ -53,56 +53,57 @@ development: &default
   # OPTIONAL for Safe Browsing Lookup API https://developers.google.com/safe-browsing/v4/lookup-api
   # To get a key, follow these instructions https://developers.google.com/safe-browsing/v4/get-started
   #
-  google_api_key: # '<GOOGLE API KEY>'
+  google_api_key: # 'SECRET'
 
   # Twitter API
   #
   # REQUIRED for Twitter posts
   #
-  twitter_bearer_token: # '<TWITTER API BEARER TOKEN>'
+  twitter_bearer_token: # 'SECRET'
 
   # Facebook API
   #
   # REQUIRED for Facebook social metrics
   #
-  facebook_app: # '<FACEBOOK APP ID>:<FACEBOOK APP SECRET>'
+  facebook_app: # 'SECRET'
 
   # Luminati proxy service https://luminati.io/
   #
   # OPTIONAL
   #
-  proxy_host: # '<LUMINATI HOST>'
-  proxy_port: # '<LUMINATI PORT>'
-  proxy_user_prefix: # '<LUMINATI ACCOUNT PREFIX>'
-  proxy_country_prefix: #'<LUMINATI COUNTRY PREFIX>'
-  proxy_session_prefix: #'<LUMINATI SESSION PREFIX>'
-  proxy_pass: # '<LUMINATI ACCOUNT PASSWORD>'
+  proxy_host: # 'SECRET'
+  proxy_port: # 'SECRET'
+  proxy_user_prefix: # 'SECRET'
+  proxy_country_prefix: # 'SECRET'
+  proxy_session_prefix: # 'SECRET'
+  proxy_pass: # 'SECRET'
 
   # Special instructions to access specific domains
   #
   # OPTIONAL
   #
-  hosts: "{\"<HOST DOMAIN>\":{\"country\":\"<COUNTRY CODE FOR PROXY SETTING>\"},\"<HOST DOMAIN>\":{\"cf_credentials\":\"<CLOUDFLARE CREDENTIALS>\"}}"
+  # hosts: "{\"<HOST DOMAIN>\":{\"country\":\"<COUNTRY CODE FOR PROXY SETTING>\"},\"<HOST DOMAIN>\":{\"cf_credentials\":\"<CLOUDFLARE CREDENTIALS>\"}}"
+  hosts: # 'SECRET'
 
   # Crowdtangle parsing
   #
   # OPTIONAL
   #
-  crowdtangle_facebook_token: # '<CROWDTANGLE TOKEN FOR FACEBOOK POSTS>'
-  crowdtangle_instagram_token: # '<CROWDTANGLE TOKEN FOR INSTAGRAM POSTS>'
+  crowdtangle_facebook_token: # 'SECRET'
+  crowdtangle_instagram_token: # 'SECRET'
 
   # Archive.org service to archive pages https://archive.org/account/s3.php
   #
   # OPTIONAL
   #
-  archive_org_access_key: # '<ARCHIVE.ORG ACCESS KEY>'
-  archive_org_secret_key: # '<ARCHIVE.ORG SECRET KEY>'
+  archive_org_access_key: # 'SECRET'
+  archive_org_secret_key: # 'SECRET'
 
   # Perma.cc service to archive pages https://perma.cc/
   #
   # OPTIONAL
   #
-  perma_cc_key: # '<PERMA.CC ACCESS KEY>'
+  perma_cc_key: # 'SECRET'
 
   # Open Telemetry configuration, for reporting to Honeycomb
   # See initializers/open_telemetry.rb for usage.
@@ -127,7 +128,7 @@ test:
   storage_video_bucket:
   storage_video_asset_path:
   storage_medias_asset_path: 'http://localhost:9000/check-test/medias'
-  facebook_app: # '<FACEBOOK APP ID>:<FACEBOOK APP SECRET>'
+  facebook_app: # 'SECRET'
   otel_log_level: off
   otel_traces_sampler:
   sentry_dsn:
