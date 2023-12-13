@@ -32,7 +32,12 @@ class OembedItem
 
     headers = { 'User-Agent' => 'Mozilla/5.0 (compatible; Pender/0.1; +https://github.com/meedan/pender)' }.merge(RequestHelper.get_cf_credentials(uri))
     request = Net::HTTP::Get.new(uri.request_uri, headers)
-    response = http.request(request)
+    begin
+      response = http.request(request)
+    rescue StandardError => e
+      Rails.logger.warn level: 'WARN', message: '[Parser] Could not send oembed request', url: request_url, oembed_url: oembed_uri&.to_s
+      return nil
+    end
 
     if attempts < 5 && RequestHelper::REDIRECT_HTTP_CODES.include?(response.code)
       response = get_oembed_data_from_url(construct_absolute_path(request_url, response.header['location']), attempts: attempts + 1)
