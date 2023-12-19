@@ -26,3 +26,4 @@ config/cookies.txt
 coverage
 .idea
 .byebug_history
+*.env
