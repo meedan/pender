@@ -290,6 +290,7 @@ class Media
       cache.read(id, :json).dig('archives').blank? ||
       # if the user adds a new  or changes the archiver, and the cache exists only for the old archiver it refreshes the cache
       options&.dig(:archivers) != cache.read(id, :json)['archives'].keys.join
+        Rails.logger.info level: 'INFO', message: '[Archiver] Archiving new URL', url: self.url
         self.archive(options.delete(:archivers))
     end
   end
