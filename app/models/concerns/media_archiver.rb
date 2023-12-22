@@ -16,6 +16,7 @@ module MediaArchiver
     Media.enabled_archivers(available, self).each do |name, rule|
       rule[:patterns].each do |pattern|
         if (rule[:modifier] == :only && !pattern.match(url).nil?) || (rule[:modifier] == :except && pattern.match(url).nil?)
+          Rails.logger.info level: 'INFO', message: '[Archiver] Archiving new URL', url: url, archiver: name
           self.public_send("archive_to_#{name}", url, ApiKey.current&.id)
         end
       end

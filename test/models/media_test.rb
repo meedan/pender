@@ -1,4 +1,5 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
+require 'stringio'
 
 class MediaTest < ActiveSupport::TestCase
   test "should create media" do
@@ -108,6 +109,20 @@ class MediaTest < ActiveSupport::TestCase
     id = Media.get_id m.url
     data = m.as_json
     assert_match /\/medias\/#{id}\/author_picture/, data['author_picture']
+  end
+
+  test 'should log parser information when parsing a new URL' do
+    url = 'https://twitter.com/search?q=twitter'
+    media = Media.new(url: url)
+  
+    log = StringIO.new
+    Rails.logger = Logger.new(log)
+  
+    media.as_json 
+    
+    assert_match '[Parser] Parsing new URL', log.string
+    assert_match url, log.string
+    assert_match media.type, log.string
   end
 
   test "should handle connection reset by peer error" do

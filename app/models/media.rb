@@ -189,6 +189,7 @@ class Media
         self.url = self.parser.url
         self.get_oembed_data
         parsed = true
+        Rails.logger.info level: 'INFO', message: '[Parser] Parsing new URL', url: self.url, parser: self.parser.to_s, provider: self.provider, type: self.type
       end
       break if parsed
     end
