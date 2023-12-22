@@ -69,6 +69,29 @@ class ArchiverTest < ActiveSupport::TestCase
 
     assert_equal "https://web.archive.org/web/timestamp/#{url}", data.dig('archives', 'archive_org', 'location') 
   end
+
+  test "should log archiver information when archiving URLs" do
+    api_key = create_api_key_with_webhook
+    url = 'https://example.com/'
+    log = StringIO.new
+    Rails.logger = Logger.new(log)
+
+    Media.any_instance.unstub(:archive_to_archive_org)
+  
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+    WebMock.stub_request(:get, /archive.org\/wayback/).to_return_json(body: {"archived_snapshots":{}}, headers: {})
+    WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'timestamp'})
+
+    media = create_media url: url, key: api_key
+    media.as_json(archivers: 'archive_org')
+    
+    assert_match '[Archiver] Archiving new URL', log.string
+    assert_match url, log.string
+  end
   
   test "should archive Arabics url to Archive.org" do
     api_key = create_api_key_with_webhook

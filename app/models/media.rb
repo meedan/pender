@@ -189,7 +189,7 @@ class Media
         self.url = self.parser.url
         self.get_oembed_data
         parsed = true
-        Rails.logger.info level: 'INFO', message: '[Parser] Parsing new URL', url: self.url, provider: self.provider, type: self.type
+        Rails.logger.info level: 'INFO', message: '[Parser] Parsing new URL', url: self.url, parser: self.parser.to_s, provider: self.provider, type: self.type
       end
       break if parsed
     end
@@ -290,7 +290,6 @@ class Media
       cache.read(id, :json).dig('archives').blank? ||
       # if the user adds a new  or changes the archiver, and the cache exists only for the old archiver it refreshes the cache
       options&.dig(:archivers) != cache.read(id, :json)['archives'].keys.join
-        Rails.logger.info level: 'INFO', message: '[Archiver] Archiving new URL', url: self.url
         self.archive(options.delete(:archivers))
     end
   end

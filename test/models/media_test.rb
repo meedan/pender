@@ -388,21 +388,6 @@ class MediaTest < ActiveSupport::TestCase
     assert_equal({'archive_org' => 'new-data'}, Pender::Store.current.read(id, :json)['archives'])
   end
 
-  test 'should log archiver information when archiving URLs' do
-    url = 'https://www.example.com'
-    m = create_media url: url
-  
-    log = StringIO.new
-    Rails.logger = Logger.new(log)
-  
-    m.as_json
-
-    Media.update_cache(m.url, { archives: { 'archive_org' => 'new-data' } })
-    
-    assert_match '[Archiver] Archiving new URL', log.string
-    assert_match url, log.string
-  end
-
   test "should add error on raw oembed and generate the default oembed when can't parse oembed" do
     oembed_response = 'mock'
     oembed_response.stubs(:code).returns('200')
