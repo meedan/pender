@@ -58,7 +58,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'page', data['provider']
-    assert_match(/Hong Kong Free Press/, data['title'])
+    assert_match(/Hong Kong lawmakers/, data['title'])
     assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
     assert_match /https:\/\/.+AFP/, data['author_url']
@@ -73,7 +73,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'page', data['provider']
-    assert_match(/Hong Kong Free Press/, data['title'])
+    assert_match(/Hong Kong lawmakers/, data['title'])
     assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
     assert_match /https:\/\/.+AFP/, data['author_url']

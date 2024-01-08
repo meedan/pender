@@ -424,6 +424,32 @@ class MediaTest < ActiveSupport::TestCase
     end
   end
 
+  test "should not reach the end of file caused by Net::Http::Proxy" do
+    logger_output = StringIO.new
+    Rails.logger = Logger.new(logger_output)
+    m = create_media url: 'https://www.nbcnews.com/'
+    parsed_url = RequestHelper.parse_url(m.url)
+    header_options = RequestHelper.html_options(m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(EOFError)
+    assert_nothing_raised do
+      m.send(:get_html, header_options)
+    end
+    assert_includes logger_output.string, "[Parser] Could not get html"
+  end
+
+  test "should not throw read time out errors caused by Net::Http::Proxy" do
+    logger_output = StringIO.new
+    Rails.logger = Logger.new(logger_output)
+    m = create_media url: 'https://www.nbcnews.com/'
+    parsed_url = RequestHelper.parse_url(m.url)
+    header_options = RequestHelper.html_options(m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Net::ReadTimeout)
+    assert_nothing_raised do
+      m.send(:get_html, header_options)
+    end
+    assert_includes logger_output.string, "[Parser] Could not get html"
+  end
+
   test "should parse page when json+ld tag content is an empty array" do
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML('<script data-rh="true" type="application/ld+json">[]</script>'))
     url = 'https://www.nytimes.com/2019/10/13/world/middleeast/syria-turkey-invasion-isis.html'
