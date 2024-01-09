@@ -15,11 +15,12 @@ build_qa:
     AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
   script:
-    - aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION
+    - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_API_BASE_URL
     - docker build -f production/Dockerfile -t "$ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA" .
     - docker push "$ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA"
   only:
     - develop
+    - bugfix/update-aws-ecr-login
 
 deploy_qa:
   image: python:3.7.7
@@ -44,6 +45,7 @@ deploy_qa:
     - echo "new Image was deployed $ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA"
   only:
     - develop
+    - bugfix/update-aws-ecr-login
 
 build_live:
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
@@ -58,7 +60,7 @@ build_live:
     AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
   script:
-    - aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION
+    - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_API_BASE_URL
     - docker build -f production/Dockerfile -t "$ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA" .
     - docker push "$ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA"
   only:
