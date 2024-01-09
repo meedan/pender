@@ -36,7 +36,7 @@ class OembedItem
       response = http.request(request)
     rescue StandardError => e
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not send oembed request', url: request_url, oembed_url: oembed_uri&.to_s
-      return nil
+      return e
     end
 
     if attempts < 5 && RequestHelper::REDIRECT_HTTP_CODES.include?(response.code)
