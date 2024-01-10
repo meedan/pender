@@ -11,7 +11,7 @@
   # 24 hours.
   # If we haven’t been able to get the status after 24 hours should it seems wasteful to keep trying
 
-  class ArchiverStatusJob
+class ArchiverStatusJob
   include Sidekiq::Job
   sidekiq_options retry_for: 24.hours
 
