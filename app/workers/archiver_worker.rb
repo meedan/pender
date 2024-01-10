@@ -4,8 +4,7 @@ class ArchiverWorker
 
   sidekiq_retries_exhausted { |msg, e| retries_exhausted_callback(msg, e) }
 
-  sidekiq_retry_in do |count, exception, jobhash|
-    return unless exception.is_a? Pender::Exception::ArchiveOrgError
+  sidekiq_retry_in do |count|
     (count ** 4.5) + 300 + (rand(10) * (count + 1))
   end
 
