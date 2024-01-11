@@ -29,6 +29,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: pender-tests
   pender:
+    env_file:
+      - .env
     build: .
     shm_size: 1G
     ports:
