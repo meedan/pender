@@ -11,9 +11,6 @@ else
     VALUE=$(aws ssm get-parameters --region $REGION --with-decryption --name "$NAME" | jq .Parameters[].Value)
     VARNAME=$(basename "$NAME")
 
-    echo "$VARNAME=$VALUE" >> web-variables.env
+    echo "$VARNAME=$VALUE" >> .env
   done
-
-  cat web-variables.env
-  rm web-variables.env
 fi
