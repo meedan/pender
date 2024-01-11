@@ -13,7 +13,7 @@ module Metrics
       613, # Calls to graph_url_engagement_count have exceeded the rate of 10 calls per 3600 seconds
     ]
 
-    NUMBER_OF_DAYS_TO_UPDATE = 9
+    NUMBER_OF_DAYS_TO_UPDATE = 1
 
     def schedule_fetching_metrics_from_facebook(data, url, key_id)
       facebook_id = data['uuid'] if is_a_facebook_post?(data)
