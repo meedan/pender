@@ -19,9 +19,11 @@ module Metrics
       facebook_id = data['uuid'] if is_a_facebook_post?(data)
 
       MetricsWorker.perform_in(30.seconds, url, key_id.to_s, '0', facebook_id)
+      Rails.logger.info level: 'INFO', message: "First attempt to request metrics from Facebook", url: url, key_id: ApiKey.current&.id, update_number: update_number, facebook_id: facebook_id
       NUMBER_OF_DAYS_TO_UPDATE.times do |index|
         attempt_num = index + 1
         MetricsWorker.perform_in(attempt_num * 24.hours, url, key_id.to_s, attempt_num.to_s, facebook_id)
+        Rails.logger.info level: 'INFO', message: "##{attempt_num} Update attempt to request metrics from Facebook", url: url, key_id: ApiKey.current&.id, update_number: update_number, facebook_id: facebook_id
       end
     end
 
