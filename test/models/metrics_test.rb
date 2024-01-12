@@ -78,17 +78,13 @@ class MetricsUnitTest < ActiveSupport::TestCase
     Semaphore.new(facebook_app_id).unlock
   end
 
-<<<<<<< HEAD
-  test 'should queue ten days of metrics updates, including a near-term background job to request initial from facebook' do
-=======
   test 'should schedule metrics updates a couple of days after initial request, including a near-term background job to request initial from facebook' do
->>>>>>> 90268ed (update test to reflect updated behavior)
     stub_facebook_oauth_request
     stub_facebook_metrics_request
 
     current_time = Time.now
 
-    assert_difference 'MetricsWorker.jobs.size', 10 do
+    assert_difference 'MetricsWorker.jobs.size', 2 do
       Metrics.schedule_fetching_metrics_from_facebook({}, 'https://example.com/trending-article', key.id)
     end
 

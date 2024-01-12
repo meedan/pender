@@ -13,6 +13,7 @@ module Metrics
       613, # Calls to graph_url_engagement_count have exceeded the rate of 10 calls per 3600 seconds
     ]
 
+    # we are going to update once in 2 days
     NUMBER_OF_DAYS_TO_UPDATE = 1
 
     def schedule_fetching_metrics_from_facebook(data, url, key_id)
@@ -21,7 +22,7 @@ module Metrics
       MetricsWorker.perform_in(30.seconds, url, key_id.to_s, '0', facebook_id)
       NUMBER_OF_DAYS_TO_UPDATE.times do |index|
         attempt_num = index + 1
-        MetricsWorker.perform_in(attempt_num * 24.hours, url, key_id.to_s, attempt_num.to_s, facebook_id)
+        MetricsWorker.perform_in(attempt_num * 48.hours, url, key_id.to_s, attempt_num.to_s, facebook_id)
       end
     end
 
