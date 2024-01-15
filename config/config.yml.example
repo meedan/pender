@@ -43,7 +43,7 @@ development: &default
   # REQUIRED for deployed environments
   # OPTIONAL for development
   #
-  sentry_dsn: '# '<SENTRY_DSN>''
+  sentry_dsn: # '<SENTRY_DSN>'
   sentry_environment: # dev
   sentry_traces_sample_rate: # 1
 
