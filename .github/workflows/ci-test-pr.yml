@@ -59,18 +59,18 @@ jobs:
 
     - name: Set up configuration
       run: |
-      cp config/database.yml.example config/database.yml
-      cp config/sidekiq.yml.example config/sidekiq.yml
-      cp config/config.yml.example config/config.yml
-      bin/get_env_vars.sh
+        cp config/database.yml.example config/database.yml
+        cp config/sidekiq.yml.example config/sidekiq.yml
+        cp config/config.yml.example config/config.yml
+        bin/get_env_vars.sh
 
     - name: Run container
       id: run-container
       run: |
         docker-compose -f docker-compose.yml -f docker-test.yml up -d pender
 
-    - name: Run PR Tests
-      id: run-tests
+    - name: Set up PR Tests
+      id: setup-tests
       run: |
         docker-compose exec pender test/setup-parallel
 
