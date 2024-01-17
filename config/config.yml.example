@@ -127,6 +127,7 @@ test:
   storage_video_bucket:
   storage_video_asset_path:
   storage_medias_asset_path: 'http://localhost:9000/check-test/medias'
+  facebook_app: # '<FACEBOOK APP ID>:<FACEBOOK APP SECRET>'
   otel_log_level: off
   otel_traces_sampler:
   sentry_dsn:

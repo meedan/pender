@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'stringio'
 
 class OembedItemUnitTest < ActiveSupport::TestCase
   def setup
@@ -93,6 +94,16 @@ class OembedItemUnitTest < ActiveSupport::TestCase
     item = OembedItem.new('https://example.com', '/foo')
 
     assert_equal 'https://example.com/foo', item.oembed_uri.to_s
+  end
+
+  test "logs oembed request failures" do
+    logger_output = StringIO.new
+    Rails.logger = Logger.new(logger_output)
+    WebMock.stub_request(:get, /example.com\/unreachable/).to_raise(StandardError)
+
+    OembedItem.new('https://example.com', '/unreachable').get_data
+
+    assert_includes logger_output.string, "[Parser] Could not send oembed request"
   end
 
   test "sets empty oembed_uri if URI is bunk for some reason" do

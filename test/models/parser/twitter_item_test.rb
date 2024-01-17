@@ -69,6 +69,10 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     assert_equal true, match_six.is_a?(Parser::TwitterItem)
     match_seven = Parser::TwitterItem.match?('http://twitter.com/%23!/salmaeldaly/status/45532711472992256')
     assert_equal true, match_seven.is_a?(Parser::TwitterItem)
+
+    # Search URLs
+    match_eight = Parser::TwitterSearchItem.match?('https://twitter.com/search?q=guacamole')
+    assert_equal true, match_eight.is_a?(Parser::TwitterSearchItem)
   end
 
   test "it makes a get request to the tweet lookup endpoint successfully" do
@@ -195,6 +199,14 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     data = Parser::TwitterItem.new(' https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
 
     assert_match 'Youths! Webb observed galaxy cluster El Gordo', data['title']
+  end
+
+  test "should parse valid search url" do
+    stub_tweet_lookup.returns(twitter_item_response_success)
+
+    data = Parser::TwitterSearchItem.new('https://twitter.com/search?q=ISS%20from:@Space_Station&src=typed_query&f=live').parse_data(empty_doc)
+
+    assert_match 'ISS from:@Space_Station', data['title']
   end
 
   test "should fill in html when html parsing fails but API works" do
