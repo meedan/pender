@@ -27,7 +27,8 @@ services:
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
-      POSTGRES_DB: pender-tests
+      # POSTGRES_DB: pender-tests
+      POSTGRES_DB: pender_test__db
   pender:
     env_file:
       - .env
