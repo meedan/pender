@@ -86,9 +86,10 @@ jobs:
       id: after-tests
       env:
         GIT_SHA: ${{ github.sha }}
+        GIT_COMMITED_AT: ${{ github.???? }}
       run: |
         docker-compose exec pender cat tmp/performance.csv
-        docker-compose exec -e CC_TEST_REPORTER_ID=$CC_TEST_REPORTER_ID -e GIT_COMMIT_SHA=$GIT_SHA -e GIT_COMMITTED_AT=$GIT_COMMITTED_AT pender test/test-coverage
+        docker-compose exec -e GIT_COMMIT_SHA=$GIT_SHA -e GIT_COMMITTED_AT=$GIT_COMMITTED_AT pender test/test-coverage
 
     - name: Reset cache
       id: reset-cache
