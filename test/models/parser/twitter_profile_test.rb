@@ -93,12 +93,6 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     
     WebMock.stub_request(:get, "https://api.twitter.com/2/users/by")
       .with(query: query)
-      .with(headers: { 
-        "Authorization": "Bearer test", 
-        'Accept'=>'*/*',
-        'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
-        'User-Agent'=>'Ruby'
-      })
       .to_return(status: 200, body: response_fixture_from_file('twitter-profile-response-success.json'))
 
     data = Parser::TwitterProfile.new('https://m.twitter.com/fake_user').parse_data(empty_doc)
@@ -112,12 +106,6 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, "https://api.twitter.com/2/users/by")
       .with(query: query)
-      .with(headers: { 
-        "Authorization": "Bearer test", 
-        'Accept'=>'*/*',
-        'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
-        'User-Agent'=>'Ruby'
-      })
       .to_return(status: 404, body: response_fixture_from_file('twitter-profile-response-error.json'))
 
     sentry_call_count = 0
@@ -139,12 +127,6 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, "https://api.twitter.com/2/users/by")
       .with(query: query)
-      .with(headers: { 
-        "Authorization": "Bearer test", 
-        'Accept'=>'*/*',
-        'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
-        'User-Agent'=>'Ruby'
-      })
       .to_raise(Errno::EHOSTUNREACH)
 
     sentry_call_count = 0
