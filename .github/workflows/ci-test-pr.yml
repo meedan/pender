@@ -1,9 +1,6 @@
 name: Build and Run Integration Test
 
-on:
-  push:
-    branches:
-      - '3875-get-env-var'
+on: push
 
 permissions:
   id-token: write
@@ -16,7 +13,7 @@ jobs:
     outputs:
       image: ${{ steps.build-image.outputs.image }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
