@@ -1,0 +1,99 @@
+name: Build and Run Integration Test
+
+on: push
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+
+    outputs:
+      image: ${{ steps.build-image.outputs.image }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+        aws-region: eu-west-1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Cache Docker layers
+      uses: actions/cache@v4
+      id: cache
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Docker Buildx (build)
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ github.event.repository.name }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker buildx build \
+          --cache-from "type=local,src=/tmp/.buildx-cache" \
+          --cache-to "type=local,dest=/tmp/.buildx-cache-new" \
+          --load \
+          --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+          --file ./Dockerfile ./
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Set up configuration
+      run: |
+        cp config/database.yml.example config/database.yml
+        cp config/sidekiq.yml.example config/sidekiq.yml
+        cp config/config.yml.example config/config.yml
+        bin/get_env_vars.sh
+
+    - name: Run container
+      id: run-container
+      run: |
+        docker-compose -f docker-compose.yml -f docker-test.yml up -d pender
+
+    - name: Set up PR Tests
+      id: setup-tests
+      run: |
+        docker-compose exec -T pender test/setup-parallel
+
+    - name: Run PR Tests
+      id: run-tests
+      env:
+        TEST_RETRY_COUNT: 5
+      run: |
+        docker-compose exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -T pender bundle exec rake "parallel:test[3]"
+        docker-compose exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -T pender bundle exec rake parallel:spec
+
+    - name: After PR Tests
+      id: after-tests
+      env:
+        GIT_SHA: ${{ github.sha }}
+        GIT_COMMITED_AT: ${{ github.event.head_commit.timestamp }}
+      run: |
+        docker-compose exec -T pender cat tmp/performance.csv
+        docker-compose exec -e GIT_COMMIT_SHA=$GIT_SHA -e GIT_COMMITTED_AT=$GIT_COMMITTED_AT -T pender test/test-coverage
+
+    - name: Reset cache
+      id: reset-cache
+      if: ${{ failure() || success() }}
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache

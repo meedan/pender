@@ -1,9 +1,8 @@
 # Pender
 
-<a href="https://codeclimate.com/repos/5715585edb5e930072004cc5/feed"><img src="https://codeclimate.com/repos/5715585edb5e930072004cc5/badges/f5868b936888747f319f/gpa.svg" /></a>
-[![Issue Count](https://codeclimate.com/repos/5715585edb5e930072004cc5/badges/f5868b936888747f319f/issue_count.svg)](https://codeclimate.com/repos/5715585edb5e930072004cc5/feed)
-[![Test Coverage](https://codeclimate.com/repos/5715585edb5e930072004cc5/badges/f5868b936888747f319f/coverage.svg)](https://codeclimate.com/repos/5715585edb5e930072004cc5/coverage)
-[![Travis](https://travis-ci.org/meedan/pender.svg?branch=develop)](https://travis-ci.org/meedan/pender/)
+[Test Coverage: Overview](https://codeclimate.com/github/meedan/pender)
+[Test Coverage: Issues](https://codeclimate.com/github/meedan/pender/issues)
+![test](https://github.com/meedan/pender/actions/workflows/ci-test-pr.yml/badge.svg?branch=develop)
 
 Pender is a service for link parsing, archiving and rendering. It is one of the services that supports [Check](https://meedan.com/check), an open source platform for collaborative fact-checking and media annotation.
 
