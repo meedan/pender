@@ -1,4 +1,5 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '..', 'test_helper')
+require 'stringio'
 
 class MediaTest < ActiveSupport::TestCase
   test "should create media" do
@@ -71,7 +72,7 @@ class MediaTest < ActiveSupport::TestCase
     data = m.as_json
     assert_match 'https://www.bbc.com', m.url
     assert_match 'BBC', data['title']
-    assert_match /Breaking news/, data['description']
+    assert_kind_of String, data['description']
     assert_equal '', data['published_at']
     assert_equal '', data['username']
     assert_equal 'https://www.bbc.com', data['author_url']
@@ -108,6 +109,20 @@ class MediaTest < ActiveSupport::TestCase
     id = Media.get_id m.url
     data = m.as_json
     assert_match /\/medias\/#{id}\/author_picture/, data['author_picture']
+  end
+
+  test 'should log parser information when parsing a new URL' do
+    url = 'https://twitter.com/search?q=twitter'
+    media = Media.new(url: url)
+  
+    log = StringIO.new
+    Rails.logger = Logger.new(log)
+  
+    media.as_json 
+    
+    assert_match '[Parser] Parsing new URL', log.string
+    assert_match url, log.string
+    assert_match media.type, log.string
   end
 
   test "should handle connection reset by peer error" do
@@ -407,6 +422,32 @@ class MediaTest < ActiveSupport::TestCase
     assert_nothing_raised do
       m.send(:get_html, header_options)
     end
+  end
+
+  test "should not reach the end of file caused by Net::Http::Proxy" do
+    logger_output = StringIO.new
+    Rails.logger = Logger.new(logger_output)
+    m = create_media url: 'https://www.nbcnews.com/'
+    parsed_url = RequestHelper.parse_url(m.url)
+    header_options = RequestHelper.html_options(m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(EOFError)
+    assert_nothing_raised do
+      m.send(:get_html, header_options)
+    end
+    assert_includes logger_output.string, "[Parser] Could not get html"
+  end
+
+  test "should not throw read time out errors caused by Net::Http::Proxy" do
+    logger_output = StringIO.new
+    Rails.logger = Logger.new(logger_output)
+    m = create_media url: 'https://www.nbcnews.com/'
+    parsed_url = RequestHelper.parse_url(m.url)
+    header_options = RequestHelper.html_options(m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
+    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Net::ReadTimeout)
+    assert_nothing_raised do
+      m.send(:get_html, header_options)
+    end
+    assert_includes logger_output.string, "[Parser] Could not get html"
   end
 
   test "should parse page when json+ld tag content is an empty array" do

@@ -19,11 +19,11 @@ if File.exist?(file)
       end
     end
   end
-
+  
   Sidekiq.configure_client do |config|
     config.redis = redis_config
+    config.logger.level = ::Logger::WARN
   end
 else
   SIDEKIQ_CONFIG = nil
 end
-Sidekiq::Extensions.enable_delay!

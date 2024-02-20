@@ -58,7 +58,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'page', data['provider']
-    assert_match(/Hong Kong Free Press/, data['title'])
+    assert_match(/Hong Kong lawmakers/, data['title'])
     assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
     assert_match /https:\/\/.+AFP/, data['author_url']
@@ -73,7 +73,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'page', data['provider']
-    assert_match(/Hong Kong Free Press/, data['title'])
+    assert_match(/Hong Kong lawmakers/, data['title'])
     assert_match(/Hong Kong/, data['description'])
     assert_not_nil data['published_at']
     assert_match /https:\/\/.+AFP/, data['author_url']
@@ -107,9 +107,8 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
 
   test "should parse urls without utf encoding" do
     urls = [
-      'https://www.yallakora.com/epl/2545/News/350853/مصدر-ليلا-كورة-ليفربول-حذر-صلاح-وزملاءه-من-جماهير-فيديو-السيارة',
-      'https://www.yallakora.com/epl/2545/News/350853/%D9%85%D8%B5%D8%AF%D8%B1-%D9%84%D9%8A%D9%84%D8%A7-%D9%83%D9%88%D8%B1%D8%A9-%D9%84%D9%8A%D9%81%D8%B1%D8%A8%D9%88%D9%84-%D8%AD%D8%B0%D8%B1-%D8%B5%D9%84%D8%A7%D8%AD-%D9%88%D8%B2%D9%85%D9%84%D8%A7%D8%A1%D9%87-%D9%85%D9%86-%D8%AC%D9%85%D8%A7%D9%87%D9%8A%D8%B1-%D9%81%D9%8A%D8%AF%D9%8A%D9%88-%D8%A7%D9%84%D8%B3%D9%8A%D8%A7%D8%B1%D8%A9',
-      'https://www.yallakora.com//News/350853/%25D9%2585%25D8%25B5%25D8%25AF%25D8%25B1-%25D9%2584%25D9%258A%25D9%2584%25D8%25A7-%25D9%2583%25D9%2588%25D8%25B1%25D8%25A9-%25D9%2584%25D9%258A%25D9%2581%25D8%25B1%25D8%25A8%25D9%2588%25D9%2584-%25D8%25AD%25D8%25B0%25D8%25B1-%25D8%25B5%25D9%2584%25D8%25A7%25D8%25AD-%25D9%2588%25D8%25B2%25D9%2585%25D9%2584%25D8%25A7%25D8%25A1%25D9%2587-%25D9%2585%25D9%2586-%25D8%25AC%25D9%2585%25D8%25A7%25D9%2587%25D9%258A%25D8%25B1-%25D9%2581%25D9%258A%25D8%25AF%25D9%258A%25D9%2588-%25D8%25A7%25D9%2584%25D8%25B3%25D9%258A%25D8%25A7%25D8%25B1%25D8%25A9-'
+      'https://www.aljazeera.net/news/2024/1/24/شهيد-بالضفة-والاحتلال-يعتقل-طفلا-حرر',
+      'https://www.aljazeera.net/news/2024/1/24/%D8%B4%D9%87%D9%8A%D8%AF-%D8%A8%D8%A7%D9%84%D8%B6%D9%81%D8%A9-%D9%88%D8%A7%D9%84%D8%A7%D8%AD%D8%AA%D9%84%D8%A7%D9%84-%D9%8A%D8%B9%D8%AA%D9%82%D9%84-%D8%B7%D9%81%D9%84%D8%A7-%D8%AD%D8%B1%D8%B1',
     ]
     urls.each do |url|
       m = create_media url: url

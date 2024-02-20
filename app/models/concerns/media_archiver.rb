@@ -16,6 +16,7 @@ module MediaArchiver
     Media.enabled_archivers(available, self).each do |name, rule|
       rule[:patterns].each do |pattern|
         if (rule[:modifier] == :only && !pattern.match(url).nil?) || (rule[:modifier] == :except && pattern.match(url).nil?)
+          Rails.logger.info level: 'INFO', message: '[Archiver] Archiving new URL', url: url, archiver: name
           self.public_send("archive_to_#{name}", url, ApiKey.current&.id)
         end
       end
@@ -68,7 +69,11 @@ module MediaArchiver
 
     def notify_webhook_and_update_cache(archiver, url, data, key_id)
       settings = Media.api_key_settings(key_id)
-      Media.update_cache(url, { archives: { archiver => data } })
+
+      id = Media.get_id(url)
+      archiver_data = Pender::Store.current.read(id, :json).to_h.dig('archives', archiver).to_h
+      archiver_data.delete('error')
+      Media.update_cache(url, { archives: { archiver => archiver_data.merge(data) } })
       Media.notify_webhook(archiver, url, data, settings)
     end
 

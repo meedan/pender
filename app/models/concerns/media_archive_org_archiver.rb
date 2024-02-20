@@ -6,7 +6,7 @@ module MediaArchiveOrgArchiver
   end
 
   def archive_to_archive_org(url, key_id)
-    ArchiverWorker.perform_in(30.seconds, url, :archive_org, key_id)
+    ArchiverWorker.perform_in(30.seconds, url, 'archive_org', key_id)
   end
 
   module ClassMethods
@@ -25,7 +25,7 @@ module MediaArchiveOrgArchiver
         Rails.logger.info level: 'INFO', message: '[archive_org] Sent URL to archive', url: url, code: response.code, response: response.message
         body = JSON.parse(response.body)
         if body['job_id']
-          Media.delay_for(2.minutes).get_archive_org_status(body['job_id'], url, key_id)
+          ArchiverStatusJob.perform_in(2.minutes, body['job_id'], url, key_id)
         else
           data = snapshot_data.to_h.merge({ error: { message: "(#{body['status_ext']}) #{body['message']}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }})
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
@@ -63,7 +63,7 @@ module MediaArchiveOrgArchiver
         response = http.request(request)
         body = JSON.parse(response.body)
         if body['status'] == 'success'
-          location = "https://web.archive.org/web/#{body['timestamp']}/#{url}"
+         location = "https://web.archive.org/web/#{body['timestamp']}/#{url}"
           data = { location: location }
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
         else
@@ -81,7 +81,8 @@ module MediaArchiveOrgArchiver
       http.use_ssl = uri.scheme == "https"
       headers = {
         'Accept' => 'application/json',
-        'Authorization' => "LOW #{PenderConfig.get('archive_org_access_key')}:#{PenderConfig.get('archive_org_secret_key')}"
+        'Authorization' => "LOW #{PenderConfig.get('archive_org_access_key')}:#{PenderConfig.get('archive_org_secret_key')}",
+        'X-Priority-Reduced' => '1'
       }
       [http, "Net::HTTP::#{verb}".constantize.new(uri, headers)]
     end

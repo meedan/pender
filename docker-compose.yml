@@ -5,7 +5,7 @@ volumes:
   postgres13:
 services:
   redis:
-    image: redis:5
+    image: redis:6.2
     ports:
       - "6379:6379"
     volumes:
@@ -27,8 +27,11 @@ services:
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
-      POSTGRES_DB: pender-tests
+      # POSTGRES_DB: pender-tests
+      POSTGRES_DB: pender_test__db
   pender:
+    env_file:
+      - .env
     build: .
     shm_size: 1G
     ports:

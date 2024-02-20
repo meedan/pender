@@ -42,12 +42,12 @@ gem 'sass-rails'
 gem 'open_uri_redirections', require: false
 gem 'postrank-uri', git: 'https://github.com/postrank-labs/postrank-uri.git', ref: '485ac46', require: false # Ruby 3.0 support, as of 2/6/23 no gem relaease
 gem 'retryable'
-gem 'puma', '5.6.7'
+gem 'puma', '5.6.8'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'rails-perftest'
-gem 'sidekiq', '< 7'
+gem 'sidekiq', '< 8'
 gem 'redis', '4.3.1'
-gem 'nokogiri', '1.14.3', require: false
+gem 'nokogiri', '1.16.2', require: false
 gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
 gem 'loofah', '2.19.1', require: false

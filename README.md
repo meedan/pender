@@ -1,9 +1,8 @@
 # Pender
 
-<a href="https://codeclimate.com/repos/5715585edb5e930072004cc5/feed"><img src="https://codeclimate.com/repos/5715585edb5e930072004cc5/badges/f5868b936888747f319f/gpa.svg" /></a>
-[![Issue Count](https://codeclimate.com/repos/5715585edb5e930072004cc5/badges/f5868b936888747f319f/issue_count.svg)](https://codeclimate.com/repos/5715585edb5e930072004cc5/feed)
-[![Test Coverage](https://codeclimate.com/repos/5715585edb5e930072004cc5/badges/f5868b936888747f319f/coverage.svg)](https://codeclimate.com/repos/5715585edb5e930072004cc5/coverage)
-[![Travis](https://travis-ci.org/meedan/pender.svg?branch=develop)](https://travis-ci.org/meedan/pender/)
+[Test Coverage: Overview](https://codeclimate.com/github/meedan/pender)
+[Test Coverage: Issues](https://codeclimate.com/github/meedan/pender/issues)
+![test](https://github.com/meedan/pender/actions/workflows/ci-test-pr.yml/badge.svg?branch=develop)
 
 Pender is a service for link parsing, archiving and rendering. It is one of the services that supports [Check](https://meedan.com/check), an open source platform for collaborative fact-checking and media annotation.
 
@@ -32,12 +31,6 @@ Besides the specific parsers Pender can parse any link with an oEmbed endpoint o
   * This archiver requires `archive_org_access_key` and `archive_org_secret_key` on `config/config.yml` file to be enabled. Get your account’s keys at https://archive.org/account/s3.php
 * Perma.cc
   * This archiver requires a `perma_cc_key` on `config/config.yml` file or the requesting API key to be enabled. Get your account key at https://perma.cc
-* Video Archiver
-  * Pender uses `youtube-dl` to download videos from any page
-  * Many requests in a short period of time to a domain (~20 requests/min) can lead to IP blocking.
-  * To avoid IP blocking when downloading Youtube videos Pender can use a proxy. We have tested two proxies:
-    * Oxylabs (recommended)
-    * Luminati is not recommended for downloading videos: https://github.com/ytdl-org/youtube-dl/issues/23521
 
 ## Setup
 

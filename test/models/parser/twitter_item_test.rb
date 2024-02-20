@@ -69,6 +69,10 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     assert_equal true, match_six.is_a?(Parser::TwitterItem)
     match_seven = Parser::TwitterItem.match?('http://twitter.com/%23!/salmaeldaly/status/45532711472992256')
     assert_equal true, match_seven.is_a?(Parser::TwitterItem)
+
+    # Search URLs
+    match_eight = Parser::TwitterSearchItem.match?('https://twitter.com/search?q=guacamole')
+    assert_equal true, match_eight.is_a?(Parser::TwitterSearchItem)
   end
 
   test "it makes a get request to the tweet lookup endpoint successfully" do
@@ -76,7 +80,6 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     
     WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
       .with(query: query)
-      .with(headers: { "Authorization": "Bearer test" })
       .to_return(status: 200, body: response_fixture_from_file('twitter-item-response-success.json'))
 
     data = Parser::TwitterItem.new('https://m.twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
@@ -91,7 +94,6 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
       .with(query: query)
-      .with(headers: { "Authorization": "Bearer test" })
       .to_return(status: 404, body: response_fixture_from_file('twitter-item-response-error.json'))
 
     sentry_call_count = 0
@@ -113,7 +115,6 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
       .with(query: query)
-      .with(headers: { "Authorization": "Bearer test" })
       .to_raise(Errno::EHOSTUNREACH)
 
     sentry_call_count = 0
@@ -135,7 +136,6 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
     .with(query: query)
-    .with(headers: { "Authorization": "Bearer test" })
     .to_return(status: 429, body: "{'title':'Too Many Requests','detail':'Too Many Requests','type':'about:blank','status':429}")
 
     data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
@@ -195,6 +195,14 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     data = Parser::TwitterItem.new(' https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
 
     assert_match 'Youths! Webb observed galaxy cluster El Gordo', data['title']
+  end
+
+  test "should parse valid search url" do
+    stub_tweet_lookup.returns(twitter_item_response_success)
+
+    data = Parser::TwitterSearchItem.new('https://twitter.com/search?q=ISS%20from:@Space_Station&src=typed_query&f=live').parse_data(empty_doc)
+
+    assert_match 'ISS from:@Space_Station', data['title']
   end
 
   test "should fill in html when html parsing fails but API works" do

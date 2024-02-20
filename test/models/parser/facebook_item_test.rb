@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'stringio'
 
 class FacebookItemUnitTest < ActiveSupport::TestCase
   def setup
@@ -163,6 +164,16 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     })
 
     Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824').parse_data(empty_doc, 'https://www.facebook.com/fakeaccount/posts/original-123456789')
+  end
+
+  test "logs requests sent to crowdtangle" do
+    logger_output = StringIO.new
+    Rails.logger = Logger.new(logger_output)
+
+    WebMock.stub_request(:get, /api.crowdtangle.com\/post/).to_return(status: 200, body: crowdtangle_response)
+    Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824').parse_data(empty_doc, throwaway_url)
+
+    assert_includes("[Parser] Requesting data from Crowdtangle", logger_output.string)
   end
 
   test "sets information from crowdtangle" do
