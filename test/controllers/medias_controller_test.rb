@@ -591,7 +591,7 @@ class MediasControllerTest < ActionController::TestCase
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)
     WebMock.enable!
-    WebMock.disable_net_connect!
+    WebMock.disable_net_connect!(allow: [/minio/])
 
     WebMock.stub_request(:get, /malware.wicar.org/).to_return(status: 200, body: "<title>Test Malware!</title>")
 
