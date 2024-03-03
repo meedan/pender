@@ -80,7 +80,6 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     
     WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
       .with(query: query)
-      .with(headers: { "Authorization": "Bearer test" })
       .to_return(status: 200, body: response_fixture_from_file('twitter-item-response-success.json'))
 
     data = Parser::TwitterItem.new('https://m.twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
@@ -95,7 +94,6 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
       .with(query: query)
-      .with(headers: { "Authorization": "Bearer test" })
       .to_return(status: 404, body: response_fixture_from_file('twitter-item-response-error.json'))
 
     sentry_call_count = 0
@@ -117,7 +115,6 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
       .with(query: query)
-      .with(headers: { "Authorization": "Bearer test" })
       .to_raise(Errno::EHOSTUNREACH)
 
     sentry_call_count = 0
@@ -139,7 +136,6 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
     .with(query: query)
-    .with(headers: { "Authorization": "Bearer test" })
     .to_return(status: 429, body: "{'title':'Too Many Requests','detail':'Too Many Requests','type':'about:blank','status':429}")
 
     data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
