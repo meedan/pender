@@ -17,7 +17,7 @@
 
 class ArchiverWorker
   include Sidekiq::Worker
-  sidekiq_options retry_for: 24.hours
+  sidekiq_options retry_for: 24.hours, queue: 'archiving'
 
   sidekiq_retries_exhausted { |msg, e| retries_exhausted_callback(msg, e) }
 
