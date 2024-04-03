@@ -4,4 +4,5 @@
 :redis_database: 0
 :queues:
   - default
-  - video_archiving
+  - archiving
+  - metrics

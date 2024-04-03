@@ -13,7 +13,7 @@
 
 class ArchiverStatusJob
   include Sidekiq::Job
-  sidekiq_options retry_for: 24.hours
+  sidekiq_options retry_for: 24.hours, queue: 'archiving'
 
   sidekiq_retry_in do |count|
     (count ** 4) + 60 + (rand(10) * (count + 1))
