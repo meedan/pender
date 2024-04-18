@@ -43,7 +43,7 @@ gem 'open_uri_redirections', require: false
 gem 'postrank-uri', git: 'https://github.com/postrank-labs/postrank-uri.git', ref: '485ac46', require: false # Ruby 3.0 support, as of 2/6/23 no gem relaease
 gem 'retryable'
 gem 'puma', '5.6.8'
-gem 'rack-cors', :require => 'rack/cors'
+gem 'rack-cors', '>= 2.0.2', :require => 'rack/cors'
 gem 'rails-perftest'
 gem 'sidekiq', '< 8'
 gem 'redis', '4.3.1'
