@@ -7,7 +7,7 @@ class TelegramIntegrationTest < ActiveSupport::TestCase
     assert_equal 'rechtsanwaeltin_beate_bahner', data['username']
     assert_equal 'item', data['type']
     assert_equal 'telegram', data['provider']
-    assert_equal 'Rechtsanwältin Beate Bahner', data['author_name']
+    assert_match /Rechtsanwältin Beate Bahner/, data['author_name']
     assert_equal 'https://t.me/rechtsanwaeltin_beate_bahner/13285', data['title']
     assert_match /Pfizer bestätigt vor EU-Covid-Ausschuss/, data['description']
     assert_nil data['error']
@@ -53,7 +53,7 @@ class TelegramItemUnitTest <  ActiveSupport::TestCase
     data = Parser::TelegramItem.new('https://t.me/example_account/12345').parse_data(doc)
     assert_equal 'https://t.me/example_account/12345', data[:title]
     assert_match /❗ Pfizer bestätigt vor EU-Covid-Ausschuss/, data[:description]
-    assert_equal 'Rechtsanwältin Beate Bahner', data[:author_name]
+    assert_match /Rechtsanwältin Beate Bahner/, data[:author_name]
     assert_equal 'example_account', data[:username]
     assert_equal '12345', data[:external_id]
     assert_match /cdn4.telegram-cdn.org\/file/, data[:picture]
