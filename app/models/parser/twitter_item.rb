@@ -2,7 +2,7 @@ module Parser
   class TwitterItem < Base
     include ProviderTwitter
 
-    TWITTER_ITEM_URL = /^https?:\/\/([^\.]+\.)?twitter|x\.com\/((%23|#)!\/)?(?<user>[^\/]+)\/status\/(?<id>[0-9]+).*/
+    TWITTER_ITEM_URL = /^https?:\/\/([^\.]+\.)?(twitter|x)\.com\/((%23|#)!\/)?(?<user>[^\/]+)\/status\/(?<id>[0-9]+).*/
 
     class << self
       def type

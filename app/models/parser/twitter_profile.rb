@@ -9,7 +9,7 @@ module Parser
 
       def patterns
         [
-          /^https?:\/\/((0|m|mobile|www)\.)?twitter|x\.com\/(?<username>[\w]{4,15})[\/]*(\?.*)?[\/]*$/
+          /^https?:\/\/((0|m|mobile|www)\.)?(twitter|x)\.com\/(?<username>[\w]{4,15})[\/]*(\?.*)?[\/]*$/
         ]
       end
     end
