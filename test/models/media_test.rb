@@ -112,7 +112,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test 'should log parser information when parsing a new URL' do
-    url = 'https://twitter.com/search?q=twitter'
+    url = 'https://x.com/search?q=twitter'
     media = Media.new(url: url)
   
     log = StringIO.new
