@@ -49,7 +49,7 @@ module Parser
             description: raw_data['text'].squish,
             author_picture: raw_user_data['profile_image_url'].gsub('_normal', ''),
             published_at: raw_data['created_at'],
-            html: html_for_twitter_item(url),
+            html: html_for_twitter_item(url,raw_data['lang']),
             author_name: raw_user_data['name'],
           })  
         end
@@ -67,11 +67,13 @@ module Parser
       item_media ? item_media.dig(0, 'url') : ''
     end
 
-    def html_for_twitter_item(url)
+    def html_for_twitter_item(url,lang)
       '<blockquote class="twitter-tweet">' +
-      '<a href="' + url + '"></a>' +
+        '<p lang="' + lang + '" dir="ltr"></p>' +
+        '<a href="' + url.gsub(/x\.com/, 'twitter.com') + '"></a>' +
       '</blockquote>' +
-      '<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>'
+      '<script async src="https://platform.twitter.com/widgets.js" charset="utf-8">' +
+      '</script>'
     end
   end
 end
