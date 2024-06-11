@@ -618,4 +618,12 @@ class MediaUnitTest < ActiveSupport::TestCase
     assert_equal "201", response.code
     assert_equal 'fake response body', response.body
   end
+
+  test 'should remove parser specific URL parameters' do
+    url = 'https://www.instagram.com/p/xyz/?igshid=1'
+    WebMock.stub_request(:any, url).to_return(status: 200, body: 'fake response body')
+
+    media = Media.new(url: url)
+    assert_not_includes media.url, 'igshid=1'
+  end
 end
