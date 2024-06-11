@@ -288,7 +288,7 @@ class Media
 
     params_to_remove.each do |param|
       query_params.keys.each do |key|
-        query_params.delete(key) if key.include?(param)
+        query_params.delete(key) if key == param
       end
     end
 
