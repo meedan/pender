@@ -14,7 +14,7 @@ module ProviderTwitter
   def tweet_lookup(tweet_id)
     params = {
       "ids": tweet_id,
-      "tweet.fields": "author_id,created_at,text",
+      "tweet.fields": "author_id,created_at,text,lang",
       "expansions": "author_id,attachments.media_keys",
       "user.fields": "profile_image_url,username,url",
       "media.fields": "url",

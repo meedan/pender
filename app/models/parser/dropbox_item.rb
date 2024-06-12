@@ -7,7 +7,7 @@ module Parser
 
       def patterns
         [
-          /^https?:\/\/(www\.)?dropbox\.com\/sh?\/([^\/]+)/,
+          /^https?:\/\/(www\.)?dropbox\.com\/([^\/]+)/,
           /^https?:\/\/([^\.]+\.)?(dropboxusercontent|dropbox)\.com\/s\/([^\/]+)/,
         ]
       end

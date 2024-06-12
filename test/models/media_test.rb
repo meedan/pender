@@ -112,7 +112,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test 'should log parser information when parsing a new URL' do
-    url = 'https://twitter.com/search?q=twitter'
+    url = 'https://x.com/search?q=twitter'
     media = Media.new(url: url)
   
     log = StringIO.new
@@ -617,5 +617,23 @@ class MediaUnitTest < ActiveSupport::TestCase
     response = Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
     assert_equal "201", response.code
     assert_equal 'fake response body', response.body
+  end
+
+  test 'should remove parser specific URL parameters' do
+    url = 'https://www.instagram.com/p/xyz/?igsh=1'
+    WebMock.stub_request(:any, url).to_return(status: 200, body: 'fake response body')
+
+    media = Media.new(url: url)
+    assert_not_includes media.url, 'igsh'
+    assert_equal media.url, 'https://www.instagram.com/p/xyz'
+  end
+
+  test 'should remove parser specific URL parameters when URL contains multiple parameters' do
+    url = 'https://www.instagram.com/p/xyz/?param1=value1&igsh=1&param2=value2'
+    WebMock.stub_request(:any, url).to_return(status: 200, body: 'fake response body')
+
+    media = Media.new(url: url)
+    assert_not_includes media.url, 'igsh'
+    assert_equal media.url, 'https://www.instagram.com/p/xyz?param1=value1&param2=value2'
   end
 end

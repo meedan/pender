@@ -16,7 +16,7 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
   def query
     params = {
       "ids": "1111111111111111111",
-      "tweet.fields": "author_id,created_at,text",
+      "tweet.fields": "author_id,created_at,text,lang",
       "expansions": "author_id,attachments.media_keys",
       "user.fields": "profile_image_url,username,url",
       "media.fields": "url",
@@ -148,7 +148,7 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     stub_tweet_lookup.returns(twitter_item_response_error)
 
     data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
-    
+
     assert_not_nil data['error']
     assert_equal 'https://twitter.com/fake_user', data['author_url']
   end
