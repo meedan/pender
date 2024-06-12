@@ -64,6 +64,7 @@ class Media
     self.follow_redirections
     self.url = RequestHelper.normalize_url(self.url) unless self.get_canonical_url
     self.try_https
+    self.remove_parser_specific_parameters
     self.parser = nil
   end
 
@@ -273,6 +274,37 @@ class Media
     rescue
       self.url.gsub!(/^https:/i, 'http:')
     end
+  end
+
+  def remove_parser_specific_parameters
+    parser_class = self.class.find_parser_class(self.url)
+    return unless parser_class&.respond_to?(:urls_parameters_to_remove)
+
+    params_to_remove = parser_class.urls_parameters_to_remove
+    return unless params_to_remove.any? { |param| self.url.include?(param) }
+
+    uri = URI.parse(self.url)
+    query_params = URI.decode_www_form(uri.query || '').to_h
+
+    params_to_remove.each do |param|
+      query_params.keys.each do |key|
+        query_params.delete(key) if key == param
+      end
+    end
+
+    new_query = query_params.empty? ? nil : URI.encode_www_form(query_params)
+    uri.query = new_query
+
+    result_url = uri.to_s
+    result_url += '/' if url.end_with?('/') && !result_url.end_with?('/')
+    self.url = result_url
+  end
+
+  def self.find_parser_class(url)
+    PARSERS.each do |parser|
+      return parser if parser.patterns.any? { |pattern| pattern.match?(url) }
+    end
+    nil
   end
 
   def get_html(header_options = {}, force_proxy = false)

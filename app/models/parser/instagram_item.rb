@@ -13,6 +13,10 @@ module Parser
       def patterns
         [INSTAGRAM_ITEM_URL, INSTAGRAM_HOME_URL]
       end
+
+      def urls_parameters_to_remove
+        ['igsh']
+      end
     end
     
     private
