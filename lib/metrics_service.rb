@@ -2,7 +2,7 @@ require 'prometheus/client'
 
 class MetricsService
   class << self
-    def custom_counter(name, description, labels: {})
+    def custom_counter(name, description, labels: [])
       counter = Prometheus::Client::Counter.new(
         name, 
         docstring: description,
@@ -11,14 +11,14 @@ class MetricsService
       prometheus_registry.register(counter)
     end
 
-    def increment_counter(name, labels: {})
+    def increment_counter(name, labels: [])
       counter = prometheus_registry.get(name)
       return if counter.nil?
 
       counter.increment(labels: labels)
     end
 
-    def get_counter(counter, labels: {})
+    def get_counter(counter, labels: [])
       counter.get(labels: labels)
     end
 
