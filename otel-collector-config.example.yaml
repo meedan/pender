@@ -5,7 +5,7 @@ receivers:
         - job_name: "prometheus"
           scrape_interval: 15s
           static_configs:
-            - targets: ["0.0.0.0:3200"] 
+            - targets: ["pender:3200"] 
 
 processors:
   batch:
