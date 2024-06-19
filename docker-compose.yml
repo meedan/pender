@@ -60,7 +60,7 @@ services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib
     volumes:
-      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+      - ./config/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
     depends_on:
       - pender
     ports:
