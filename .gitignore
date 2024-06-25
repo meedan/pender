@@ -27,3 +27,4 @@ coverage
 .idea
 .byebug_history
 *.env
+otel-collector-config.yaml
