@@ -86,7 +86,7 @@ class Media
     end
     archive_if_conditions_are_met(options, id, cache)
     Metrics.schedule_fetching_metrics_from_facebook(self.data, self.url, ApiKey.current&.id)
-    MetricsService.increment_counter(:media_request_total, labels: { parser: data[:provider] })
+    MetricsService.increment_counter(:media_request_total, labels: { parser: data[:provider], host: URI(data[:url]).host })
     cache.read(id, :json) || cleanup_data_encoding(data)
   end
 
