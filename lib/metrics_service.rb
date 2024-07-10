@@ -7,7 +7,7 @@ class MetricsService
         name, 
         docstring: description,
         labels: labels,
-        preset_labels: { service: 'pender' }
+        preset_labels: { service_name: 'pender' }
         )
       prometheus_registry.register(counter)
     end
