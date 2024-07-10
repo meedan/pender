@@ -50,7 +50,7 @@
       frame.setAttribute(attr, attrs[attr]);
     }
     frame.innerHTML = 'Your browser does not support iframes';
-    
+
     placeholder.parentNode.insertBefore(frame, placeholder.nextSibling);
 
     if (blockquote) {
@@ -85,7 +85,7 @@
             f = frame.getBoundingClientRect(),
             h = window.innerHeight || document.documentElement.clientHeight,
             w = window.innerWidth || document.documentElement.clientWidth;
-          if (isVisible(frame)) frame.contentWindow.postMessage(['lazyLoad', h, w, f.top, f.left, f.bottom, f.right].join(';'), '*');
+          if (isVisible(frame)) frame.contentWindow?.postMessage(['lazyLoad', h, w, f.top, f.left, f.bottom, f.right].join(';'), '*');
       }
     };
 
