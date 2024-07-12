@@ -85,9 +85,14 @@ class Media
       self.upload_images
     end
     archive_if_conditions_are_met(options, id, cache)
-    Metrics.schedule_fetching_metrics_from_facebook(self.data, self.url, ApiKey.current&.id)
-    MetricsService.increment_counter(:parsing_requests_total, labels: { parser_name: data[:provider], parsed_host: URI(data[:url]).host, parsing_status: data[:error].nil? ?  'success' : 'error' })
-    cache.read(id, :json) || cleanup_data_encoding(data)
+    # Metrics.schedule_fetching_metrics_from_facebook(self.data, self.url, ApiKey.current&.id)
+    MetricsService.increment_counter(:parser_requests_total, labels: { parser_name: data[:provider], parsed_host: URI(data[:url]).host, parsing_status: data[:error].nil? ?  'success' : 'error' })
+    if data[:error].nil?
+      MetricsService.increment_counter(:parser_requests_success, labels: { parser_name: data[:provider], parsed_host: URI(data[:url]).host })
+    else
+      MetricsService.increment_counter(:parser_requests_error, labels: { parser_name: data[:provider], parsed_host: URI(data[:url]).host })
+    end
+      cache.read(id, :json) || cleanup_data_encoding(data)
   end
 
   PARSERS = [
