@@ -330,15 +330,15 @@ class Media
   def parser_requests_metrics
     url = RequestHelper.normalize_url(self.url)
 
-    MetricsService.increment_counter(:parser_requests_total)
-    MetricsService.increment_counter(:parser_requests_per_parser, labels: { parser_name: data[:provider], parsing_status: data[:error].nil? ?  'success' : 'error' })
-    MetricsService.increment_counter(:parser_requests, labels: { parser_name: data[:provider], parsed_host: URI(url).host, parsing_status: data[:error].nil? ?  'success' : 'error' })
+    MetricsService.increment_counter(:pender_parser_requests_total)
+    MetricsService.increment_counter(:pender_parser_requests_per_parser, labels: { parser_name: data[:provider], parsing_status: data[:error].nil? ?  'success' : 'error' })
+    MetricsService.increment_counter(:pender_parser_requests, labels: { parser_name: data[:provider], parsed_host: URI(url).host, parsing_status: data[:error].nil? ?  'success' : 'error' })
     if data[:error].nil?
-      MetricsService.increment_counter(:parser_requests_success)
-      MetricsService.increment_counter(:parser_requests_success_per_parser, labels: { parser_name: data[:provider] })
+      MetricsService.increment_counter(:pender_parser_requests_success)
+      MetricsService.increment_counter(:pender_parser_requests_success_per_parser, labels: { parser_name: data[:provider] })
     else
-      MetricsService.increment_counter(:parser_requests_error)
-      MetricsService.increment_counter(:parser_requests_error_per_parser, labels: { parser_name: data[:provider] })
+      MetricsService.increment_counter(:pender_parser_requests_error)
+      MetricsService.increment_counter(:pender_parser_requests_error_per_parser, labels: { parser_name: data[:provider] })
     end
   end
 
