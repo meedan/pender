@@ -86,7 +86,7 @@ class Media
     end
     archive_if_conditions_are_met(options, id, cache)
     Metrics.schedule_fetching_metrics_from_facebook(self.data, self.url, ApiKey.current&.id)
-    MetricsService.increment_counter(:media_request_total, labels: { service: 'pender', parser: self.data['provider'] })
+    parser_requests_metrics
     cache.read(id, :json) || cleanup_data_encoding(data)
   end
 
@@ -326,4 +326,20 @@ class Media
         self.archive(options.delete(:archivers))
     end
   end
+
+  def parser_requests_metrics
+    url = RequestHelper.normalize_url(self.url)
+
+    MetricsService.increment_counter(:pender_parser_requests_total)
+    MetricsService.increment_counter(:pender_parser_requests_per_parser, labels: { parser_name: data[:provider], parsing_status: data[:error].nil? ?  'success' : 'error' })
+    MetricsService.increment_counter(:pender_parser_requests, labels: { parser_name: data[:provider], parsed_host: URI(url).host, parsing_status: data[:error].nil? ?  'success' : 'error' })
+    if data[:error].nil?
+      MetricsService.increment_counter(:pender_parser_requests_success)
+      MetricsService.increment_counter(:pender_parser_requests_success_per_parser, labels: { parser_name: data[:provider] })
+    else
+      MetricsService.increment_counter(:pender_parser_requests_error)
+      MetricsService.increment_counter(:pender_parser_requests_error_per_parser, labels: { parser_name: data[:provider] })
+    end
+  end
+
 end

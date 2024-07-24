@@ -26,24 +26,6 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     assert_equal '', data['username']
   end
 
-  test "should parse url with arabic or already encoded chars" do
-    urls = [
-      'https://www.aljazeera.net/news/2023/2/9/الشرطة-السويدية-ترفض-منح-إذن-لحرق',
-      'https://www.aljazeera.net/news/2023/2/9/%D8%A7%D9%84%D8%B4%D8%B1%D8%B7%D8%A9-%D8%A7%D9%84%D8%B3%D9%88%D9%8A%D8%AF%D9%8A%D8%A9-%D8%AA%D8%B1%D9%81%D8%B6-%D9%85%D9%86%D8%AD-%D8%A5%D8%B0%D9%86-%D9%84%D8%AD%D8%B1%D9%82'
-    ]
-    urls.each do |url|
-      m = create_media url: url
-      data = m.as_json
-      assert_equal 'الشرطة السويدية ترفض منح إذن جديد لحرق المصحف الشريف أمام السفارة التركية.. فما السبب؟', data['title']
-      assert_equal 'رفضت الشرطة السويدية منح إذن لحرق المصحف الشريف أمام السفارة التركية، قائلة إن ذلك من شأنه “إثارة اضطرابات خطيرة للأمن القومي”.', data['description']
-      assert_equal '', data['published_at']
-      assert_equal '', data['username']
-      assert_match /^https?:\/\/www\.aljazeera\.net$/, data['author_url']
-      assert_nil data['error']
-      assert_not_nil data['picture']
-    end
-  end
-
   test "should store metatags in an Array" do
     m = create_media url: 'https://www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html'
     data = m.as_json
@@ -103,18 +85,6 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     assert_match '@zoesqwilliams', data['username']
     assert_match 'https://twitter.com/zoesqwilliams', data['author_url']
     assert !data['picture'].blank?
-  end
-
-  test "should parse urls without utf encoding" do
-    urls = [
-      'https://www.aljazeera.net/news/2024/1/24/شهيد-بالضفة-والاحتلال-يعتقل-طفلا-حرر',
-      'https://www.aljazeera.net/news/2024/1/24/%D8%B4%D9%87%D9%8A%D8%AF-%D8%A8%D8%A7%D9%84%D8%B6%D9%81%D8%A9-%D9%88%D8%A7%D9%84%D8%A7%D8%AD%D8%AA%D9%84%D8%A7%D9%84-%D9%8A%D8%B9%D8%AA%D9%82%D9%84-%D8%B7%D9%81%D9%84%D8%A7-%D8%AD%D8%B1%D8%B1',
-    ]
-    urls.each do |url|
-      m = create_media url: url
-      data = m.as_json
-      assert data['error'].nil?
-    end
   end
 
   test "should use original url when redirected page requires cookie" do

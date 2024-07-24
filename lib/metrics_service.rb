@@ -6,7 +6,8 @@ class MetricsService
       counter = Prometheus::Client::Counter.new(
         name, 
         docstring: description,
-        labels: labels
+        labels: labels,
+        preset_labels: { service_name: 'pender' }
         )
       prometheus_registry.register(counter)
     end
