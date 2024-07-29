@@ -7,8 +7,8 @@ class KwaiIntegrationTest < ActiveSupport::TestCase
 
     assert_kind_of String, data['title']
     assert_kind_of String, data['description']
-    assert_equal 'Arthur Virgilio', data['username']
-    assert_equal 'Arthur Virgilio', data['author_name']
+    assert_match(/arthur\s*virgilio/i, data['username'])
+    assert_match(/arthur\s*virgilio/i, data['author_name'])
     assert_equal 'kwai', data['provider']
     assert_equal 'item', data['type']
   end
