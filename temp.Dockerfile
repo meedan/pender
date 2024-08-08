@@ -2,7 +2,6 @@ FROM ruby:3.0.5-slim
 LABEL maintainer=sysops@meedan.com
 
 ENV RAILS_ENV=production \
-    RAILS_SERVE_STATIC_FILES=1 \
     DEPLOY_ENV=development
 
 # Set a UTF-8 capabable locale
