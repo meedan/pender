@@ -31,13 +31,16 @@ services:
   pender:
     env_file:
       - .env
-    build: .
+    # build: .
+    build:
+      context: .
+      dockerfile: temp.Dockerfile
     shm_size: 1G
     ports:
       - "3200:3200"
       - "9555:9555"
     volumes:
-      - ".:/app"
+      - ".:/app/pender"
     depends_on:
       - postgres
       - redis
@@ -47,10 +50,10 @@ services:
       SERVER_PORT: 3200
   pender-background:
     build: .
-    command: /app/docker-background.sh
+    command: /app/pender/docker-background.sh
     shm_size: 1G
     volumes:
-      - ".:/app"
+      - ".:/app/pender"
     depends_on:
       - pender
     environment:
