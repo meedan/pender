@@ -25,10 +25,7 @@ ARG BUNDLER_VERSION="2.3.5"
 RUN apt-get update && apt-get install -y curl \
     build-essential \
     git \
-    libpq-dev \
-    graphicsmagick \
-    inotify-tools \
-    python --no-install-recommends
+    libpq-dev --no-install-recommends
 
 # pender user
 RUN mkdir -p ${DIRPATH}
