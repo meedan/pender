@@ -1,4 +1,4 @@
-FROM ruby:3.0.5-slim
+FROM ruby:3.1.6-slim
 MAINTAINER Meedan <sysops@meedan.com>
 
 # the Rails stage can be overridden from the caller
@@ -10,7 +10,7 @@ ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 
 # install dependencies
-RUN apt-get update -qq && apt-get install -y curl build-essential git graphicsmagick inotify-tools libpq-dev python --no-install-recommends
+RUN apt-get update -qq && apt-get install -y curl build-essential git graphicsmagick inotify-tools libpq-dev --no-install-recommends
 
 # install our app
 RUN mkdir -p /app

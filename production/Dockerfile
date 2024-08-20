@@ -1,7 +1,7 @@
 # meedan/pender
 # https://github.com/meedan/pender
 
-FROM ruby:3.0.5-slim
+FROM ruby:3.1.6-slim
 MAINTAINER sysops@meedan.com
 
 ENV DEPLOYUSER=pender \
@@ -22,7 +22,7 @@ ENV DEPLOYUSER=pender \
 COPY production/bin /opt/bin/
 RUN chmod 755 /opt/bin/*.sh
 
-RUN apt-get update && apt-get install -y curl build-essential git libpq-dev graphicsmagick inotify-tools python --no-install-recommends
+RUN apt-get update && apt-get install -y curl build-essential git libpq-dev graphicsmagick inotify-tools --no-install-recommends
 
 # pender user
 RUN useradd ${DEPLOYUSER} -s /bin/bash -m
