@@ -16,7 +16,7 @@ if [ ${RAILS_ENV} = 'development' ] ; then
 	cat << EOF >> ${puma}
 	pidfile '${PWD}/tmp/pids/server-${RAILS_ENV}.pid'
 	environment '${RAILS_ENV}'
-	port ${SERVER_PORT}
+	port ${SERVER_PORT} 
 EOF
 
 	rm -f ${PWD}/tmp/pids/server-${RAILS_ENV}.pid
@@ -42,8 +42,8 @@ else
 	cat << EOF >> ${puma}
 	pidfile '${PWD}/tmp/pids/server-${DEPLOY_ENV}.pid'
 	environment '${DEPLOY_ENV}'
-	port ${SERVER_PORT}
-	workers 3
+	port ${SERVER_PORT} 
+	workers 3 
 EOF
 
 	bundle exec puma -C ${puma} -t 8:32

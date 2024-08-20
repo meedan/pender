@@ -46,6 +46,6 @@ EXPOSE 3200
 ENTRYPOINT ["./docker-entrypoint.sh"]
 
 # PROD
-# RUN chmod +x ./temp-docker-entrypoint.sh
+# RUN chmod +x ./temp-docker_entrypoint.sh
 # EXPOSE 8000
-# ENTRYPOINT ["./temp-docker-entrypoint.sh"]
+# ENTRYPOINT ["./temp-docker_entrypoint.sh"]
