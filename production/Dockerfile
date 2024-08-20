@@ -43,4 +43,4 @@ RUN chown -R ${DEPLOYUSER}:www-data ${DEPLOYDIR}
 USER ${DEPLOYUSER}
 EXPOSE 8000
 WORKDIR ${DEPLOYDIR}
-ENTRYPOINT ["/opt/bin/start.sh"]
+ENTRYPOINT ["/opt/bin/docker_entrypoint.sh"]
