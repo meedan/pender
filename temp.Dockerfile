@@ -1,4 +1,4 @@
-FROM ruby:3.0.5-slim
+FROM ruby:3.1.6-slim
 LABEL maintainer=sysops@meedan.com
 
 # PROD
