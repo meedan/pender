@@ -1,76 +1,46 @@
 #!/bin/bash
-
-############
-##### run pender
-
-if [ ${RAILS_ENV} = 'development' ] ; then
-	# LOCAL
-	bundle exec rake db:create
-	bundle exec rake db:migrate
-	export SECRET_KEY_BASE=$(bundle exec rake secret)
-	bundle exec rake lapis:api_keys:create_default
-
-	mkdir -p ${PWD}/tmp/pids
-	puma="${PWD}/tmp/pids/puma-${RAILS_ENV}.rb"
-	cp config/puma.rb ${puma}
-	cat << EOF >> ${puma}
-	pidfile '${PWD}/tmp/pids/server-${RAILS_ENV}.pid'
-	environment '${RAILS_ENV}'
-	port ${SERVER_PORT}
-EOF
-
-	rm -f ${PWD}/tmp/pids/server-${RAILS_ENV}.pid
-
-	bundle exec puma -C ${puma}
-
-else
-
-	# PROD
-	if [[ -z ${DEPLOY_ENV+x} || -z ${APP+x} ]]; then
-		echo "DEPLOY_ENV and APP must be in the environment. Exiting."
-		exit 1
-	fi
-
-	# Create configuration files based on SSM and ENV settings.
-	bash /opt/bin/create_configs.sh
-
-	echo "--- STARTUP COMPLETE ---"
-
-	mkdir -p ${PWD}/tmp/pids
-	puma="${PWD}/tmp/puma-${DEPLOY_ENV}.rb"
-	cp config/puma.rb ${puma}
-	cat << EOF >> ${puma}
-	pidfile '${PWD}/tmp/pids/server-${DEPLOY_ENV}.pid'
-	environment '${DEPLOY_ENV}'
-	port ${SERVER_PORT}
-	workers 3
-EOF
-
-	bundle exec puma -C ${puma} -t 8:32
-
+if [[ -z ${DEPLOY_ENV+x} || -z ${APP+x} ]]; then
+  echo "DEPLOY_ENV and APP must be in the environment. Exiting."
+  exit 1
 fi
 
+# pender
+if [ "${APP}" = 'pender' ] ; then
+  if [ "${DEPLOY_ENV}" = 'local' ] ; then
+    bundle exec rake db:create
+    bundle exec rake db:migrate
+    SECRET_KEY_BASE=$(bundle exec rake secret)
+    export SECRET_KEY_BASE
+    bundle exec rake lapis:api_keys:create_default
+  else # qa, live etc
+    bash /opt/bin/create_configs.sh
+    echo "--- STARTUP COMPLETE ---"
+  fi
 
-############
-##### run sidekiq
+  DIRPATH=${PWD}/tmp
+  PUMA="${DIRPATH}/puma-${DEPLOY_ENV}.rb"
+  mkdir -p "${DIRPATH}/pids"
+  cp config/puma.rb "${PUMA}"
+  cat << EOF >> "${PUMA}"
+  pidfile '${DIRPATH}/pids/server-${DEPLOY_ENV}.pid'
+  environment '${DEPLOY_ENV}'
+  port ${SERVER_PORT}
+EOF
 
-# # LOCAL
-# # Wait for API
-# until curl --silent -XGET --fail http://pender:${SERVER_PORT}; do printf '.'; sleep 1; done
-
-# # Sidekiq
-# bundle exec sidekiq
-
-# ######
-
-# # PROD
-# if [[ -z ${DEPLOY_ENV+x} || -z ${APP+x} ]]; then
-# 	echo "DEPLOY_ENV and APP must be in the environment. Exiting."
-# 	exit 1
-# fi
-
-# # Create configuration files based on SSM and ENV settings.
-# bash /opt/bin/create_configs.sh
-
-# echo "starting sidekiq"
-# bundle exec sidekiq
+  if [ "${DEPLOY_ENV}" = 'local' ] ; then
+    rm -f "${DIRPATH}/pids/server-${DEPLOY_ENV}.pid"
+    bundle exec puma -C "${PUMA}"
+  else # qa, live etc
+    echo "workers 3" >> "${PUMA}"
+    bundle exec puma -C "${PUMA}" -t 8:32
+  fi
+# pender-background (sidekiq)
+elif [ "${APP}" = 'pender-background' ] ; then
+  if [ "${DEPLOY_ENV}" = 'local' ] ; then
+    until curl --silent -XGET --fail "http://pender:${SERVER_PORT}"; do printf '.'; sleep 1; done
+  else # qa, live etc
+    bash /opt/bin/create_configs.sh
+    echo "starting sidekiq"
+  fi
+  bundle exec sidekiq
+fi
