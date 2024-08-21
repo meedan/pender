@@ -46,6 +46,8 @@ services:
       - redis
       - minio
     environment:
+      APP: pender
+      DEPLOY_ENV: local
       RAILS_ENV: development
       SERVER_PORT: 3200
   pender-background:
@@ -57,6 +59,8 @@ services:
     depends_on:
       - pender
     environment:
+      APP: pender-background
+      DEPLOY_ENV: local
       RAILS_ENV: development
       SERVER_PORT: 3200
   otel-collector:
