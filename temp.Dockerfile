@@ -3,13 +3,11 @@ LABEL maintainer=sysops@meedan.com
 
 # PROD
 # ENV RAILS_ENV=production \
-#     DEPLOY_ENV=production \
 #     BUNDLE_DEPLOYMENT=true \
 #     BUNDLE_WITHOUT=development:test
 
 # DEV
 ENV RAILS_ENV=development \
-    DEPLOY_ENV=development \
     SERVER_PORT=3200
 
 # Set a UTF-8 capabable locale
