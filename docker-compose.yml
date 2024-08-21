@@ -52,7 +52,6 @@ services:
       SERVER_PORT: 3200
   pender-background:
     build: .
-    command: /app/pender/docker-background.sh
     shm_size: 1G
     volumes:
       - ".:/app/pender"
