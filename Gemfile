@@ -77,3 +77,4 @@ gem 'addressable', '2.8.1'
 # (see https://github.com/ruby/net-imap/issues/16). We *might* be able to remove this after upgrading to Ruby 3
 gem 'net-http'
 gem 'prometheus-client'
+gem 'psych', '< 4'
