@@ -45,7 +45,6 @@ module Parser
 
     # Main function for class
     def parse_data_for_parser(doc, original_url, _jsonld_array)
-
       handle_exceptions(StandardError) do
         grabber = IdsGrabber.new(doc, url, original_url)
         set_data_field('user_uuid', grabber.user_id)
@@ -53,14 +52,15 @@ module Parser
         set_data_field('uuid', grabber.uuid)
         set_data_field('external_id', grabber.uuid)
 
-        @parsed_data['raw']['crowdtangle'] = get_crowdtangle_data(parsed_data['uuid']) || {}
-        if has_valid_crowdtangle_data?
-          crowdtangle_data = format_crowdtangle_result(parsed_data['raw']['crowdtangle'])
-          updated_url = parsed_data.dig('raw', 'crowdtangle', 'posts', 0, 'postUrl')
+        @parsed_data['raw']['scrapingbot'] = get_scrapingbot_data(url) || {}
+
+        if has_valid_scrapingbot_data?
+          scrapingbot_data = format_scrapingbot_result(parsed_data['raw']['scrapingbot'])
+          updated_url = parsed_data.dig('raw', 'scrapingbot', 'url')
           @url = updated_url if updated_url && updated_url != url
-          @parsed_data.merge!(crowdtangle_data)
+          @parsed_data.merge!(scrapingbot_data)
         else
-          og_metadata = get_opengraph_metadata.reject{|k,v| v.nil?}
+          og_metadata = get_opengraph_metadata.reject { |k, v| v.nil? }
 
           if should_use_markup_title?
             set_data_field('title', get_unique_facebook_page_title(doc))
@@ -73,10 +73,10 @@ module Parser
         set_facebook_privacy_error(doc, unavailable_page)
 
         strip_facebook_from_title!
-        
+
         @parsed_data['html'] = html_for_facebook_post(parsed_data.dig('username'), doc, url) || ''
       end
-      
+
       parsed_data
     end
 

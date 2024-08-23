@@ -32,25 +32,25 @@ module ProviderFacebook
 
   private
 
-  def get_crowdtangle_data(id)
+  def get_scrapingbot_data(url)
     response_data = {}
-    if id.blank?
-      return { error: { message: 'No ID given for Crowdtangle', code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
+    return { error: { message: 'No URL provided for ScrapingBot', code: Lapis::ErrorCodes::const_get('UNKNOWN') }} if url.blank?
+
+    scrapingbot_data = Media.scrapingbot_request(:facebook_post, url)
+
+    if scrapingbot_data.blank?
+      return { error: { message: "No data received from ScrapingBot", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
+    elsif scrapingbot_data.dig('result').blank?
+     return { error: { message: "No data received from ScrapingBot", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
+    elsif scrapingbot_data['error'].present?
+      return { error: { message: scrapingbot_data['error']['message'], code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
     end
 
-    crowdtangle_data = Media.crowdtangle_request(:facebook, id).with_indifferent_access
-    if crowdtangle_data.blank?
-      return { error: { message: "No data received from Crowdtangle", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
-    elsif crowdtangle_data.dig('result').blank?
-      return { error: { message: "No results received from Crowdtangle", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
-    elsif crowdtangle_data.dig('result', 'posts', 0, 'platformId') != id
-      return { error: { message: "Unexpected platform ID from Crowdtangle", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
-    end
 
-    crowdtangle_data.dig('result')
+    scrapingbot_data.dig('result')
   end
 
-  def format_crowdtangle_result(data)
+  def format_scrapingbot_result(data)
     post_info = (data.dig('posts') || []).first
     message = post_info.dig('message')
     picture = (post_info.dig('media').select { |m| m['type'] == 'photo' }.first || {}).dig('full') if post_info.dig('media')
@@ -70,13 +70,13 @@ module ProviderFacebook
     }.with_indifferent_access
   end
 
-  def has_valid_crowdtangle_data?
-    parsed_data.dig('raw', 'crowdtangle').present? && parsed_data.dig('raw', 'crowdtangle', 'error').blank?
+  def has_valid_scrapingbot_data?
+    parsed_data.dig('raw', 'scrapingbot').present? && parsed_data.dig('raw', 'scrapingbot', 'error').blank?
   end
 
   def set_facebook_privacy_error(html_page, page_is_unavailable)
     return if html_page.nil?
-    return if has_valid_crowdtangle_data?
+    return if has_valid_scrapingbot_data?
 
     title = get_page_title(html_page)
     return if title.blank?

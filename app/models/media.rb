@@ -110,7 +110,7 @@ class Media
   [
     MediaArchiveOrgArchiver,
     MediaPermaCcArchiver,
-    MediaCrowdtangleItem
+    MediaScrapingBotItem
   ].each { |concern| include concern }
 
   def self.minimal_data(instance)

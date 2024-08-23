@@ -67,6 +67,13 @@ development: &default
   #
   facebook_app: # 'SECRET'
 
+  # OPTIONAL
+  #
+  # ScrapingBot API KEY and UserName
+  #
+  SCRAPINGBOT_API_KEY: 'KEY'
+  SCRAPINGBOT_USERNAME: 'USER_NAME'
+
   # Luminati proxy service https://luminati.io/
   #
   # OPTIONAL
@@ -84,13 +91,6 @@ development: &default
   #
   # hosts: "{\"<HOST DOMAIN>\":{\"country\":\"<COUNTRY CODE FOR PROXY SETTING>\"},\"<HOST DOMAIN>\":{\"cf_credentials\":\"<CLOUDFLARE CREDENTIALS>\"}}"
   hosts: # 'SECRET'
-
-  # Crowdtangle parsing
-  #
-  # OPTIONAL
-  #
-  crowdtangle_facebook_token: # 'SECRET'
-  crowdtangle_instagram_token: # 'SECRET'
 
   # Archive.org service to archive pages https://archive.org/account/s3.php
   #
