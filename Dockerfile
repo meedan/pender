@@ -1,27 +1,46 @@
 FROM ruby:3.1.6-slim
-MAINTAINER Meedan <sysops@meedan.com>
+LABEL maintainer=sysops@meedan.com
 
-# the Rails stage can be overridden from the caller
-ENV RAILS_ENV development
+# PROD
+# ENV RAILS_ENV=production \
+#     BUNDLE_DEPLOYMENT=true \
+#     BUNDLE_WITHOUT=development:test
+
+# DEV
+ENV RAILS_ENV=development \
+    SERVER_PORT=3200
 
 # Set a UTF-8 capabable locale
-ENV LC_ALL C.UTF-8
-ENV LANG C.UTF-8
-ENV LANGUAGE C.UTF-8
+ENV LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    LANGUAGE=C.UTF-8
 
-# install dependencies
-RUN apt-get update -qq && apt-get install -y curl build-essential git graphicsmagick inotify-tools libpq-dev --no-install-recommends
+ENV APP=pender
+
+ARG DIRPATH=/app/pender
+ARG BUNDLER_VERSION="2.3.5" 
+
+RUN apt-get update && apt-get install -y curl \
+    build-essential \
+    git \
+    libpq-dev --no-install-recommends
+
+# pender user
+RUN mkdir -p ${DIRPATH}
+RUN useradd ${APP} -s /bin/bash -m
+USER ${APP}
+WORKDIR ${DIRPATH}
 
 # install our app
-RUN mkdir -p /app
-WORKDIR /app
-COPY Gemfile Gemfile.lock /app/
-RUN gem install bundler -v "2.3.5" --no-document && bundle install --jobs 20 --retry 5
-COPY . /app/
+COPY --chown=${APP} Gemfile Gemfile.lock ./
+RUN gem install bundler -v ${BUNDLER_VERSION} --no-document \
+    && bundle install --jobs 20 --retry 5
+COPY --chown=${APP} . ./
 
-# startup
-RUN chmod +x /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-background.sh
+# DEV
+RUN chmod +x ./bin/docker-entrypoint.sh
 EXPOSE 3200
+ENTRYPOINT ["./bin/docker-entrypoint.sh"]
 
-CMD ["/app/docker-entrypoint.sh"]
+# PROD
+# EXPOSE 8000
