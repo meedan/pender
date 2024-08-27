@@ -31,10 +31,7 @@ services:
   pender:
     env_file:
       - .env
-    # build: .
-    build:
-      context: .
-      dockerfile: temp.Dockerfile
+    build: .
     shm_size: 1G
     ports:
       - "3200:3200"
