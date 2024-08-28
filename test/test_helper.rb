@@ -53,7 +53,6 @@ class ActiveSupport::TestCase
     Media::ARCHIVERS['archive_org'][:enabled] = true
     ApiKey.current = Pender::Store.current = PenderConfig.current = nil
     clear_bucket
-    Metrics.stubs(:request_metrics_from_facebook).returns({ 'share_count' => 123 })
   end
 
   # This will run after any test

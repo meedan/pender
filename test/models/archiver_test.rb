@@ -5,7 +5,6 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.enable!
     WebMock.disable_net_connect!(allow: [/minio/])
     Sidekiq::Testing.inline!
-    Metrics.stubs(:request_metrics_from_facebook).returns({ 'share_count' => 123 })
     clear_bucket
   end
   
