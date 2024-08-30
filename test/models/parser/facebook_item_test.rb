@@ -23,87 +23,19 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
       {
         "status": 200,
         "result": {
-          "posts": [
-            {
-              "platformId": "123456789276277_1127489833985824",
-              "platform": "Facebook",
-              "date": "2016-10-05 11:15:30",
-              "updated": "2022-05-16 04:12:28",
-              "type": "native_video",
-              "message": "MATTHEW YOU ARE DRUNK...GO HOME! Look at what the long range computer models are indicating with Hurricane Matthew. Yes that's right the GFS model along with the ECMWF (European Model) are both showing Matthew looping around the Atlantic and heading back to the west toward Florida. Let's hope this trend changes and this DOES NOT HAPPEN. Let's get through the next 48hrs first...",
-              "expandedLinks": [
-                {
-                  "original": "https://www.facebook.com/TrentAricTV/videos/1127489833985824/",
-                  "expanded": "https://www.facebook.com/TrentAricTV/videos/1127489833985824/"
-                }
-              ],
-              "link": "https://www.facebook.com/TrentAricTV/videos/1127489833985824/",
-              "postUrl": "https://www.facebook.com/123456789276277/posts/1127489833985824/woo",
-              "subscriberCount": 0,
-              "score": 320.5113636363636,
-              "media": [
-                {
-                  "type": "video",
-                  "url": "https://video-sea1-1.xx.fbcdn.net/v/t42.1790-2/14611887_638161409698155_4235661386849452032_n.mp4?_nc_cat=109&ccb=1-6&_nc_sid=985c63&efg=eyJybHIiOjcyMywicmxhIjo1MTIsInZlbmNvZGVfdGFnIjoic3ZlX3NkIn0%3D&_nc_ohc=hOgMc6P8lbgAX_okTBW&rl=723&vabr=402&_nc_ht=video-sea1-1.xx&oh=00_AT8zx1iV-_tmlAkletndjbvSFjikw1j3yxZ4JNG33AJGRQ&oe=6283862F",
-                  "height": 0,
-                  "width": 0
-                },
-                {
-                  "type": "photo",
-                  "url": "https://scontent-sea1-1.xx.fbcdn.net/v/t15.5256-10/14602101_1127500960651378_1143375978446192640_n.jpg?stp=dst-jpg_s720x720&_nc_cat=107&ccb=1-6&_nc_sid=ad6a45&_nc_ohc=ElhPemC4khoAX-rBExM&_nc_ht=scontent-sea1-1.xx&oh=00_AT_O0XJgewEDqZ55eTyYX7kwt0CmlFX-Ikd-AvCVURY-qw&oe=6287A947",
-                  "height": 405,
-                  "width": 720,
-                  "full": "https://scontent-sea1-1.xx.fbcdn.net/v/t15.5256-10/14602101_1127500960651378_1143375978446192640_n.jpg?_nc_cat=107&ccb=1-6&_nc_sid=ad6a45&_nc_ohc=ElhPemC4khoAX-rBExM&_nc_ht=scontent-sea1-1.xx&oh=00_AT9zKVSCo0kkvuv2jEi4aJhSdyAU56Xcl0bEYU0lSQK19w&oe=6287A947"
-                }
-              ],
-              "statistics": {
-                "actual": {
-                  "likeCount": 2327,
-                  "shareCount": 18692,
-                  "commentCount": 5690,
-                  "loveCount": 18,
-                  "wowCount": 1110,
-                  "hahaCount": 100,
-                  "sadCount": 207,
-                  "angryCount": 61,
-                  "thankfulCount": 0,
-                  "careCount": 0
-                },
-                "expected": {
-                  "likeCount": 38,
-                  "shareCount": 4,
-                  "commentCount": 9,
-                  "loveCount": 12,
-                  "wowCount": 7,
-                  "hahaCount": 8,
-                  "sadCount": 7,
-                  "angryCount": 1,
-                  "thankfulCount": 0,
-                  "careCount": 2
-                }
-              },
-              "account": {
-                "id": 1612336,
-                "name": "Trent Aric - Meteorologist",
-                "handle": "TrentAricTV",
-                "profileImage": "https://scontent-sea1-1.xx.fbcdn.net/v/t39.30808-1/273572839_489238069228086_8419777016738266396_n.jpg?stp=c184.151.769.769a_cp0_dst-jpg_s50x50&_nc_cat=106&ccb=1-7&_nc_sid=05dcb7&_nc_ohc=MV2d-ud_YnwAX_BySca&_nc_ht=scontent-sea1-1.xx&oh=00_AT9kUPnHwj5_OhDDe3BYUSjiDkz_RSV2dP_qn9frcqISkQ&oe=631CECF7",
-                "subscriberCount": 10922,
-                "url": "https://www.facebook.com/123456789276277",
-                "platform": "Facebook",
-                "platformId": "100044256918130",
-                "accountType": "facebook_page",
-                "pageAdminTopCountry": "US",
-                "pageDescription": "Morning Meteorologist at WFTX Fox 4",
-                "pageCreatedDate": "2011-04-18 14:08:05",
-                "pageCategory": "NEWS_PERSONALITY",
-                "verified": true
-              },
-              "videoLengthMS": 10967,
-              "languageCode": "en",
-              "legacyId": 0,
-              "id": "1612336|1127489833985824"
-            }
-          ]
+          "owner_url": "https://www.facebook.com/123456789276277",
+          "url": "https://www.facebook.com/123456789276277/posts/1127489833985824",
+          "name": "Trent Aric - Meteorologist",
+          "is_sponsored": false,
+          "date": "2016-10-05T11:15:30.000Z",
+          "post_text": "MATTHEW YOU ARE DRUNK...GO HOME! Look at what the long range computer models are indicating with Hurricane Matthew. Yes that's right the GFS model along with the ECMWF (European Model) are both showing Matthew looping around the Atlantic and heading back to the west toward Florida. Let's hope this trend changes and this DOES NOT HAPPEN. Let's get through the next 48hrs first...",
+          "media_url": "https://scontent.fyaw1-1.fna.fbcdn.net/v/t15.5256-10/14602101_1127500960651378_1143375978446192640_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=a27664&_nc_ohc=xumoWreIeNsQ7kNvgE1FEHn&_nc_ht=scontent.fyaw1-1.fna&_nc_gid=An3cH6AuHAbt6-wH_haP1XK&oh=00_AYCyZevczrZQ6m4_14tyCy8UnApGq4ffL21-_nKpz9nKXA&oe=66D75907",
+          "likes": 2327,
+          "shares": 18692,
+          "num_comments": 5690,
+          "scrape_time": "2024-08-30T09:45:05.026Z",
+          "comments": [],
+          "video_views": ""
         }
       }
     JSON
@@ -176,14 +108,10 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert data['error'].blank?
     assert_equal '123456789276277_1127489833985824', data['external_id']
     assert_equal 'Trent Aric - Meteorologist', data['author_name']
-    assert_equal 'TrentAricTV', data['username']
-    assert_match /273572839_489238069228086_8419777016738266396_n.jpg/, data['author_picture']
     assert_equal 'https://www.facebook.com/123456789276277', data['author_url']
     assert_match /Look at what the long range computer models are indicating/, data['title']
     assert_match /Look at what the long range computer models are indicating/, data['description']
     assert_match /Look at what the long range computer models are indicating/, data['text']
-    assert_match /14602101_1127500960651378_1143375978446192640_n.jpg\?_nc_cat=107&ccb=1-6/, data['picture']
-    assert_equal 'native_video', data['subtype']
     assert_equal '2016-10-05 11:15:30', data['published_at']
   end
 

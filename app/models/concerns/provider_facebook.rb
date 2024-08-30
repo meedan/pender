@@ -51,22 +51,20 @@ module ProviderFacebook
   end
 
   def format_scrapingbot_result(data)
-    post_info = (data.dig('posts') || []).first
-    message = post_info.dig('message')
-    picture = (post_info.dig('media').select { |m| m['type'] == 'photo' }.first || {}).dig('full') if post_info.dig('media')
-
+    post_info = (data)
+    message = post_info.dig('post_text')
+    picture = post_info.dig('media_url')
     {
-      author_name: post_info.dig('account', 'name'),
-      username: post_info.dig('account', 'handle'),
-      author_picture: post_info.dig('account', 'profileImage'),
-      author_url: post_info.dig('account', 'url'),
+      author_name: post_info.dig('name'),
+      username: post_info.dig('handle'),
+      author_picture: post_info.dig('owner_url'),
+      author_url: post_info.dig('owner_url'),
       title: message,
       description: message,
       text: message,
-      external_id: post_info.dig('platformId'),
+      external_id: "#{post_info.dig('owner_url').split('/').last}_#{post_info.dig('url').split('/').last}",
       picture: picture,
-      published_at: post_info.dig('date'),
-      subtype: post_info.dig('type'),
+      published_at: post_info.dig('date').sub('T', ' ').sub('.000Z', ''),
     }.with_indifferent_access
   end
 
