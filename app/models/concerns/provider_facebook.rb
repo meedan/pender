@@ -36,7 +36,7 @@ module ProviderFacebook
     response_data = {}
     return { error: { message: 'No URL provided for ScrapingBot', code: Lapis::ErrorCodes::const_get('UNKNOWN') }} if url.blank?
 
-    scrapingbot_data = Media.scrapingbot_request(:facebook_post, url)
+    scrapingbot_data = Media.scrapingbot_request(url)
 
     if scrapingbot_data.blank?
       return { error: { message: "No data received from ScrapingBot", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
@@ -56,7 +56,7 @@ module ProviderFacebook
     picture = post_info.dig('media_url')
     {
       author_name: post_info.dig('name'),
-      username: post_info.dig('handle'),
+      username: post_info.dig('name'),
       author_picture: post_info.dig('owner_url'),
       author_url: post_info.dig('owner_url'),
       title: message,
