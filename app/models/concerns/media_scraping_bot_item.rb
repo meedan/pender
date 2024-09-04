@@ -4,6 +4,8 @@ module MediaScrapingBotItem
   class ScrapingBotError < StandardError; end
   class ScrapingBotResponseError < StandardError; end
 
+  AUTH_KEY="Basic #{PenderConfig.get('scrapingbot_api_key')}"
+
   Media.class_eval do
     # Step 1: Send POST request to ScrapingBot to start scraping
     def self.scrapingbot_start_request(url)
@@ -12,7 +14,7 @@ module MediaScrapingBotItem
       # Prepare the POST request
       headers = {
         'content-type' => 'application/json',
-        'authorization' => "Basic #{Base64.strict_encode64("#{ENV['SCRAPINGBOT_USERNAME']}:#{ENV['SCRAPINGBOT_API_KEY']}")}"
+        'authorization' => AUTH_KEY
       }
 
       # POST request payload
@@ -50,7 +52,7 @@ module MediaScrapingBotItem
 
       headers = {
         'content-type' => 'application/json',
-        'authorization' => "Basic #{Base64.strict_encode64("#{ENV['SCRAPINGBOT_USERNAME']}:#{ENV['SCRAPINGBOT_API_KEY']}")}"
+        'authorization' => AUTH_KEY
       }
 
       uri = URI.parse(scrapingbot_url)

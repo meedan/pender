@@ -7,7 +7,7 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
 
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
-    assert_equal '23497828950_1071869390977157', data['external_id']
+    assert_equal '-2207520000_1071681137662649', data['external_id']
     assert data['error'].nil?
     assert !data['title'].blank?
     assert !data['username'].blank?
