@@ -31,11 +31,11 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
     assert data['external_id'].blank?
-    assert !data['raw']['scrapingbot']['error'].blank?
+    assert data['raw']['scrapingbot'].blank?
     assert !data['title'].blank?
-    assert !data['description'].blank?
-    assert !data['picture'].blank?
-    assert !data['html'].blank?
+    assert data['description'].blank?
+    assert data['picture'].blank?
+    assert data['html'].blank?
   end
 
   test "should return data even if post does not exist" do

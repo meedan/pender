@@ -36,12 +36,7 @@ module MediaScrapingBotItem
         result = JSON.parse(response.body)
         result['responseId']
       rescue ScrapingBotResponseError, JSON::ParserError => error
-        PenderSentry.notify(
-          ScrapingBotError.new(error),
-          scrapingbot_url: uri,
-          error_message: error.message
-        )
-        Rails.logger.warn level: 'WARN', message: '[Parser] Could not initiate ScrapingBot job', scrapingbot_url: uri, error_class: error.class
+        handle_scrapingbot_error(error, uri)
         nil
       end
     end
@@ -73,12 +68,7 @@ module MediaScrapingBotItem
           sleep 10
         end
       rescue ScrapingBotResponseError, JSON::ParserError => error
-        PenderSentry.notify(
-          ScrapingBotError.new(error),
-          scrapingbot_url: uri,
-          error_message: error.message
-        )
-        Rails.logger.warn level: 'WARN', message: '[Parser] Could not retrieve ScrapingBot result', scrapingbot_url: uri, error_class: error.class
+        handle_scrapingbot_error(error, uri)
         nil
       end
     end
@@ -89,6 +79,15 @@ module MediaScrapingBotItem
       return nil unless response_id
 
       scrapingbot_get_result(response_id)
+    end
+
+    def self.handle_scrapingbot_error(error, uri)
+      PenderSentry.notify(
+        ScrapingBotError.new(error),
+        scrapingbot_url: uri,
+        error_message: error.message
+      )
+      Rails.logger.warn level: 'WARN', message: '[Parser] Could not process ScrapingBot request', scrapingbot_url: uri, error_class: error.class
     end
   end
 end

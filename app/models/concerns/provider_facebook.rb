@@ -36,7 +36,7 @@ module ProviderFacebook
     response_data = {}
     return { error: { message: 'No URL provided for ScrapingBot', code: Lapis::ErrorCodes::const_get('UNKNOWN') }} if url.blank?
 
-    scrapingbot_data = Media.scrapingbot_request(url)
+    scrapingbot_data = Media.scrapingbot_request(url)&.with_indifferent_access
 
     if scrapingbot_data.blank?
       return { error: { message: "No data received from ScrapingBot", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
