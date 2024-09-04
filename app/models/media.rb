@@ -36,7 +36,6 @@
 #    4. Match the url with the patterns described on specific parsers
 #    5. Parse the page with the parser found on previous step
 #    6. Archives the page in background, for the archivers that apply to the current URL
-#    7. Get metrics for the current URL, in background
 #  * Parse as oEmbed
 #    1. Get media the json data
 #    2. If the page has an oEmbed url, request it and get the response
@@ -85,7 +84,6 @@ class Media
       self.upload_images
     end
     archive_if_conditions_are_met(options, id, cache)
-    Metrics.schedule_fetching_metrics_from_facebook(self.data, self.url, ApiKey.current&.id)
     parser_requests_metrics
     cache.read(id, :json) || cleanup_data_encoding(data)
   end
@@ -118,7 +116,7 @@ class Media
   def self.minimal_data(instance)
     data = {}
     %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field.to_sym] = ''.freeze }
-    data[:raw] = data[:archives] = data[:metrics] = {}
+    data[:raw] = data[:archives] = {}
     data.merge(Media.required_fields(instance)).with_indifferent_access
   end
 
