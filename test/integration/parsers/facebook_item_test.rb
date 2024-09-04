@@ -32,7 +32,6 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert_equal 'item', data['type']
     assert data['external_id'].blank?
     assert data['error'].nil?
-    assert !data['raw']['crowdtangle']['error'].blank?
     assert !data['title'].blank?
     assert !data['description'].blank?
     assert !data['picture'].blank?
@@ -47,7 +46,6 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert_equal 'item', data['type']
     assert_equal '111111111111111_1111111111111111', data['external_id']
     assert_equal 'https://www.facebook.com/111111111111111/posts/1111111111111111', data['title']
-    assert !data['raw']['crowdtangle']['error'].blank?
     assert_equal '', data['username']
     assert_equal '', data['author_name']
     assert_equal '', data['author_picture']

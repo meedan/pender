@@ -584,7 +584,7 @@ class MediaUnitTest < ActiveSupport::TestCase
     webhook_info = { 'webhook_url' => 'http://example.com/webhook', 'webhook_token' => 'test' }
 
     assert_raises Pender::Exception::RetryLater do
-      Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+      Media.notify_webhook('archive.org', 'http://example.com', {}, webhook_info)
     end
   end
 
@@ -599,7 +599,7 @@ class MediaUnitTest < ActiveSupport::TestCase
 
     PenderSentry.stub(:notify, arguments_checker) do
       assert_nothing_raised do
-        Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+        Media.notify_webhook('archive.org', 'http://example.com', {}, webhook_info)
       end
     end
     assert_equal 1, sentry_call_count
@@ -609,12 +609,12 @@ class MediaUnitTest < ActiveSupport::TestCase
     webhook_info = { 'webhook_url' => 'http://example.com/webhook', 'webhook_token' => 'test' }
 
     WebMock.stub_request(:post, /example.com/).and_return(status: 200, body: 'fake response body')
-    response = Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+    response = Media.notify_webhook('archive.org', 'http://example.com', {}, webhook_info)
     assert_equal "200", response.code
     assert_equal 'fake response body', response.body
 
     WebMock.stub_request(:post, /example.com/).and_return(status: 201, body: 'fake response body')
-    response = Media.notify_webhook('metrics', 'http://example.com', {}, webhook_info)
+    response = Media.notify_webhook('archive.org', 'http://example.com', {}, webhook_info)
     assert_equal "201", response.code
     assert_equal 'fake response body', response.body
   end

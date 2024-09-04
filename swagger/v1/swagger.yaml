@@ -142,7 +142,6 @@ paths:
                   screenshot: ''
                   external_id: ''
                   html: ''
-                  metrics: {}
                   archives: {}
                   raw:
                     metatags:
