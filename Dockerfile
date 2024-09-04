@@ -28,17 +28,18 @@ RUN apt-get update && apt-get install -y curl \
 # pender user
 RUN mkdir -p ${DIRPATH}
 RUN useradd ${APP} -s /bin/bash -m
-USER ${APP}
 WORKDIR ${DIRPATH}
 
 # install our app
-COPY --chown=${APP} Gemfile Gemfile.lock ./
+COPY Gemfile Gemfile.lock ./
 RUN gem install bundler -v ${BUNDLER_VERSION} --no-document \
     && bundle install --jobs 20 --retry 5
-COPY --chown=${APP} . ./
+COPY . ./
+
+USER ${APP}
 
 # DEV
-RUN chmod +x ./bin/docker-entrypoint.sh
+# RUN chmod +x ./bin/docker-entrypoint.sh
 EXPOSE 3200
 ENTRYPOINT ["./bin/docker-entrypoint.sh"]
 
