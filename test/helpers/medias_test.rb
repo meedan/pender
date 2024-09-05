@@ -122,7 +122,7 @@ class MediasHelperTest < ActionView::TestCase
   end
 
   test "encodes URLs in returned data" do
-    Parser::FacebookItem.any_instance.stubs(:get_crowdtangle_data).returns(
+    Parser::FacebookItem.any_instance.stubs(:get_apify_data).returns(
       {
         url: 'https://www.facebook.com/people/á<80><99>á<80><84>á<80>ºá<80>¸á<80><91>á<80>®á<80>¸/100056594476400'
       }
@@ -132,7 +132,7 @@ class MediasHelperTest < ActionView::TestCase
     data = m.as_json
 
     assert_equal 'https://www.facebook.com/people/%C3%A1%3C80%3E%3C99%3E%C3%A1%3C80%3E%3C84%3E%C3%A1%3C80%3E%C2%BA%C3%A1%3C80%3E%C2%B8%C3%A1%3C80%3E%3C91%3E%C3%A1%3C80%3E%C2%AE%C3%A1%3C80%3E%C2%B8/100056594476400',
-      data['raw']['crowdtangle']['url']
+      data['raw']['apify']['url']
   end
 
   test 'should recover from failed url decoding' do
