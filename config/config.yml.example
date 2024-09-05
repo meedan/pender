@@ -69,9 +69,9 @@ development: &default
 
   # OPTIONAL
   #
-  # ScrapingBot API KEY
+  # Apify API Token
   #
-  scrapingbot_api_key: 'KEY'
+  apify_api_token: 'TOKEN'
 
   # Luminati proxy service https://luminati.io/
   #

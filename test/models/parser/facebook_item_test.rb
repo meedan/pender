@@ -18,30 +18,61 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     @empty_doc ||= Nokogiri::HTML('')
   end
 
-  def scrapingbot_response
+  def apify_response
     <<~JSON
-      {
-        "status": 200,
-        "result": {
-          "owner_url": "https://www.facebook.com/123456789276277",
-          "url": "https://www.facebook.com/123456789276277/posts/1127489833985824",
-          "name": "Trent Aric - Meteorologist",
-          "is_sponsored": false,
-          "date": "2016-10-05T11:15:30.000Z",
-          "post_text": "MATTHEW YOU ARE DRUNK...GO HOME! Look at what the long range computer models are indicating with Hurricane Matthew. Yes that's right the GFS model along with the ECMWF (European Model) are both showing Matthew looping around the Atlantic and heading back to the west toward Florida. Let's hope this trend changes and this DOES NOT HAPPEN. Let's get through the next 48hrs first...",
-          "media_url": "https://scontent.fyaw1-1.fna.fbcdn.net/v/t15.5256-10/14602101_1127500960651378_1143375978446192640_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=a27664&_nc_ohc=xumoWreIeNsQ7kNvgE1FEHn&_nc_ht=scontent.fyaw1-1.fna&_nc_gid=An3cH6AuHAbt6-wH_haP1XK&oh=00_AYCyZevczrZQ6m4_14tyCy8UnApGq4ffL21-_nKpz9nKXA&oe=66D75907",
-          "likes": 2327,
-          "shares": 18692,
-          "num_comments": 5690,
-          "scrape_time": "2024-08-30T09:45:05.026Z",
-          "comments": [],
-          "video_views": ""
-        }
-      }
+        [
+          {
+            "facebookUrl": "https://www.facebook.com/123456789276277/posts/1127489833985824",
+            "postId": "1127489833985824",
+            "pageName": "TrentAricTV",
+            "url": "https://www.facebook.com/123456789276277/posts/1127489833985824",
+            "time": "2016-10-05T11:15:30.000Z",
+            "timestamp": 1725454801,
+            "user": {
+              "id": "123456789276277",
+              "name": "Trent Aric - Meteorologist",
+              "profileUrl": "https://www.facebook.com/123456789276277",
+              "profilePic": "https://scontent-lax3-2.xx.fbcdn.net/v/t39.30808-1/438118350_990999482397482_3325227196394365011_n.jpg?stp=cp0_dst-jpg_s40x40&_nc_cat=1&ccb=1-7&_nc_sid=f4b9fd&_nc_ohc=-042mhnbMuMQ7kNvgFmbOGG&_nc_ht=scontent-lax3-2.xx&oh=00_AYBz4cSFvAQPVqhU_M8EffXT-BYWcA5myWWy-nlzd2vavA&oe=66DF417A"
+            },
+            "text": "MATTHEW YOU ARE DRUNK...GO HOME! Look at what the long range computer models are indicating with Hurricane Matthew. Yes that's right the GFS model along with the ECMWF (European Model) are both showing Matthew looping around the Atlantic and heading back to the west toward Florida. Let's hope this trend changes and this DOES NOT HAPPEN. Let's get through the next 48hrs first",
+            "likes": 1737,
+            "comments": 51,
+            "shares": 70,
+            "media": [
+              {
+                "thumbnail": "https://scontent-lax3-1.xx.fbcdn.net/v/t39.30808-6/458267352_1072984427532320_3650659647239955349_n.jpg?stp=dst-jpg_p180x540&_nc_cat=108&ccb=1-7&_nc_sid=127cfc&_nc_ohc=S-OM4BpCmPYQ7kNvgHn3sRW&_nc_ht=scontent-lax3-1.xx&oh=00_AYDD6Jo2QOxEE7Gauh9Gb5j9mZUdrwKS-TaAld1q9FIm_g&oe=66DF38EE",
+                "__typename": "Photo",
+                "photo_image": {
+                  "uri": "https://scontent-lax3-1.xx.fbcdn.net/v/t39.30808-6/458267352_1072984427532320_3650659647239955349_n.jpg?stp=dst-jpg_p180x540&_nc_cat=108&ccb=1-7&_nc_sid=127cfc&_nc_ohc=S-OM4BpCmPYQ7kNvgHn3sRW&_nc_ht=scontent-lax3-1.xx&oh=00_AYDD6Jo2QOxEE7Gauh9Gb5j9mZUdrwKS-TaAld1q9FIm_g&oe=66DF38EE",
+                  "height": 540,
+                  "width": 812
+                },
+                "__isMedia": "Photo",
+                "accent_color": "FF665754",
+                "photo_product_tags": [],
+                "url": "https://www.facebook.com/photo/?fbid=1072984424198987&set=a.528642321966536",
+                "id": "1072984424198987",
+                "ocrText": "May be an image of text"
+              }
+            ],
+            "feedbackId": "ZmVlZGJhY2s6MTA3Mjk4NDQ0NzUzMjMxOA==",
+            "reactionLikeCount": 1485,
+            "reactionLoveCount": 227,
+            "reactionCareCount": 14,
+            "reactionWowCount": 7,
+            "reactionHahaCount": 3,
+            "reactionSadCount": 1,
+            "facebookId": "UzpfSTEwMDA0NDYyMzE3MDQxODoxMDcyOTg0NDQ3NTMyMzE4OjEwNzI5ODQ0NDc1MzIzMTg=",
+            "pageAdLibrary": {
+              "is_business_page_active": false,
+              "id": "23497828950"
+            }
+          }
+        ]
     JSON
   end
 
-  def scrapingbot_response_not_found
+  def apify_response_not_found
     <<~JSON
       {"status":200,"notes":"Post not found"}
     JSON
@@ -86,21 +117,21 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert Parser::FacebookItem.match?('https://m.facebook.com/story.php?story_fbid=pfbid0213Dz5MyduLTHpELPoRmop9E7zj3Ed163P7djxSWbkfvaMSBrjNYTY9BFx6h7i3zWl&id=100054495283578').is_a?(Parser::FacebookItem)
   end
 
-  test "logs requests sent to scrapingbot" do
+  test "logs requests sent to apify" do
     logger_output = StringIO.new
     Rails.logger = Logger.new(logger_output)
 
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response)
+    
 
     Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824').parse_data(empty_doc, throwaway_url)
 
-    assert_includes(logger_output.string,"[Parser] Polling for ScrapingBot result")
+    assert_includes(logger_output.string,"[Parser] Initiated scraping job on Apify")
   end
 
-  test "sets information from scrapingbot" do
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response)
+  test "sets information from apify" do
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response)
+    
 
     parser = Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824')
     data = parser.parse_data(empty_doc, throwaway_url)
@@ -115,9 +146,8 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_equal '2016-10-05 11:15:30', data['published_at']
   end
 
-  test "sets fallbacks from metatags and populates HTML for post on scrapingbot error" do
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+  test "sets fallbacks from metatags and populates HTML for post on apify error" do
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="this is a page title" />
@@ -136,9 +166,8 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_match /data-href="https:\/\/www.facebook.com\/fakeaccount\/posts\/123456789"/, data.dig('html')
   end
 
-  test "sets fallbacks from metatags for event and watch URLS on scrapingbot error" do
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+  test "sets fallbacks from metatags for event and watch URLS on apify error" do
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="this is a page title | Facebook" />
@@ -162,8 +191,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   test "should parse and set data from mobile URL" do
     url = 'https://m.facebook.com/KIKOLOUREIROofficial/photos/a.10150618138397252/10152555300292252/?type=3&theater'
 
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="this is a page title" />
@@ -176,14 +204,14 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert !data['title'].blank?
   end
 
-  test "sends error to sentry when we receive unexpected response from scrapingbot API" do
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: 'something unexpected')
+  test "sends error to sentry when we receive unexpected response from apify API" do
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: 'something unexpected')
 
     data = {}
     sentry_call_count = 0
     arguments_checker = Proc.new do |e|
       sentry_call_count += 1
-      assert_includes [MediaScrapingBotItem::ScrapingBotError, NoMethodError], e.class
+      assert_includes [MediaApifyItem::ApifyError, NoMethodError], e.class
     end
     PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::FacebookItem.new('https://www.facebook.com/555555/posts/123456789').parse_data(empty_doc, throwaway_url)
@@ -191,19 +219,18 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_operator sentry_call_count, :>, 0
   end
 
-  test 'sets raw error when scrapingbot request fails' do
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+  test 'sets raw error when apify request fails' do
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     data = Parser::FacebookItem.new('https://www.facebook.com/55555/posts/123456789').parse_data(empty_doc, throwaway_url)
 
     assert data['error'].blank?
-    assert_match /No data received from ScrapingBot/, data.dig('raw', 'scrapingbot', 'error', 'message')
+    assert_match /No data received from Apify/, data.dig('raw', 'apify', 'error', 'message')
   end
 
-  test "updates URL if different than received from scrapingbot" do
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response)
+  test "updates URL if different than received from apify" do
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response)
+    
 
     parser = Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824')
     parser.parse_data(empty_doc, throwaway_url)
@@ -212,8 +239,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   test "sets html for deleted/unavailable posts" do
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2,shrink-to-fit=no">
@@ -228,8 +254,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   test "should return empty html when FB url is from group or event and cannot be embedded" do
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     data = Parser::FacebookItem.new('https://www.facebook.com/groups/133819471984630/').parse_data(empty_doc, throwaway_url)
     assert_equal '', data['html']
@@ -239,8 +264,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   test "should reject default page titles" do
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     parser = Parser::FacebookItem.new('https://www.facebook.com/fakeaccount/posts/12345')
 
@@ -260,8 +284,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   test "sets unique title from page description when FB post ID is obscured in URL" do
     url = "https://www.facebook.com/LittleMix/posts/pfbid0E7xrT6BDrv7r7Ry3kHUSdw2naE6BdFBgH2gTsEY9h1a64DdM3vqPyq8gXaFY5rqhl"
 
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="this is a page title" />
@@ -283,8 +306,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   test "should return default data (set title to URL and description to empty string) when redirected to login page" do
     url = 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988'
 
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="Log into Facebook | Facebook" />
@@ -304,8 +326,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     url_from_facebook_object = 'https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407/?type=3&theater'
     canonical_url = "https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407"
 
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:url" content="https://www.facebook.com/54212446406/photos/a.397338611406/10157431603156407" />
@@ -326,8 +347,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     canonical_url = 'https://www.facebook.com/ugmhmyanmar/posts/ugmh-%E1%80%80%E1%80%95%E1%80%BC%E1%80%B1%E1%80%AC%E1%80%90%E1%80%B2%E1%80%B7-ugmh-%E1%80%A1%E1%80%80%E1%80%BC%E1%80%B1%E1%80%AC%E1%80%84%E1%80%BA%E1%80%B8%E1%80%A1%E1%80%95%E1%80%AD%E1%80%AF%E1%80%84%E1%80%BA%E1%80%B8-%E1%81%84%E1%80%80%E1%80%90%E1%80%AD%E1%80%99%E1%80%90%E1%80%8A%E1%80%BA%E1%80%81%E1%80%BC%E1%80%84%E1%80%BA%E1%80%B8-%E1%80%80%E1%80%9C%E1%80%AD%E1%80%94%E1%80%BA%E1%80%80%E1%80%BB%E1%80%85%E1%80%BA%E1%80%80%E1%80%BB%E1%80%81%E1%80%BC%E1%80%84%E1%80%BA%E1%80%B8%E1%80%9B%E1%80%B2%E1%80%B7-%E1%80%A1%E1%80%80%E1%80%BB%E1%80%AD%E1%80%AF%E1%80%B8%E1%80%86%E1%80%80%E1%80%BA%E1%80%9F%E1%80%AC/2850282508516442/'
     redirection_to_login_page = 'https://www.facebook.com/login/'
 
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="this is a page title" />
@@ -349,8 +369,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     relative_url = '/dina.samak/posts/10153679232246949'
     url = "https://www.facebook.com#{relative_url}"
 
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="this is a page title" />
@@ -368,8 +387,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   test "should get canonical URL parsed from facebook html when it is a page" do
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     canonical_url = 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479'
     url = 'https://www.facebook.com/CyrineOfficialPage/posts/10154332542247479?pnref=story.unseen-section'
@@ -391,8 +409,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   test "should add login required error, return html and empty description when redirected to login" do
     url = 'https://m.facebook.com/groups/593719938050039/permalink/1184073722347988/'
 
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:site_name" content="Facebook">
@@ -414,8 +431,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   test "should return html and empty description when FB url is private" do
     url = 'https://www.facebook.com/caiosba/posts/1913749825339929'
 
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2,shrink-to-fit=no">
@@ -436,8 +452,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   test "should get the group name when parsing group post" do
     url = 'https://www.facebook.com/groups/memetics.hacking/permalink/1580570905320222'
 
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="this is a page title" />
@@ -456,8 +471,8 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   test "should store oembed data of a facebook post" do
     url = 'https://www.facebook.com/123456789276277/posts/1127489833985824'
 
-    WebMock.stub_request(:post, /api\.scraping-bot\.io\/scrape\/data-scraper/).to_return(status: 200, body: '{"responseId": "123"}')
-    WebMock.stub_request(:get, /api\.scraping-bot\.io\/scrape\/data-scraper-response/).to_return(status: 200, body: scrapingbot_response)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response)
+    
     WebMock.stub_request(:get, url).to_return(status: 200)
     WebMock.stub_request(:get, "https://www.facebook.com/123456789276277").to_return(status: 200)
     WebMock.stub_request(:get, /fbcdn.net/).to_return(status: 200)

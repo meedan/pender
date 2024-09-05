@@ -1,13 +1,13 @@
 require 'test_helper'
 
 class FacebookItemIntegrationTest < ActiveSupport::TestCase
-  test "should get facebook post with valid data from scrapingbot" do
-    m = create_media url: 'https://www.facebook.com/photo/?fbid=1071681137662649&set=pb.100044623170418.-2207520000'
+  test "should get facebook post with valid data from apify" do
+    m = create_media url: 'https://www.facebook.com/natgeo/posts/pfbid02vFSkQz1Htm7UCRmPVLt8PSEhfgZqyGEQpyAfSCotSPYbdMWy2y4hZSFcMpecSw1Dl'
     data = m.as_json
 
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
-    assert_equal '-2207520000_1071681137662649', data['external_id']
+    assert_equal '100044623170418_1072984447532318', data['external_id']
     assert data['error'].nil?
     assert !data['title'].blank?
     assert !data['username'].blank?
@@ -18,24 +18,17 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert !data['text'].blank?
     assert !data['picture'].blank?
     assert !data['published_at'].blank?
-    # data['html'] started to be returned as an empty string for this test
-    # which is extra weird since we get it even when the page does not exist
-    # will come back to this
-    # assert !data['html'].blank?
   end
 
-  test "should get facebook data even if scrapingbot fails" do
+  test "should get facebook data even if apify fails" do
     m = create_media url: 'https://www.facebook.com/ECRG.TheBigO/posts/pfbid036xece5JjgLH7rD9RnCr1ASnjETq7QThCHiH1HqYAcfUZNHav4gFJdYUY7nGU8JB6l'
     data = m.as_json
 
-    assert_equal 'facebook', data['provider']
-    assert_equal 'item', data['type']
-    assert data['external_id'].blank?
-    assert data['raw']['scrapingbot'].blank?
+    assert data['error'].nil?
     assert !data['title'].blank?
-    assert data['description'].blank?
-    assert data['picture'].blank?
-    assert data['html'].blank?
+    assert !data['username'].blank?
+    assert !data['author_name'].blank?
+    assert !data['author_picture'].blank?
   end
 
   test "should return data even if post does not exist" do

@@ -32,49 +32,51 @@ module ProviderFacebook
 
   private
 
-  def get_scrapingbot_data(url)
+  def get_apify_data(url)
     response_data = {}
-    return { error: { message: 'No URL provided for ScrapingBot', code: Lapis::ErrorCodes::const_get('UNKNOWN') }} if url.blank?
+    return { error: { message: 'No URL provided for Apify', code: Lapis::ErrorCodes::const_get('UNKNOWN') }} if url.blank?
 
-    scrapingbot_data = Media.scrapingbot_request(url)&.with_indifferent_access
+    apify_data = Media.apify_request(url)
 
-    if scrapingbot_data.blank?
-      return { error: { message: "No data received from ScrapingBot", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
-    elsif scrapingbot_data.dig('result').blank?
-     return { error: { message: "No data received from ScrapingBot", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
-    elsif scrapingbot_data['error'].present?
-      return { error: { message: scrapingbot_data['error']['message'], code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
+    if apify_data.blank?
+      return { error: { message: "No data received from Apify", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
+    elsif !apify_data.is_a?(Array) && apify_data.dig('result').blank?
+      return { error: { message: "No data received from Apify", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
+    elsif apify_data.first['error'].present?
+      return { error: { message: apify_data['error']['message'], code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
     end
 
 
-    scrapingbot_data.dig('result')
+    apify_data.first
   end
 
-  def format_scrapingbot_result(data)
+  def format_apify_result(data)
     post_info = (data)
-    message = post_info.dig('post_text')
-    picture = post_info.dig('media_url')
+    message = post_info.dig('text')
+    picture = post_info.dig('media').first['thumbnail']
+    user_id = post_info.dig('user').dig('id')
+    post_id = post_info.dig('postId')
     {
-      author_name: post_info.dig('name'),
-      username: post_info.dig('name'),
-      author_picture: post_info.dig('owner_url'),
-      author_url: post_info.dig('owner_url'),
+      author_name: post_info.dig('user').dig('name'),
+      username: post_info.dig('user').dig('name'),
+      author_url: post_info.dig('user').dig('profileUrl'),
+      author_picture: post_info.dig('user').dig('profilePic'),
       title: message,
       description: message,
       text: message,
-      external_id: "#{post_info.dig('owner_url').split('/').last}_#{post_info.dig('url').split('/').last}",
+      external_id: "#{user_id}_#{post_id}",
       picture: picture,
-      published_at: post_info.dig('date').sub('T', ' ').sub('.000Z', ''),
+      published_at: post_info.dig('time').sub('T', ' ').sub('.000Z', ''),
     }.with_indifferent_access
   end
 
-  def has_valid_scrapingbot_data?
-    parsed_data.dig('raw', 'scrapingbot').present? && parsed_data.dig('raw', 'scrapingbot', 'error').blank?
+  def has_valid_apify_data?
+    parsed_data.dig('raw', 'apify').present? && parsed_data.dig('raw', 'apify', 'error').blank?
   end
 
   def set_facebook_privacy_error(html_page, page_is_unavailable)
     return if html_page.nil?
-    return if has_valid_scrapingbot_data?
+    return if has_valid_apify_data?
 
     title = get_page_title(html_page)
     return if title.blank?

@@ -52,13 +52,13 @@ module Parser
         set_data_field('uuid', grabber.uuid)
         set_data_field('external_id', grabber.uuid)
 
-        @parsed_data['raw']['scrapingbot'] = get_scrapingbot_data(url) || {}
+        @parsed_data['raw']['apify'] = get_apify_data(url) || {}
 
-        if has_valid_scrapingbot_data?
-          scrapingbot_data = format_scrapingbot_result(parsed_data['raw']['scrapingbot'])
-          updated_url = parsed_data.dig('raw', 'scrapingbot', 'url')
+        if has_valid_apify_data?
+          apify_data = format_apify_result(parsed_data['raw']['apify'])
+          updated_url = parsed_data.dig('raw', 'apify', 'url')
           @url = updated_url if updated_url && updated_url != url
-          @parsed_data.merge!(scrapingbot_data)
+          @parsed_data.merge!(apify_data)
         else
           og_metadata = get_opengraph_metadata.reject { |k, v| v.nil? }
 
