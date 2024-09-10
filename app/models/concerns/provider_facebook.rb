@@ -32,51 +32,51 @@ module ProviderFacebook
 
   private
 
-  def get_crowdtangle_data(id)
+  def get_apify_data(url)
     response_data = {}
-    if id.blank?
-      return { error: { message: 'No ID given for Crowdtangle', code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
+    return { error: { message: 'No URL provided for Apify', code: Lapis::ErrorCodes::const_get('UNKNOWN') }} if url.blank?
+
+    apify_data = Media.apify_request(url)
+
+    if apify_data.blank?
+      return { error: { message: "No data received from Apify", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
+    elsif !apify_data.is_a?(Array) && apify_data.dig('result').blank?
+      return { error: { message: "No data received from Apify", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
+    elsif apify_data.first['error'].present?
+      return { error: { message: apify_data['error']['message'], code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
     end
 
-    crowdtangle_data = Media.crowdtangle_request(:facebook, id).with_indifferent_access
-    if crowdtangle_data.blank?
-      return { error: { message: "No data received from Crowdtangle", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
-    elsif crowdtangle_data.dig('result').blank?
-      return { error: { message: "No results received from Crowdtangle", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
-    elsif crowdtangle_data.dig('result', 'posts', 0, 'platformId') != id
-      return { error: { message: "Unexpected platform ID from Crowdtangle", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
-    end
 
-    crowdtangle_data.dig('result')
+    apify_data.first
   end
 
-  def format_crowdtangle_result(data)
-    post_info = (data.dig('posts') || []).first
-    message = post_info.dig('message')
-    picture = (post_info.dig('media').select { |m| m['type'] == 'photo' }.first || {}).dig('full') if post_info.dig('media')
-
+  def format_apify_result(data)
+    post_info = (data)
+    message = post_info.dig('text')
+    picture = post_info.dig('media').first['thumbnail']
+    user_id = post_info.dig('user').dig('id')
+    post_id = post_info.dig('postId')
     {
-      author_name: post_info.dig('account', 'name'),
-      username: post_info.dig('account', 'handle'),
-      author_picture: post_info.dig('account', 'profileImage'),
-      author_url: post_info.dig('account', 'url'),
+      author_name: post_info.dig('user').dig('name'),
+      username: post_info.dig('user').dig('name'),
+      author_url: post_info.dig('user').dig('profileUrl'),
+      author_picture: post_info.dig('user').dig('profilePic'),
       title: message,
       description: message,
       text: message,
-      external_id: post_info.dig('platformId'),
+      external_id: "#{user_id}_#{post_id}",
       picture: picture,
-      published_at: post_info.dig('date'),
-      subtype: post_info.dig('type'),
+      published_at: post_info.dig('time').sub('T', ' ').sub('.000Z', ''),
     }.with_indifferent_access
   end
 
-  def has_valid_crowdtangle_data?
-    parsed_data.dig('raw', 'crowdtangle').present? && parsed_data.dig('raw', 'crowdtangle', 'error').blank?
+  def has_valid_apify_data?
+    parsed_data.dig('raw', 'apify').present? && parsed_data.dig('raw', 'apify', 'error').blank?
   end
 
   def set_facebook_privacy_error(html_page, page_is_unavailable)
     return if html_page.nil?
-    return if has_valid_crowdtangle_data?
+    return if has_valid_apify_data?
 
     title = get_page_title(html_page)
     return if title.blank?

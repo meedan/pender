@@ -299,7 +299,7 @@ Clears the cache for the URL(s) passed as parameter.
 
 ## Webhook Notification
 
-The metrics and archiving feature are asynchronous events. Pender can notify your application after it requests the metrics or sends the URLs for archiving.
+The archiving feature uses asynchronous events. Pender can notify your application after it sends URLs for archiving.
 
 Pender sends the `url`, `type` and the information associated with the event. The webhook endpoint should have an associated URL (e.g., http://api:3000/api/webhooks/keep) and a token. These information should be added to API key's `application_settings`: `api_key.application_settings = {:webhook_url=>"http://api:3000/api/webhooks/keep", :webhook_token=>"somethingsecret"}`
 

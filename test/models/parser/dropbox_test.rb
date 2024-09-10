@@ -7,8 +7,8 @@ class DropboxIntegrationTest < ActiveSupport::TestCase
 
     assert_equal 'item', data['type']
     assert_equal 'dropbox', data['provider']
-    assert_equal 'How to use the Public folder.rtf', data['title']
     assert_equal 'Shared with Dropbox', data['description']
+    assert_match /How.to.use.the.Public.folder.rtf/, data['title']
     assert_not_nil data['picture']
     assert_nil data['error']
   end

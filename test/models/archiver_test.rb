@@ -5,7 +5,6 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.enable!
     WebMock.disable_net_connect!(allow: [/minio/])
     Sidekiq::Testing.inline!
-    Metrics.stubs(:request_metrics_from_facebook).returns({ 'share_count' => 123 })
     clear_bucket
   end
   
@@ -562,7 +561,6 @@ class ArchiverTest < ActiveSupport::TestCase
 
     Media.any_instance.unstub(:archive_to_perma_cc)
     Media.stubs(:available_archivers).returns(['perma_cc'])
-    Metrics.stubs(:schedule_fetching_metrics_from_facebook).returns(nil)    
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, "https://example.com/webhook.php").to_return(status: 200, body: '')

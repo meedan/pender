@@ -57,3 +57,9 @@ services:
     environment:
       RAILS_ENV: development
       SERVER_PORT: 3200
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    volumes:
+      - ./config/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    depends_on:
+      - pender
