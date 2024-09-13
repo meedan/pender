@@ -78,7 +78,12 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
     assert_nil Parser::YoutubeItem.match?('https://www.youtube.com/user/portadosfundos')
     
     match_one = Parser::YoutubeItem.match?('https://www.youtube.com/watch?v=mtLxD7r4BZQ')
+    match_two = Parser::YoutubeItem.match?('https://www.youtube.com/shorts/uZG3Y-ulMsc?si=yAE7bJpPPbsevBO7')
+    match_three = Parser::YoutubeItem.match?('https://youtu.be/cMQuVvFvSIA?si=JpFRMHlGMiQ6aMJO')
+
     assert_equal true, match_one.is_a?(Parser::YoutubeItem)
+    assert_equal true, match_two.is_a?(Parser::YoutubeItem)
+    assert_equal true, match_three.is_a?(Parser::YoutubeItem)
   end
 
   test "should selectively assign YouTube fields to raw api data" do
