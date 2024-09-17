@@ -2,7 +2,7 @@ module Parser
   class YoutubeItem < Base
     include ProviderYoutube
 
-    YOUTUBE_ITEM_URL = /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|v\/|shorts\/|playlist\?list=)?(?<id>[a-zA-Z0-9_-]{9,11})(\S+)?$/
+    YOUTUBE_ITEM_URL = /^https?:\/\/(www\.|m\.)?(youtube(-nocookie)?\.com|youtu\.be)\/((watch\?v=|embed\/|v\/|e\/|shorts\/|live\/|playlist\?list=)?(?<id>[a-zA-Z0-9_-]{9,11})([&?]([^#]+))?(#t=[\dhms]+)?)|(oembed\?url=.+)|(attribution_link\?a=.+&u=%2Fwatch%3Fv%3D(?<id>[a-zA-Z0-9_-]{9,11})(.+))$/
 
     DIRECT_ATTRIBUTES = %w[
       description
