@@ -73,17 +73,38 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
   end
 
   test "matches known URL patterns, and returns instance on success" do
-    assert_nil Parser::YoutubeItem.match?('https://example.com')
-    assert_nil Parser::YoutubeItem.match?('https://www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQm')
-    assert_nil Parser::YoutubeItem.match?('https://www.youtube.com/user/portadosfundos')
+    # URLs that should not match
+    invalid_urls = [
+      'https://example.com',
+      'https://www.youtube.com/channel/UCZbgt7KIEF_755Xm14JpkCQm',
+      'https://www.youtube.com/user/portadosfundos'
+    ]
     
-    match_one = Parser::YoutubeItem.match?('https://www.youtube.com/watch?v=mtLxD7r4BZQ')
-    match_two = Parser::YoutubeItem.match?('https://www.youtube.com/shorts/uZG3Y-ulMsc?si=yAE7bJpPPbsevBO7')
-    match_three = Parser::YoutubeItem.match?('https://youtu.be/cMQuVvFvSIA?si=JpFRMHlGMiQ6aMJO')
-
-    assert_equal true, match_one.is_a?(Parser::YoutubeItem)
-    assert_equal true, match_two.is_a?(Parser::YoutubeItem)
-    assert_equal true, match_three.is_a?(Parser::YoutubeItem)
+    invalid_urls.each do |url|
+      assert_nil Parser::YoutubeItem.match?(url), "Expected #{url} to not match, but it did."
+    end
+  
+    # URLs that should match
+    valid_urls = [
+      'https://www.youtube.com/watch?v=mtLxD7r4BZQ',
+      'https://www.youtube.com/shorts/uZG3Y-ulMsc?si=yAE7bJpPPbsevBO7',
+      'https://youtu.be/cMQuVvFvSIA?si=JpFRMHlGMiQ6aMJO',
+      'https://www.youtube.com/watch?v=-wtIMTCHWuI',
+      'https://youtube.com/watch?v=lalOy8Mbfdc',
+      'https://m.youtube.com/watch?v=yZv2daTWRZU&feature=em-uploademail',
+      'https://www.youtube.com/embed/0zM3nApSvMg',
+      'https://youtu.be/dQw4w9WgXcQ?feature=youtube_gdata_player',
+      'https://www.youtube.com/v/0zM3nApSvMg?fs=1&hl=en_US&rel=0',
+      'https://www.youtube.com/watch?v=0zM3nApSvMg#t=0m10s',
+      'https://www.youtube.com/live/8hBmepWUJoc',
+      'https://www.youtube.com/shorts/j9rZxAF3C0I',
+      'https://www.youtube.com/oembed?url=http%3A//www.youtube.com/watch?v%3D-wtIMTCHWuI&format=json'
+    ]
+  
+    valid_urls.each do |url|
+      match = Parser::YoutubeItem.match?(url)
+      assert_equal true, match.is_a?(Parser::YoutubeItem), "Expected #{url} to match and return a Parser::YoutubeItem instance, but it did not."
+    end
   end
 
   test "should selectively assign YouTube fields to raw api data" do
