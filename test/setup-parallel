@@ -13,6 +13,7 @@ mkdir -p /app/pender/tmp/cache /app/pender/tmp/cache1 /app/pender/tmp/cache2 /ap
 
 echo `pwd`
 ls -al tmp
+echo `env`
 echo "-------------------------------------------------------------------------"
 
 bundle exec rake db:create db:migrate &
