@@ -12,7 +12,6 @@ rm -rf /app/pender/tmp/cache /app/pender/tmp/cache1 /app/pender/tmp/cache2 /app/
 mkdir -p /app/pender/tmp/cache /app/pender/tmp/cache1 /app/pender/tmp/cache2 /app/pender/tmp/cache3
 
 echo `pwd`
-ls -al tmp
 echo "-------------------------------------------------------------------------"
 
 bundle exec rake db:create db:migrate &
