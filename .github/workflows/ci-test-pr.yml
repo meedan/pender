@@ -74,12 +74,12 @@ jobs:
     - name: Run container
       id: run-container
       run: |
-        docker compose -f docker-compose.yml -f docker-test.yml up -d pender
+        docker compose -f docker-compose.yml -f docker-test.yml up pender --wait
 
     - name: Set up PR Tests
       id: setup-tests
       run: |
-        docker compose exec -T pender test/setup-parallel
+        docker compose exec -e DEPLOY_ENV=test -T pender test/setup-parallel
 
     - name: Run PR Tests
       id: run-tests
