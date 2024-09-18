@@ -23,15 +23,15 @@ RUN apt-get update && apt-get install -y curl \
     git \
     libpq-dev --no-install-recommends
 
-RUN useradd ${APP} --shell /bin/bash --home-dir ${DIRPATH}
-RUN mkdir -p ${DIRPATH} && chown -R ${APP} ${DIRPATH}
+RUN mkdir -p ${DIRPATH}
 WORKDIR ${DIRPATH}
 
-COPY Gemfile Gemfile.lock ./
+COPY Gemfile Gemfile.lock .
 RUN gem install bundler -v ${BUNDLER_VERSION} --no-document \
     && bundle install --jobs 20 --retry 5
-COPY . ./
+COPY ./ .
 
+RUN useradd ${APP} --shell /bin/bash --home-dir ${DIRPATH}
 USER ${APP}
 
 # DEV
