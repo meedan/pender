@@ -6,7 +6,7 @@ fi
 
 # pender
 if [ "${APP}" = 'pender' ] ; then
-  if [ "${DEPLOY_ENV}" = 'local' ] ; then
+  if [ "${DEPLOY_ENV}" = 'test' ] ; then
     bundle exec rake db:create
     bundle exec rake db:migrate
     SECRET_KEY_BASE=$(bundle exec rake secret)
