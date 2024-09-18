@@ -23,8 +23,9 @@ RUN apt-get update && apt-get install -y curl \
     git \
     libpq-dev --no-install-recommends
 
-RUN mkdir -p ${DIRPATH}
 RUN useradd ${APP} --shell /bin/bash --home-dir ${DIRPATH}
+RUN mkdir -p ${DIRPATH} && chown -R ${APP} ${DIRPATH}
+WORKDIR ${DIRPATH}
 
 COPY Gemfile Gemfile.lock ./
 RUN gem install bundler -v ${BUNDLER_VERSION} --no-document \
@@ -32,7 +33,6 @@ RUN gem install bundler -v ${BUNDLER_VERSION} --no-document \
 COPY . ./
 
 USER ${APP}
-WORKDIR ${DIRPATH}
 
 # DEV
 # RUN chmod +x ./bin/docker-entrypoint.sh
