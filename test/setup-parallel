@@ -10,6 +10,7 @@ echo "--"
 
 rm -rf /tmp/cache /tmp/cache1 /tmp/cache2 /tmp/cache3
 mkdir -p /tmp/cache /tmp/cache1 /tmp/cache2 /tmp/cache3
+cp db/schema.rb /opt/db/
 
 echo `pwd`
 echo "-------------------------------------------------------------------------"
