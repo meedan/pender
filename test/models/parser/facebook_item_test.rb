@@ -485,4 +485,42 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_match /facebook.com/, data['oembed']['provider_url']
     assert_equal "facebook", data['oembed']['provider_name'].downcase
   end
+
+  test "html_for_facebook_post returns expected embed HTML for valid post" do
+    username = "test_user"
+    request_url = "https://www.facebook.com/test_user/posts/12345"
+    html_page = Nokogiri::HTML("<html></html>") # Simulate a valid HTML page
+  
+    parser = Parser::FacebookItem.new(request_url)
+  
+    parser.stub(:not_an_event_page, true) do
+      parser.stub(:not_a_group_post, true) do
+        embed_html = parser.send(:html_for_facebook_post, username, html_page, request_url)
+  
+        assert_includes embed_html, '<script>'
+        assert_includes embed_html, 'FB.init({ xfbml: true, version: "v2.6" });'
+        assert_includes embed_html, '<div class="fb-post" data-href="https://www.facebook.com/test_user/posts/12345"></div>'
+      end
+    end
+  end
+  
+  test "html_for_facebook_post returns nil for group or event post" do
+    username = "test_user"
+    request_url = "https://www.facebook.com/test_user/posts/12345"
+    html_page = Nokogiri::HTML("<html></html>") # Simulate a valid HTML page
+  
+    parser = Parser::FacebookItem.new(request_url)
+  
+    parser.stub(:not_an_event_page, false) do
+      embed_html = parser.send(:html_for_facebook_post, username, html_page, request_url)
+      assert_nil embed_html
+    end
+  
+    parser.stub(:not_an_event_page, true) do
+      parser.stub(:not_a_group_post, false) do
+        embed_html = parser.send(:html_for_facebook_post, username, html_page, request_url)
+        assert_nil embed_html
+      end
+    end
+  end  
 end

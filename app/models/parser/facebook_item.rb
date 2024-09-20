@@ -82,7 +82,6 @@ module Parser
 
     def html_for_facebook_post(username, html_page, request_url)
       return unless html_page
-      return if username && !['groups', 'flx'].include?(username)
       return unless not_an_event_page && not_a_group_post
 
       '<script>
