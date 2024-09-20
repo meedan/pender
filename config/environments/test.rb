@@ -46,7 +46,6 @@ Rails.application.configure do
 
   config.lograge.enabled = true
 
-  config.logger = ActiveSupport::Logger.new(STDOUT)
   config.lograge.logger = ActiveSupport::Logger.new(STDOUT)
   config.lograge.custom_options = lambda do |event|
     options = event.payload.slice(:request_id, :user_id)
