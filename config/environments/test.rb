@@ -55,4 +55,5 @@ Rails.application.configure do
   end
   config.lograge.formatter = Lograge::Formatters::Json.new
   config.log_level = :warn
+  config.log_path = "/var/log/#{ENV['DEPLOY_ENV']}.log"
 end
