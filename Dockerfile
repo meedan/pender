@@ -27,7 +27,7 @@ RUN gem install bundler -v "${BUNDLER_VERSION}" --no-document \
     && bundle install --jobs 20 --retry 5
 COPY ./ .
 COPY bin/ /opt/bin/
-COPY ./db/schema.rb /opt/db/schema.rb
+COPY mkdir /opt/db && ./db/schema.rb /opt/db/schema.rb
 
 USER ${APP}
 
