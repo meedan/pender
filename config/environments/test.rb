@@ -46,7 +46,7 @@ Rails.application.configure do
 
   config.lograge.enabled = true
 
-  config.logger = ActiveSupport::Logger.new(STDOUT)
+  # config.logger = ActiveSupport::Logger.new(STDOUT)
   config.lograge.logger = ActiveSupport::Logger.new(STDOUT)
   config.lograge.custom_options = lambda do |event|
     options = event.payload.slice(:request_id, :user_id)
@@ -58,5 +58,5 @@ Rails.application.configure do
   config.log_level = :warn
   config.paths['log'] = "/var/log/#{ENV['DEPLOY_ENV']}.log"
   config.paths['tmp'] = "/tmp"
-  config.paths['db'] = "/opt"
+  # config.paths['db'] = "/opt"
 end
