@@ -69,6 +69,7 @@ jobs:
         cp config/database.yml.example config/database.yml
         cp config/sidekiq.yml.example config/sidekiq.yml
         cp config/config.yml.example config/config.yml
+        cp config/cookies.txt.example config/cookies.txt
         bin/get_env_vars.sh
 
     - name: Run container
