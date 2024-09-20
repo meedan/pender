@@ -58,5 +58,5 @@ Rails.application.configure do
   config.log_level = :warn
   config.paths['log'] = "/var/log/#{ENV['DEPLOY_ENV']}.log"
   config.paths['tmp'] = "/tmp"
-  config.paths['db'] = "/opt/db"
+  config.paths['db'] = "/opt"
 end
