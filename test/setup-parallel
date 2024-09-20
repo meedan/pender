@@ -8,8 +8,8 @@ echo `whoami`
 ls -al tmp
 echo "--"
 
-rm -rf /app/pender/tmp/cache /app/pender/tmp/cache1 /app/pender/tmp/cache2 /app/pender/tmp/cache3
-mkdir -p /app/pender/tmp/cache /app/pender/tmp/cache1 /app/pender/tmp/cache2 /app/pender/tmp/cache3
+rm -rf /tmp/cache /tmp/cache1 /tmp/cache2 /tmp/cache3
+mkdir -p /tmp/cache /tmp/cache1 /tmp/cache2 /tmp/cache3
 
 echo `pwd`
 echo "-------------------------------------------------------------------------"

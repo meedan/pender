@@ -42,7 +42,7 @@ Rails.application.configure do
   
   config.allow_concurrency = true
 
-  config.cache_store = :file_store, "#{Rails.root}/tmp/cache#{ENV['TEST_ENV_NUMBER']}"
+  config.cache_store = :file_store, "/tmp/cache#{ENV['TEST_ENV_NUMBER']}"
 
   config.lograge.enabled = true
 
