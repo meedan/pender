@@ -6,8 +6,6 @@ FAIL=0
 
 echo `whoami`
 ls -al tmp
-echo "--"
-
 rm -rf /tmp/cache /tmp/cache1 /tmp/cache2 /tmp/cache3
 mkdir -p /tmp/cache /tmp/cache1 /tmp/cache2 /tmp/cache3
 mkdir -p /opt/db
