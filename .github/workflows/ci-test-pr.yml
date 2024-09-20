@@ -80,15 +80,15 @@ jobs:
     - name: Set up PR Tests
       id: setup-tests
       run: |
-        docker compose exec -e DEPLOY_ENV=test -T pender test/setup-parallel
+        docker compose -f docker-test.yml exec -T pender test/setup-parallel
 
     - name: Run PR Tests
       id: run-tests
       env:
         TEST_RETRY_COUNT: 5
       run: |
-        docker compose exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -T pender bundle exec rake "parallel:test[3]"
-        docker compose exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -T pender bundle exec rake parallel:spec
+        docker compose -f docker-test.yml exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -T pender bundle exec rake "parallel:test[3]"
+        docker compose -f docker-test.yml exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -T pender bundle exec rake parallel:spec
 
     - name: After PR Tests
       id: after-tests
@@ -96,8 +96,8 @@ jobs:
         GIT_SHA: ${{ github.sha }}
         GIT_COMMITED_AT: ${{ github.event.head_commit.timestamp }}
       run: |
-        docker compose exec -T pender cat tmp/performance.csv
-        docker compose exec -e GIT_COMMIT_SHA=$GIT_SHA -e GIT_COMMITTED_AT=$GIT_COMMITTED_AT -T pender test/test-coverage
+        docker compose -f docker-test.yml exec -T pender cat tmp/performance.csv
+        docker compose -f docker-test.yml exec -e GIT_COMMIT_SHA=$GIT_SHA -e GIT_COMMITTED_AT=$GIT_COMMITTED_AT -T pender test/test-coverage
 
     - name: Reset cache
       id: reset-cache
