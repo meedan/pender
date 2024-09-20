@@ -1,5 +1,53 @@
-version: "2.2"
+volumes:
+  redis:
+  minio:
+  postgres13:
 services:
-  pender:
+  redis:
+    image: redis:6.2
+    ports:
+      - "6379:6379"
+    volumes:
+      - "redis:/data"
+  minio:
+    image: minio/minio
+    command: server /data
+    ports:
+      - "9000:9000"
+    volumes:
+      - "minio:/data"
     environment:
+      MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
+      MINIO_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  postgres:
+    image: postgres:13-buster
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      # POSTGRES_DB: pender-tests
+      POSTGRES_DB: pender_test__db
+  pender:
+    env_file:
+      - .env
+    build: .
+    shm_size: 1G
+    ports:
+      - "3200:3200"
+      - "9555:9555"
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    environment:
+      APP: pender
+      DEPLOY_ENV: local
       RAILS_ENV: test
+      SERVER_PORT: 3200
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    volumes:
+      - ./config/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    depends_on:
+      - pender

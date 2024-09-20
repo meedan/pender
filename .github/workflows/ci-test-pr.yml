@@ -75,7 +75,7 @@ jobs:
     - name: Run container
       id: run-container
       run: |
-        docker compose -f docker-compose.yml -f docker-test.yml up -d pender
+        docker compose -f docker-test.yml up -d pender
 
     - name: Set up PR Tests
       id: setup-tests
