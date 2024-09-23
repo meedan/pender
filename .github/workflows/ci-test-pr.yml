@@ -49,6 +49,15 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-buildx-
 
+    - name: Set up configuration
+      run: |
+        cp config/database.yml.example config/database.yml
+        cp config/sidekiq.yml.example config/sidekiq.yml
+        cp config/config.yml.example config/config.yml
+        cp config/cookies.txt.example config/cookies.txt
+        bin/get_env_vars.sh
+        chmod -R a+w .
+
     - name: Docker Buildx (build)
       id: build-image
       env:
@@ -63,14 +72,6 @@ jobs:
           --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
           --file ./Dockerfile ./
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-    - name: Set up configuration
-      run: |
-        cp config/database.yml.example config/database.yml
-        cp config/sidekiq.yml.example config/sidekiq.yml
-        cp config/config.yml.example config/config.yml
-        cp config/cookies.txt.example config/cookies.txt
-        bin/get_env_vars.sh
 
     - name: Run container
       id: run-container
@@ -101,7 +102,7 @@ jobs:
         GIT_SHA: ${{ github.sha }}
         GIT_COMMITED_AT: ${{ github.event.head_commit.timestamp }}
       run: |
-        docker compose -f docker-test.yml exec -T pender cat tmp/performance.csv
+        docker compose -f docker-test.yml exec -T pender cat /tmp/performance.csv
         docker compose -f docker-test.yml exec -e GIT_COMMIT_SHA=$GIT_SHA -e GIT_COMMITTED_AT=$GIT_COMMITTED_AT -T pender test/test-coverage
 
     - name: Reset cache
