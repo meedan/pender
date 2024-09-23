@@ -55,7 +55,7 @@ Rails.application.configure do
     options
   end
   config.lograge.formatter = Lograge::Formatters::Json.new
-  config.log_level = :debug
+  config.log_level = :warn
   config.paths['log'] = "/var/log/#{ENV['DEPLOY_ENV']}.log"
   config.paths['tmp'] = "/tmp"
   config.paths['db'] = "/opt/db"
