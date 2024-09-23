@@ -6,7 +6,7 @@ fi
 
 # pender
 if [ "${APP}" = 'pender' ] ; then
-  if [ "${DEPLOY_ENV}" = 'local' ] ; then
+  if [ "${DEPLOY_ENV}" = 'local' ] || [ "${RAILS_ENV}" = 'test' ] ; then
     bundle exec rake db:create
     bundle exec rake db:migrate
     SECRET_KEY_BASE=$(bundle exec rake secret)
@@ -17,7 +17,7 @@ if [ "${APP}" = 'pender' ] ; then
     echo "--- STARTUP COMPLETE ---"
   fi
 
-  DIRPATH=${PWD}/tmp
+  DIRPATH=/tmp
   PUMA="${DIRPATH}/puma-${DEPLOY_ENV}.rb"
   mkdir -p "${DIRPATH}/pids"
   cp config/puma.rb "${PUMA}"
