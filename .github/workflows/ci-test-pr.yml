@@ -87,12 +87,13 @@ jobs:
       env:
         TEST_RETRY_COUNT: 5
       run: |
-        docker compose -f docker-test.yml exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -e DEPLOY_ENV=ci -T pender bundle exec rake routes
+        docker compose -f docker-test.yml exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -e DEPLOY_ENV=ci -T pender bundle exec rails routes
         echo 'ran routes'
          docker compose -f docker-test.yml exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -e DEPLOY_ENV=ci -T pender bundle exec rake "parallel:test"
         echo 'ran parallel:test not 3'
         #        docker compose -f docker-test.yml exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -e DEPLOY_ENV=ci -T pender bundle exec rake parallel:spec
         # echo 'ran parallel:spec'
+        docker compose --tail 50 pender
 
     - name: After PR Tests
       id: after-tests
