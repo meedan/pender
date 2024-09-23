@@ -27,7 +27,7 @@ if [ "${APP}" = 'pender' ] ; then
   port ${SERVER_PORT}
 EOF
 
-  if [ "${DEPLOY_ENV}" = 'local' ||  "${DEPLOY_ENV}" = 'test' ] ; then
+  if [ "${DEPLOY_ENV}" = 'local' ||  "${RAILS_ENV}" = 'test' ] ; then
     rm -f "${DIRPATH}/pids/server-${DEPLOY_ENV}.pid"
     bundle exec puma -C "${PUMA}"
   else # qa, live etc
