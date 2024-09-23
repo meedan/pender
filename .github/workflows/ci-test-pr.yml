@@ -80,7 +80,7 @@ jobs:
     - name: Set up PR Tests
       id: setup-tests
       run: |
-        docker compose -f docker-test.yml exec -T pender test/setup-parallel
+        docker compose -f docker-test.yml exec -T -e DEPLOY_ENV=ci pender test/setup-parallel
 
     - name: Run PR Tests
       id: run-tests
