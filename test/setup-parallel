@@ -9,7 +9,6 @@ ls -al tmp
 rm -rf /tmp/cache /tmp/cache1 /tmp/cache2 /tmp/cache3
 mkdir -p /tmp/cache /tmp/cache1 /tmp/cache2 /tmp/cache3
 mkdir -p /opt/db
-mkdir -p coverage && chmod -R a+w coverage
 
 echo `pwd`
 ls -al db
