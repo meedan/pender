@@ -19,7 +19,7 @@ namespace :lapis do
       version_file = File.join(basedir, 'version.rb')
       current_version = '0.1.0'
       new_version = '0.0.1'
-      if File.exists?(version_file)
+      if File.exist?(version_file)
         number = File.readlines(version_file)[1].gsub(/[^0-9\.]/, '').gsub('0.0.', '').to_i
         new_version = '0.0.' + (number + 1).to_s
       end

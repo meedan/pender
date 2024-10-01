@@ -8,7 +8,7 @@ class BasePerformance < ActiveSupport::TestCase
 
   def teardown
     tmp = File.join(Rails.root, 'tmp', 'cache')
-    if File.exists?(tmp)
+    if File.exist?(tmp)
       Rails.cache.clear
     else
       FileUtils.mkdir_p(tmp)

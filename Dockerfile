@@ -1,4 +1,4 @@
-FROM ruby:3.1.6-slim
+FROM ruby:3.2.5-slim
 MAINTAINER Meedan <sysops@meedan.com>
 
 # the Rails stage can be overridden from the caller
