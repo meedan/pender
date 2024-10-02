@@ -3,7 +3,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '..', '..', 'lib', '
 
 class LapisWebhookTest < ActiveSupport::TestCase
   def setup
-    url = 'https://example.org/'
+    url = 'https://postman-echo.com/post'
     @lw = Lapis::Webhook.new(url, { foo: 'bar' }.to_json)
   end
 

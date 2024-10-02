@@ -32,6 +32,7 @@ deploy_qa:
     AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
   script:
+    - pip install setuptools==68.0.0
     - pip install botocore==1.33.13
     - pip install boto3==1.33.13
     - pip install ecs-deploy==1.14.0
@@ -76,6 +77,7 @@ deploy_live:
     AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
   script:
+    - pip install setuptools==68.0.0
     - pip install botocore==1.33.13
     - pip install boto3==1.33.13
     - pip install ecs-deploy==1.14.0
