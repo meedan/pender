@@ -78,6 +78,17 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     JSON
   end
 
+  def apify_error_response
+    <<~JSON
+    [
+      {
+        "error": "no_items",
+        "errorDescription": "Empty or private data for provided input"
+      }
+    ]
+    JSON
+  end
+
   test "returns provider and type" do
     assert_equal Parser::FacebookItem.type, 'facebook_item'
   end
@@ -167,7 +178,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   test "sets fallbacks from metatags for event and watch URLS on apify error" do
-    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_error_response)
 
     doc = Nokogiri::HTML(<<~HTML)
       <meta property="og:title" content="this is a page title | Facebook" />
