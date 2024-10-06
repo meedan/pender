@@ -56,13 +56,13 @@ module ProviderFacebook
     post_info = (data)
     message = post_info.dig('text')
     picture = post_info && post_info.dig('media').is_a?(Array) ? post_info.dig('media').first['thumbnail'] : ""
-    user_id = post_info.dig('user').is_a?(Array) ? post_info.dig('user').dig('id') : ""
+    user_id = post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('id') : ""
     post_id = post_info.dig('postId')
     {
-      author_name:  post_info.dig('user').is_a?(Array) ? post_info.dig('user').dig('name') : "",
-      username: post_info.dig('user').is_a?(Array) ? post_info.dig('user').dig('name') : "",
-      author_url: post_info.dig('user').is_a?(Array) ? post_info.dig('user').dig('profileUrl') : "",
-      author_picture: post_info.dig('user').is_a?(Array) ? post_info.dig('user').dig('profilePic') : "",
+      author_name:  post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('name') : "",
+      username: post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('name') : "",
+      author_url: post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('profileUrl') : "",
+      author_picture: post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('profilePic') : "",
       title: message,
       description: message,
       text: message,
