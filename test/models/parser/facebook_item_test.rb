@@ -40,6 +40,11 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
             "shares": 70,
             "media": [
               {
+                "mediaset_token": "pcb.945990797560910",
+                "url": "https://www.facebook.com/PinacotecaSP/posts/pfbid0x8nLv3UkFS8EKq1Ri1orXxw4o6UGgCtagyEh3LuNbPackvSszpgzAJ8zPC1p6LUDl",
+                "comet_product_tag_feed_overlay_renderer": null
+              },
+              {
                 "thumbnail": "https://scontent-lax3-1.xx.fbcdn.net/v/t39.30808-6/458267352_1072984427532320_3650659647239955349_n.jpg?stp=dst-jpg_p180x540&_nc_cat=108&ccb=1-7&_nc_sid=127cfc&_nc_ohc=S-OM4BpCmPYQ7kNvgHn3sRW&_nc_ht=scontent-lax3-1.xx&oh=00_AYDD6Jo2QOxEE7Gauh9Gb5j9mZUdrwKS-TaAld1q9FIm_g&oe=66DF38EE",
                 "__typename": "Photo",
                 "photo_image": {
@@ -146,6 +151,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
 
     parser = Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824')
     data = parser.parse_data(empty_doc, throwaway_url)
+    thumbnail_url = "https://scontent-lax3-1.xx.fbcdn.net/v/t39.30808-6/458267352_1072984427532320_3650659647239955349_n.jpg?stp=dst-jpg_p180x540&_nc_cat=108&ccb=1-7&_nc_sid=127cfc&_nc_ohc=S-OM4BpCmPYQ7kNvgHn3sRW&_nc_ht=scontent-lax3-1.xx&oh=00_AYDD6Jo2QOxEE7Gauh9Gb5j9mZUdrwKS-TaAld1q9FIm_g&oe=66DF38EE"
 
     assert data['error'].blank?
     assert_equal '123456789276277_1127489833985824', data['external_id']
@@ -155,6 +161,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_match /Look at what the long range computer models are indicating/, data['description']
     assert_match /Look at what the long range computer models are indicating/, data['text']
     assert_equal '2016-10-05 11:15:30', data['published_at']
+    assert_equal thumbnail_url, data['picture']
   end
 
   test "sets fallbacks from metatags and populates HTML for post on apify error" do

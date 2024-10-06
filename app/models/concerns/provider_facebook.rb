@@ -55,7 +55,12 @@ module ProviderFacebook
   def format_apify_result(data)
     post_info = (data)
     message = post_info.dig('text')
-    picture = post_info && post_info.dig('media').is_a?(Array) ? post_info.dig('media').first['thumbnail'] : ""
+    media = post_info.dig('media')
+    picture = if media.is_a?(Array)
+      media.find { |m| m['thumbnail'] }&.dig('thumbnail') || ""
+    else
+      ""
+    end
     user_id = post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('id') : ""
     post_id = post_info.dig('postId')
     {
