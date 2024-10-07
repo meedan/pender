@@ -42,31 +42,38 @@ module ProviderFacebook
       return { error: { message: "No data received from Apify", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
     elsif !apify_data.is_a?(Array) && apify_data.dig('result').blank?
       return { error: { message: "No data received from Apify", code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
-    elsif apify_data.first['error'].present?
-      return { error: { message: apify_data['error']['message'], code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
+    elsif apify_data.is_a?(Hash) && apify_data['error'].present?
+      return { error: { message: apify_data['errorDescription'], code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
+    elsif apify_data.is_a?(Array) && apify_data.first['error'].present?
+      return { error: { message: apify_data.first['errorDescription'], code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
     end
 
 
-    apify_data.first
+    apify_data.is_a?(Array) ? apify_data.first : apify_data
   end
 
   def format_apify_result(data)
     post_info = (data)
     message = post_info.dig('text')
-    picture = post_info.dig('media').first['thumbnail']
-    user_id = post_info.dig('user').dig('id')
+    media = post_info.dig('media')
+    picture = if media.is_a?(Array)
+      media.find { |m| m['thumbnail'] }&.dig('thumbnail') || ""
+    else
+      ""
+    end
+    user_id = post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('id') : ""
     post_id = post_info.dig('postId')
     {
-      author_name: post_info.dig('user').dig('name'),
-      username: post_info.dig('user').dig('name'),
-      author_url: post_info.dig('user').dig('profileUrl'),
-      author_picture: post_info.dig('user').dig('profilePic'),
+      author_name:  post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('name') : "",
+      username: post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('name') : "",
+      author_url: post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('profileUrl') : "",
+      author_picture: post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('profilePic') : "",
       title: message,
       description: message,
       text: message,
       external_id: "#{user_id}_#{post_id}",
       picture: picture,
-      published_at: post_info.dig('time').sub('T', ' ').sub('.000Z', ''),
+      published_at: post_info.dig('user') ? post_info.dig('time').sub('T', ' ').sub('.000Z', '') : "",
     }.with_indifferent_access
   end
 
