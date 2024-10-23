@@ -34,16 +34,33 @@ Besides the specific parsers Pender can parse any link with an oEmbed endpoint o
 
 ## Setup
 
-To run Pender, follow these steps:
+To set Pender up locally:
 
 ```
-$ git clone https://github.com/meedan/pender.git
-$ cd pender
-$ find -name '*.example' | while read f; do cp "$f" "${f%%.example}"; done
+git clone https://github.com/meedan/pender.git
+cd pender
+find -name '*.example' | while read f; do cp "$f" "${f%%.example}"; done
+```
+
+To run Pender in development mode, follow these steps:
+
+```
 $ docker-compose build
 $ docker-compose up --abort-on-container-exit
 ```
 Open http://localhost:3200/api-docs/index.html to access Pender API directly.
+
+To run the full test suite of Pender tests locally the way CI runs them:
+
+```
+rm .env.test
+bin/get_env_vars.sh
+docker build . -t pender
+docker compose -f docker-test.yml up pender
+docker compose -f docker-test.yml exec pender test/setup-parallel
+docker compose -f docker-test.yml exec pender bundle exec rake "parallel:test[3]"
+docker compose -f docker-test.yml exec pender bundle exec rake "parallel:spec"
+```
 
 ### Setting Cookies for Requests
 
