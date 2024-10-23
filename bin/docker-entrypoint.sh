@@ -3,10 +3,11 @@ if [[ -z ${DEPLOY_ENV+x} || -z ${APP+x} ]]; then
   echo "DEPLOY_ENV and APP must be in the environment. Exiting."
   exit 1
 fi
+echo "running ${APP} in ${DEPLOY_ENV} environment..."
 
 # pender
 if [ "${APP}" = 'pender' ] ; then
-  if [ "${DEPLOY_ENV}" = 'local' ] || [ "${RAILS_ENV}" = 'test' ] ; then
+  if [ "${DEPLOY_ENV}" = 'local' ] ; then
     bundle exec rake db:create
     bundle exec rake db:migrate
     SECRET_KEY_BASE=$(bundle exec rake secret)

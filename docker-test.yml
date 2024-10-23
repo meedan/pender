@@ -26,11 +26,12 @@ services:
       interval: 1s
       timeout: 5s
       retries: 10
+    user: postgres
     environment:
       #POSTGRES_DB: pender-tests
       POSTGRES_DB: pender_test__db
-      POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     networks:
       - test-internal
   pender:
