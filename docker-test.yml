@@ -2,6 +2,7 @@ volumes:
   redis:
   minio:
   postgres13:
+
 services:
   redis:
     image: redis:6.2
@@ -36,6 +37,7 @@ services:
       - test-internal
   pender:
     image: pender:latest
+    build: .
     env_file:
       - .env.test
     shm_size: 1G
