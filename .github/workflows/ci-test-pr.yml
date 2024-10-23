@@ -51,6 +51,7 @@ jobs:
 
     - name: Set up configuration
       run: |
+        touch .env.test
         cp config/database.yml.example config/database.yml
         cp config/sidekiq.yml.example config/sidekiq.yml
         cp config/config.yml.example config/config.yml
