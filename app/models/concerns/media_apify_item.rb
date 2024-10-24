@@ -5,19 +5,40 @@ module MediaApifyItem
   class ApifyResponseError < StandardError; end
 
   Media.class_eval do
-    def self.apify_start_request(url)
-      apify_url = "https://api.apify.com/v2/acts/apify~facebook-posts-scraper/run-sync-get-dataset-items?token=#{PenderConfig.get('apify_api_token')}"
+    APIFY_URLS = {
+      facebook: "https://api.apify.com/v2/acts/apify~facebook-posts-scraper/run-sync-get-dataset-items?token=#{PenderConfig.get('apify_api_token')}",
+      instagram: "https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=#{PenderConfig.get('apify_api_token')}"
+    }.freeze
 
-      headers = {
-        'content-type' => 'application/json'
-      }
+    def self.apify_start_request(url, platform = :facebook)
+      apify_url = APIFY_URLS[platform]
+      raise ApifyError, 'Unsupported platform' unless apify_url
 
-      payload = {
-        resultsLimit: 20,
-        startUrls: [
-          { url: url }
-        ]
-      } 
+      headers = { 'content-type' => 'application/json' }
+
+      payload = case platform
+                when :facebook
+                  {
+                    resultsLimit: 20,
+                    startUrls: [
+                      { url: url }
+                    ]
+                  }
+                when :instagram
+                  {
+                    addParentData: false,
+                    directUrls: [url],
+                    enhanceUserSearchWithFacebookPage: false,
+                    isUserReelFeedURL: false,
+                    isUserTaggedFeedURL: false,
+                    resultsLimit: 200,
+                    resultsType: "details",
+                    searchLimit: 1,
+                    searchType: "hashtag"
+                  }
+                else
+                  raise ApifyError, 'Unsupported platform'
+                end
 
       uri = URI.parse(apify_url)
       http = Net::HTTP.new(uri.host, uri.port)
@@ -28,7 +49,7 @@ module MediaApifyItem
       begin
         response = http.request(request)
 
-        Rails.logger.info level: 'INFO', message: '[Parser] Initiated scraping job on Apify', url: uri.to_s
+        Rails.logger.info level: 'INFO', message: "[Parser] Initiated scraping job on Apify (#{platform})", url: uri.to_s
         raise ApifyResponseError if response.nil? || !['200', '201'].include?(response.code) || response.body.blank?
         raise ApifyResponseError if response.body.include?("This content isn't available")
 
@@ -39,8 +60,8 @@ module MediaApifyItem
       end
     end
 
-    def self.apify_request( url)
-      response = apify_start_request(url)
+    def self.apify_request(url, platform = :facebook)
+      response = apify_start_request(url, platform)
       return nil unless response
 
       response
