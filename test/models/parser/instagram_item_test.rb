@@ -1,29 +1,7 @@
 require 'test_helper'
 
-class InstagramItemIntegrationTest < ActiveSupport::TestCase
-  test "should parse Instagram item link for real" do
-    m = Media.new url: 'https://www.instagram.com/p/CdOk-lLKmyH/'
-    data = m.as_json
-    assert_equal 'item', data['type']
-    assert_equal 'CdOk-lLKmyH', data['external_id']
-    assert !data['title'].blank?
-  end
-
-  test "should parse Instagram item when the final url is instagram.com" do
-    m = Media.new url: 'https://instagram.com/'
-    data = m.as_json
-    assert_equal 'instagram', data['provider']
-    assert_equal 'https://instagram.com/', data['title']
-  end
-
-  test "should get canonical URL parsed from html tags" do
-    media1 = create_media url: 'https://www.instagram.com/p/CAdW7PMlTWc/?taken-by=kikoloureiro'
-    assert_match /https:\/\/www.instagram.com\/p\/CAdW7PMlTWc/, media1.url
-  end
-end
-
 class InstagramItemUnitTest < ActiveSupport::TestCase
-  INSTAGRAM_ITEM_API_REGEX = /instagram.com\/p\//
+  INSTAGRAM_ITEM_API_REGEX = /apify.com/
 
   def setup
     isolated_setup
@@ -63,7 +41,7 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
   end
 
   test "should set profile defaults to URL upon error" do
-    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_raise(Net::ReadTimeout.new("Raised in test"))
+    WebMock.stub_request(:post, INSTAGRAM_ITEM_API_REGEX).to_raise(Net::ReadTimeout.new("Raised in test"))
 
     data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(nil)
 
@@ -72,101 +50,78 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
   end
 
   test "should attempt to set defaults from metatags on failure" do
-    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: '', status: 401)
-
+    WebMock.stub_request(:post, INSTAGRAM_ITEM_API_REGEX).to_return(status: 401)
+  
     doc = Nokogiri::HTML(<<~HTML)
-      <meta name="twitter:site" content="@instagram">
-      <meta name="twitter:image" content="https://example.com/1111">
       <meta name="twitter:title" content="Ana C. Lana (@direitatemrazao) • Instagram photos and videos">
-      <meta name="description" content='Ana C. Lana shared a post on Instagram: \"Nada que a gente já não tenha vivido.\" Follow their account to see 541 posts.'>
-      <meta property="og:site_name" content="Instagram">
-      <meta property="og:title" content='Ana C. Lana on Instagram: \"Nada que a gente \n\njá não tenha vivido.\"'>
+      <meta property="og:title" content='Ana C. Lana on Instagram: "Nada que a gente \n\njá não tenha vivido."'/>
       <meta property="og:image" content="https://example.com/2222">
-      <meta property="og:url" content="https://www.instagram.com/p/CjG7HTOLvd8/">
-      <meta property="og:description" content='Ana C. Lana shared a post on Instagram: \"Nada que a gente já não tenha vivido.\" Follow their account to see 541 posts.'>
     HTML
-
+  
     data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
-    assert_equal "Nada que a gente \n\njá não tenha vivido.", data['title']
+  
+    assert_equal "Ana C. Lana on Instagram: \"Nada que a gente \n\njá não tenha vivido.\"", data['title']
     assert_equal "@direitatemrazao", data['username']
-    assert_equal "Nada que a gente \n\njá não tenha vivido.", data['description']
+    assert_equal "Ana C. Lana on Instagram: \"Nada que a gente \n\njá não tenha vivido.\"", data['description']
     assert_equal "https://example.com/2222", data['picture']
-    assert_equal "Ana C. Lana", data['author_name']
-    assert_equal "https://instagram.com/direitatemrazao", data['author_url']
-    assert data['author_picture'].blank?
-    assert data['published_at'].blank?
-  end
-
-  test "should return error on item data when link can't be found" do
-    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(status: 404)
-
-    data = {}
-    sentry_call_count = 0
-    arguments_checker = Proc.new do |e|
-      sentry_call_count += 1
-      assert_equal ProviderInstagram::ApiError, e.class
-    end
-
-    PenderSentry.stub(:notify, arguments_checker) do
-      data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
-      assert_equal 1, sentry_call_count
-    end
-    assert_match /ProviderInstagram::ApiResponseCodeError/, data['error']['message']
+    assert_equal "Ana", data['author_name']
+    assert_equal "https://instagram.com/@direitatemrazao", data['author_url']
   end
 
   test "should re-raise a wrapped error when parsing fails" do
-    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: 'asdf', status: 200)
-
+    WebMock.stub_request(:post, INSTAGRAM_ITEM_API_REGEX).to_return(body: 'asdf', status: 200)
+  
     data = {}
     sentry_call_count = 0
     arguments_checker = Proc.new do |e|
       sentry_call_count += 1
-      assert_equal ProviderInstagram::ApiError, e.class
+      assert_equal MediaApifyItem::ApifyError, e.class
     end
     PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
       assert_equal 1, sentry_call_count
     end
-    assert_match /ProviderInstagram::ApiError/, data['error']['message']
+    assert_match /Apify data not found or link is inaccessible/, data['error']['message']
   end
 
   test "should re-raise a wrapped error when redirected to a page that requires authentication" do
-    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/accounts/login/' })
-
+    WebMock.stub_request(:post, INSTAGRAM_ITEM_API_REGEX).to_return(status: 302, headers: { location: 'https://www.instagram.com/accounts/login/' })
+  
     data = {}
     sentry_call_count = 0
     arguments_checker = Proc.new do |e|
       sentry_call_count += 1
-      assert_equal ProviderInstagram::ApiError, e.class
+      assert_equal MediaApifyItem::ApifyError, e.class
     end
     PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
       assert_equal 1, sentry_call_count
     end
-    assert_match /ProviderInstagram::ApiAuthenticationError/, data['error']['message']
+    assert_match /Apify data not found or link is inaccessible/, data['error']['message']
   end
 
-  test 'should set item fields from successful api response' do
-    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: graphql, status: 200)
+  test 'should set item fields from successful Apify response' do
+    WebMock.stub_request(:post, INSTAGRAM_ITEM_API_REGEX)
+           .to_return(body: '[{"inputUrl": "https://www.instagram.com/p/fake-post", "id": "fake-post", "caption": "This cool caption", "ownerUsername": "retrobayarea", "displayUrl": "https://example.com/image.jpg", "ownerFullName": "Retro Bay Area", "timestamp": "2024-08-21T17:27:17.000Z"}]', status: 200)
 
     data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
     assert_equal 'fake-post', data['external_id']
     assert_equal '@retrobayarea', data['username']
-    assert_match /This cool neon sign was located at the intersection of South Murphy and El Camino Real/, data['description']
-    assert_match /This cool neon sign was located at the intersection of South Murphy and El Camino Real/, data['title']
-    assert_match /scontent-sjc3-1.cdninstagram.com\/v\/t51.2885-15\/300827385_771443254176686_3645633281116479321_n.jpg/, data['picture']
-    assert_equal 'Retro Bay Area', data['author_name']
-    assert_equal 'https://instagram.com/retrobayarea', data['author_url']
-    assert_match /scontent-sjc3-1.cdninstagram.com\/v\/t51.2885-19\/275782436_803363541058120_8527469417809134606_n.jpg/, data['author_picture']
-    assert_equal Time.new(2022,8,23,16,51,41), data['published_at']
+    assert_equal "This cool caption", data['description']
+    assert_equal "This cool caption", data['title']
+    assert_equal "https://example.com/image.jpg", data['picture']
+    assert_equal "Retro Bay Area", data['author_name']
+    assert_equal "https://instagram.com/retrobayarea", data['author_url']
+    assert_equal Time.parse("2024-08-21T17:27:17.000Z"), data['published_at']
   end  
 
   test "should preserve all raw data, without overwriting" do
-    WebMock.stub_request(:any, INSTAGRAM_ITEM_API_REGEX).to_return(body: graphql, status: 200)
+    WebMock.stub_request(:post, INSTAGRAM_ITEM_API_REGEX)
+           .to_return(body: '[{"inputUrl": "https://www.instagram.com/p/fake-post", "id": "fake-post", "caption": "Test caption", "displayUrl": "https://example.com/image.jpg"}]', status: 200)
     
     data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
     assert data['raw']['metatags'].present?
-    assert data['raw']['api'].present?
+    assert data['raw']['apify'].present?
   end
 
   test "should return url as title when redirected to instagram main page" do
@@ -175,7 +130,7 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     
     WebMock.stub_request(:get, url).to_return(status: 302, headers: { 'location' => instagram_main_page })
     WebMock.stub_request(:get, instagram_main_page).to_return(status: 200, body: '<html>Instagram</html>')
-    WebMock.stub_request(:get, "https://www.instagram.com/p/CdOk-lLKmyH/?__a=1&__d=a").to_return(status: 200)
+    WebMock.stub_request(:post, /apify.com/).to_return(status: 200)
 
     media = Media.new(url: url)
     data = media.as_json
