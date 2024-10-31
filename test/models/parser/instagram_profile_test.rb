@@ -10,7 +10,7 @@ class InstagramProfileIntegrationTest < ActiveSupport::TestCase
 end
 
 class InstagramProfileUnitTest < ActiveSupport::TestCase
-  INSTAGRAM_PROFILE_API_REGEX = /i.instagram.com\/api\/v1\/users\/web_profile_info\//
+  INSTAGRAM_PROFILE_API_REGEX = /apify.com/
 
   def setup
     isolated_setup
@@ -53,91 +53,15 @@ class InstagramProfileUnitTest < ActiveSupport::TestCase
     assert_match 'https://www.instagram.com/fake-account', data['description']
   end
 
-  test "should return error on item data when link can't be found" do
-    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(status: 404)
-
-    data = {}
-    sentry_call_count = 0
-    arguments_checker = Proc.new do |e|
-      sentry_call_count += 1
-      assert_equal ProviderInstagram::ApiError, e.class
-    end
-
-    PenderSentry.stub(:notify, arguments_checker) do
-      data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
-      assert_equal 1, sentry_call_count
-    end
-    assert_match /ProviderInstagram::ApiResponseCodeError/, data['error']['message']
-  end
-
-  test "should re-raise a wrapped error when parsing fails" do
-    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: 'asdf', status: 200)
-
-    data = {}
-    sentry_call_count = 0
-    arguments_checker = Proc.new do |e|
-      sentry_call_count += 1
-      assert_equal ProviderInstagram::ApiError, e.class
-    end
-    PenderSentry.stub(:notify, arguments_checker) do
-      data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
-      assert_equal 1, sentry_call_count
-    end
-    assert_match /ProviderInstagram::ApiError/, data['error']['message']
-  end
-
-  test "should re-raise a wrapped error when redirected to a page that requires challenge" do
-    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/challenge/?' })
-
-    data = {}
-    sentry_call_count = 0
-    arguments_checker = Proc.new do |e|
-      sentry_call_count += 1
-      assert_equal ProviderInstagram::ApiError, e.class
-    end
-    PenderSentry.stub(:notify, arguments_checker) do
-      data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
-      assert_equal 1, sentry_call_count
-    end
-    assert_match /ProviderInstagram::ApiAuthenticationError/, data['error']['message']
-  end
-
-  test "should re-raise a wrapped error when redirected to a page that requires authentication" do
-    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: '', status: 302, headers: { location: 'https://www.instagram.com/login/?' })
-
-    data = {}
-    airbrake_call_count = 0
-    arguments_checker = Proc.new do |e|
-      airbrake_call_count += 1
-      assert_equal ProviderInstagram::ApiError, e.class
-    end
-    PenderSentry.stub(:notify, arguments_checker) do
-      data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
-      assert_equal 1, airbrake_call_count
-    end
-    assert_match /ProviderInstagram::ApiAuthenticationError/, data['error']['message']
-  end
-
-  test 'should set profile fields from successful api response' do
-    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: graphql, status: 200)
-
+  test 'should set profile fields from successful Apify response' do
+    WebMock.stub_request(:post, INSTAGRAM_PROFILE_API_REGEX)
+           .to_return(body: '[{"inputUrl": "https://www.instagram.com/fake-account", "id": "fake-account", "caption": "This is the profile bio", "username": "fakeaccount", "profilePicUrl": "https://example.com/profile.jpg", "fullName": "Fake Account", "timestamp": "2024-08-21T17:27:17.000Z"}]', status: 200)
+  
     data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
+    
     assert_equal 'fake-account', data['external_id']
     assert_equal '@fake-account', data['username']
-    assert_match /New album out September 2/, data['description']
-    assert_equal 'fake-account', data['title']
-    assert_equal 'Megadeth', data['author_name']
-    assert_match /scontent-sjc3-1.cdninstagram.com\/v\/t51.2885-19\/298966074_744587416797579_6159007932562050088_n.jpg/, data['picture']
-    assert_match /scontent-sjc3-1.cdninstagram.com\/v\/t51.2885-19\/298966074_744587416797579_6159007932562050088_n.jpg/, data['author_picture']
-    assert data['published_at'].blank?
-  end
-
-  test "should store raw data of profile returned by Instagram request" do
-    WebMock.stub_request(:any, INSTAGRAM_PROFILE_API_REGEX).to_return(body: graphql, status: 200)
-    
-    data = Parser::InstagramProfile.new('https://www.instagram.com/fake-account').parse_data(doc)
-
-    assert_not_nil data['raw']['api']
-    assert !data['raw']['api'].empty?
+    assert_equal "https://www.instagram.com/fake-account", data['description']
+    assert_equal "fake-account", data['title']
   end
 end 

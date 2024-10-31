@@ -8,8 +8,6 @@ class InstagramItemIntegrationTest < ActiveSupport::TestCase
     assert_equal 'instagram', data['provider']
     assert_equal 'item', data['type']
     assert_equal 'C-8LjWmuTx1', data['external_id']
-    require 'byebug'
-    byebug
     assert data['error'].nil?
     assert !data['title'].blank?
     assert !data['username'].blank?
