@@ -68,6 +68,7 @@ module Parser
     def html_for_instagram_post(username, html_page, request_url)
       return unless html_page
 
+      request_url = request_url.sub(/\?.*/, '')
       request_url = request_url + "/" unless request_url.end_with? "/"
 
       '<div><iframe src="' + request_url + 'embed" width="397" height="477" frameborder="0" scrolling="no" allowtransparency="true"></iframe></div>'
