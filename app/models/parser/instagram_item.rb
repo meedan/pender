@@ -18,78 +18,60 @@ module Parser
         ['igsh']
       end
     end
-    
+
     private
 
-    # Main function for class
     def parse_data_for_parser(doc, original_url, _jsonld_array)
       id = url.match(INSTAGRAM_ITEM_URL)[3]
       @parsed_data.merge!(external_id: id)
 
       handle_exceptions(StandardError) do
-        response_data = get_instagram_api_data("https://www.instagram.com/p/#{id}/?__a=1&__d=a")
-        @parsed_data['raw']['api'] = response_data.dig('items', 0)
+        apify_data = get_instagram_data_from_apify(id)
+        
+        if apify_data
+          @parsed_data['raw']['apify'] = apify_data[0]
 
-        username = get_instagram_username_from_data
-        set_data_field('description', get_instagram_item_text_from_data)
-        set_data_field('username', username)
-        set_data_field('title', get_instagram_item_text_from_data)
-        set_data_field('picture', get_instagram_item_picture_from_data)
-        set_data_field('author_name', parsed_data.dig('raw', 'api', 'user', 'full_name'))
-        set_data_field('author_url', username&.gsub(/^@/, 'https://instagram.com/'))
-        set_data_field('author_picture', parsed_data.dig('raw', 'api', 'user', 'profile_pic_url'))
-        set_data_field('published_at', Time.at(parsed_data.dig('raw', 'api', 'taken_at'))) unless parsed_data.dig('raw', 'api', 'taken_at').blank?
+          set_data_field('title', @parsed_data['raw']['apify']['caption'])
+          set_data_field('description', @parsed_data['raw']['apify']['caption'])
+          set_data_field('username', "@#{@parsed_data['raw']['apify']['ownerUsername']}")
+          set_data_field('picture', @parsed_data['raw']['apify']['displayUrl'])
+          set_data_field('author_name', @parsed_data['raw']['apify']['ownerFullName'])
+          set_data_field('author_url', "https://instagram.com/#{@parsed_data['raw']['apify']['ownerUsername']}")
+          set_data_field('author_picture', @parsed_data['raw']['apify'].dig('latestComments', 0, 'ownerProfilePicUrl'))
+          set_data_field('published_at', @parsed_data['raw']['apify']['timestamp'] ? Time.parse(@parsed_data['raw']['apify']['timestamp']) : nil)
+        else
+          @parsed_data['error'] = { 'message' => 'Apify data not found or link is inaccessible' }
+          set_data_field('title', get_metadata_from_tag(doc, 'og:title') || get_metadata_from_tag(doc, 'twitter:title'))
+          set_data_field('description', @parsed_data['title'])
+          set_data_field('username', get_metadata_from_tag(doc, 'twitter:title')&.match(/\((@[^)]+)\)/)&.captures&.first)
+          set_data_field('picture', get_metadata_from_tag(doc, 'og:image'))
+          set_data_field('author_name', @parsed_data['title']&.split&.first)
+          set_data_field('author_url', "https://instagram.com/#{@parsed_data['username']}")
+        end
       end
 
-      # Fallbacks from metatags, in case we cannot parse above
-      username = get_instagram_username_from_twitter_title
-      title = get_instagram_title_from_og_title
-      set_data_field('title', title)
-      set_data_field('description', title, url)
-      set_data_field('picture', get_metadata_from_tag('og:image'))
-      set_data_field('username', username)
-      set_data_field('author_name', get_instagram_author_name_from_twitter_title)
-      set_data_field('author_url', username&.gsub(/^@/, 'https://instagram.com/'))
-
+      @parsed_data['description'] ||= url
+      @parsed_data['html'] = html_for_instagram_post(parsed_data.dig('username'), doc, url) || ''
       parsed_data
     end
 
-    def get_instagram_username_from_data
-      username = parsed_data.dig('raw', 'api', 'user', 'username').to_s
-      username.prepend('@') unless username.blank?
+    # Helper method to retrieve meta tag content
+    def get_metadata_from_tag(doc, tag_name)
+      tag = doc.at("meta[property='#{tag_name}']") || doc.at("meta[name='#{tag_name}']")
+      tag['content'] if tag
     end
 
-    def get_instagram_item_text_from_data
-      parsed_data.dig('raw', 'api', 'caption', 'text').to_s
+    def get_instagram_data_from_apify(id)
+      Media.apify_request("https://www.instagram.com/p/#{id}/", :instagram)
     end
 
-    def get_instagram_item_picture_from_data
-      parsed_data.dig('raw', 'api', 'image_versions2', 'candidates', 0, 'url') ||
-        parsed_data.dig('raw', 'api', 'carousel_media', 0, 'image_versions2', 'candidates', 0, 'url')
-    end
+    def html_for_instagram_post(username, html_page, request_url)
+      return unless html_page
 
-    def get_instagram_title_from_og_title
-      raw_title = get_metadata_from_tag('og:title')
-      matches = raw_title&.match(/on Instagram:(|\s)"(?<title>.+)"/m)
-      return if matches.blank?
+      request_url = request_url.sub(/\?.*/, '')
+      request_url = request_url + "/" unless request_url.end_with? "/"
 
-      matches['title']
-    end
-
-    def get_instagram_username_from_twitter_title
-      raw_username = get_metadata_from_tag('twitter:title')
-      matches = raw_username&.match(/(?<author_name>.*) \(@(?<username>.+)\)/)
-      return if matches.blank?
-
-      matches['username'].prepend('@')
-    end
-
-    def get_instagram_author_name_from_twitter_title
-      raw_username = get_metadata_from_tag('twitter:title')
-      matches = raw_username&.match(/(?<author_name>.*) \(@(?<username>.+)\)/)
-      return if matches.blank?
-
-      matches['author_name']
+      '<div><iframe src="' + request_url + 'embed" width="397" height="477" frameborder="0" scrolling="no" allowtransparency="true"></iframe></div>'
     end
   end
 end
