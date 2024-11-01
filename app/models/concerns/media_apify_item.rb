@@ -44,9 +44,7 @@ module MediaApifyItem
           addParentData: false,
           directUrls: [url],
           enhanceUserSearchWithFacebookPage: false,
-          isUserReelFeedURL: false,
-          isUserTaggedFeedURL: false,
-          resultsLimit: 200,
+          resultsLimit: 10,
           resultsType: "details",
           searchLimit: 1,
           searchType: "hashtag"

@@ -51,6 +51,7 @@ module Parser
       end
 
       @parsed_data['description'] ||= url
+      @parsed_data['html'] = html_for_instagram_post(parsed_data.dig('username'), doc, url) || ''
       parsed_data
     end
 
@@ -62,6 +63,14 @@ module Parser
 
     def get_instagram_data_from_apify(id)
       Media.apify_request("https://www.instagram.com/p/#{id}/", :instagram)
+    end
+
+    def html_for_instagram_post(username, html_page, request_url)
+      return unless html_page
+
+      request_url = request_url + "/" unless request_url.end_with? "/"
+
+      '<div><iframe src="' + request_url + 'embed" width="397" height="477" frameborder="0" scrolling="no" allowtransparency="true"></iframe></div>'
     end
   end
 end
