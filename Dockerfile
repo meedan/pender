@@ -25,9 +25,10 @@ WORKDIR "${DIRPATH}"
 COPY Gemfile Gemfile.lock .
 RUN gem install bundler -v "${BUNDLER_VERSION}" --no-document \
     && bundle install --jobs 20 --retry 5
-COPY ./ .
-COPY bin/ /opt/bin/
-COPY db/schema.rb /opt/db/
+# FIXME: chown flags required for local macos (and likely windows) builds
+COPY --chown=${APP} ./ .
+COPY --chown=${APP} bin/ /opt/bin/
+COPY --chown=${APP} db/schema.rb /opt/db/
 RUN chmod a+w /opt/db/schema.rb
 
 USER ${APP}
