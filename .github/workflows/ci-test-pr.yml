@@ -4,7 +4,7 @@ on:
   push:
     branches:
     - master
-    - dmou/test-consolidate-dockerfiles
+    - caio/test-consolidate-dockerfiles
   pull_request:
     branches:
     - develop
