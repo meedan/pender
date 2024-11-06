@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
     - develop
+    - dmou/test-consolidate-dockerfiles
 
 permissions:
   id-token: write
