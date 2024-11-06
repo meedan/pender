@@ -100,10 +100,9 @@ jobs:
         GIT_COMMITED_AT: ${{ github.event.head_commit.timestamp }}
       run: |
         docker compose -f docker-test.yml exec -T pender cat tmp/performance.csv
-        docker compose -f docker-test.yml exec -T pender ls -l
-        docker compose -f docker-test.yml exec -T pender ls -l test/
-        docker cp pender:tmp/performance.csv performance.csv
-        docker cp pender:coverage/.resultset.json .resultset.json
+        docker compose -f docker-test.yml exec -T pender ls -l coverage/
+        docker cp pender-pender-1:tmp/performance.csv performance.csv
+        docker cp pender-pender-1:coverage/.resultset.json .resultset.json
 
         # pulled from test/test-coverage
         printf '#!/bin/bash\ngo run /tmp/go/src/github.com/codeclimate/test-reporter/main.go $@\n' > test/cc-test-reporter && chmod +x test/cc-test-reporter
