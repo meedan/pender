@@ -112,9 +112,13 @@ jobs:
         mkdir -p /tmp/go/src/github.com/codeclimate
         git clone -b 0.10.3 https://github.com/codeclimate/test-reporter /tmp/go/src/github.com/codeclimate/test-reporter
         cd test
-        echo '------ .resultset.json START ------'
+        echo '------ .resultset.json START 1 ------'
         cat .resultset.json # Debugging
-        echo '------- .resultset.json END -------'
+        echo '------- .resultset.json END 1 -------'
+        sed -i 's/\/app\//\/home\/runner\/work\/pender\//g' .resultset.json # Convert container-paths to local-paths
+        echo '------ .resultset.json START 2 ------'
+        cat .resultset.json # Debugging
+        echo '------- .resultset.json END 2 -------'
         GIT_COMMIT_SHA=$GIT_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./cc-test-reporter format-coverage .resultset.json -t simplecov -o codeclimate.json -d
         cat codeclimate.json
         # cat codeclimate.json | sed 's/\/app\///g' | ./cc-test-reporter upload-coverage -r $cc_test_reporter_id --input -
