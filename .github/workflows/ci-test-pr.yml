@@ -99,6 +99,7 @@ jobs:
       env:
         GIT_SHA: ${{ github.sha }}
         GIT_COMMITED_AT: ${{ github.event.head_commit.timestamp }}
+        CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
       run: |
         docker compose -f docker-test.yml exec -T pender cat tmp/performance.csv
         docker compose -f docker-test.yml exec -T pender ls -l coverage/
