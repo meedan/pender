@@ -115,7 +115,7 @@ jobs:
         echo '------ .resultset.json START 1 ------'
         cat .resultset.json # Debugging
         echo '------- .resultset.json END 1 -------'
-        sed -i 's/\/app\//\/home\/runner\/work\/pender\//g' .resultset.json # Convert container-paths to local-paths
+        sed -i 's/\/app\/pender/\/home\/runner\/work\/pender\/pender/g' .resultset.json # Convert container-paths to local-paths
         echo '------ .resultset.json START 2 ------'
         cat .resultset.json # Debugging
         echo '------- .resultset.json END 2 -------'
