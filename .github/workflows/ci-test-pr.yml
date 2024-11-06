@@ -109,10 +109,11 @@ jobs:
         export GOPATH=/tmp/go
         mkdir -p /tmp/go/src/github.com/codeclimate
         git clone -b 0.10.3 https://github.com/codeclimate/test-reporter /tmp/go/src/github.com/codeclimate/test-reporter
+        cd test
         go mod init
-        GIT_COMMIT_SHA=$GIT_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./test/cc-test-reporter format-coverage -t simplecov --output codeclimate.json .resultset.json
+        GIT_COMMIT_SHA=$GIT_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./cc-test-reporter format-coverage -t simplecov --output codeclimate.json .resultset.json
         cat codeclimate.json
-        # cat ../coverage/codeclimate.json | sed 's/\/app\///g' | ./test/cc-test-reporter upload-coverage -r $cc_test_reporter_id --input -
+        # cat ../coverage/codeclimate.json | sed 's/\/app\///g' | ./cc-test-reporter upload-coverage -r $cc_test_reporter_id --input -
 
     - name: Reset cache
       id: reset-cache
