@@ -93,18 +93,29 @@ jobs:
         docker compose -f docker-test.yml exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -e DEPLOY_ENV=ci -T pender bundle exec rake "parallel:test[3]"
         docker compose -f docker-test.yml exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -e DEPLOY_ENV=ci -T pender bundle exec rake parallel:spec
 
-    - name: After PR Tests
-      id: after-tests
+    - name: Upload coverage to CodeClimate
+      id: upload-coverage
       env:
         GIT_SHA: ${{ github.sha }}
         GIT_COMMITED_AT: ${{ github.event.head_commit.timestamp }}
       run: |
         docker compose -f docker-test.yml exec -T pender cat tmp/performance.csv
-        docker compose -f docker-test.yml exec -e GIT_COMMIT_SHA=$GIT_SHA -e GIT_COMMITTED_AT=$GIT_COMMITTED_AT -T pender test/test-coverage
+        docker compose -f docker-test.yml exec -T pender ls -l
+        docker compose -f docker-test.yml exec -T pender ls -l test/
+        docker cp pender:tmp/performance.csv performance.csv
+        docker cp pender:coverage/.resultset.json .resultset.json
+
+        # pulled from test/test-coverage
+        printf '#!/bin/bash\ngo run /tmp/go/src/github.com/codeclimate/test-reporter/main.go $@\n' > test/cc-test-reporter && chmod +x test/cc-test-reporter
+        export GOPATH=/tmp/go
+        mkdir -p /tmp/go/src/github.com/codeclimate
+        git clone -b 0.10.3 https://github.com/codeclimate/test-reporter /tmp/go/src/github.com/codeclimate/test-reporter
+        GIT_COMMIT_SHA=$GIT_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./cc-test-reporter format-coverage -t simplecov --output codeclimate.json .resultset.json
+        cat codeclimate.json
+        # cat ../coverage/codeclimate.json | sed 's/\/app\///g' | ./cc-test-reporter upload-coverage -r $cc_test_reporter_id --input -
 
     - name: Reset cache
       id: reset-cache
-      if: ${{ failure() || success() }}
       run: |
         rm -rf /tmp/.buildx-cache
         mv /tmp/.buildx-cache-new /tmp/.buildx-cache
