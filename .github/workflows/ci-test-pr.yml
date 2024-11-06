@@ -115,7 +115,7 @@ jobs:
         echo '------ .resultset.json START ------'
         cat .resultset.json # Debugging
         echo '------- .resultset.json END -------'
-        GIT_COMMIT_SHA=$GIT_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./cc-test-reporter format-coverage .resultset.json --input-type simplecov --output codeclimate.json
+        GIT_COMMIT_SHA=$GIT_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./cc-test-reporter format-coverage -t simplecov --output codeclimate.json .resultset.json
         cat codeclimate.json
         # cat codeclimate.json | sed 's/\/app\///g' | ./cc-test-reporter upload-coverage -r $cc_test_reporter_id --input -
 
