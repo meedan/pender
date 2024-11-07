@@ -116,7 +116,7 @@ jobs:
         sed -i 's/\/app\/pender/\/home\/runner\/work\/pender\/pender/g' .resultset.json # Convert container-paths to local-paths
         GIT_COMMIT_SHA=$GIT_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./cc-test-reporter format-coverage .resultset.json -t simplecov -o codeclimate.json -d
         sed -i 's/\/home\/runner\/work\/pender\///g' codeclimate.json
-        cp codeclimate.json coverage/
+        cp codeclimate.json ../coverage/
         ./cc-test-reporter upload-coverage -r $CC_TEST_REPORTER_ID -i codeclimate.json -d
 
     - name: Reset cache
