@@ -100,6 +100,7 @@ jobs:
         GIT_SHA: ${{ github.sha }}
         GIT_COMMITED_AT: ${{ github.event.head_commit.timestamp }}
         CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+        GIT_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
       run: |
         docker compose -f docker-test.yml exec -T pender cat tmp/performance.csv
         docker compose -f docker-test.yml exec -T pender ls -l coverage/
@@ -117,7 +118,7 @@ jobs:
         GIT_COMMIT_SHA=$GIT_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./cc-test-reporter format-coverage .resultset.json -t simplecov -o codeclimate.json -d
         sed -i 's/\/home\/runner\/work\/pender\///g' codeclimate.json
         cp codeclimate.json ../coverage/
-        ./cc-test-reporter upload-coverage -r $CC_TEST_REPORTER_ID -i codeclimate.json -d
+        GIT_BRANCH=$GIT_BRANCH_NAME ./cc-test-reporter upload-coverage -r $CC_TEST_REPORTER_ID -i codeclimate.json -d
 
     - name: Reset cache
       id: reset-cache
