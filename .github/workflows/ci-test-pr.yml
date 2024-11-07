@@ -100,25 +100,25 @@ jobs:
         GIT_SHA: ${{ github.sha }}
         GIT_COMMITED_AT: ${{ github.event.head_commit.timestamp }}
         CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-        GIT_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+        CODEBUILD_GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
       run: |
         docker compose -f docker-test.yml exec -T pender cat tmp/performance.csv
         docker compose -f docker-test.yml exec -T pender ls -l coverage/
         docker cp pender-pender-1:/app/pender/tmp/performance.csv performance.csv
         docker cp pender-pender-1:/app/pender/coverage/.resultset.json test/.resultset.json
 
-        # Pulled from test/test-coverage
+        # pulled from test/test-coverage
         printf '#!/bin/bash\ngo run /tmp/go/src/github.com/codeclimate/test-reporter/main.go $@\n' > test/cc-test-reporter && chmod +x test/cc-test-reporter
         export GOPATH=/tmp/go
         go env -w GO111MODULE=off
         mkdir -p /tmp/go/src/github.com/codeclimate
         git clone -b 0.10.3 https://github.com/codeclimate/test-reporter /tmp/go/src/github.com/codeclimate/test-reporter
         cd test
-        sed -i 's/\/app\/pender/\/home\/runner\/work\/pender\/pender/g' .resultset.json # Convert container-paths to local-paths
-        GIT_COMMIT_SHA=$GIT_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./cc-test-reporter format-coverage .resultset.json -t simplecov -o codeclimate.json -d
+        sed -i 's/\/app\/pender/\/home\/runner\/work\/pender\/pender/g' .resultset.json # convert container-paths to local-paths
+        GIT_COMMIT_SHA=$GIT_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./cc-test-reporter format-coverage .resultset.json -t simplecov -o codeclimate.json
         sed -i 's/\/home\/runner\/work\/pender\///g' codeclimate.json
         cp codeclimate.json ../coverage/
-        GIT_BRANCH=$GIT_BRANCH_NAME ./cc-test-reporter upload-coverage -r $CC_TEST_REPORTER_ID -i codeclimate.json -d
+        ./cc-test-reporter upload-coverage -r $CC_TEST_REPORTER_ID -i codeclimate.json
 
     - name: Reset cache
       id: reset-cache
