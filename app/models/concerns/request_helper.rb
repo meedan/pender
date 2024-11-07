@@ -18,7 +18,7 @@ class RequestHelper
           html = f.read
         end
         Nokogiri::HTML HtmlPreprocessor.preprocess_html(html)
-      rescue OpenURI::HTTPError, Errno::ECONNRESET => e
+      rescue OpenURI::HTTPError, Errno::ECONNRESET, Net::HTTPClientException => e
         if force_proxy
           PenderSentry.notify(e, url: url)
           Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
@@ -135,11 +135,15 @@ class RequestHelper
 
     def request_url(url, verb = 'Get')
       uri = self.parse_url(url)
-      self.request_uri(uri, verb)
+      begin
+        self.request_uri(uri, verb)
+      rescue Net::HTTPClientException
+        self.request_uri(uri, verb, skip_proxy = true)
+      end
     end
 
-    def request_uri(uri, verb = 'Get')
-      http = self.initialize_http(uri)
+    def request_uri(uri, verb = 'Get', skip_proxy = false)
+      http = self.initialize_http(uri, skip_proxy)
       headers = {
         'User-Agent' => self.html_options(uri)['User-Agent'],
         'Accept-Language' => LANG,
@@ -151,10 +155,10 @@ class RequestHelper
       http.request(request)
     end
 
-    def initialize_http(uri)
+    def initialize_http(uri, skip_proxy = false)
       http = Net::HTTP.new(uri.host, uri.inferred_port)
       proxy_config = self.get_proxy(uri, :hash)
-      if proxy_config
+      if proxy_config && skip_proxy == false
         http = Net::HTTP.new(uri.host, uri.inferred_port, proxy_config['host'], proxy_config['port'], proxy_config['user'], proxy_config['pass'])
       end
       http.read_timeout = PenderConfig.get('timeout', 30).to_i
