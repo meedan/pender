@@ -139,9 +139,7 @@ class RequestHelper
     end
 
     def request_uri(uri, verb = 'Get')
-      http = Net::HTTP.new(uri.host, uri.inferred_port)
-      http.read_timeout = PenderConfig.get('timeout', 30).to_i
-      http.use_ssl = uri.scheme == 'https'.freeze
+      http = self.initialize_http(uri)
       headers = {
         'User-Agent' => self.html_options(uri)['User-Agent'],
         'Accept-Language' => LANG,
@@ -149,15 +147,20 @@ class RequestHelper
 
       request = "Net::HTTP::#{verb}".constantize.new(uri.to_s, headers)
       request['Cookie'] = self.set_cookies(uri)
+
+      http.request(request)
+    end
+
+    def initialize_http(uri)
+      http = Net::HTTP.new(uri.host, uri.inferred_port)
       proxy_config = self.get_proxy(uri, :hash)
       if proxy_config
-        proxy = Net::HTTP::Proxy(proxy_config['host'], proxy_config['port'], proxy_config['user'], proxy_config['pass'])
-        proxy.start(uri.host, uri.inferred_port, use_ssl: uri.scheme == 'https') do |http2|
-          http2.request(request)
-        end
-      else
-        http.request(request)
+        http = Net::HTTP.new(uri.host, uri.inferred_port, proxy_config['host'], proxy_config['port'], proxy_config['user'], proxy_config['pass'])
       end
+      http.read_timeout = PenderConfig.get('timeout', 30).to_i
+      http.use_ssl = uri.scheme == 'https'.freeze
+
+      http
     end
 
     def decode_uri(url)

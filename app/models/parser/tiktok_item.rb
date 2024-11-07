@@ -54,8 +54,7 @@ module Parser
 
     def get_tiktok_api_data(requested_url)
       uri = RequestHelper.parse_url(oembed_url)
-      http = Net::HTTP.new(uri.host, uri.inferred_port)
-      http.use_ssl = uri.scheme == 'https'
+      http = RequestHelper.initialize_http(uri)
       headers = RequestHelper.extended_headers(uri)
       request = Net::HTTP::Get.new(uri.request_uri, headers)
       response = http.request(request)
