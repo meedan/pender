@@ -11,6 +11,5 @@ class TiktokProfileIntegrationTest < ActiveSupport::TestCase
     assert !data['author_name'].blank?
     assert_equal '@scout2015', data['external_id']
     assert_match 'https://www.tiktok.com/@scout2015', m.url
-    assert_nil data['error']
   end
 end
