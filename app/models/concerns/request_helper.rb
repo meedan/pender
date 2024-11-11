@@ -158,7 +158,7 @@ class RequestHelper
     def initialize_http(uri, skip_proxy = false)
       http = Net::HTTP.new(uri.host, uri.inferred_port)
       proxy_config = self.get_proxy(uri, :hash)
-      if proxy_config && skip_proxy == false
+      if proxy_config && !skip_proxy
         http = Net::HTTP.new(uri.host, uri.inferred_port, proxy_config['host'], proxy_config['port'], proxy_config['user'], proxy_config['pass'])
       end
       http.read_timeout = PenderConfig.get('timeout', 30).to_i
