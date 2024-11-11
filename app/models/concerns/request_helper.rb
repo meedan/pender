@@ -110,16 +110,6 @@ class RequestHelper
       end
     end
 
-    def extended_headers(uri = nil)
-      uri = self.parse_url(decode_uri(uri)) if uri.is_a?(String)
-      ({
-        'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
-        'Accept' =>  'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-        'Accept-Language' => 'en-US',
-        'Cookie' => self.set_cookies(uri)
-      })
-    end
-
     def get_proxy(uri, format = :array, force = false)
       proxy = self.valid_proxy
       if proxy || force
