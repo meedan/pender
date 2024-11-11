@@ -98,6 +98,7 @@ jobs:
       env:
         GIT_SHA: ${{ github.sha }}
         GIT_COMMITED_AT: ${{ github.event.head_commit.timestamp }}
+        CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
       run: |
         docker compose -f docker-test.yml exec -T pender cat tmp/performance.csv
         docker compose -f docker-test.yml exec -T pender ls -l coverage/
@@ -111,9 +112,11 @@ jobs:
         mkdir -p /tmp/go/src/github.com/codeclimate
         git clone -b 0.10.3 https://github.com/codeclimate/test-reporter /tmp/go/src/github.com/codeclimate/test-reporter
         cd test
-        GIT_COMMIT_SHA=$GIT_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./cc-test-reporter format-coverage .resultset.json --input-type simplecov --output codeclimate.json
-        cat codeclimate.json
-        # cat codeclimate.json | sed 's/\/app\///g' | ./cc-test-reporter upload-coverage -r $cc_test_reporter_id --input -
+        sed -i 's/\/app\/pender/\/home\/runner\/work\/pender\/pender/g' .resultset.json # convert container-paths to local-paths
+        GIT_COMMIT_SHA=$GIT_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./cc-test-reporter format-coverage .resultset.json -t simplecov -o codeclimate.json
+        sed -i 's/\/home\/runner\/work\/pender\///g' codeclimate.json
+        cp codeclimate.json ../coverage/
+        ./cc-test-reporter upload-coverage -r $CC_TEST_REPORTER_ID -i codeclimate.json
 
     - name: Reset cache
       id: reset-cache
