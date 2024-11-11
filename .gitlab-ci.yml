@@ -20,6 +20,7 @@ build_qa:
     - docker push "$ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA"
   only:
     - develop
+    - CV2-5619-fix-instagram-embed-issues
 
 deploy_qa:
   image: python:3.7.7
@@ -45,6 +46,7 @@ deploy_qa:
     - echo "new Image was deployed $ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA"
   only:
     - develop
+    - CV2-5619-fix-instagram-embed-issues
 
 build_live:
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest

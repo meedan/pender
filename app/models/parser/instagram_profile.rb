@@ -47,7 +47,6 @@ module Parser
       end
 
       @parsed_data['description'] ||= url
-      @parsed_data['html'] = html_for_instagram_profile(doc, url) || ''
       parsed_data
     end
 
