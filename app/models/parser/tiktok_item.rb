@@ -22,7 +22,7 @@ module Parser
       set_data_field('description', url)
 
       handle_exceptions(StandardError) do
-        @parsed_data[:raw][:api] = @parsed_data[:raw][:oembed] = get_tiktok_api_data(url)
+        @parsed_data[:raw][:api] = @parsed_data[:raw][:oembed] = get_tiktok_api_data
         if url.match(TIKTOK_ITEM_URL)
           match = url.match(TIKTOK_ITEM_URL)
           username = match['username']
@@ -52,12 +52,8 @@ module Parser
       parsed_data
     end
 
-    def get_tiktok_api_data(requested_url)
-      uri = RequestHelper.parse_url(oembed_url)
-      http = RequestHelper.initialize_http(uri)
-      headers = RequestHelper.extended_headers(uri)
-      request = Net::HTTP::Get.new(uri.request_uri, headers)
-      response = http.request(request)
+    def get_tiktok_api_data
+      response = RequestHelper.request_url(oembed_url)
       JSON.parse(response.body)
     end
   end
