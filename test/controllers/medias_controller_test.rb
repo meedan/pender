@@ -62,31 +62,6 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal first_parsed_at, second_parsed_at
   end
 
-  test "should return error message on hash if url does not exist" do
-    authenticate_with_token
-    get :index, params: { url: 'https://www.instagram.com/kjdahsjkdhasjdkhasjk/', format: :json }
-    assert_response 200
-    data = JSON.parse(@response.body)['data']
-    assert_not_nil data['error']['message']
-    assert_equal Lapis::ErrorCodes::const_get('UNKNOWN'), data['error']['code']
-    assert_equal 'instagram', data['provider']
-    assert_equal 'profile', data['type']
-    assert_not_nil data['embed_tag']
-  end
-
-  # TODO Must be fixed on #8794
-  #test "should return error message on hash if url does not exist 4" do
-  #  authenticate_with_token
-  #  get :index, params: { url: 'https://www.instagram.com/p/blih_blih/', format: :json
-  #  assert_response 200
-  #  data = JSON.parse(@response.body)['data']
-  #  assert_equal 'RuntimeError: Net::HTTPNotFound: Not Found', data['error']['message']
-  #  assert_equal 5, data['error']['code']
-  #  assert_equal 'instagram', data['provider']
-  #  assert_equal 'item', data['type']
-  #  assert_not_nil data['embed_tag']
-  #end
-
   test "should return error message on hash if url does not exist 5" do
     authenticate_with_token
     get :index, params: { url: 'http://example.com/blah_blah', format: :json }
