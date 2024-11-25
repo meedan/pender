@@ -18,7 +18,7 @@ class RequestHelper
           html = f.read
         end
         Nokogiri::HTML HtmlPreprocessor.preprocess_html(html)
-      rescue OpenURI::HTTPError, Errno::ECONNRESET, Net::HTTPClientException => e
+      rescue OpenURI::HTTPError, Errno::ECONNRESET => e
         if force_proxy
           PenderSentry.notify(e, url: url)
           Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
@@ -26,6 +26,11 @@ class RequestHelper
           return nil
         end
         get_html(url, set_error_callback, header_options, true)
+      rescue Net::HTTPClientException => e
+        PenderSentry.notify(e, url: url)
+        Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
+        set_error_callback.call(message: 'Invalid Auth', code: Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'))
+        return nil
       rescue Zlib::DataError, Zlib::BufError
         get_html(url, set_error_callback, self.html_options(url).merge('Accept-Encoding' => 'identity'))
       rescue EOFError, Net::ReadTimeout => e
