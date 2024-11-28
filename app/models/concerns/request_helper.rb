@@ -129,7 +129,8 @@ class RequestHelper
       uri = self.parse_url(url)
       begin
         self.request_uri(uri, verb)
-      rescue Net::HTTPClientException
+      rescue Net::HTTPClientException => e
+        handle_http_exception_error(e)
         self.request_uri(uri, verb, skip_proxy = true)
       end
     end
