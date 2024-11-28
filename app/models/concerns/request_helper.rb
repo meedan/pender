@@ -29,7 +29,7 @@ class RequestHelper
       rescue Net::HTTPClientException => e
         PenderSentry.notify(e, url: url)
         Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
-        set_error_callback.call(message: 'Invalid Auth', code: Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'))
+        set_error_callback.call(message: 'Proxy Error', code: Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'))
         return nil
       rescue Zlib::DataError, Zlib::BufError
         get_html(url, set_error_callback, self.html_options(url).merge('Accept-Encoding' => 'identity'))
