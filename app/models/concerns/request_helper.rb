@@ -26,6 +26,8 @@ class RequestHelper
           return nil
         end
         get_html(url, set_error_callback, header_options, true)
+      rescue Net::HTTPClientException => e
+        handle_http_exception_error(e)
       rescue Zlib::DataError, Zlib::BufError
         get_html(url, set_error_callback, self.html_options(url).merge('Accept-Encoding' => 'identity'))
       rescue EOFError, Net::ReadTimeout => e
@@ -110,16 +112,6 @@ class RequestHelper
       end
     end
 
-    def extended_headers(uri = nil)
-      uri = self.parse_url(decode_uri(uri)) if uri.is_a?(String)
-      ({
-        'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
-        'Accept' =>  'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-        'Accept-Language' => 'en-US',
-        'Cookie' => self.set_cookies(uri)
-      })
-    end
-
     def get_proxy(uri, format = :array, force = false)
       proxy = self.valid_proxy
       if proxy || force
@@ -135,13 +127,16 @@ class RequestHelper
 
     def request_url(url, verb = 'Get')
       uri = self.parse_url(url)
-      self.request_uri(uri, verb)
+      begin
+        self.request_uri(uri, verb)
+      rescue Net::HTTPClientException => e
+        handle_http_exception_error(e)
+        self.request_uri(uri, verb, skip_proxy = true) # retries without the proxy
+      end
     end
 
-    def request_uri(uri, verb = 'Get')
-      http = Net::HTTP.new(uri.host, uri.inferred_port)
-      http.read_timeout = PenderConfig.get('timeout', 30).to_i
-      http.use_ssl = uri.scheme == 'https'.freeze
+    def request_uri(uri, verb = 'Get', skip_proxy = false)
+      http = self.initialize_http(uri, skip_proxy)
       headers = {
         'User-Agent' => self.html_options(uri)['User-Agent'],
         'Accept-Language' => LANG,
@@ -149,15 +144,20 @@ class RequestHelper
 
       request = "Net::HTTP::#{verb}".constantize.new(uri.to_s, headers)
       request['Cookie'] = self.set_cookies(uri)
+
+      http.request(request)
+    end
+
+    def initialize_http(uri, skip_proxy = false)
+      http = Net::HTTP.new(uri.host, uri.inferred_port)
       proxy_config = self.get_proxy(uri, :hash)
-      if proxy_config
-        proxy = Net::HTTP::Proxy(proxy_config['host'], proxy_config['port'], proxy_config['user'], proxy_config['pass'])
-        proxy.start(uri.host, uri.inferred_port, use_ssl: uri.scheme == 'https') do |http2|
-          http2.request(request)
-        end
-      else
-        http.request(request)
+      if proxy_config && !skip_proxy
+        http = Net::HTTP.new(uri.host, uri.inferred_port, proxy_config['host'], proxy_config['port'], proxy_config['user'], proxy_config['pass'])
       end
+      http.read_timeout = PenderConfig.get('timeout', 30).to_i
+      http.use_ssl = uri.scheme == 'https'.freeze
+
+      http
     end
 
     def decode_uri(url)
@@ -227,5 +227,12 @@ class RequestHelper
         empty
       end
     end
+  end
+
+  def handle_http_exception_error(error)
+    PenderSentry.notify(e, url: url)
+    Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
+    set_error_callback.call(message: 'Proxy Error', code: Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'))
+    return nil
   end
 end
