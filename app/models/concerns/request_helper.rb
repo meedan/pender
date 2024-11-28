@@ -131,7 +131,7 @@ class RequestHelper
         self.request_uri(uri, verb)
       rescue Net::HTTPClientException => e
         handle_http_exception_error(e)
-        self.request_uri(uri, verb, skip_proxy = true)
+        self.request_uri(uri, verb, skip_proxy = true) # retries without the proxy
       end
     end
 
