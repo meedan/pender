@@ -85,11 +85,4 @@ class TiktokItemUnitTest < ActiveSupport::TestCase
     url = Parser::TiktokItem.new('https://tiktok.com/fakeaccount/1234').oembed_url
     assert_equal 'https://www.tiktok.com/oembed?url=https://tiktok.com/fakeaccount/1234', url
   end
-
-  test "should try to parse tiktok url even if the proxy fails" do
-    # add url with data response
-    # mock proxy failed response
-    # try to parse the url
-    # it should return the data
-  end
 end
