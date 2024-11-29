@@ -66,9 +66,14 @@
           // Height changed
           case 'setHeight':
             var title = data[1],
-                height = data[2],
-                iframe = document.getElementById('pender-iframe-' + title);
-            if (iframe != undefined) iframe.style.height = height + 'px';
+            height = parseInt(data[2], 10), // Ensure height is treated as an integer
+            iframe = document.getElementById('pender-iframe-' + title);
+
+            if (iframe != undefined) {
+              // Adjust height to account for possible margins or padding
+              var adjustment = 20; // Cover margins or padding
+              iframe.style.height = (height + adjustment) + 'px';
+            }
             break;
         }
       }
