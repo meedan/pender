@@ -231,7 +231,7 @@ class RequestHelper
 
     def handle_http_exception_error(error, url)
       PenderSentry.notify(error, url: url)
-      Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: error.class, error_message: error.message
+      Rails.logger.warn level: 'WARN', message: '[HTTP] HTTP Client Error (Proxy)', url: url, error_class: error.class, error_message: error.message
       return nil
     end
   end
