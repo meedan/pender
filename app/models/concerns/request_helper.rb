@@ -27,7 +27,7 @@ class RequestHelper
         end
         get_html(url, set_error_callback, header_options, true)
       rescue Net::HTTPClientException => e
-        set_error_callback.call(message: 'Proxy Error', code: Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'))
+        set_error_callback.call(message: 'Proxy Error', code: Lapis::ErrorCodes::const_get('PROXY_ERROR'))
         handle_http_exception_error(e, url)
       rescue Zlib::DataError, Zlib::BufError
         get_html(url, set_error_callback, self.html_options(url).merge('Accept-Encoding' => 'identity'))
