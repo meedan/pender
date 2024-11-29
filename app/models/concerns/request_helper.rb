@@ -27,7 +27,8 @@ class RequestHelper
         end
         get_html(url, set_error_callback, header_options, true)
       rescue Net::HTTPClientException => e
-        handle_http_exception_error(e)
+        set_error_callback.call(message: 'Proxy Error', code: Lapis::ErrorCodes::const_get('PROXY_ERROR'))
+        handle_http_exception_error(e, url)
       rescue Zlib::DataError, Zlib::BufError
         get_html(url, set_error_callback, self.html_options(url).merge('Accept-Encoding' => 'identity'))
       rescue EOFError, Net::ReadTimeout => e
@@ -130,7 +131,7 @@ class RequestHelper
       begin
         self.request_uri(uri, verb)
       rescue Net::HTTPClientException => e
-        handle_http_exception_error(e)
+        handle_http_exception_error(e, url)
         self.request_uri(uri, verb, skip_proxy = true) # retries without the proxy
       end
     end
@@ -227,12 +228,11 @@ class RequestHelper
         empty
       end
     end
-  end
 
-  def handle_http_exception_error(error)
-    PenderSentry.notify(e, url: url)
-    Rails.logger.warn level: 'WARN', message: '[Parser] Could not get html', url: url, error_class: e.class, error_message: e.message
-    set_error_callback.call(message: 'Proxy Error', code: Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'))
-    return nil
+    def handle_http_exception_error(error, url)
+      PenderSentry.notify(error, url: url)
+      Rails.logger.warn level: 'WARN', message: '[HTTP] HTTP Client Error (Proxy)', url: url, error_class: error.class, error_message: error.message
+      return nil
+    end
   end
 end
