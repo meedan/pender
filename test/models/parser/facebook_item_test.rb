@@ -540,5 +540,26 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
         assert_nil embed_html
       end
     end
-  end  
+  end
+
+  test "html_for_facebook_post includes script for height adjustment" do
+    username = "test_user"
+    request_url = "https://www.facebook.com/test_user/posts/12345"
+    html_page = Nokogiri::HTML("<html></html>") # Simulate a valid HTML page
+  
+    parser = Parser::FacebookItem.new(request_url)
+  
+    parser.stub(:not_an_event_page, true) do
+      parser.stub(:not_a_group_post, true) do
+        embed_html = parser.send(:html_for_facebook_post, username, html_page, request_url)
+  
+        # Ensure the script for Facebook embed is present
+        assert_includes embed_html, '<script>'
+        assert_includes embed_html, 'FB.init({ xfbml: true, version: "v2.6" });'
+  
+        # Check that the embed HTML includes the iframe
+        assert_includes embed_html, '<div class="fb-post" data-href="https://www.facebook.com/test_user/posts/12345"></div>'
+      end
+    end
+  end
 end

@@ -82,8 +82,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     assert_match 'Larry Sanders on brother Bernie and why Tony Blair was ‘destructive’', data['title']
     assert_match /The Green party candidate, who is fighting the byelection in David Cameron’s old seat/, data['description']
     assert_match /2016-10/, data['published_at']
-    assert_match '@zoesqwilliams', data['username']
-    assert_match 'https://twitter.com/zoesqwilliams', data['author_url']
+    assert_match 'https://www.theguardian.com/profile/zoewilliams', data['author_url']
     assert !data['picture'].blank?
   end
 
