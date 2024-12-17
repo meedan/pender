@@ -19,7 +19,7 @@ Minitest::Retry.on_failure do |_klass, _test_name|
 end
 
 class ActiveSupport::TestCase
-  ActiveRecord::Migration.check_all_pending!
+  ActiveRecord::Migration.check_pending!
 
   include SampleData
 
