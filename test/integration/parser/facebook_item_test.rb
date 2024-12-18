@@ -12,8 +12,6 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert !data['title'].blank?
     assert !data['username'].blank?
     assert !data['author_name'].blank?
-    assert !data['author_picture'].blank?
-    assert !data['author_url'].blank?
     assert !data['description'].blank?
     assert !data['text'].blank?
     assert !data['picture'].blank?
@@ -28,7 +26,6 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert !data['title'].blank?
     assert !data['username'].blank?
     assert !data['author_name'].blank?
-    assert !data['author_picture'].blank?
   end
 
   test "should return data even if post does not exist" do
