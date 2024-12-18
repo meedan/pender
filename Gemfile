@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-gem 'rails', '~> 7.0.8'
+gem 'rails', '~> 7.2.2'
 gem 'pg', '~> 1.4'
 group :development, :test do
   gem 'byebug'
