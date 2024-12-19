@@ -46,11 +46,11 @@ gem 'rack-cors', '>= 2.0.2', :require => 'rack/cors'
 gem 'rails-perftest'
 gem 'sidekiq', '< 8'
 gem 'redis', '4.3.1'
-gem 'nokogiri', '1.16.5', require: false
+gem 'nokogiri', '1.17.2', require: false
 gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
 gem 'loofah', '2.21', require: false
-gem 'rails-html-sanitizer', '1.6'
+gem 'rails-html-sanitizer', '1.6.2'
 gem 'sprockets', '3.7.2'
 gem 'rack', '>= 1.6.11', require: false
 gem 'aws-sdk-s3', require: false
