@@ -33,4 +33,13 @@ module ProviderInstagram
       ]
     end
   end
+
+  def oembed_url(_ = nil)
+    request_url = self.url
+
+    request_url = request_url.sub(/\?.*/, '')
+    request_url = request_url + "/" unless request_url.end_with? "/"
+
+    '<div><iframe src="' + request_url + 'embed" width="397" height="477" frameborder="0" scrolling="no" allowtransparency="true"></iframe></div>'
+  end
 end

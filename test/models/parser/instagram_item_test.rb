@@ -139,4 +139,10 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     assert_equal 'instagram', data['provider']
     assert_equal 'item', data['type']
   end
+
+  test "#oembed_url returns URL with the instance URL" do
+    url = 'https://www.instagram.com/p/CdOk-lLKmyH'
+    oembed_url = Parser::TwitterItem.new(url).oembed_url
+    assert_equal '<div><iframe src="' + url + 'embed" width="397" height="477" frameborder="0" scrolling="no" allowtransparency="true"></iframe></div>', oembed_url
+  end
 end
