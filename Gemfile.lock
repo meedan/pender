@@ -194,6 +194,13 @@ GEM
     json-schema (5.1.1)
       addressable (~> 2.8)
       bigdecimal (~> 3.1)
+    libv8-node (18.19.0.0)
+    libv8-node (18.19.0.0-aarch64-linux)
+    libv8-node (18.19.0.0-aarch64-linux-musl)
+    libv8-node (18.19.0.0-arm64-darwin)
+    libv8-node (18.19.0.0-x86_64-darwin)
+    libv8-node (18.19.0.0-x86_64-linux)
+    libv8-node (18.19.0.0-x86_64-linux-musl)
     logger (1.6.4)
     lograge (0.14.0)
       actionpack (>= 4)
@@ -215,6 +222,8 @@ GEM
     memory_profiler (1.1.0)
     mini_histogram (0.3.1)
     mini_mime (1.1.5)
+    mini_racer (0.16.0)
+      libv8-node (~> 18.19.0.0)
     minitest (5.10.1)
     minitest-retry (0.2.3)
       minitest (>= 5.0)
@@ -522,6 +531,7 @@ DEPENDENCIES
   logstash-logger
   loofah (= 2.21)
   memory_profiler
+  mini_racer
   minitest (= 5.10.1)
   minitest-retry
   mocha (~> 1.14.0)
