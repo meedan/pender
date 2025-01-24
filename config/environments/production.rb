@@ -95,4 +95,6 @@ Rails.application.configure do
   end
   config.lograge.formatter = Lograge::Formatters::Json.new
   config.logger = ActiveSupport::Logger.new(STDOUT)
+
+  config.assets.js_compressor = Uglifier.new(harmony: true)
 end
