@@ -206,6 +206,7 @@ class Media
     tag = self.doc&.at_css("meta[property='og:url']") || self.doc&.at_css("meta[property='twitter:url']") || self.doc&.at_css("link[rel='canonical']")
     canonical_url = tag&.attr('content') || tag&.attr('href')
     get_parsed_url(canonical_url) if canonical_url
+    self.url
   end
 
   def get_parsed_url(canonical_url)
