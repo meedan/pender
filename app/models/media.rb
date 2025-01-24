@@ -202,10 +202,10 @@ class Media
   # Parse the page and set it to media `doc`. If the `doc` has a tag (`og:url`, `twitter:url`, `rel='canonical`) with a different url, the media `url` is updated with the url found, the page is parsed and the media `doc` is updated
 
   def get_canonical_url
-    # self.doc = self.get_html(RequestHelper.html_options(self.url))
-    # tag = self.doc&.at_css("meta[property='og:url']") || self.doc&.at_css("meta[property='twitter:url']") || self.doc&.at_css("link[rel='canonical']")
-    # canonical_url = tag&.attr('content') || tag&.attr('href')
-    # get_parsed_url(canonical_url) if canonical_url
+    self.doc = self.get_html(RequestHelper.html_options(self.url))
+    tag = self.doc&.at_css("meta[property='og:url']") || self.doc&.at_css("meta[property='twitter:url']") || self.doc&.at_css("link[rel='canonical']")
+    canonical_url = tag&.attr('content') || tag&.attr('href')
+    get_parsed_url(canonical_url) if canonical_url
     self.url
   end
 

@@ -124,14 +124,14 @@ module Api
       end
 
       def render_as_html
-        #begin
+        begin
           if @refresh || !Pender::Store.current.exist?(@id, :html)
             save_cache
           end
           render plain: Pender::Store.current.read(@id, :html), status: 200
-        # rescue
-        #   render html: 'Could not parse this media'
-        # end
+        rescue
+          render html: 'Could not parse this media'
+        end
       end
 
       def render_as_js
