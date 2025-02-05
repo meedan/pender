@@ -1,19 +1,18 @@
 source 'https://rubygems.org'
-gem 'rails', '~> 6.1.7'
+gem 'rails', '~> 7.2.2'
 gem 'pg', '~> 1.4'
 group :development, :test do
   gem 'byebug'
   gem 'gem-licenses'
   gem 'rspec-rails'
-  # workaround for https://github.com/rswag/rswag/issues/317, remove GIT repository after https://github.com/rswag/rswag/pull/319 is merged
-  gem 'rswag-specs', git: 'https://github.com/jetpackworkflow/rswag.git', branch: 'allow_oas3_param_schema_array'
+  gem 'rswag-specs'
   gem 'get_process_mem'
   gem 'derailed'
   gem "spring"
 end
 gem 'memory_profiler'
 group :development do
-  gem 'web-console', '~> 3.5.1'
+  gem 'web-console'
   gem 'awesome_print', require: false
 end
 group :test do
@@ -47,11 +46,11 @@ gem 'rack-cors', '>= 2.0.2', :require => 'rack/cors'
 gem 'rails-perftest'
 gem 'sidekiq', '< 8'
 gem 'redis', '4.3.1'
-gem 'nokogiri', '1.16.5', require: false
+gem 'nokogiri', '1.17.2', require: false
 gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
-gem 'loofah', '2.19.1', require: false
-gem 'rails-html-sanitizer', '1.4.4'
+gem 'loofah', '2.21', require: false
+gem 'rails-html-sanitizer', '1.6.2'
 gem 'sprockets', '3.7.2'
 gem 'rack', '>= 1.6.11', require: false
 gem 'aws-sdk-s3', require: false
@@ -78,3 +77,6 @@ gem 'addressable', '2.8.1'
 gem 'net-http'
 gem 'prometheus-client'
 gem 'psych', '< 4'
+gem 'net-protocol'
+gem 'mini_racer'
+gem 'terser'

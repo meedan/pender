@@ -159,9 +159,10 @@ module Api
 
       def generate_media_html(template, locals)
         ApplicationController.render(
-          template: "medias/#{template}.html.erb",
-          layout: 'layouts/application.html.erb',
-          assigns: locals.merge({ request: request, id: @id, media: @media })
+          template: "medias/#{template}",
+          layout: 'layouts/application',
+          assigns: locals.merge({ request: request, id: @id, media: @media }),
+          formats: [:html]
         )
       end
 
