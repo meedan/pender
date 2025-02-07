@@ -280,8 +280,6 @@ class Media
   end
 
   def remove_parser_specific_parameters
-    return unless self.url.is_a?(String) && self.url.start_with?('http')
-
     parser_class = self.class.find_parser_class(self.url)
     return unless parser_class&.respond_to?(:urls_parameters_to_remove)
 
