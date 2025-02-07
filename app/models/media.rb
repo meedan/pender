@@ -208,7 +208,7 @@ class Media
     canonical_url = tag&.attr('content') || tag&.attr('href')
     return get_parsed_url(canonical_url) if canonical_url.is_a?(String) && !canonical_url.empty? # Ensure it only returns a string
   
-    valid_url?(self.url) ? self.url : nil
+    nil # Return nil, since url is empty/not a string
   end
 
   def get_parsed_url(canonical_url)
@@ -344,12 +344,4 @@ class Media
     end
   end
 
-  private
-
-  def valid_url?(url)
-    uri = URI.parse(url)
-    uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
-  rescue URI::InvalidURIError
-    false
-  end
 end
