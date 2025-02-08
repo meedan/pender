@@ -2,7 +2,7 @@ module Parser
   class InstagramProfile < Base
     include ProviderInstagram
 
-    INSTAGRAM_PROFILE_URL = /^https?:\/\/(www\.)?instagram\.com\/[^\/]+\/?$/
+    INSTAGRAM_PROFILE_URL = %r{^https?://(www\.)?instagram\.com/([^/?#]+)}
 
     class << self
       def type
