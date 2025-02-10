@@ -208,12 +208,12 @@ class ArchiverTest < ActiveSupport::TestCase
     url = 'https://example.com/'
 
     Media.any_instance.unstub(:archive_to_archive_org)
-    Media.stubs(:get_available_archive_org_snapshot).returns({ location: "https://web.archive.org/web/timestamp/#{url}" })
+    Media.stubs(:get_available_archive_org_snapshot).returns({ status_ext: 'error:blocked-url', message: 'This URL is in the Save Page Now service block list and cannot be captured.', url: url })
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(status: 200, body: { message: '[archive_org]: (error:blocked-url) This URL is in the Save Page Now service block list and cannot be captured.', url: url})
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(status: 200, body: { status: 'error', status_ext: 'error:blocked-url', message: 'This URL is in the Save Page Now service block list and cannot be captured.', url: url })
 
     m = Media.new url: url, key: api_key
 
