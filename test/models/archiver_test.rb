@@ -180,27 +180,94 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal "https://web.archive.org/web/timestamp/#{url}", media_data.dig('archives', 'archive_org', 'location') 
   end
 
-  test "when Archive.org fails with Pender::Exception::TooManyCaptures it should NOT retry, it should update data with snapshot (if available) and error" do
+  test "when Archive.org fails with the same snapshot has been made... it should NOT retry, and should notify Sentry" do
     api_key = create_api_key_with_webhook
     url = 'https://example.com/'
 
     Media.any_instance.unstub(:archive_to_archive_org)
-    Media.stubs(:get_available_archive_org_snapshot).returns({ location: "https://web.archive.org/web/timestamp/#{url}" })
+    Media.stubs(:get_available_archive_org_snapshot).returns({ message: 'The same snapshot had been made 1 hour, 12 minutes ago. You can make new capture of this URL after 24 hours.', url: url })
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(status: 200, body: { message: 'The same snapshot had been made 12 hours, 13 minutes ago. You can make new capture of this URL after 24 hours.', url: url})
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(status: 200, body: { message: 'The same snapshot had been made 1 hour, 12 minutes ago. You can make new capture of this URL after 24 hours.', url: url})
 
     m = Media.new url: url, key: api_key
-    assert_nothing_raised do
-      m.as_json(archivers: 'archive_org')
+
+    sentry_call_count = 0
+    arguments_checker = Proc.new do |e|
+      sentry_call_count += 1
     end
+
+    PenderSentry.stub(:notify, arguments_checker) do
+      assert_nothing_raised do
+        m.as_json(archivers: 'archive_org')
+      end
+    end
+    assert_equal 1, sentry_call_count
 
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
-    assert_match /The same snapshot/, media_data.dig('archives', 'archive_org', 'error', 'message')
-    assert_equal "https://web.archive.org/web/timestamp/#{url}", media_data.dig('archives', 'archive_org', 'location') 
+  end
+
+  test "when Archive.org fails with too-many-daily-captures it should NOT retry, and should notify Sentry" do
+    api_key = create_api_key_with_webhook
+    url = 'https://example.com/'
+
+    Media.any_instance.unstub(:archive_to_archive_org)
+    Media.stubs(:get_available_archive_org_snapshot).returns({ status_ext: 'error:too-many-daily-captures', message: 'This URL has been already captured 7 times today, which is a daily limit we have set for that Resource type. Please try again tomorrow. Please email us at "info@archive.org" if you would like to discuss this more.', url: url })
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(status: 200, body: { status_ext: 'error:too-many-daily-captures', message: 'This URL has been already captured 7 times today, which is a daily limit we have set for that Resource type. Please try again tomorrow. Please email us at "info@archive.org" if you would like to discuss this more.', url: url})
+
+    m = Media.new url: url, key: api_key
+
+    sentry_call_count = 0
+    arguments_checker = Proc.new do |e|
+      sentry_call_count += 1
+    end
+
+    PenderSentry.stub(:notify, arguments_checker) do
+      assert_nothing_raised do
+        m.as_json(archivers: 'archive_org')
+      end
+    end
+    assert_equal 1, sentry_call_count
+
+    media_data = Pender::Store.current.read(Media.get_id(url), :json)
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
+  end
+
+  test "when Archive.org fails with blocked-url it should NOT retry, and should notify Sentry" do
+    api_key = create_api_key_with_webhook
+    url = 'https://example.com/'
+
+    Media.any_instance.unstub(:archive_to_archive_org)
+    Media.stubs(:get_available_archive_org_snapshot).returns({ status_ext: 'error:blocked-url', message: 'This URL is in the Save Page Now service block list and cannot be captured.', url: url })
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(status: 200, body: { status: 'error', status_ext: 'error:blocked-url', message: 'This URL is in the Save Page Now service block list and cannot be captured.', url: url })
+
+    m = Media.new url: url, key: api_key
+
+    sentry_call_count = 0
+    arguments_checker = Proc.new do |e|
+      sentry_call_count += 1
+    end
+
+    PenderSentry.stub(:notify, arguments_checker) do
+      assert_nothing_raised do
+        m.as_json(archivers: 'archive_org')
+      end
+    end
+    assert_equal 1, sentry_call_count
+
+    media_data = Pender::Store.current.read(Media.get_id(url), :json)
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
   end
 
   test "when Archive.org fails to make/complete a request it should retry and update data with error" do
