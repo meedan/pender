@@ -34,7 +34,7 @@ module MediaArchiveOrgArchiver
              body['status_ext'] == 'error:too-many-daily-captures' ||
              body['status_ext'] == 'error:blocked-url'
               PenderSentry.notify(
-                custom_exception(body['status_ext'], body["message"]),
+                custom_exception(body['status_ext'], body['message']),
                 url: url,
                 response_body: body
               )
