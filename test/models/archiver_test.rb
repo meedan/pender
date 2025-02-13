@@ -728,4 +728,59 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal ['perma_cc'], cached.keys
     assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-1'}, cached['perma_cc'])
   end
+
+  test "should handle RetryLimitHit error properly and not retry" do
+    api_key = create_api_key_with_webhook
+    url = 'https://example.com/'
+    archiver = 'archive_org'
+  
+    Media.any_instance.stubs(:archive_to_archive_org).raises(Pender::Exception::RetryLimitHit.new("Too many requests"))
+  
+    WebMock.stub_request(:get, url).to_return(status: 429, body: '<html><body><h1>429 Too Many Requests</h1></body></html>')
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+  
+    media = create_media url: url, key: api_key
+    log = StringIO.new
+    Rails.logger = Logger.new(log)
+  
+    # Ensure the error is handled properly
+    assert_nothing_raised do
+      Media.handle_archiving_exceptions(archiver, { url: url, key_id: api_key.id }) do
+        media.as_json(archivers: archiver)
+      end
+    end
+  
+    media_data = Pender::Store.current.read(Media.get_id(url), :json)
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_RATE_LIMITED'), media_data.dig('archives', archiver, 'error', 'code')
+    assert_match 'Too many requests. Archiver is temporarily rate-limited.', media_data.dig('archives', archiver, 'error', 'message')
+    assert_match '[ARCHIVER RATE LIMITED]', log.string
+  end
+
+  test "should handle RetryLimitHit error when item is unavailable on Archive.org" do
+    api_key = create_api_key_with_webhook
+    url = 'https://example.com/'
+    archiver = 'archive_org'
+
+    Media.any_instance.stubs(:archive_to_archive_org).raises(Pender::Exception::RetryLimitHit.new("Item not available"))
+
+    WebMock.stub_request(:get, url).to_return(status: 403, body: '<html><body><h1>Item not available</h1></body></html>')
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+
+    media = create_media url: url, key: api_key
+    log = StringIO.new
+    Rails.logger = Logger.new(log)
+
+    assert_nothing_raised do
+      Media.handle_archiving_exceptions(archiver, { url: url, key_id: api_key.id }) do
+        media.as_json(archivers: archiver)
+      end
+    end
+
+    media_data = Pender::Store.current.read(Media.get_id(url), :json)
+    assert_not_nil media_data, "Expected media_data to be present but got nil"
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_RATE_LIMITED'), media_data.dig('archives', archiver, 'error', 'code')
+    assert_match '[ARCHIVER RATE LIMITED]', log.string
+  end
 end

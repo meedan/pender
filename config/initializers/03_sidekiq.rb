@@ -11,9 +11,13 @@ if File.exist?(file)
     config.redis = redis_config
 
     config.death_handlers << ->(job, original_exception) do
-      if original_exception.is_a?(Pender::Exception::RetryLater)
+      case original_exception
+      when Pender::Exception::RetryLater
         limit_hit_exception = Pender::Exception::RetryLimitHit.new(original_exception)
         PenderSentry.notify(limit_hit_exception, { job: job, original_exception: original_exception.cause.inspect })
+      when Pender::Exception::RetryLimitHit
+        Rails.logger.warn level: 'WARN', message: "Archiver rate limited: Too many requests. Job: #{job}"
+        PenderSentry.notify(original_exception, { job: job, rate_limited: true })
       else
         PenderSentry.notify(original_exception, { job: job })
       end
