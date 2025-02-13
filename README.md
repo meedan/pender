@@ -53,7 +53,6 @@ Open http://localhost:3200/api-docs/index.html to access Pender API directly.
 To run the full test suite of Pender tests locally the way CI runs them:
 
 ```
-rm .env.test
 bin/get_env_vars.sh
 docker build . -t pender
 docker compose -f docker-test.yml up pender

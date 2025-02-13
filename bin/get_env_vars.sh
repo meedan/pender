@@ -8,7 +8,7 @@ else
   SSM_NAMES=$(aws ssm get-parameters-by-path --region $REGION --path /test/pender/ --recursive --with-decryption --output text --query "Parameters[].[Name]")
 
   if [ -f ".env" ]; then
-    echo "File .env exists, removing."
+    echo "File .env exists, removing and overwriting."
     rm .env
   fi
   echo "Getting SSM variables"

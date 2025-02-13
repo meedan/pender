@@ -38,8 +38,6 @@ services:
   pender:
     image: pender:latest
     build: .
-    env_file:
-      - .env.test
     shm_size: 1G
     depends_on:
       - postgres
