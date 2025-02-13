@@ -133,7 +133,7 @@ module MediaArchiver
       Media.notify_webhook_and_update_cache(archiver, params[:url], data, params[:key_id])
     
       Rails.logger.error level: 'ERROR', message: "[#{error_type}] #{error.message}", url: params[:url], archiver: archiver
-      retry_archiving_after_failure(archiver, params) unless error.is_a?(Pender::Exception::RetryLimitHit)
+      retry_archiving_after_failure(archiver, params)
     end
   end
 end
