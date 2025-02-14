@@ -1,4 +1,4 @@
-Rails.application.reloader.to_prepare do
+Rails.application.config.after_initialize do
   MetricsService.custom_counter(:pender_parser_requests_total, 'Count parsing requests, gets the full total - does not break them by labels', labels: [:service_name])
   MetricsService.custom_counter(:pender_parser_requests_success, 'Count successful parsing requests', labels: [:service_name])
   MetricsService.custom_counter(:pender_parser_requests_error, 'Count errored parsing requests', labels: [:service_name])
