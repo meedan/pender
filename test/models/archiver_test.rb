@@ -729,67 +729,38 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-1'}, cached['perma_cc'])
   end
 
-  test "should handle RetryLimitHit error properly and not retry" do
+  test "when Archive.org returns 429 Too Many Requests it should notify Sentry with RateLimitExceeded" do
     api_key = create_api_key_with_webhook
     url = 'https://example.com/'
-    archiver = 'archive_org'
 
-    Media.any_instance.stubs(:archive_to_archive_org)
-         .raises(Pender::Exception::RetryLimitHit.new("Too many requests"))
-
-    WebMock.stub_request(:get, url).to_return(
-      status: 429,
-      body: '<html><body><h1>429 Too Many Requests</h1></body></html>'
-    )
-    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+    Media.any_instance.unstub(:archive_to_archive_org)
+    Media.stubs(:get_available_archive_org_snapshot).returns({ status_ext: 'error:rate-limit', message: '429 Too Many Requests', url: url })
   
-    media = create_media url: url, key: api_key
-    log = StringIO.new
-    Rails.logger = Logger.new(log)
-
-    assert_nothing_raised do
-      Media.handle_archiving_exceptions(archiver, { url: url, key_id: api_key.id }) do
-        media.as_json(archivers: archiver)
-      end
-    end
-
-    media_data = Pender::Store.current.read(Media.get_id(url), :json)
-    assert_equal Lapis::ErrorCodes::ARCHIVER_RETRY_LIMIT_HIT,
-                 media_data.dig('archives', archiver, 'error', 'code')
-    assert_match 'Too many requests', media_data.dig('archives', archiver, 'error', 'message')
-    assert_match /\[ARCHIVER_RETRY_LIMIT_HIT\]/, log.string
-  end
-
-  test "should handle RetryLimitHit error when item is unavailable on Archive.org" do
-    api_key = create_api_key_with_webhook
-    url = 'https://example.com/'
-    archiver = 'archive_org'
-
-    Media.any_instance.stubs(:archive_to_archive_org)
-         .raises(Pender::Exception::RetryLimitHit.new("Item not available"))
-
-    WebMock.stub_request(:get, url).to_return(
-      status: 403,
-      body: '<html><body><h1>Item not available</h1></body></html>'
-    )
-    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /archive.org\/save/).to_return_json(body: { status: 'error', status_ext: 'error:rate-limit', message: '429 Too Many Requests', url: url })
+  
+    m = Media.new url: url, key: api_key
 
-    media = create_media url: url, key: api_key
-    log = StringIO.new
-    Rails.logger = Logger.new(log)
-    assert_nothing_raised do
-      Media.handle_archiving_exceptions(archiver, { url: url, key_id: api_key.id }) do
-        media.as_json(archivers: archiver)
+    sentry_call_count = 0
+    arguments_checker = Proc.new do |e|
+      sentry_call_count += 1
+      assert_instance_of Pender::Exception::RateLimitExceeded, e
+      assert_equal '429 Too Many Requests', e.message
+    end
+
+    PenderSentry.stub(:notify, arguments_checker) do
+      assert_nothing_raised do
+        m.as_json(archivers: 'archive_org')
       end
     end
 
+    assert_equal 1, sentry_call_count
+
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
-    assert_not_nil media_data, "Expected media_data to be present but got nil"
-    assert_equal Lapis::ErrorCodes::ARCHIVER_RETRY_LIMIT_HIT,
-                 media_data.dig('archives', archiver, 'error', 'code')
-    assert_match 'Item not available', media_data.dig('archives', archiver, 'error', 'message')
-    assert_match /\[ARCHIVER_RETRY_LIMIT_HIT\]/, log.string
-  end
+    expected_error_message = "(error:rate-limit) 429 Too Many Requests"
+    assert_equal expected_error_message, media_data.dig('archives', 'archive_org', 'error', 'message')
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
+  end  
 end

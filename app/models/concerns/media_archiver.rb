@@ -93,55 +93,20 @@ module MediaArchiver
       begin
         ApiKey.current = ApiKey.find_by(id: params.dig(:key_id))
         yield
-      rescue Pender::Exception::RateLimitExceeded => error
-        handle_limit_error(archiver, params, error, limit_type: :rate)
-      rescue Pender::Exception::RetryLimitHit => error
-        handle_limit_error(archiver, params, error, limit_type: :retry)
       rescue Pender::Exception::RetryLater => error
         retry_archiving_after_failure(archiver, { message: error.message })
       rescue StandardError => error
-        handle_generic_archiver_error(archiver, params, error)
+        error_type = 'ARCHIVER_ERROR'
+        params.merge!({code: Lapis::ErrorCodes::const_get(error_type), message: error.message})
+        data = { error: { message: params[:message], code: Lapis::ErrorCodes::const_get(error_type) }}
+        Media.notify_webhook_and_update_cache(archiver, params[:url], data, params[:key_id])
+        retry_archiving_after_failure(archiver, params)
       end
     end
 
     def retry_archiving_after_failure(archiver, params)
       Rails.logger.warn level: 'WARN', message: "#{params[:message]}", url: params[:url], archiver: archiver, error_code: params[:code], error_message: params[:message]
       raise Pender::Exception::RetryLater, "[#{archiver}]: #{params[:message]}"
-    end
-
-    def handle_limit_error(archiver, params, error, limit_type: :rate)
-      if limit_type == :rate
-        error_type = 'ARCHIVER_RATE_LIMITED'
-        message = 'Too many requests. Archiver is temporarily rate-limited.'
-      else
-        error_type = 'ARCHIVER_RETRY_LIMIT_HIT'
-        message = error.message
-      end
-
-      params.merge!({ code: Lapis::ErrorCodes::const_get(error_type), message: message })
-      data = { error: { message: params[:message], code: Lapis::ErrorCodes::const_get(error_type) } }
-      id = Media.get_id(params[:url])
-      existing_data = Pender::Store.current.read(id, :json) || {}
-      updated_data = existing_data.deep_merge({ archives: { archiver => data } })
-      Pender::Store.current.write(id, :json, updated_data)
-    
-      Media.notify_webhook_and_update_cache(archiver, params[:url], data, params[:key_id])
-
-      Rails.logger.warn level: 'WARN',
-                        message: "[#{error_type}] #{params[:message]}",
-                        url: params[:url],
-                        archiver: archiver
-    end
-
-    def handle_generic_archiver_error(archiver, params, error)
-      error_type = 'ARCHIVER_ERROR'
-      params.merge!({code: Lapis::ErrorCodes::const_get(error_type), message: error.message})
-    
-      data = { error: { message: params[:message], code: Lapis::ErrorCodes::const_get(error_type) }}
-      Media.notify_webhook_and_update_cache(archiver, params[:url], data, params[:key_id])
-    
-      Rails.logger.error level: 'ERROR', message: "[#{error_type}] #{error.message}", url: params[:url], archiver: archiver
-      retry_archiving_after_failure(archiver, params)
     end
   end
 end
