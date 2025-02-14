@@ -739,8 +739,8 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /archive.org\/save/).to_return_json(body: { status: 'error', status_ext: 'error:rate-limit', message: '429 Too Many Requests', url: url })
-  
+    WebMock.stub_request(:post, /archive.org\/save/).to_return(status: 500, body: '<html><body><h1>429 Too Many Requests</h1>')
+
     m = Media.new url: url, key: api_key
 
     sentry_call_count = 0
@@ -759,8 +759,8 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal 1, sentry_call_count
 
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
-    expected_error_message = "(error:rate-limit) 429 Too Many Requests"
-    assert_equal expected_error_message, media_data.dig('archives', 'archive_org', 'error', 'message')
+    expected_error_message = "<html><body><h1>429 Too Many Requests</h1>"
+    assert_includes media_data.dig('archives', 'archive_org', 'error', 'message'), expected_error_message
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
   end  
 end
