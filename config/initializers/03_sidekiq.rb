@@ -14,14 +14,13 @@ if File.exist?(file)
       case original_exception
       when Pender::Exception::RetryLater
         if original_exception.message.include?("Too Many Requests")
-          rate_limit_exception = Pender::Exception::RateLimitExceeded.new(original_exception)
-          PenderSentry.notify(rate_limit_exception, { job: job, original_exception: original_exception.cause.inspect })
+          limit_exception = Pender::Exception::RateLimitExceeded.new(original_exception)
         else
-          limit_hit_exception = Pender::Exception::RetryLimitHit.new(original_exception)
-          PenderSentry.notify(limit_hit_exception, { job: job, original_exception: original_exception.cause.inspect })
+          limit_exception = Pender::Exception::RetryLimitHit.new(original_exception)
         end
+        PenderSentry.notify(limit_exception, { job: job, original_exception: original_exception.cause.inspect })
       when Pender::Exception::RetryLimitHit
-        Rails.logger.warn level: 'WARN', message: "Archiver rate limited: Too many requests. Job: #{job}"
+        Rails.logger.warn level: 'WARN', message: "Archiver retry limit hit. Job: #{job}"
         PenderSentry.notify(original_exception, { job: job, rate_limited: true })
       else
         PenderSentry.notify(original_exception, { job: job })
