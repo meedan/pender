@@ -11,7 +11,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     assert_not_nil data['published_at']
     assert_equal '', data['username']
     assert_equal 'https://noticias.uol.com.br', data['author_url']
-    assert_equal 'UOLNoticias @UOL', data['author_name']
+    assert_equal 'UOLNoticias', data['author_name']
     assert_not_nil data['picture']
     assert_nil data['error']
   end
