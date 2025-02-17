@@ -123,6 +123,8 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     # User post
     assert Parser::FacebookItem.match?('https://www.facebook.com/dina.hawary/posts/10158416884740321').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/Classic.mou/posts/666508790193454:0').is_a?(Parser::FacebookItem)
+    assert Parser::FacebookItem.match?('https://www.facebook.com/maspmuseu/posts/pfbid0HqdatRwvYR9BFXsGDG1A9Q2xG952LoB6HACbenPPSMWy8SWw66Q26MnEovkQPEt3l').is_a?(Parser::FacebookItem)
+    assert Parser::FacebookItem.match?('https://web.facebook.com/maspmuseu/posts/na-obra-paisagem-114-a-artista-lucia-laguna-se-inspira-em-uma-fotografia-que-ela/1062887189213981/').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/media/set?set=a.10154534110871407.1073742048.54212446406&type=3').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/pg/Mariano-Rajoy-Brey-54212446406/photos/?tab=album&album_id=10154534110871407').is_a?(Parser::FacebookItem)
     assert Parser::FacebookItem.match?('https://www.facebook.com/Bimbo.Memories/photos/pb.235404669918505.-2207520000.1481570271./1051597428299221/?type=3&theater').is_a?(Parser::FacebookItem)
