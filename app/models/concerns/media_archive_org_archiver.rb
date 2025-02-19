@@ -22,16 +22,36 @@ module MediaArchiveOrgArchiver
           "url" => encoded_uri,
         )
         response = http.request(request)
+
         Rails.logger.info level: 'INFO', message: '[archive_org] Sent URL to archive', url: url, code: response.code, response: response.message
+
+        if response&.body&.include?("<html><body><h1>429 Too Many Requests</h1>") && response&.code == "500"
+          data = snapshot_data.to_h.merge({ error: { message: "(#{response.body}) #{response}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }})
+          Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
+          PenderSentry.notify(
+              Pender::Exception::RateLimitExceeded.new("429 Too Many Requests"),
+              url: url,
+              response_body: response.body
+            )
+          return
+        end
+
         body = JSON.parse(response.body)
         if body['job_id']
           ArchiverStatusJob.perform_in(2.minutes, body['job_id'], url, key_id)
         else
           data = snapshot_data.to_h.merge({ error: { message: "(#{body['status_ext']}) #{body['message']}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }})
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
-          if body['message']&.include?('The same snapshot') || body['status_ext'] == 'error:too-many-daily-captures'
+
+         if body['message']&.include?('The same snapshot') || body['status_ext'] == 'error:too-many-daily-captures'
             PenderSentry.notify(
-              Pender::Exception::TooManyCaptures.new(body["message"]),
+              Pender::Exception::TooManyCaptures.new(body['message']),
+              url: url,
+              response_body: body
+            )
+          elsif body['status_ext'] == 'error:blocked-url'
+            PenderSentry.notify(
+              Pender::Exception::BlockedUrl.new(body['message']),
               url: url,
               response_body: body
             )

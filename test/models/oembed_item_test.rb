@@ -118,4 +118,14 @@ class OembedItemUnitTest < ActiveSupport::TestCase
     item = OembedItem.new('http://example.com/original', 'http://example.com/oembed')
     assert !item.get_data.blank?
   end
+
+  test ".get_data assigns error when Zlib::DataError is raised" do
+    WebMock.stub_request(:get, /example.com\/oembed/).to_raise(Zlib::DataError.new("fake zlib error"))
+    
+    data = OembedItem.new(request_url, 'https://example.com/oembed').get_data
+  
+    assert data[:error].present?, "Expected an error in the data when Zlib::DataError is raised"
+    assert_match /Zlib::DataError/, data[:error][:message]
+    assert_match /fake zlib error/, data[:error][:message]
+  end
 end

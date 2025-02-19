@@ -204,9 +204,11 @@ class Media
   def get_canonical_url
     self.doc = self.get_html(RequestHelper.html_options(self.url))
     tag = self.doc&.at_css("meta[property='og:url']") || self.doc&.at_css("meta[property='twitter:url']") || self.doc&.at_css("link[rel='canonical']")
+    
     canonical_url = tag&.attr('content') || tag&.attr('href')
-    get_parsed_url(canonical_url) if canonical_url
-    self.url
+    return get_parsed_url(canonical_url) if canonical_url.is_a?(String) && !canonical_url.empty? # Ensure it only returns a string
+  
+    nil # Return nil, since url is empty/not a string
   end
 
   def get_parsed_url(canonical_url)
