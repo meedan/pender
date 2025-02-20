@@ -114,7 +114,8 @@ jobs:
         git clone -b 0.10.3 https://github.com/codeclimate/test-reporter /tmp/go/src/github.com/codeclimate/test-reporter
         cd test
         sed -i 's/\/app\/pender/\/home\/runner\/work\/pender\/pender/g' .resultset.json # convert container-paths to local-paths
-        export GIT_HEAD_SHA=$(git rev-parse HEAD)
+        echo "GIT_HEAD_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+        echo "GIT_COMMITTED_AT=$(git log -1 --format=%ct)" >> $GITHUB_ENV
         GIT_COMMIT_SHA=$GIT_HEAD_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./cc-test-reporter format-coverage .resultset.json -t simplecov -o codeclimate.json
         sed -i 's/\/home\/runner\/work\/pender\///g' codeclimate.json
         cp codeclimate.json ../coverage/
