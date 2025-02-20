@@ -107,12 +107,13 @@ jobs:
         docker cp pender-pender-1:/app/pender/coverage/.resultset.json test/.resultset.json
 
         # pulled from test/test-coverage
-        printf '#!/bin/bash\ngo run /tmp/go/src/github.com/codeclimate/test-reporter/main.go $@\n' > test/cc-test-reporter && chmod +x test/cc-test-reporter
-        export GOPATH=/tmp/go
-        go env -w GO111MODULE=off
-        mkdir -p /tmp/go/src/github.com/codeclimate
-        git clone -b 0.10.3 https://github.com/codeclimate/test-reporter /tmp/go/src/github.com/codeclimate/test-reporter
+        # printf '#!/bin/bash\ngo run /tmp/go/src/github.com/codeclimate/test-reporter/main.go $@\n' > test/cc-test-reporter && chmod +x test/cc-test-reporter
+        # export GOPATH=/tmp/go
+        # go env -w GO111MODULE=off
+        # mkdir -p /tmp/go/src/github.com/codeclimate
+        # git clone -b 0.10.3 https://github.com/codeclimate/test-reporter /tmp/go/src/github.com/codeclimate/test-reporter
         cd test
+        curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 -o cc-test-reporter
         sed -i 's/\/app\/pender/\/home\/runner\/work\/pender\/pender/g' .resultset.json # convert container-paths to local-paths
         GIT_COMMIT_SHA=$(git rev-parse HEAD) GIT_COMMITTED_AT=$(git log -1 --format=%ct) ./cc-test-reporter format-coverage .resultset.json -t simplecov -o codeclimate.json
         sed -i 's/\/home\/runner\/work\/pender\///g' codeclimate.json
