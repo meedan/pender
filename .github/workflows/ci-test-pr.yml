@@ -22,8 +22,6 @@ jobs:
       image: ${{ steps.build-image.outputs.image }}
     steps:
     - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0 # Fetch full history
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -118,7 +116,7 @@ jobs:
         sed -i 's/\/app\/pender/\/home\/runner\/work\/pender\/pender/g' .resultset.json # convert container-paths to local-paths
         echo "GIT_HEAD_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
         echo "GIT_COMMITTED_AT=$(git log -1 --format=%ct)" >> $GITHUB_ENV
-        GIT_COMMIT_SHA=$GIT_HEAD_SHA GIT_COMMITTED_AT=$GIT_COMMITTED_AT ./cc-test-reporter format-coverage .resultset.json -t simplecov -o codeclimate.json
+        GIT_COMMIT_SHA=$GIT_HEAD_SHA GIT_COMMITTED_AT=test ./cc-test-reporter format-coverage .resultset.json -t simplecov -o codeclimate.json
         sed -i 's/\/home\/runner\/work\/pender\///g' codeclimate.json
         cp codeclimate.json ../coverage/
         ./cc-test-reporter upload-coverage -r $CC_TEST_REPORTER_ID -i codeclimate.json
