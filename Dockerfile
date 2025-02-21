@@ -1,47 +1,38 @@
 FROM ruby:3.3.3-slim
 LABEL maintainer=sysops@meedan.com
 
-# PROD
-# ENV RAILS_ENV=production \
-#     BUNDLE_DEPLOYMENT=true \
-#     BUNDLE_WITHOUT=development:test
-
-# DEV
-ENV RAILS_ENV=development \
-    SERVER_PORT=3200
-
-# Set a UTF-8 capabable locale
-ENV LC_ALL=C.UTF-8 \
-    LANG=C.UTF-8 \
-    LANGUAGE=C.UTF-8
-
 ENV APP=pender
+# Set a UTF-8 capabable locale
+ENV LANG=C.UTF-8
 
+ENV RAILS_ENV=development \
+    SERVER_PORT=3200 \
+    BUNDLE_DEPLOYMENT="" \
+    BUNDLE_WITHOUT=""
+
+# Build-time variables
 ARG DIRPATH=/app/pender
-ARG BUNDLER_VERSION="2.3.5" 
+ARG BUNDLER_VERSION="2.3.5"
 
 RUN apt-get update && apt-get install -y curl \
     build-essential \
     git \
     libpq-dev --no-install-recommends
 
-# pender user
-RUN mkdir -p ${DIRPATH}
-RUN useradd ${APP} -s /bin/bash -m
-WORKDIR ${DIRPATH}
+RUN useradd "${APP}" --shell /bin/bash --create-home
+WORKDIR "${DIRPATH}"
 
-# install our app
-COPY Gemfile Gemfile.lock ./
-RUN gem install bundler -v ${BUNDLER_VERSION} --no-document \
+COPY Gemfile Gemfile.lock .
+RUN gem install bundler -v "${BUNDLER_VERSION}" --no-document \
     && bundle install --jobs 20 --retry 5
-COPY . ./
+# FIXME: chown flags required for local macos (and likely windows) builds
+COPY --chown=${APP} ./ .
+COPY --chown=${APP} bin/ /opt/bin/
+COPY --chown=${APP} db/schema.rb /opt/db/
+RUN chmod a+w /opt/db/schema.rb
 
 USER ${APP}
 
-# DEV
-# RUN chmod +x ./bin/docker-entrypoint.sh
 EXPOSE 3200
-ENTRYPOINT ["./bin/docker-entrypoint.sh"]
-
-# PROD
 # EXPOSE 8000
+ENTRYPOINT ["/opt/bin/docker-entrypoint.sh"]

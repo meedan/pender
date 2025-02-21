@@ -42,10 +42,11 @@ Rails.application.configure do
   
   config.allow_concurrency = true
 
-  config.cache_store = :file_store, "#{Rails.root}/tmp/cache#{ENV['TEST_ENV_NUMBER']}"
+  config.cache_store = :file_store, "/tmp/cache#{ENV['TEST_ENV_NUMBER']}"
 
   config.lograge.enabled = true
 
+  config.logger = ActiveSupport::Logger.new(STDOUT)
   config.lograge.logger = ActiveSupport::Logger.new(STDOUT)
   config.lograge.custom_options = lambda do |event|
     options = event.payload.slice(:request_id, :user_id)
@@ -55,4 +56,7 @@ Rails.application.configure do
   end
   config.lograge.formatter = Lograge::Formatters::Json.new
   config.log_level = :warn
+  config.paths['log'] = "/var/log/#{ENV['DEPLOY_ENV']}.log"
+  config.paths['tmp'] = "/tmp"
+  config.paths['db'] = "/opt/db"
 end
