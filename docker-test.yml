@@ -1,5 +1,59 @@
-version: "2.2"
+volumes:
+  redis:
+  minio:
+  postgres13:
+
 services:
-  pender:
+  redis:
+    image: redis:6.2
+    volumes:
+      - "redis:/data"
+    networks:
+      - test-internal
+  minio:
+    image: minio/minio
+    command: server /data
+    volumes:
+      - "minio:/data"
     environment:
+      MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
+      MINIO_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    networks:
+      - test-internal
+  postgres:
+    image: postgres:13-buster
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    user: postgres
+    environment:
+      #POSTGRES_DB: pender-tests
+      POSTGRES_DB: pender_test__db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - test-internal
+  pender:
+    image: pender:latest
+    build: .
+    shm_size: 1G
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    environment:
+      APP: pender
+      DEPLOY_ENV: local
       RAILS_ENV: test
+      SERVER_PORT: 3200
+    networks:
+      - test-internal
+
+networks:
+  test-internal:
+    driver: bridge
+    # internal: true
+    labels:
+      meedan.testing: "true"

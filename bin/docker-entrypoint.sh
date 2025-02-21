@@ -3,6 +3,7 @@ if [[ -z ${DEPLOY_ENV+x} || -z ${APP+x} ]]; then
   echo "DEPLOY_ENV and APP must be in the environment. Exiting."
   exit 1
 fi
+echo "running ${APP} in ${DEPLOY_ENV} environment..."
 
 # pender
 if [ "${APP}" = 'pender' ] ; then
@@ -17,7 +18,7 @@ if [ "${APP}" = 'pender' ] ; then
     echo "--- STARTUP COMPLETE ---"
   fi
 
-  DIRPATH=${PWD}/tmp
+  DIRPATH=/tmp
   PUMA="${DIRPATH}/puma-${DEPLOY_ENV}.rb"
   mkdir -p "${DIRPATH}/pids"
   cp config/puma.rb "${PUMA}"
@@ -27,7 +28,7 @@ if [ "${APP}" = 'pender' ] ; then
   port ${SERVER_PORT}
 EOF
 
-  if [ "${DEPLOY_ENV}" = 'local' ] ; then
+  if [ "${DEPLOY_ENV}" = 'local' ] || [ "${RAILS_ENV}" = 'test' ] ; then
     rm -f "${DIRPATH}/pids/server-${DEPLOY_ENV}.pid"
     bundle exec puma -C "${PUMA}"
   else # qa, live etc
