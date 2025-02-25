@@ -10,7 +10,8 @@ module ProviderFacebook
       [
         { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/login/, reason: :login_page },
         { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/?$/, reason: :login_page },
-        { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/cookie\/consent-page/, reason: :consent_page }
+        { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/cookie\/consent-page/, reason: :consent_page },
+        { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/.*\?absolute_url_processed=1&(fref=ts&)?_rdc=1&_rdr/, reason: :garbage },
       ]
     end
 
