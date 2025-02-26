@@ -33,10 +33,10 @@ deploy_qa:
     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
   script:
     - pip install setuptools==68.0.0
-    - pip install botocore==1.34.162
-    - pip install boto3==1.34.162
-    - pip install ecs-deploy==1.15.0
-    - pip install awscli==1.33.44
+    - pip install botocore==1.33.13
+    - pip install boto3==1.33.13
+    - pip install ecs-deploy==1.14.0
+    - pip install awscli==1.29.59
     - aws ssm get-parameters-by-path --region $AWS_DEFAULT_REGION --path /qa/pender/ --recursive --with-decryption --output text --query "Parameters[].[Name]" | sed -E 's#/qa/pender/##' > env.qa.names
     - rm -f qa-pender-c.env.args; for NAME in `cat env.qa.names`; do echo -n "-s qa-pender-c $NAME /qa/pender/$NAME " >> qa-pender-c.env.args; done
     - ecs deploy ecs-qa  qa-pender --image qa-pender-c $ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA --exclusive-env -e qa-pender-c APP pender -e qa-pender-c DEPLOY_ENV qa -e qa-pender-c AWS_REGION $AWS_DEFAULT_REGION --timeout 3600 --exclusive-secrets `cat qa-pender-c.env.args`
@@ -78,10 +78,10 @@ deploy_live:
     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
   script:
     - pip install setuptools==68.0.0
-    - pip install botocore==1.34.162
-    - pip install boto3==1.34.162
-    - pip install ecs-deploy==1.15.0
-    - pip install awscli==1.33.44
+    - pip install botocore==1.33.13
+    - pip install boto3==1.33.13
+    - pip install ecs-deploy==1.14.0
+    - pip install awscli==1.29.59
     - aws ssm get-parameters-by-path --region $AWS_DEFAULT_REGION --path /live/pender/ --recursive --with-decryption --output text --query "Parameters[].[Name]" | sed -E 's#/live/pender/##' > env.live.names
     - rm -f live-pender-c.env.args; for NAME in `cat env.live.names`; do echo -n "-s live-pender-c $NAME /live/pender/$NAME " >> live-pender-c.env.args; done
     - ecs deploy ecs-live  live-pender --image live-pender-c $ECR_API_BASE_URL/live/pender/api:$CI_COMMIT_SHA --exclusive-env -e live-pender-c APP pender -e live-pender-c DEPLOY_ENV live -e live-pender-c AWS_REGION $AWS_DEFAULT_REGION --timeout 3600 --exclusive-secrets `cat live-pender-c.env.args`
