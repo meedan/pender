@@ -20,6 +20,7 @@ build_qa:
     - docker push "$ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA"
   only:
     - develop
+    - bugfix/python-pip-update
 
 deploy_qa:
   image: python:3.7.7
@@ -32,6 +33,7 @@ deploy_qa:
     AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
   script:
+    - python3 -m pip install --upgrade pip
     - pip install setuptools==68.0.0
     - pip install botocore==1.34.162
     - pip install boto3==1.34.162
@@ -45,6 +47,7 @@ deploy_qa:
     - echo "new Image was deployed $ECR_API_BASE_URL/qa/pender/api:$CI_COMMIT_SHA"
   only:
     - develop
+    - bugfix/python-pip-update
 
 build_live:
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
