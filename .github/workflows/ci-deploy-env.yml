@@ -6,6 +6,7 @@ on:
       - 'develop'
       - 'master'
       - '*deploy/*'
+      - '4921-consolidate-dockerfiles'
 
 jobs:
   build-test-deploy:
