@@ -1,18 +1,21 @@
 FROM ruby:3.3.3-slim
 LABEL maintainer=sysops@meedan.com
 
+# Build-time variables
+ARG DIRPATH=/app/pender
+ARG BUNDLER_VERSION="2.3.5"
+ARG RAILS_ENV=development
+ARG BUNDLE_DEPLOYMENT=""
+ARG BUNDLE_WITHOUT=""
+
 ENV APP=pender
 # Set a UTF-8 capabable locale
 ENV LANG=C.UTF-8
 
-ENV RAILS_ENV=development \
+ENV RAILS_ENV=$RAILS_ENV \
     SERVER_PORT=3200 \
-    BUNDLE_DEPLOYMENT="" \
-    BUNDLE_WITHOUT=""
-
-# Build-time variables
-ARG DIRPATH=/app/pender
-ARG BUNDLER_VERSION="2.3.5"
+    BUNDLE_DEPLOYMENT=$BUNDLE_DEPLOYMENT \
+    BUNDLE_WITHOUT=$BUNDLE_WITHOUT
 
 RUN apt-get update && apt-get install -y curl \
     build-essential \
