@@ -52,6 +52,9 @@ jobs:
           --cache-from "type=local,src=/tmp/.buildx-cache" \
           --cache-to "type=local,dest=/tmp/.buildx-cache" \
           --load \
+          --build-arg RAILS_ENV=production \
+          --build-arg BUNDLE_DEPLOYMENT="true" \
+          --build-arg BUNDLE_WITHOUT="development:test" \
           --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
           --file ./Dockerfile ./
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
@@ -71,12 +74,18 @@ jobs:
         docker buildx build \
           --cache-from "type=local,src=/tmp/.buildx-cache" \
           --output "type=image,push=true" \
+          --build-arg RAILS_ENV=production \
+          --build-arg BUNDLE_DEPLOYMENT="true" \
+          --build-arg BUNDLE_WITHOUT="development:test" \
           --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
           --file ./Dockerfile ./
         # push docker tag to indicate branch
         docker buildx build \
           --cache-from "type=local,src=/tmp/.buildx-cache" \
           --output "type=image,push=true" \
+          --build-arg RAILS_ENV=production \
+          --build-arg BUNDLE_DEPLOYMENT="true" \
+          --build-arg BUNDLE_WITHOUT="development:test" \
           --tag $ECR_REGISTRY/$ECR_REPOSITORY:$BRANCH \
           --file ./Dockerfile ./
 
