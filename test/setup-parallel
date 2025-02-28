@@ -11,8 +11,7 @@ mkdir -p /tmp/cache /tmp/cache1 /tmp/cache2 /tmp/cache3
 mkdir -p /opt/db
 
 echo `pwd`
-ls -al db
-ls -al /opt/db
+echo `ls -al`
 echo "-------------------------------------------------------------------------"
 
 bundle exec rake db:create db:migrate &
