@@ -85,12 +85,14 @@ module MediaApifyItem
     end
 
     def self.handle_apify_error(error, uri)
+      apify_url = URI.parse(uri).path
+
       PenderSentry.notify(
         ApifyError.new(error),
-        apify_url: uri,
+        apify_url: apify_url,
         error_message: error.message
       )
-      Rails.logger.warn level: 'WARN', message: '[Parser] Could not process Apify request', apify_url: uri, error_class: error.class
+      Rails.logger.warn level: 'WARN', message: '[Parser] Could not process Apify request', apify_url: apify_url, error_class: error.class
     end
   end
 end
