@@ -37,6 +37,8 @@ services:
       - test-internal
   pender:
     image: pender:latest
+    env_file:
+      - .env
     build: .
     shm_size: 1G
     depends_on:
