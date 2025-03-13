@@ -25,17 +25,6 @@ module MediaArchiveOrgArchiver
 
         Rails.logger.info level: 'INFO', message: '[archive_org] Sent URL to archive', url: url, code: response.code, response: response.message
 
-        if response&.body&.include?("<html><body><h1>429 Too Many Requests</h1>") && response&.code == "500"
-          data = snapshot_data.to_h.merge({ error: { message: "(#{response.body}) #{response}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }})
-          Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
-          PenderSentry.notify(
-              Pender::Exception::RateLimitExceeded.new("429 Too Many Requests"),
-              url: url,
-              response_body: response.body
-            )
-          return
-        end
-
         body = JSON.parse(response.body)
         if body['job_id']
           ArchiverStatusJob.perform_in(2.minutes, body['job_id'], url, key_id)
@@ -81,13 +70,21 @@ module MediaArchiveOrgArchiver
       begin
         http, request = Media.archive_org_request("https://web.archive.org/save/status/#{job_id}", 'Get')
         response = http.request(request)
-        body = JSON.parse(response.body)
-        if body['status'] == 'success'
-         location = "https://web.archive.org/web/#{body['timestamp']}/#{url}"
+        body = response&.body
+        body_json = JSON.parse(response.body)
+
+        if body_json['status'] == 'success'
+         location = "https://web.archive.org/web/#{body_json['timestamp']}/#{url}"
           data = { location: location }
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
+        elsif body&.include?("<html><body><h1>429 Too Many Requests</h1>") && response&.code == "500"
+          PenderSentry.notify(
+              Pender::Exception::RateLimitExceeded.new("429 Too Many Requests"),
+              url: url,
+              response_body: response.body
+            )
         else
-          message = body['status'] == 'pending' ? 'Capture is pending' : "(#{body['status_ext']}) #{body['message']}"
+          message = body_json['status'] == 'pending' ? 'Capture is pending' : "(#{body_json['status_ext']}) #{body_json['message']}"
           raise Pender::Exception::RetryLater, message
         end
       rescue StandardError => error
