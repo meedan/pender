@@ -43,7 +43,7 @@ module MediaArchiveOrgArchiver
           data = snapshot_data.to_h.merge({ error: { message: "(#{body['status_ext']}) #{body['message']}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }})
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
 
-         if body['message']&.include?('The same snapshot') || body['status_ext'] == 'error:too-many-daily-captures'
+          if body['message']&.include?('The same snapshot') || body['status_ext'] == 'error:too-many-daily-captures'
             PenderSentry.notify(
               Pender::Exception::TooManyCaptures.new(body['message']),
               url: url,
