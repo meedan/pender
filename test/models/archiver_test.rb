@@ -729,17 +729,19 @@ class ArchiverTest < ActiveSupport::TestCase
   #   assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-1'}, cached['perma_cc'])
   # end
 
-  test "when Archive.org returns 429 Too Many Requests it should notify Sentry with RateLimitExceeded" do
+  test "when Archive.org status returns 429 Too Many Requests it should notify Sentry with RateLimitExceeded" do
     api_key = create_api_key_with_webhook
     url = 'https://example.com/'
 
     Media.any_instance.unstub(:archive_to_archive_org)
-    Media.stubs(:get_available_archive_org_snapshot).returns({ status_ext: 'error:rate-limit', message: '429 Too Many Requests', url: url })
-  
+    Media.stubs(:get_available_archive_org_snapshot).returns( nil ) # What snaphot returns isn't relevant to this test (or shouldn't be)
+
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /archive.org\/save/).to_return(status: 500, body: '<html><body><h1>429 Too Many Requests</h1>')
+    # This response comes from ArchiveStatusJob, in order to call it we need to get a job_id
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+    WebMock.stub_request(:get, /archive.org\/save\/status/).to_return(status: 500, body:  '429 Too Many Requests')
 
     m = Media.new url: url, key: api_key
 
