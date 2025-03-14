@@ -77,7 +77,7 @@ module MediaArchiveOrgArchiver
          location = "https://web.archive.org/web/#{body_json['timestamp']}/#{url}"
           data = { location: location }
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
-        elsif body&.include?("<html><body><h1>429 Too Many Requests</h1>") && response&.code == "500"
+        elsif body&.include?("429 Too Many Requests")
           PenderSentry.notify(
               Pender::Exception::RateLimitExceeded.new("429 Too Many Requests"),
               url: url,
