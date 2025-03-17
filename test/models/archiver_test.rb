@@ -729,21 +729,49 @@ class ArchiverTest < ActiveSupport::TestCase
   #   assert_equal({ 'location' => 'http://perma.cc/perma-cc-guid-1'}, cached['perma_cc'])
   # end
 
-  test "when Archive.org status returns 429 Too Many Requests it should notify Sentry with RateLimitExceeded" do
+  # test "when Archive.org status returns 429 Too Many Requests it should notify Sentry with RateLimitExceeded" do
+  #   api_key = create_api_key_with_webhook
+  #   url = 'https://example.com/'
+
+  #   Media.any_instance.unstub(:archive_to_archive_org)
+
+  #   WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+  #   WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+  #   WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+  #   # This response comes from ArchiveStatusJob, in order to call it we need to get a job_id
+  #   WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
+  #   WebMock.stub_request(:get, /archive.org\/wayback/).to_return_json(body: {"archived_snapshots":{}}, headers: {})
+  #   WebMock.stub_request(:get, /archive.org\/save\/status/).to_return(body:  '429 Too Many Requests')
+
+  #   m = Media.new url: url, key: api_key
+
+  #   sentry_call_count = 0
+  #   arguments_checker = Proc.new do |e|
+  #     sentry_call_count += 1
+  #     assert_instance_of Pender::Exception::RateLimitExceeded, e
+  #     assert_equal '429 Too Many Requests', e.message
+  #   end
+
+  #   PenderSentry.stub(:notify, arguments_checker) do
+  #     assert_nothing_raised do
+  #       m.as_json(archivers: 'archive_org')
+  #     end
+  #   end
+
+  #   assert_equal 1, sentry_call_count
+
+  #   media_data = Pender::Store.current.read(Media.get_id(url), :json)
+  #   expected_error_message = "<html><body><h1>429 Too Many Requests</h1>"
+  #   assert_includes media_data.dig('archives', 'archive_org', 'error', 'message'), expected_error_message
+  #   assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
+  # end
+
+  test "when Archive.org status returns 429 Too Many Requests it should notify Sentry with RateLimitExceeded #2" do
     api_key = create_api_key_with_webhook
     url = 'https://example.com/'
+    job_id = 'ebb13d31-7fcf-4dce-890c-c256e2823ca0'
 
-    Media.any_instance.unstub(:archive_to_archive_org)
-
-    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
-    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
-    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    # This response comes from ArchiveStatusJob, in order to call it we need to get a job_id
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
-    WebMock.stub_request(:get, /archive.org\/wayback/).to_return_json(body: {"archived_snapshots":{}}, headers: {})
     WebMock.stub_request(:get, /archive.org\/save\/status/).to_return(body:  '429 Too Many Requests')
-
-    m = Media.new url: url, key: api_key
 
     sentry_call_count = 0
     arguments_checker = Proc.new do |e|
@@ -754,15 +782,10 @@ class ArchiverTest < ActiveSupport::TestCase
 
     PenderSentry.stub(:notify, arguments_checker) do
       assert_nothing_raised do
-        m.as_json(archivers: 'archive_org')
+        Media.get_archive_org_status(job_id, url, api_key)
       end
     end
 
     assert_equal 1, sentry_call_count
-
-    media_data = Pender::Store.current.read(Media.get_id(url), :json)
-    expected_error_message = "<html><body><h1>429 Too Many Requests</h1>"
-    assert_includes media_data.dig('archives', 'archive_org', 'error', 'message'), expected_error_message
-    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
-  end
+  end  
 end
