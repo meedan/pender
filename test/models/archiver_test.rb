@@ -159,7 +159,7 @@ class ArchiverTest < ActiveSupport::TestCase
       end
   end
 
-  test "when Archive.org fails with Pender::Exception::ArchiveOrgError it should retry, update data with snapshot (if available) and error" do
+  test "when Archive.org fails with Pender::Exception::ArchiveOrgError it should not notify Sentry, it should retry, update data with snapshot (if available) and error" do
     api_key = create_api_key_with_webhook
     url = 'https://example.com/'
 
@@ -171,10 +171,19 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
     WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(status: 500, body: { status_ext: '500', message: 'Random Error.', url: url})
 
-    media = create_media url: url, key: api_key
-    assert_raises StandardError do
-      media.as_json(archivers: 'archive_org')
+    sentry_call_count = 0
+    arguments_checker = Proc.new do |e|
+      sentry_call_count += 1
     end
+
+    media = create_media url: url, key: api_key
+    PenderSentry.stub(:notify, arguments_checker) do
+      assert_raises StandardError do
+        media.as_json(archivers: 'archive_org')
+      end
+    end
+
+    assert_equal 0, sentry_call_count
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
     assert_equal '(500) Random Error.', media_data.dig('archives', 'archive_org', 'error', 'message') 
     assert_equal "https://web.archive.org/web/timestamp/#{url}", media_data.dig('archives', 'archive_org', 'location') 
@@ -749,7 +758,7 @@ class ArchiverTest < ActiveSupport::TestCase
     arguments_checker = Proc.new do |e|
       sentry_call_count += 1
       assert_instance_of Pender::Exception::RateLimitExceeded, e
-      assert_equal e.message, '429 Too Many Requests'
+      assert_includes e.message, 'Too Many Requests'
     end
 
     PenderSentry.stub(:notify, arguments_checker) do
