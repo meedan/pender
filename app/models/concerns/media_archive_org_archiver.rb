@@ -33,17 +33,9 @@ module MediaArchiveOrgArchiver
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
 
           if body['message']&.include?('The same snapshot') || body['status_ext'] == 'error:too-many-daily-captures'
-            PenderSentry.notify(
-              Pender::Exception::TooManyCaptures.new(body['message']),
-              url: url,
-              response_body: body
-            )
+            raise Pender::Exception::TooManyCaptures, body['message']
           elsif body['status_ext'] == 'error:blocked-url'
-            PenderSentry.notify(
-              Pender::Exception::BlockedUrl.new(body['message']),
-              url: url,
-              response_body: body
-            )
+            raise Pender::Exception::BlockedUrl, body['message']
           else
             raise Pender::Exception::ArchiveOrgError, "(#{body['status_ext']}) #{body['message']}"
           end
@@ -82,17 +74,9 @@ module MediaArchiveOrgArchiver
         end
       rescue JSON::ParserError => error
         if error.message.include?("Too Many Requests")
-          PenderSentry.notify(
-              Pender::Exception::RateLimitExceeded.new("429 Too Many Requests"),
-              url: url,
-              response_body: error.message
-            )
+          raise Pender::Exception::RateLimitExceeded, error.message
         else
-          PenderSentry.notify(
-            JSON::ParserError.new(error.message),
-            url: url,
-            response_body: error.message
-          )
+          raise JSON::ParserError, error.message
         end
       rescue StandardError => error
         raise Pender::Exception::RetryLater, error.message

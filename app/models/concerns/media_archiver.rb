@@ -95,13 +95,38 @@ module MediaArchiver
         yield
       rescue Pender::Exception::RetryLater => error
         retry_archiving_after_failure(archiver, { message: error.message })
+      rescue Pender::Exception::TooManyCaptures =>  error
+        post_error_tasks(archiver, params, error)
+      rescue Pender::Exception::BlockedUrl => error
+        post_error_tasks(archiver, params, error)
+      rescue Pender::Exception::RateLimitExceeded => error
+        post_error_tasks(archiver, params, error)
+      rescue JSON::ParserError => error
+        post_error_tasks(archiver, params, error)
       rescue StandardError => error
-        error_type = 'ARCHIVER_ERROR'
-        params.merge!({code: Lapis::ErrorCodes::const_get(error_type), message: error.message})
-        data = { error: { message: params[:message], code: Lapis::ErrorCodes::const_get(error_type) }}
-        Media.notify_webhook_and_update_cache(archiver, params[:url], data, params[:key_id])
+        post_error_tasks(archiver, params, error, false)
         retry_archiving_after_failure(archiver, params)
       end
+    end
+
+    def post_error_tasks(archiver, params, error, notify_sentry = true)
+      error_type = 'ARCHIVER_ERROR'
+      if notify_sentry then Media.notify_sentry(archiver, params[:url], error) end
+      data = Media.updated_errored_data(archiver, params, error, error_type = 'ARCHIVER_ERROR')
+      Media.notify_webhook_and_update_cache(archiver, params[:url], data, params[:key_id])
+    end
+
+    def notify_sentry(archiver, url, error)
+      PenderSentry.notify(
+        error.class.new("#{archiver}: #{error.message}"),
+        url: url,
+        response_body: error.message
+      )
+    end
+
+    def updated_errored_data(archiver, params, error, error_type = 'ARCHIVER_ERROR')
+      params.merge!({code: Lapis::ErrorCodes::const_get(error_type), message: error.message})
+      { error: { message: params[:message], code: Lapis::ErrorCodes::const_get(error_type) }}
     end
 
     def retry_archiving_after_failure(archiver, params)
