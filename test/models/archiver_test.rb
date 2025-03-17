@@ -734,14 +734,14 @@ class ArchiverTest < ActiveSupport::TestCase
     url = 'https://example.com/'
 
     Media.any_instance.unstub(:archive_to_archive_org)
-    Media.stubs(:get_available_archive_org_snapshot).returns( nil ) # What snaphot returns isn't relevant to this test (or shouldn't be)
 
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
     # This response comes from ArchiveStatusJob, in order to call it we need to get a job_id
     WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
-    WebMock.stub_request(:get, /archive.org\/save\/status/).to_return(status: 500, body:  '429 Too Many Requests')
+    WebMock.stub_request(:get, /archive.org\/wayback/).to_return_json(body: {"archived_snapshots":{}}, headers: {})
+    WebMock.stub_request(:get, /archive.org\/save\/status/).to_return(body:  '429 Too Many Requests')
 
     m = Media.new url: url, key: api_key
 
@@ -764,5 +764,5 @@ class ArchiverTest < ActiveSupport::TestCase
     expected_error_message = "<html><body><h1>429 Too Many Requests</h1>"
     assert_includes media_data.dig('archives', 'archive_org', 'error', 'message'), expected_error_message
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
-  end  
+  end
 end
