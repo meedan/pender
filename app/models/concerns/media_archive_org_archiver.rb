@@ -70,22 +70,23 @@ module MediaArchiveOrgArchiver
       begin
         http, request = Media.archive_org_request("https://web.archive.org/save/status/#{job_id}", 'Get')
         response = http.request(request)
-        body = response&.body
-        body_json = JSON.parse(response.body)
+        body = JSON.parse(response.body)
 
-        if body_json['status'] == 'success'
-         location = "https://web.archive.org/web/#{body_json['timestamp']}/#{url}"
+        if body['status'] == 'success'
+          location = "https://web.archive.org/web/#{body['timestamp']}/#{url}"
           data = { location: location }
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
-        elsif body&.include?("429 Too Many Requests")
+        else
+          message = body['status'] == 'pending' ? 'Capture is pending' : "(#{body['status_ext']}) #{body['message']}"
+          raise Pender::Exception::RetryLater, message
+        end
+      rescue JSON::ParserError => error
+        if error.message.include?("Too Many Requests")
           PenderSentry.notify(
               Pender::Exception::RateLimitExceeded.new("429 Too Many Requests"),
               url: url,
-              response_body: response.body
+              response_body: error.message
             )
-        else
-          message = body_json['status'] == 'pending' ? 'Capture is pending' : "(#{body_json['status_ext']}) #{body_json['message']}"
-          raise Pender::Exception::RetryLater, message
         end
       rescue StandardError => error
         raise Pender::Exception::RetryLater, error.message
