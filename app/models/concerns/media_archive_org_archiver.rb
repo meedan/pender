@@ -87,6 +87,12 @@ module MediaArchiveOrgArchiver
               url: url,
               response_body: error.message
             )
+        else
+          PenderSentry.notify(
+            JSON::ParserError.new(error.message),
+            url: url,
+            response_body: error.message
+          )
         end
       rescue StandardError => error
         raise Pender::Exception::RetryLater, error.message
