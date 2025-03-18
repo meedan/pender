@@ -25,7 +25,7 @@ module MediaArchiveOrgArchiver
 
         Rails.logger.info level: 'INFO', message: '[archive_org] Sent URL to archive', url: url, code: response.code, response: response.message
 
-        body = JSON.parse(response.body)
+        body = json_parse(response)
         if body['job_id']
           ArchiverStatusJob.perform_in(2.minutes, body['job_id'], url, key_id)
         else
@@ -59,27 +59,17 @@ module MediaArchiveOrgArchiver
     end
 
     def get_archive_org_status(job_id, url, key_id)
-      begin
-        http, request = Media.archive_org_request("https://web.archive.org/save/status/#{job_id}", 'Get')
-        response = http.request(request)
-        body = JSON.parse(response.body)
+      http, request = Media.archive_org_request("https://web.archive.org/save/status/#{job_id}", 'Get')
+      response = http.request(request)
+      body = json_parse(response)
 
-        if body['status'] == 'success'
-          location = "https://web.archive.org/web/#{body['timestamp']}/#{url}"
-          data = { location: location }
-          Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
-        else
-          message = body['status'] == 'pending' ? 'Capture is pending' : "(#{body['status_ext']}) #{body['message']}"
-          raise Pender::Exception::RetryLater, message
-        end
-      rescue JSON::ParserError => error
-        if error.message.include?("Too Many Requests")
-          raise Pender::Exception::RateLimitExceeded, error.message
-        else
-          raise JSON::ParserError, error.message
-        end
-      rescue StandardError => error
-        raise Pender::Exception::RetryLater, error.message
+      if body['status'] == 'success'
+        location = "https://web.archive.org/web/#{body['timestamp']}/#{url}"
+        data = { location: location }
+        Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
+      else
+        message = body['status'] == 'pending' ? 'Capture is pending' : "(#{body['status_ext']}) #{body['message']}"
+        raise Pender::Exception::RetryLater, message
       end
     end
 
@@ -93,6 +83,20 @@ module MediaArchiveOrgArchiver
         'X-Priority-Reduced' => '1'
       }
       [http, "Net::HTTP::#{verb}".constantize.new(uri, headers)]
+    end
+
+    def json_parse(response)
+      begin
+        JSON.parse(response.body)
+      rescue JSON::ParserError => error
+        if error.message.include?("Too Many Requests")
+          raise Pender::Exception::RateLimitExceeded, error.message
+        elsif error.message.include?("Item Not Avaiable")
+          raise Pender::Exception::ItemNotAvailable, error.message
+        else
+          raise JSON::ParserError, error.message
+        end
+      end
     end
   end
 end

@@ -784,7 +784,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: 'Item Not Avaiable' )
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: '<html>A html response</html>' )
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return_json(body: {"archived_snapshots":{}}, headers: {})
 
     m = Media.new url: url, key: api_key
@@ -793,6 +793,38 @@ class ArchiverTest < ActiveSupport::TestCase
     arguments_checker = Proc.new do |e|
       sentry_call_count += 1
       assert_instance_of JSON::ParserError, e
+    end
+
+    PenderSentry.stub(:notify, arguments_checker) do
+      assert_nothing_raised do
+        m.as_json(archivers: 'archive_org')
+      end
+    end
+
+    assert_equal 1, sentry_call_count
+
+    media_data = Pender::Store.current.read(Media.get_id(url), :json)
+    assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
+  end
+
+  test "when Archive.org returns 'Item Not Available' response it should notify Sentry with Pender::Exception::ItemNotAvailable" do
+    api_key = create_api_key_with_webhook
+    url = 'https://example.com/'
+
+    Media.any_instance.unstub(:archive_to_archive_org)
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
+    WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
+    WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: 'Item Not Avaiable' )
+    WebMock.stub_request(:get, /archive.org\/wayback/).to_return_json(body: {"archived_snapshots":{}}, headers: {})
+
+    m = Media.new url: url, key: api_key
+
+    sentry_call_count = 0
+    arguments_checker = Proc.new do |e|
+      sentry_call_count += 1
+      assert_instance_of Pender::Exception::ItemNotAvailable, e
       assert_includes e.message, 'Item Not Avaiable'
     end
 

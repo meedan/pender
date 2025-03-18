@@ -95,14 +95,12 @@ module MediaArchiver
         yield
       rescue Pender::Exception::RetryLater => error
         retry_archiving_after_failure(archiver, { message: error.message })
-      rescue Pender::Exception::TooManyCaptures =>  error
-        post_error_tasks(archiver, params, error)
-      rescue Pender::Exception::BlockedUrl => error
-        post_error_tasks(archiver, params, error)
-      rescue Pender::Exception::RateLimitExceeded => error
-        post_error_tasks(archiver, params, error)
-      rescue JSON::ParserError => error
-        post_error_tasks(archiver, params, error)
+      rescue Pender::Exception::BlockedUrl,
+             Pender::Exception::TooManyCaptures,
+             Pender::Exception::ItemNotAvailable,
+             Pender::Exception::RateLimitExceeded,
+             JSON::ParserError => error
+              post_error_tasks(archiver, params, error)
       rescue StandardError => error
         post_error_tasks(archiver, params, error, false)
         retry_archiving_after_failure(archiver, params)
