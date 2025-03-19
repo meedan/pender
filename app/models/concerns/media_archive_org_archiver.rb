@@ -91,7 +91,7 @@ module MediaArchiveOrgArchiver
       rescue JSON::ParserError => error
         if error.message.include?("Too Many Requests")
           raise Pender::Exception::RateLimitExceeded, error.message
-        elsif error.message.include?("Item Not Avaiable")
+        elsif error.message.include?("Item Not Available")
           raise Pender::Exception::ItemNotAvailable, error.message
         else
           raise JSON::ParserError, error.message
