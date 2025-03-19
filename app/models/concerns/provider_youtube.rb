@@ -42,8 +42,6 @@ module ProviderYoutube
 
   def set_deleted_info(error)
     @parsed_data['username'] = @parsed_data['author_name'] = 'YouTube'
-    @parsed_data['title'] = 'Deleted video'
-    @parsed_data['description'] = 'This video is unavailable.'
     @parsed_data[:raw][:api] = { error: { message: error.message, code: Lapis::ErrorCodes::const_get('NOT_FOUND') }}
   end
 end
