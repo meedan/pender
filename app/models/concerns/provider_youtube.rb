@@ -14,7 +14,8 @@ module ProviderYoutube
   def initialize(url)
     super(url)
 
-    Yt.configuration.api_key = PenderConfig.get(:google_api_key)
+    # Yt.configuration.api_key = PenderConfig.get(:google_api_key)
+    Yt.configuration.api_key = "AIzaSyDn7mOdyoTZFOHVN5HOsOq4L4saj_JkAuA"
   end
 
   private
@@ -42,8 +43,6 @@ module ProviderYoutube
 
   def set_deleted_info(error)
     @parsed_data['username'] = @parsed_data['author_name'] = 'YouTube'
-    @parsed_data['title'] = 'Deleted video'
-    @parsed_data['description'] = 'This video is unavailable.'
     @parsed_data[:raw][:api] = { error: { message: error.message, code: Lapis::ErrorCodes::const_get('NOT_FOUND') }}
   end
 end
