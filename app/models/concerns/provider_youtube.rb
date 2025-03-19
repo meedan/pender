@@ -14,8 +14,7 @@ module ProviderYoutube
   def initialize(url)
     super(url)
 
-    # Yt.configuration.api_key = PenderConfig.get(:google_api_key)
-    Yt.configuration.api_key = "AIzaSyDn7mOdyoTZFOHVN5HOsOq4L4saj_JkAuA"
+    Yt.configuration.api_key = PenderConfig.get(:google_api_key)
   end
 
   private
