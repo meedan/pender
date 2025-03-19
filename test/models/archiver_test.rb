@@ -816,7 +816,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
-    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: 'Item Not Avaiable' )
+    WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: 'Item Not Available' )
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return_json(body: {"archived_snapshots":{}}, headers: {})
 
     m = Media.new url: url, key: api_key
@@ -825,7 +825,7 @@ class ArchiverTest < ActiveSupport::TestCase
     arguments_checker = Proc.new do |e|
       sentry_call_count += 1
       assert_instance_of Pender::Exception::ItemNotAvailable, e
-      assert_includes e.message, 'Item Not Avaiable'
+      assert_includes e.message, 'Item Not Available'
     end
 
     PenderSentry.stub(:notify, arguments_checker) do
@@ -837,7 +837,7 @@ class ArchiverTest < ActiveSupport::TestCase
     assert_equal 1, sentry_call_count
 
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
-    expected_error_message = "Item Not Avaiable"
+    expected_error_message = "Item Not Available"
     assert_includes media_data.dig('archives', 'archive_org', 'error', 'message'), expected_error_message
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'archive_org', 'error', 'code')
   end
