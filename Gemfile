@@ -46,7 +46,7 @@ gem 'rack-cors', '>= 2.0.2', :require => 'rack/cors'
 gem 'rails-perftest'
 gem 'sidekiq', '< 8'
 gem 'redis', '4.3.1'
-gem 'nokogiri', '1.18.3', require: false
+gem 'nokogiri', '1.18.4', require: false
 gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
 gem 'loofah', '2.21', require: false

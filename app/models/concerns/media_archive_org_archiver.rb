@@ -25,36 +25,17 @@ module MediaArchiveOrgArchiver
 
         Rails.logger.info level: 'INFO', message: '[archive_org] Sent URL to archive', url: url, code: response.code, response: response.message
 
-        if response&.body&.include?("<html><body><h1>429 Too Many Requests</h1>") && response&.code == "500"
-          data = snapshot_data.to_h.merge({ error: { message: "(#{response.body}) #{response}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }})
-          Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
-          PenderSentry.notify(
-              Pender::Exception::RateLimitExceeded.new("429 Too Many Requests"),
-              url: url,
-              response_body: response.body
-            )
-          return
-        end
-
-        body = JSON.parse(response.body)
+        body = json_parse(response)
         if body['job_id']
           ArchiverStatusJob.perform_in(2.minutes, body['job_id'], url, key_id)
         else
           data = snapshot_data.to_h.merge({ error: { message: "(#{body['status_ext']}) #{body['message']}", code: Lapis::ErrorCodes::const_get('ARCHIVER_ERROR') }})
           Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
 
-         if body['message']&.include?('The same snapshot') || body['status_ext'] == 'error:too-many-daily-captures'
-            PenderSentry.notify(
-              Pender::Exception::TooManyCaptures.new(body['message']),
-              url: url,
-              response_body: body
-            )
+          if body['message']&.include?('The same snapshot') || body['status_ext'] == 'error:too-many-daily-captures'
+            raise Pender::Exception::TooManyCaptures, body['message']
           elsif body['status_ext'] == 'error:blocked-url'
-            PenderSentry.notify(
-              Pender::Exception::BlockedUrl.new(body['message']),
-              url: url,
-              response_body: body
-            )
+            raise Pender::Exception::BlockedUrl, body['message']
           else
             raise Pender::Exception::ArchiveOrgError, "(#{body['status_ext']}) #{body['message']}"
           end
@@ -78,20 +59,17 @@ module MediaArchiveOrgArchiver
     end
 
     def get_archive_org_status(job_id, url, key_id)
-      begin
-        http, request = Media.archive_org_request("https://web.archive.org/save/status/#{job_id}", 'Get')
-        response = http.request(request)
-        body = JSON.parse(response.body)
-        if body['status'] == 'success'
-         location = "https://web.archive.org/web/#{body['timestamp']}/#{url}"
-          data = { location: location }
-          Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
-        else
-          message = body['status'] == 'pending' ? 'Capture is pending' : "(#{body['status_ext']}) #{body['message']}"
-          raise Pender::Exception::RetryLater, message
-        end
-      rescue StandardError => error
-        raise Pender::Exception::RetryLater, error.message
+      http, request = Media.archive_org_request("https://web.archive.org/save/status/#{job_id}", 'Get')
+      response = http.request(request)
+      body = json_parse(response)
+
+      if body['status'] == 'success'
+        location = "https://web.archive.org/web/#{body['timestamp']}/#{url}"
+        data = { location: location }
+        Media.notify_webhook_and_update_cache('archive_org', url, data, key_id)
+      else
+        message = body['status'] == 'pending' ? 'Capture is pending' : "(#{body['status_ext']}) #{body['message']}"
+        raise Pender::Exception::RetryLater, message
       end
     end
 
@@ -105,6 +83,20 @@ module MediaArchiveOrgArchiver
         'X-Priority-Reduced' => '1'
       }
       [http, "Net::HTTP::#{verb}".constantize.new(uri, headers)]
+    end
+
+    def json_parse(response)
+      begin
+        JSON.parse(response.body)
+      rescue JSON::ParserError => error
+        if error.message.include?("Too Many Requests")
+          raise Pender::Exception::RateLimitExceeded, error.message
+        elsif error.message.include?("Item Not Available")
+          raise Pender::Exception::ItemNotAvailable, error.message
+        else
+          raise JSON::ParserError, error.message
+        end
+      end
     end
   end
 end

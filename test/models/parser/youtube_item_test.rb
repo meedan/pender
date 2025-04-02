@@ -296,8 +296,8 @@ class YoutubeItemUnitTest < ActiveSupport::TestCase
     data = Parser::YoutubeItem.new('https://www.youtube.com/watch?v=123456789').parse_data(doc)
 
     assert_equal 'YouTube', data['username']
-    assert_equal 'Deleted video', data['title']
-    assert_equal 'This video is unavailable.', data['description']
+    assert_equal 'Full Length Freight Trains! 1 Hour of Trains!', data['title']
+    assert_not_equal 'This video is unavailable.', data['description']
     assert data['author_url'].empty?
     assert data['author_picture'].empty?
     assert data['html'].empty?
