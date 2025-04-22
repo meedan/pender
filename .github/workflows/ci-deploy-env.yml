@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  build-deploy:
+  build-push:
     runs-on: ubuntu-latest
 
     outputs:
@@ -80,15 +80,19 @@ jobs:
           --tag $ECR_REGISTRY/$ECR_REPOSITORY:$BRANCH \
           --file ./Dockerfile ./
 
-#    - name: Kick off Terraform deploy in sysops/ if not live
-#      id: sysops-deploy
-#      run: |
-#        BRANCH=$(echo "${GITHUB_REF#refs/*/}" | sed 's/.*\///')
-#        if [[ "$BRANCH" != master ]]; then
-#          curl \
-#          -X POST \
-#          -H "Accept: application/vnd.github.v3+json" \
-#          https://api.github.com/repos/meedan/sysops/actions/workflows/deploy_${{ github.event.repository.name }}.yml/dispatches \
-#          -u ${{ secrets.SYSOPS_RW_GITHUB_TOKEN }} \
-#          -d '{"ref": "master", "inputs": {"git_sha": "${{ github.sha }}", "branch": "'$BRANCH'"}}'
-#        fi
+  trigger-sysops-deploy:
+    runs-on: ubuntu-latest
+    needs: [build-push]
+    steps:
+    - name: Kick off Terraform deploy in sysops/ if not live
+      id: sysops-deploy
+      run: |
+        BRANCH=$(echo "${GITHUB_REF#refs/*/}" | sed 's/.*\///')
+        if [[ "$BRANCH" != master ]]; then
+          curl \
+          -X POST \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/meedan/sysops/actions/workflows/deploy_${{ github.event.repository.name }}.yml/dispatches \
+          -u ${{ secrets.SYSOPS_RW_GITHUB_TOKEN }} \
+          -d '{"ref": "master", "inputs": {"git_sha": "${{ github.sha }}", "branch": "'$BRANCH'"}}'
+        fi
