@@ -1,4 +1,4 @@
-name: Build Test and Deploy
+name: Build and Deploy
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  build-test-deploy:
+  build-deploy:
     runs-on: ubuntu-latest
 
     outputs:
