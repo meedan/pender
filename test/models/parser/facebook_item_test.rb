@@ -564,4 +564,25 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
       end
     end
   end
+
+  test "should return url as the title and empty description when directed to main watch page" do
+    # and I guess the original url as url as well
+    url = 'https://www.facebook.com/watch/?v=687311417207347'
+
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_error_response)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="Discover Popular Videos" />
+      <meta property="og:description" content="Video is the place to enjoy videos and shows together. Watch the latest reels, discover original shows and catch up with your favorite creators." />
+    HTML
+
+    WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
+
+    parser = Parser::FacebookItem.new(url)
+    data = parser.parse_data(doc, url)
+
+    p data
+    assert_equal data[:title], url
+    assert_empty data[:description]
+  end
 end
