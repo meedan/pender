@@ -186,7 +186,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_match /data-href="https:\/\/www.facebook.com\/fakeaccount\/posts\/123456789"/, data.dig('html')
   end
 
-  test "sets fallbacks from metatags for event and watch URLS on apify error" do
+  test "event URL: sets fallbacks from metatags for event on apify error" do
     WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_error_response)
 
     doc = Nokogiri::HTML(<<~HTML)
@@ -198,14 +198,40 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     data = Parser::FacebookItem.new('https://www.facebook.com/events/331430157280289').parse_data(doc, throwaway_url)
     assert_equal 'this is a page title', data['title']
     assert_equal 'this is the page description', data['description']
+  end
 
-    data = Parser::FacebookItem.new('https://www.facebook.com/watch/live/?ref=live_delegate#@37.777053833008,-122.41587829590001,4z').parse_data(doc, throwaway_url)
-    assert_equal 'this is a page title', data['title']
-    assert_equal 'this is the page description', data['description']
+  test "watch URLs: sets fallbacks from metatags for watch URLS on apify error" do
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_error_response)
 
-    data = Parser::FacebookItem.new('https://www.facebook.com/K9Ballistics/videos/upgrade-your-dog-bed/1871564813213101/').parse_data(doc, throwaway_url)
-    assert_equal 'this is a page title', data['title']
-    assert_equal 'this is the page description', data['description']
+    # when it redirects to an existing item watch page 
+    original_url = "https://www.facebook.com/watch/?v=1228508975067324"
+    canonical_url = "https://www.facebook.com/user/videos/video-title/1228508975067324/"
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="This video's title" />
+      <meta property="og:description" content="This video's description." />
+      <meta property='og:url' content="#{canonical_url}">
+    HTML
+
+    parser = Parser::FacebookItem.new(canonical_url)
+    data = parser.parse_data(doc, original_url)
+    assert_equal "This video's title", data['title']
+    assert_equal "This video's description.", data['description']
+
+    # when it redirects to the main watch page
+    original_url = "https://www.facebook.com/watch/?v=687311417207347"
+    canonical_url = "https://www.facebook.com/watch"
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="Discover Popular Videos" />
+      <meta property="og:description" content="Video is the place to enjoy videos and shows together. Watch the latest reels, discover original shows and catch up with your favorite creators." />
+      <meta property='og:url' content="#{canonical_url}">
+    HTML
+
+    parser = Parser::FacebookItem.new(canonical_url)
+    data = parser.parse_data(doc, original_url)
+    assert_nil data['title']
+    assert_empty data['description']
   end
 
   test "should parse and set data from mobile URL" do
@@ -563,26 +589,5 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
         assert_includes embed_html, '<div class="fb-post" data-href="https://www.facebook.com/test_user/posts/12345"></div>'
       end
     end
-  end
-
-  test "should return url as the title and empty description when directed to main watch page" do
-    # and I guess the original url as url as well
-    url = 'https://www.facebook.com/watch/?v=687311417207347'
-
-    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_error_response)
-
-    doc = Nokogiri::HTML(<<~HTML)
-      <meta property="og:title" content="Discover Popular Videos" />
-      <meta property="og:description" content="Video is the place to enjoy videos and shows together. Watch the latest reels, discover original shows and catch up with your favorite creators." />
-    HTML
-
-    WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
-
-    parser = Parser::FacebookItem.new(url)
-    data = parser.parse_data(doc, url)
-
-    p data
-    assert_equal data[:title], url
-    assert_empty data[:description]
   end
 end
