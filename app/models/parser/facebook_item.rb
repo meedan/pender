@@ -71,7 +71,7 @@ module Parser
           set_data_field('description', og_metadata['description'])
           set_data_field('picture', og_metadata['picture'])
         end
-        set_facebook_privacy_error(doc, unavailable_page)
+        set_facebook_dead_end_error(doc, unavailable_page)
 
         strip_facebook_from_title!
 

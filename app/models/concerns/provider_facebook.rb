@@ -82,24 +82,36 @@ module ProviderFacebook
     parsed_data.dig('raw', 'apify').present? && parsed_data.dig('raw', 'apify', 'error').blank?
   end
 
-  def set_facebook_privacy_error(html_page, page_is_unavailable)
+  def set_facebook_dead_end_error(html_page, page_is_unavailable)
     return if html_page.nil?
     return if has_valid_apify_data?
 
     title = get_page_title(html_page)
     return if title.blank?
 
-    ['log in or sign up to view', 'log into facebook', 'log in to facebook'].each do |login|
-      if page_is_unavailable || title.downcase.include?(login)
-        @parsed_data['title'] = nil
-        @parsed_data['description'] = ''
-        @parsed_data['error'] = {
+    login_page = login_page?(title) || page_is_unavailable == :login_page
+
+    if page_is_unavailable || login_page
+      @parsed_data['title'] = nil
+      @parsed_data['description'] = ''
+      @parsed_data['error'] =
+        login_page ?
+        {
           message: 'Login required to see this profile',
           code: Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'),
         }
+        :
+        {
+          message: 'Redirected to a dead end',
+          code: Lapis::ErrorCodes::const_get('DEAD_END'),
+        }
       return true
-      end
     end
+  end
+
+  def login_page?(title)
+    login_messages = ['log in or sign up to view', 'log into facebook', 'log in to facebook']
+    login_messages.any? { |login_message| title.downcase.include?(login_message)}
   end
 
   def strip_facebook_from_title!

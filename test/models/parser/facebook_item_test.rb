@@ -590,4 +590,22 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
       end
     end
   end
+
+  test "should set dead end error and message when redirected to a dead end" do
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_error_response)
+
+    original_url = "https://www.facebook.com/watch/?v=687311417207347"
+    canonical_url = "https://www.facebook.com/watch"
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="Discover Popular Videos" />
+      <meta property="og:description" content="Video is the place to enjoy videos and shows together. Watch the latest reels, discover original shows and catch up with your favorite creators." />
+      <meta property='og:url' content="#{canonical_url}">
+    HTML
+
+    parser = Parser::FacebookItem.new(canonical_url)
+    data = parser.parse_data(doc, original_url)
+    assert_equal 'Redirected to a dead end', data[:error][:message]
+    assert_equal Lapis::ErrorCodes::const_get('DEAD_END'), data[:error][:code]
+  end
 end
