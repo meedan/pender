@@ -89,7 +89,7 @@ module ProviderFacebook
     title = get_page_title(html_page)
     return if title.blank?
 
-    login_page = login_page?(title)
+    login_page = login_page?(title) || page_is_unavailable == :login_page
 
     if page_is_unavailable || login_page
       @parsed_data['title'] = nil
