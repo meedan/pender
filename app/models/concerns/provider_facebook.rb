@@ -82,7 +82,7 @@ module ProviderFacebook
     parsed_data.dig('raw', 'apify').present? && parsed_data.dig('raw', 'apify', 'error').blank?
   end
 
-  def set_facebook_privacy_error(html_page, page_is_unavailable)
+  def set_facebook_dead_end_error(html_page, page_is_unavailable)
     return if html_page.nil?
     return if has_valid_apify_data?
 
