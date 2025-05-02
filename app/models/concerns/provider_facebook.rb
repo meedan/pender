@@ -11,7 +11,7 @@ module ProviderFacebook
         { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/login/, reason: :login_page },
         { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/?$/, reason: :login_page },
         { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/cookie\/consent-page/, reason: :consent_page },
-        { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/watch/, reason: :watch_page }
+        { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/watch\/*?$/, reason: :watch_page }
       ]
     end
 
