@@ -57,6 +57,7 @@ module MediaApifyItem
     def self.make_apify_request(apify_url, payload)
       uri = URI.parse(apify_url)
       http = Net::HTTP.new(uri.host, uri.port)
+      http.read_timeout = PenderConfig.get('timeout', 30).to_i
       http.use_ssl = true
       headers = { 'content-type' => 'application/json' }
       request = Net::HTTP::Post.new(uri.request_uri, headers)

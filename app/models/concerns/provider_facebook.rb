@@ -49,7 +49,6 @@ module ProviderFacebook
       return { error: { message: apify_data.first['errorDescription'], code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
     end
 
-
     apify_data.is_a?(Array) ? apify_data.first : apify_data
   end
 
