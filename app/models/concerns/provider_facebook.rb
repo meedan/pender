@@ -54,27 +54,57 @@ module ProviderFacebook
 
   def format_apify_result(data)
     post_info = (data)
-    message = post_info.dig('text')
+
+    text = post_info.dig('text')
+    title = text || post_info.dig('previewTitle')
+    description = text || post_info.dig('previewDescription')
     media = post_info.dig('media')
-    picture = if media.is_a?(Array)
-      media.find { |m| m['thumbnail'] }&.dig('thumbnail') || ""
-    else
-      ""
-    end
-    user_id = post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('id') : ""
+    picture = item_picture(media)
+
+    user = post_info['user']
+    user_name = item_user_name(user,post_info)
+    user_info = user_info(user)
+
     post_id = post_info.dig('postId')
     {
-      author_name:  post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('name') : "",
-      username: post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('name') : "",
-      author_url: post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('profileUrl') : "",
-      author_picture: post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('profilePic') : "",
-      title: message,
-      description: message,
-      text: message,
-      external_id: "#{user_id}_#{post_id}",
+      author_name: user_name,
+      username: user_name,
+      author_url: user_info[:url],
+      author_picture: user_info[:picture],
+      title: title,
+      description: description,
+      text: text,
+      external_id: "#{user_info[:id]}_#{post_id}",
       picture: picture,
-      published_at: post_info.dig('user') ? post_info.dig('time').sub('T', ' ').sub('.000Z', '') : "",
+      published_at: user ? post_info.dig('time').sub('T', ' ').sub('.000Z', '') : "",
     }.with_indifferent_access
+  end
+
+  def item_picture(media)
+    picture = media.find { |m| m['thumbnail'] }&.dig('thumbnail') || "" if media.is_a?(Array)
+    picture || ""
+  end
+
+  def item_user_name(user, post_info)
+    user_name = user['name'] if user.is_a?(Hash)
+    user_name ||= post_info['pageName']
+    user_name || ""
+  end
+
+  def user_info(user)
+    if user.is_a?(Hash)
+      {
+        id: user['id'] || "",
+        url: user['profileUrl'] || "",
+        picture: user['profilePic'] || ""
+      }
+    else
+      {
+         id: "",
+         url: "",
+         picture: ""
+       }
+    end
   end
 
   def has_valid_apify_data?
