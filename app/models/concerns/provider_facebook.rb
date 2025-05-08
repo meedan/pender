@@ -61,7 +61,7 @@ module ProviderFacebook
     media = post_info.dig('media')
     picture = item_picture(media)
 
-    user = post_info['user']
+    user = post_info.dig('user')
     user_name = item_user_name(user,post_info)
     user_info = user_info(user)
 
@@ -86,8 +86,8 @@ module ProviderFacebook
   end
 
   def item_user_name(user, post_info)
-    user_name = user['name'] if user.is_a?(Hash)
-    user_name ||= post_info['pageName']
+    user_name = user.dig('name') if user.is_a?(Hash)
+    user_name ||= post_info.dig('pageName')
     user_name || ""
   end
 
