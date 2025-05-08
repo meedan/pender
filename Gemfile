@@ -17,12 +17,12 @@ group :development do
 end
 group :test do
   gem 'parallel_tests'
-  gem "mocha", '~> 1.14.0', require: false
+  gem "mocha", '~> 2.1.0', require: false
   gem 'simplecov', '0.13.0', require: false
   gem 'simplecov-console', require: false
   gem 'codeclimate-test-reporter', '1.0.8', group: :test, require: nil
   gem 'rails-controller-testing'
-  gem 'minitest', '5.10.1'
+  gem 'minitest', '5.19.0'
   gem 'minitest-retry'
   gem 'webmock'
 end
