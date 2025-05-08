@@ -58,8 +58,8 @@ module ProviderFacebook
     text = post_info.dig('text')
     title = text || post_info.dig('previewTitle')
     description = text || post_info.dig('previewDescription')
-    media = post_info.dig('media')
-    picture = item_picture(media)
+
+    picture = item_picture(post_info)
 
     user = post_info.dig('user')
     user_name = item_user_name(user,post_info)
@@ -80,8 +80,10 @@ module ProviderFacebook
     }.with_indifferent_access
   end
 
-  def item_picture(media)
+  def item_picture(post_info)
+    media = post_info.dig('media')
     picture = media.find { |m| m['thumbnail'] }&.dig('thumbnail') || "" if media.is_a?(Array)
+    picture ||= post_info.dig('preferred_thumbnail', 'image', 'uri')
     picture || ""
   end
 

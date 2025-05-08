@@ -100,6 +100,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
 
     original_url = 'https://www.facebook.com/123456789276277/posts/1127489833985824'
     canonical_url = 'https://www.facebook.com/canalviva/videos/a-amante-do-marido-dela-era-a-pr%25C3%25B3pria-filha-bel%25C3%25ADssima-mem%25C3%25B3ria-do-viva/557432290400735/'
+    thumbnail_url = 'https://scontent-arn2-1.xx.fbcdn.net/v/t15.5256-10/468479477_1264043074861644_6457252003944632214_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=111&ccb=1-7&_nc_sid=be8305&_nc_ohc=Nx9hqVKSDecQ7kNvwEuw4VH&_nc_oc=AdlFmwpNX5YuX7ZajGZrNW4AeCj1HBmdmf3-QImbIznSHBK8gbGFqPFhTtcXk2q1AbI&_nc_zt=23&_nc_ht=scontent-arn2-1.xx&_nc_gid=1MQwHc63DEAjcREHWh3a2Q&oh=00_AfKYdnSMoNjAEZTwiM8V6oY5Yz_i5K1Lc2WETQ1yj8PHyw&oe=68214EA1'
 
     parser = Parser::FacebookItem.new(canonical_url)
     data = parser.parse_data(empty_doc, original_url)
@@ -108,14 +109,17 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_equal 'canalviva', data['author_name']
     assert_equal "A amante do marido dela era a própria filha! | Belíssima | Memória do VIVA", data['title']
     assert_equal "Júlia descobriu que a \"outra\" era a sua própria filha, Érica 😱 #Belíssima #MemóriaDoVIVA", data['description']
+    assert_equal thumbnail_url, data['picture']
   end
 
   test "item: sets information from apify" do
     WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response)
     
-    parser = Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824')
-    data = parser.parse_data(empty_doc, throwaway_url)
+    item_url = 'https://www.facebook.com/123456789276277/posts/1127489833985824'
     thumbnail_url = "https://scontent-lax3-1.xx.fbcdn.net/v/t39.30808-6/458267352_1072984427532320_3650659647239955349_n.jpg?stp=dst-jpg_p180x540&_nc_cat=108&ccb=1-7&_nc_sid=127cfc&_nc_ohc=S-OM4BpCmPYQ7kNvgHn3sRW&_nc_ht=scontent-lax3-1.xx&oh=00_AYDD6Jo2QOxEE7Gauh9Gb5j9mZUdrwKS-TaAld1q9FIm_g&oe=66DF38EE"
+
+    parser = Parser::FacebookItem.new(item_url)
+    data = parser.parse_data(empty_doc, throwaway_url)
 
     assert data['error'].blank?
     assert_equal '123456789276277_1127489833985824', data['external_id']
