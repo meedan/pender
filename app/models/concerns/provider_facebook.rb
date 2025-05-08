@@ -61,7 +61,7 @@ module ProviderFacebook
     description = text || post_info.dig('previewDescription')
     post_id = post_info.dig('postId') || post_info.dig('id')
     picture = item_picture(post_info)
-    published_date = item_published_date(user,post_info)
+    published_date = item_published_date(post_info)
     {
       author_name: user_info[:name],
       username: user_info[:name],
@@ -83,7 +83,7 @@ module ProviderFacebook
     picture || ""
   end
 
-  def item_published_date(user,post_info)
+  def item_published_date(post_info)
     timestamp = post_info.dig('timestamp') || post_info.dig('publish_time')
     timestamp ? Time.at(timestamp).strftime('%Y-%m-%d %H:%M:%S') : ""
   end
