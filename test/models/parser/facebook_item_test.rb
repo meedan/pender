@@ -98,7 +98,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   test "video: sets information from apify" do
     WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_video_response)
 
-    original_url = 'https://www.facebook.com/123456789276277/posts/1127489833985824'
+    original_url = 'https://www.facebook.com/canalviva/videos/557432290400735/'
     canonical_url = 'https://www.facebook.com/canalviva/videos/a-amante-do-marido-dela-era-a-pr%25C3%25B3pria-filha-bel%25C3%25ADssima-mem%25C3%25B3ria-do-viva/557432290400735/'
     thumbnail_url = 'https://scontent-arn2-1.xx.fbcdn.net/v/t15.5256-10/468479477_1264043074861644_6457252003944632214_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=111&ccb=1-7&_nc_sid=be8305&_nc_ohc=Nx9hqVKSDecQ7kNvwEuw4VH&_nc_oc=AdlFmwpNX5YuX7ZajGZrNW4AeCj1HBmdmf3-QImbIznSHBK8gbGFqPFhTtcXk2q1AbI&_nc_zt=23&_nc_ht=scontent-arn2-1.xx&_nc_gid=1MQwHc63DEAjcREHWh3a2Q&oh=00_AfKYdnSMoNjAEZTwiM8V6oY5Yz_i5K1Lc2WETQ1yj8PHyw&oe=68214EA1'
 
@@ -106,9 +106,11 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     data = parser.parse_data(empty_doc, original_url)
 
     assert data['error'].blank?
+    assert_equal '100064845692203_557432290400735', data['external_id']
     assert_equal 'canalviva', data['author_name']
     assert_equal "A amante do marido dela era a própria filha! | Belíssima | Memória do VIVA", data['title']
     assert_equal "Júlia descobriu que a \"outra\" era a sua própria filha, Érica 😱 #Belíssima #MemóriaDoVIVA", data['description']
+    assert_equal '2024-11-26 21:00:22', data['published_at']
     assert_equal thumbnail_url, data['picture']
   end
 

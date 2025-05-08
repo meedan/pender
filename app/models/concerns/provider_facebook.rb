@@ -54,21 +54,17 @@ module ProviderFacebook
 
   def format_apify_result(data)
     post_info = (data)
-
+    user = post_info.dig('user') || post_info.dig('owner')
+    user_info = user_info(user,post_info)
     text = post_info.dig('text')
     title = text || post_info.dig('previewTitle')
     description = text || post_info.dig('previewDescription')
-
+    post_id = post_info.dig('postId') || post_info.dig('id')
     picture = item_picture(post_info)
-
-    user = post_info.dig('user')
-    user_name = item_user_name(user,post_info)
-    user_info = user_info(user)
-
-    post_id = post_info.dig('postId')
+    published_date = item_published_date(user,post_info)
     {
-      author_name: user_name,
-      username: user_name,
+      author_name: user_info[:name],
+      username: user_info[:name],
       author_url: user_info[:url],
       author_picture: user_info[:picture],
       title: title,
@@ -76,7 +72,7 @@ module ProviderFacebook
       text: text,
       external_id: "#{user_info[:id]}_#{post_id}",
       picture: picture,
-      published_at: user ? post_info.dig('time').sub('T', ' ').sub('.000Z', '') : "",
+      published_at: published_date
     }.with_indifferent_access
   end
 
@@ -87,24 +83,25 @@ module ProviderFacebook
     picture || ""
   end
 
-  def item_user_name(user, post_info)
-    user_name = user.dig('name') if user.is_a?(Hash)
-    user_name ||= post_info.dig('pageName')
-    user_name || ""
+  def item_published_date(user,post_info)
+    timestamp = post_info.dig('timestamp') || post_info.dig('publish_time')
+    timestamp ? Time.at(timestamp).strftime('%Y-%m-%d %H:%M:%S') : ""
   end
 
-  def user_info(user)
+  def user_info(user,post_info)
     if user.is_a?(Hash)
       {
-        id: user['id'] || "",
-        url: user['profileUrl'] || "",
-        picture: user['profilePic'] || ""
+        name: user.dig('name') || post_info.dig('pageName') || "", 
+        id: user.dig('id') || "",
+        url: user.dig('profileUrl') || "",
+        picture: user.dig('profilePic') || ""
       }
     else
       {
-         id: "",
-         url: "",
-         picture: ""
+        name: "",
+        id: "",
+        url: "",
+        picture: ""
        }
     end
   end
