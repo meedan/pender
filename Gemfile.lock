@@ -225,10 +225,10 @@ GEM
     mini_portile2 (2.8.8)
     mini_racer (0.16.0)
       libv8-node (~> 18.19.0.0)
-    minitest (5.19.0)
+    minitest (5.25.0)
     minitest-retry (0.2.3)
       minitest (>= 5.0)
-    mocha (2.1.0)
+    mocha (2.7.1)
       ruby2_keywords (>= 0.0.5)
     mutex_m (0.3.0)
     net-http (0.6.0)
@@ -541,9 +541,9 @@ DEPENDENCIES
   loofah (= 2.21)
   memory_profiler
   mini_racer
-  minitest (= 5.19.0)
+  minitest (= 5.25.0)
   minitest-retry
-  mocha (~> 2.1.0)
+  mocha (~> 2.7)
   net-http
   net-protocol
   nokogiri (= 1.18.8)
