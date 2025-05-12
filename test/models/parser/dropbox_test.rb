@@ -63,9 +63,11 @@ class DropboxUnitTest <  ActiveSupport::TestCase
     assert_equal 'Shared with Dropbox', data[:description]
   end
 
-  test "returns a hash with error message and sends error to Errbit if there is an error parsing" do
+  test "returns a hash with error message and sends error to Sentry if there is an error parsing" do
     mocked_sentry = Minitest::Mock.new
-    mocked_sentry.expect :call, :return_value, [StandardError, Hash]
+    mocked_sentry.expect :call, :return_value do |error, response|
+      error.is_a?(StandardError) && response.is_a?(Hash)
+    end
 
     Parser::DropboxItem.any_instance.stubs(:get_metadata_from_tags).raises(NoMethodError.new("Faking in test"))
 
@@ -75,6 +77,6 @@ class DropboxUnitTest <  ActiveSupport::TestCase
     end
     mocked_sentry.verify
     assert_equal 5, data[:error][:code]
-    assert_match /NoMethodError/, data[:error][:message]
+    assert_match(/NoMethodError/, data[:error][:message])
   end
 end

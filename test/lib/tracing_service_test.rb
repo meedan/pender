@@ -50,7 +50,7 @@ class TracingServiceTest < ActiveSupport::TestCase
     fake_span = Minitest::Mock.new
     fake_status = Minitest::Mock.new
 
-    fake_span.expect :record_exception, nil, [exception, attributes: {}]
+    fake_span.expect :record_exception, nil, [exception], attributes: {}
     fake_span.expect :status=, nil, [fake_status]
 
     arguments_checker = Proc.new do |message|
@@ -70,7 +70,7 @@ class TracingServiceTest < ActiveSupport::TestCase
   test "#record_exception discards empty values in attribute hash" do
     fake_span = Minitest::Mock.new
     exception = StandardError.new('exception message')
-    fake_span.expect :record_exception, nil, [exception, attributes: {'bar'=>'baz'}]
+    fake_span.expect :record_exception, nil, [exception], attributes: {'bar'=>'baz'}
     def fake_span.status=(val); nil; end
 
     OpenTelemetry::Trace.stub(:current_span, fake_span) do
@@ -85,7 +85,7 @@ class TracingServiceTest < ActiveSupport::TestCase
     fake_span = Minitest::Mock.new
     fake_status = Minitest::Mock.new
 
-    fake_span.expect :record_exception, nil, [exception, attributes: {}]
+    fake_span.expect :record_exception, nil, [exception], attributes: {}
     fake_span.expect :status=, nil, [fake_status]
 
     arguments_checker = Proc.new do |message|
