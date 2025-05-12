@@ -19,62 +19,11 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
   end
 
   def apify_response
-    <<~JSON
-        [
-          {
-            "facebookUrl": "https://www.facebook.com/123456789276277/posts/1127489833985824",
-            "postId": "1127489833985824",
-            "pageName": "TrentAricTV",
-            "url": "https://www.facebook.com/123456789276277/posts/1127489833985824",
-            "time": "2016-10-05T11:15:30.000Z",
-            "timestamp": 1725454801,
-            "user": {
-              "id": "123456789276277",
-              "name": "Trent Aric - Meteorologist",
-              "profileUrl": "https://www.facebook.com/123456789276277",
-              "profilePic": "https://scontent-lax3-2.xx.fbcdn.net/v/t39.30808-1/438118350_990999482397482_3325227196394365011_n.jpg?stp=cp0_dst-jpg_s40x40&_nc_cat=1&ccb=1-7&_nc_sid=f4b9fd&_nc_ohc=-042mhnbMuMQ7kNvgFmbOGG&_nc_ht=scontent-lax3-2.xx&oh=00_AYBz4cSFvAQPVqhU_M8EffXT-BYWcA5myWWy-nlzd2vavA&oe=66DF417A"
-            },
-            "text": "MATTHEW YOU ARE DRUNK...GO HOME! Look at what the long range computer models are indicating with Hurricane Matthew. Yes that's right the GFS model along with the ECMWF (European Model) are both showing Matthew looping around the Atlantic and heading back to the west toward Florida. Let's hope this trend changes and this DOES NOT HAPPEN. Let's get through the next 48hrs first",
-            "likes": 1737,
-            "comments": 51,
-            "shares": 70,
-            "media": [
-              {
-                "mediaset_token": "pcb.945990797560910",
-                "url": "https://www.facebook.com/PinacotecaSP/posts/pfbid0x8nLv3UkFS8EKq1Ri1orXxw4o6UGgCtagyEh3LuNbPackvSszpgzAJ8zPC1p6LUDl",
-                "comet_product_tag_feed_overlay_renderer": null
-              },
-              {
-                "thumbnail": "https://scontent-lax3-1.xx.fbcdn.net/v/t39.30808-6/458267352_1072984427532320_3650659647239955349_n.jpg?stp=dst-jpg_p180x540&_nc_cat=108&ccb=1-7&_nc_sid=127cfc&_nc_ohc=S-OM4BpCmPYQ7kNvgHn3sRW&_nc_ht=scontent-lax3-1.xx&oh=00_AYDD6Jo2QOxEE7Gauh9Gb5j9mZUdrwKS-TaAld1q9FIm_g&oe=66DF38EE",
-                "__typename": "Photo",
-                "photo_image": {
-                  "uri": "https://scontent-lax3-1.xx.fbcdn.net/v/t39.30808-6/458267352_1072984427532320_3650659647239955349_n.jpg?stp=dst-jpg_p180x540&_nc_cat=108&ccb=1-7&_nc_sid=127cfc&_nc_ohc=S-OM4BpCmPYQ7kNvgHn3sRW&_nc_ht=scontent-lax3-1.xx&oh=00_AYDD6Jo2QOxEE7Gauh9Gb5j9mZUdrwKS-TaAld1q9FIm_g&oe=66DF38EE",
-                  "height": 540,
-                  "width": 812
-                },
-                "__isMedia": "Photo",
-                "accent_color": "FF665754",
-                "photo_product_tags": [],
-                "url": "https://www.facebook.com/photo/?fbid=1072984424198987&set=a.528642321966536",
-                "id": "1072984424198987",
-                "ocrText": "May be an image of text"
-              }
-            ],
-            "feedbackId": "ZmVlZGJhY2s6MTA3Mjk4NDQ0NzUzMjMxOA==",
-            "reactionLikeCount": 1485,
-            "reactionLoveCount": 227,
-            "reactionCareCount": 14,
-            "reactionWowCount": 7,
-            "reactionHahaCount": 3,
-            "reactionSadCount": 1,
-            "facebookId": "UzpfSTEwMDA0NDYyMzE3MDQxODoxMDcyOTg0NDQ3NTMyMzE4OjEwNzI5ODQ0NDc1MzIzMTg=",
-            "pageAdLibrary": {
-              "is_business_page_active": false,
-              "id": "23497828950"
-            }
-          }
-        ]
-    JSON
+    response_fixture_from_file('facebook-item-apify-response.json')
+  end
+
+  def apify_video_response
+    response_fixture_from_file('facebook-video-apify-response.json')
   end
 
   def apify_response_not_found
@@ -140,20 +89,39 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     Rails.logger = Logger.new(logger_output)
 
     WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response)
-    
 
     Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824').parse_data(empty_doc, throwaway_url)
 
     assert_includes(logger_output.string,"[Parser] Initiated scraping job on Apify")
   end
 
-  test "sets information from apify" do
+  test "video: sets information from apify" do
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_video_response)
+
+    original_url = 'https://www.facebook.com/canalviva/videos/557432290400735/'
+    canonical_url = 'https://www.facebook.com/canalviva/videos/a-amante-do-marido-dela-era-a-pr%25C3%25B3pria-filha-bel%25C3%25ADssima-mem%25C3%25B3ria-do-viva/557432290400735/'
+    thumbnail_url = 'https://scontent-arn2-1.xx.fbcdn.net/v/t15.5256-10/468479477_1264043074861644_6457252003944632214_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=111&ccb=1-7&_nc_sid=be8305&_nc_ohc=Nx9hqVKSDecQ7kNvwEuw4VH&_nc_oc=AdlFmwpNX5YuX7ZajGZrNW4AeCj1HBmdmf3-QImbIznSHBK8gbGFqPFhTtcXk2q1AbI&_nc_zt=23&_nc_ht=scontent-arn2-1.xx&_nc_gid=1MQwHc63DEAjcREHWh3a2Q&oh=00_AfKYdnSMoNjAEZTwiM8V6oY5Yz_i5K1Lc2WETQ1yj8PHyw&oe=68214EA1'
+
+    parser = Parser::FacebookItem.new(canonical_url)
+    data = parser.parse_data(empty_doc, original_url)
+
+    assert data['error'].blank?
+    assert_equal '100064845692203_557432290400735', data['external_id']
+    assert_equal 'canalviva', data['author_name']
+    assert_equal "A amante do marido dela era a própria filha! | Belíssima | Memória do VIVA", data['title']
+    assert_equal "Júlia descobriu que a \"outra\" era a sua própria filha, Érica 😱 #Belíssima #MemóriaDoVIVA", data['description']
+    assert_equal '2024-11-26 21:00:22', data['published_at']
+    assert_equal thumbnail_url, data['picture']
+  end
+
+  test "item: sets information from apify" do
     WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response)
     
-
-    parser = Parser::FacebookItem.new('https://www.facebook.com/123456789276277/posts/1127489833985824')
-    data = parser.parse_data(empty_doc, throwaway_url)
+    item_url = 'https://www.facebook.com/123456789276277/posts/1127489833985824'
     thumbnail_url = "https://scontent-lax3-1.xx.fbcdn.net/v/t39.30808-6/458267352_1072984427532320_3650659647239955349_n.jpg?stp=dst-jpg_p180x540&_nc_cat=108&ccb=1-7&_nc_sid=127cfc&_nc_ohc=S-OM4BpCmPYQ7kNvgHn3sRW&_nc_ht=scontent-lax3-1.xx&oh=00_AYDD6Jo2QOxEE7Gauh9Gb5j9mZUdrwKS-TaAld1q9FIm_g&oe=66DF38EE"
+
+    parser = Parser::FacebookItem.new(item_url)
+    data = parser.parse_data(empty_doc, throwaway_url)
 
     assert data['error'].blank?
     assert_equal '123456789276277_1127489833985824', data['external_id']
@@ -186,7 +154,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_match /data-href="https:\/\/www.facebook.com\/fakeaccount\/posts\/123456789"/, data.dig('html')
   end
 
-  test "sets fallbacks from metatags for event and watch URLS on apify error" do
+  test "event URL: sets fallbacks from metatags for event on apify error" do
     WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_error_response)
 
     doc = Nokogiri::HTML(<<~HTML)
@@ -198,14 +166,40 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     data = Parser::FacebookItem.new('https://www.facebook.com/events/331430157280289').parse_data(doc, throwaway_url)
     assert_equal 'this is a page title', data['title']
     assert_equal 'this is the page description', data['description']
+  end
 
-    data = Parser::FacebookItem.new('https://www.facebook.com/watch/live/?ref=live_delegate#@37.777053833008,-122.41587829590001,4z').parse_data(doc, throwaway_url)
-    assert_equal 'this is a page title', data['title']
-    assert_equal 'this is the page description', data['description']
+  test "watch URLs: sets fallbacks from metatags for watch URLS on apify error" do
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_error_response)
 
-    data = Parser::FacebookItem.new('https://www.facebook.com/K9Ballistics/videos/upgrade-your-dog-bed/1871564813213101/').parse_data(doc, throwaway_url)
-    assert_equal 'this is a page title', data['title']
-    assert_equal 'this is the page description', data['description']
+    # when it redirects to an existing item watch page 
+    original_url = "https://www.facebook.com/watch/?v=1228508975067324"
+    canonical_url = "https://www.facebook.com/user/videos/video-title/1228508975067324/"
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="This video's title" />
+      <meta property="og:description" content="This video's description." />
+      <meta property='og:url' content="#{canonical_url}">
+    HTML
+
+    parser = Parser::FacebookItem.new(canonical_url)
+    data = parser.parse_data(doc, original_url)
+    assert_equal "This video's title", data['title']
+    assert_equal "This video's description.", data['description']
+
+    # when it redirects to the main watch page
+    original_url = "https://www.facebook.com/watch/?v=687311417207347"
+    canonical_url = "https://www.facebook.com/watch"
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="Discover Popular Videos" />
+      <meta property="og:description" content="Video is the place to enjoy videos and shows together. Watch the latest reels, discover original shows and catch up with your favorite creators." />
+      <meta property='og:url' content="#{canonical_url}">
+    HTML
+
+    parser = Parser::FacebookItem.new(canonical_url)
+    data = parser.parse_data(doc, original_url)
+    assert_nil data['title']
+    assert_empty data['description']
   end
 
   test "should parse and set data from mobile URL" do
@@ -563,5 +557,23 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
         assert_includes embed_html, '<div class="fb-post" data-href="https://www.facebook.com/test_user/posts/12345"></div>'
       end
     end
+  end
+
+  test "should set dead end error and message when redirected to a dead end" do
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_error_response)
+
+    original_url = "https://www.facebook.com/watch/?v=687311417207347"
+    canonical_url = "https://www.facebook.com/watch"
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="Discover Popular Videos" />
+      <meta property="og:description" content="Video is the place to enjoy videos and shows together. Watch the latest reels, discover original shows and catch up with your favorite creators." />
+      <meta property='og:url' content="#{canonical_url}">
+    HTML
+
+    parser = Parser::FacebookItem.new(canonical_url)
+    data = parser.parse_data(doc, original_url)
+    assert_equal 'Redirected to a dead end', data[:error][:message]
+    assert_equal Lapis::ErrorCodes::const_get('DEAD_END'), data[:error][:code]
   end
 end
