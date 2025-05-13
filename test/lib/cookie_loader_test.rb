@@ -58,10 +58,10 @@ class CookieLoaderTest < ActiveSupport::TestCase
   end
 
   test 'requests file from S3 if file path begins S3 and loads result into config' do
-    mocked_cookie_response = MiniTest::Mock.new
+    mocked_cookie_response = Minitest::Mock.new
     def mocked_cookie_response.successful?; true; end
 
-    mocked_s3_client = MiniTest::Mock.new
+    mocked_s3_client = Minitest::Mock.new
     mocked_s3_client.expect(:get_object, mocked_cookie_response) do |args|
       File.open(args[:response_target], 'w') { |file| file.write(cookie_contents) }
       args[:bucket] == 'fake-bucket' && args[:key] == 'fake-cookies.txt' && args[:response_target].present?
@@ -82,7 +82,7 @@ class CookieLoaderTest < ActiveSupport::TestCase
 
   # Error cases:
   test 'keeps cookies as empty and reports error if file path not provided' do
-    mocked_sentry = MiniTest::Mock.new
+    mocked_sentry = Minitest::Mock.new
     mocked_sentry.expect :call, :return_value do |error, args|
       error.class.to_s.match(/FilePathError/) &&
         error.message.match(/Path not provided/) &&
@@ -99,7 +99,7 @@ class CookieLoaderTest < ActiveSupport::TestCase
   end
 
   test 'keeps cookies as empty and reports error if file path does not exist' do
-    mocked_sentry = MiniTest::Mock.new
+    mocked_sentry = Minitest::Mock.new
     mocked_sentry.expect :call, :return_value do |error, args|
       error.class.to_s.match(/FilePathError/) &&
         error.message.match(/No file found at path/) &&
@@ -116,7 +116,7 @@ class CookieLoaderTest < ActiveSupport::TestCase
   end
 
   test 'keeps cookies as empty and reports problem downloading from S3' do
-    mocked_sentry = MiniTest::Mock.new
+    mocked_sentry = Minitest::Mock.new
     mocked_sentry.expect :call, :return_value do |error, args|
       error.class.to_s.match(/S3DownloadError/) &&
         error.message.match(/Unsuccessful response from S3/) &&
@@ -135,7 +135,7 @@ class CookieLoaderTest < ActiveSupport::TestCase
   end
 
   test 'keeps cookies as empty and reports problem if file downloaded from S3 is empty' do
-    mocked_sentry = MiniTest::Mock.new
+    mocked_sentry = Minitest::Mock.new
     mocked_sentry.expect :call, :return_value do |error, args|
       error.class.to_s.match(/S3DownloadError/) &&
         error.message.match(/Downloaded file from S3 is empty/) &&
