@@ -20,5 +20,4 @@ jobs:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     - uses: wangchucheng/git-repo-sync@v0.1.0
       with:
-        target-url: https://gitlab.com/meedan/pender.git/
-        target-username: sonoransun
+        target-url: git@gitlab.com:meedan/pender.git
