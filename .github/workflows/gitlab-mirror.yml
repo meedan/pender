@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 env:
-    TARGET_REPO: git@gitlab.com:meedan/pender.git
+  TARGET_REPO: git@gitlab.com:meedan/pender.git
 
 jobs:
   sync:
@@ -25,6 +25,7 @@ jobs:
       if: ${{ github.event_name == 'push' }}
       run: |
         git remote add target $TARGET_REPO
+        git push -f --all target
         git push -f --tags target
     - name: Sync delete 
       if: ${{ github.event_name == 'delete' }}
