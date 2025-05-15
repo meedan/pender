@@ -1,4 +1,4 @@
-name: Build Test and Deploy
+name: Build and Deploy
 
 on:
   push:
@@ -8,17 +8,21 @@ on:
       - '*deploy/*'
       - '4921-consolidate-dockerfiles'
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  build-test-deploy:
+  build-push-deploy:
     runs-on: ubuntu-latest
 
     outputs:
       image: ${{ steps.build-image.outputs.image }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -27,10 +31,10 @@ jobs:
 
     - name: Login to Amazon ECR
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      uses: aws-actions/amazon-ecr-login@v2
 
     - name: Set up Docker Buildx
-      uses: crazy-max/ghaction-docker-buildx@v3
+      uses: docker/setup-buildx-action@v3
 
     - name: Cache Docker layers
       uses: actions/cache@v4
@@ -50,7 +54,7 @@ jobs:
       run: |
         docker buildx build \
           --cache-from "type=local,src=/tmp/.buildx-cache" \
-          --cache-to "type=local,dest=/tmp/.buildx-cache" \
+          --cache-to "type=local,dest=/tmp/.buildx-cache-new" \
           --load \
           --build-arg RAILS_ENV=production \
           --build-arg BUNDLE_DEPLOYMENT="true" \
@@ -58,9 +62,6 @@ jobs:
           --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
           --file ./Dockerfile ./
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-
-#    - name: Run Unit Tests
-#      id: run-unit-tests
 
     - name: Docker Buildx (push)
       id: push-image-to-ecr
@@ -89,28 +90,15 @@ jobs:
           --tag $ECR_REGISTRY/$ECR_REPOSITORY:$BRANCH \
           --file ./Dockerfile ./
 
-#    - name: Kick off Terraform deploy in sysops/ if not live
-#      id: sysops-deploy
-#      run: |
-#        BRANCH=$(echo "${GITHUB_REF#refs/*/}" | sed 's/.*\///')
-#        if [[ "$BRANCH" != master ]]; then
-#          curl \
-#          -X POST \
-#          -H "Accept: application/vnd.github.v3+json" \
-#          https://api.github.com/repos/meedan/sysops/actions/workflows/deploy_${{ github.event.repository.name }}.yml/dispatches \
-#          -u ${{ secrets.SYSOPS_RW_GITHUB_TOKEN }} \
-#          -d '{"ref": "master", "inputs": {"git_sha": "${{ github.sha }}", "branch": "'$BRANCH'"}}'
-#        fi
-
-#   - name: Send Slack Notification
-#     id: slack-notify
-#     if: ${{ always() }}
-#     uses: 8398a7/action-slack@v3
-#     with:
-#       status: ${{ job.status }}
-#       author_name: 'Github Actions'
-#       icon_emoji: ':octocat:'
-#       fields: repo,message,author # selectable (default: repo,message)
-#     env:
-#       GITHUB_TOKEN: ${{ secrets.CONFIGURATOR_TOKEN }} # optional
-#       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+    # - name: Kick off Terraform deploy in sysops/ if not live
+    #   id: sysops-deploy
+    #   run: |
+    #     BRANCH=$(echo "${GITHUB_REF#refs/*/}" | sed 's/.*\///')
+    #     if [[ "$BRANCH" != master ]]; then
+    #       curl \
+    #       -X POST \
+    #       -H "Accept: application/vnd.github.v3+json" \
+    #       https://api.github.com/repos/meedan/sysops/actions/workflows/deploy_${{ github.event.repository.name }}.yml/dispatches \
+    #       -u ${{ secrets.SYSOPS_RW_GITHUB_TOKEN }} \
+    #       -d '{"ref": "master", "inputs": {"git_sha": "${{ github.sha }}", "branch": "'$BRANCH'"}}'
+    #     fi

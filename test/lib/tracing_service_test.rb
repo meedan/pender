@@ -24,7 +24,7 @@ class TracingServiceTest < ActiveSupport::TestCase
 
   # Unit tests below
   test "#add_attributes_to_current_span should set attributes via open telemetry" do
-    fake_span = MiniTest::Mock.new
+    fake_span = Minitest::Mock.new
     fake_span.expect :add_attributes, nil, [{'foo' => 'bar'}]
 
     OpenTelemetry::Trace.stub(:current_span, fake_span) do
@@ -35,7 +35,7 @@ class TracingServiceTest < ActiveSupport::TestCase
   end
 
   test "#add_attributes_to_current_span discards empty values in hash" do
-    fake_span = MiniTest::Mock.new
+    fake_span = Minitest::Mock.new
     fake_span.expect :add_attributes, nil, [{'bar' => 'baz'}]
 
     OpenTelemetry::Trace.stub(:current_span, fake_span) do
@@ -47,10 +47,10 @@ class TracingServiceTest < ActiveSupport::TestCase
 
   test "#record_exception reports passed exception its default message to open telemetry span" do
     exception = StandardError.new('exception message')
-    fake_span = MiniTest::Mock.new
-    fake_status = MiniTest::Mock.new
+    fake_span = Minitest::Mock.new
+    fake_status = Minitest::Mock.new
 
-    fake_span.expect :record_exception, nil, [exception, attributes: {}]
+    fake_span.expect :record_exception, nil, [exception], attributes: {}
     fake_span.expect :status=, nil, [fake_status]
 
     arguments_checker = Proc.new do |message|
@@ -68,9 +68,9 @@ class TracingServiceTest < ActiveSupport::TestCase
   end
 
   test "#record_exception discards empty values in attribute hash" do
-    fake_span = MiniTest::Mock.new
+    fake_span = Minitest::Mock.new
     exception = StandardError.new('exception message')
-    fake_span.expect :record_exception, nil, [exception, attributes: {'bar'=>'baz'}]
+    fake_span.expect :record_exception, nil, [exception], attributes: {'bar'=>'baz'}
     def fake_span.status=(val); nil; end
 
     OpenTelemetry::Trace.stub(:current_span, fake_span) do
@@ -82,10 +82,10 @@ class TracingServiceTest < ActiveSupport::TestCase
 
   test "#record_exception passes along custom error message if provided" do
     exception = StandardError.new('exception message')
-    fake_span = MiniTest::Mock.new
-    fake_status = MiniTest::Mock.new
+    fake_span = Minitest::Mock.new
+    fake_status = Minitest::Mock.new
 
-    fake_span.expect :record_exception, nil, [exception, attributes: {}]
+    fake_span.expect :record_exception, nil, [exception], attributes: {}
     fake_span.expect :status=, nil, [fake_status]
 
     arguments_checker = Proc.new do |message|
@@ -103,8 +103,8 @@ class TracingServiceTest < ActiveSupport::TestCase
   end
 
   test "#set_error_status sets error status with provided message on current span" do
-    fake_span = MiniTest::Mock.new
-    fake_status = MiniTest::Mock.new
+    fake_span = Minitest::Mock.new
+    fake_status = Minitest::Mock.new
 
     fake_span.expect :status=, nil, [fake_status]
 
@@ -123,7 +123,7 @@ class TracingServiceTest < ActiveSupport::TestCase
   end
 
   test "#set_error_status adds any passed attributes" do
-    fake_span = MiniTest::Mock.new
+    fake_span = Minitest::Mock.new
     fake_span.expect :add_attributes, nil, [{'foo' => 'bar'}]
     def fake_span.status=(val); nil; end
 

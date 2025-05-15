@@ -46,7 +46,7 @@ module Parser
 
         set_data_field('description', get_metatag_value('og:description'), get_metatag_value('description'))
         set_data_field('author_url', parseable_url)
-        set_facebook_privacy_error(doc, unavailable_page)
+        set_facebook_dead_end_error(doc, unavailable_page)
       end
 
       strip_facebook_from_title!

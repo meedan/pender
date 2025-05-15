@@ -10,7 +10,8 @@ module ProviderFacebook
       [
         { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/login/, reason: :login_page },
         { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/?$/, reason: :login_page },
-        { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/cookie\/consent-page/, reason: :consent_page }
+        { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/cookie\/consent-page/, reason: :consent_page },
+        { pattern: /^https:\/\/([^\.]+\.)?facebook.com\/watch\/*?$/, reason: :watch_page }
       ]
     end
 
@@ -48,57 +49,97 @@ module ProviderFacebook
       return { error: { message: apify_data.first['errorDescription'], code: Lapis::ErrorCodes::const_get('UNKNOWN') }}
     end
 
-
     apify_data.is_a?(Array) ? apify_data.first : apify_data
   end
 
   def format_apify_result(data)
     post_info = (data)
-    message = post_info.dig('text')
-    media = post_info.dig('media')
-    picture = if media.is_a?(Array)
-      media.find { |m| m['thumbnail'] }&.dig('thumbnail') || ""
-    else
-      ""
-    end
-    user_id = post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('id') : ""
-    post_id = post_info.dig('postId')
+    user = post_info.dig('user') || post_info.dig('owner')
+    user_info = user_info(user,post_info)
+    text = post_info.dig('text')
+    title = text || post_info.dig('previewTitle')
+    description = text || post_info.dig('previewDescription')
+    post_id = post_info.dig('postId') || post_info.dig('id')
+    picture = item_picture(post_info)
+    published_date = item_published_date(post_info)
     {
-      author_name:  post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('name') : "",
-      username: post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('name') : "",
-      author_url: post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('profileUrl') : "",
-      author_picture: post_info.dig('user').is_a?(Hash) ? post_info.dig('user').dig('profilePic') : "",
-      title: message,
-      description: message,
-      text: message,
-      external_id: "#{user_id}_#{post_id}",
+      author_name: user_info[:name],
+      username: user_info[:name],
+      author_url: user_info[:url],
+      author_picture: user_info[:picture],
+      title: title,
+      description: description,
+      text: text,
+      external_id: "#{user_info[:id]}_#{post_id}",
       picture: picture,
-      published_at: post_info.dig('user') ? post_info.dig('time').sub('T', ' ').sub('.000Z', '') : "",
+      published_at: published_date
     }.with_indifferent_access
+  end
+
+  def item_picture(post_info)
+    media = post_info.dig('media')
+    picture = media.find { |m| m['thumbnail'] }&.dig('thumbnail') || "" if media.is_a?(Array)
+    picture ||= post_info.dig('preferred_thumbnail', 'image', 'uri')
+    picture || ""
+  end
+
+  def item_published_date(post_info)
+    timestamp = post_info.dig('timestamp') || post_info.dig('publish_time')
+    timestamp ? Time.at(timestamp).strftime('%Y-%m-%d %H:%M:%S') : ""
+  end
+
+  def user_info(user,post_info)
+    if user.is_a?(Hash)
+      {
+        name: user.dig('name') || post_info.dig('pageName') || "", 
+        id: user.dig('id') || "",
+        url: user.dig('profileUrl') || "",
+        picture: user.dig('profilePic') || ""
+      }
+    else
+      {
+        name: "",
+        id: "",
+        url: "",
+        picture: ""
+       }
+    end
   end
 
   def has_valid_apify_data?
     parsed_data.dig('raw', 'apify').present? && parsed_data.dig('raw', 'apify', 'error').blank?
   end
 
-  def set_facebook_privacy_error(html_page, page_is_unavailable)
+  def set_facebook_dead_end_error(html_page, page_is_unavailable)
     return if html_page.nil?
     return if has_valid_apify_data?
 
     title = get_page_title(html_page)
     return if title.blank?
 
-    ['log in or sign up to view', 'log into facebook', 'log in to facebook'].each do |login|
-      if page_is_unavailable || title.downcase.include?(login)
-        @parsed_data['title'] = nil
-        @parsed_data['description'] = ''
-        @parsed_data['error'] = {
+    login_page = login_page?(title) || page_is_unavailable == :login_page
+
+    if page_is_unavailable || login_page
+      @parsed_data['title'] = nil
+      @parsed_data['description'] = ''
+      @parsed_data['error'] =
+        login_page ?
+        {
           message: 'Login required to see this profile',
           code: Lapis::ErrorCodes::const_get('LOGIN_REQUIRED'),
         }
+        :
+        {
+          message: 'Redirected to a dead end',
+          code: Lapis::ErrorCodes::const_get('DEAD_END'),
+        }
       return true
-      end
     end
+  end
+
+  def login_page?(title)
+    login_messages = ['log in or sign up to view', 'log into facebook', 'log in to facebook']
+    login_messages.any? { |login_message| title.downcase.include?(login_message)}
   end
 
   def strip_facebook_from_title!
