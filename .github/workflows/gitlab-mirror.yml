@@ -1,0 +1,34 @@
+name: GitLab Mirror
+
+on: 
+  - push
+  - delete
+
+permissions:
+  contents: read
+
+env:
+  TARGET_REPO: git@gitlab.com:meedan/pender.git
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    name: Git Repo Sync
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: Sync push
+      if: ${{ github.event_name == 'push' }}
+      run: |
+        git remote add target $TARGET_REPO
+        git push -f --all target
+        git push -f --tags target
+    - name: Sync delete 
+      if: ${{ github.event_name == 'delete' }}
+      run: |
+        git remote add target $TARGET_REPO
+        git push -d target ${GITHUB_EVENT_REF}
