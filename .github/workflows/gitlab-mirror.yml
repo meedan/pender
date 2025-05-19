@@ -27,11 +27,11 @@ jobs:
     - name: Sync push
       if: ${{ github.event_name == 'push' }}
       run: |
-        git remote add target $TARGET_REPO
-        git push -f --all target
-        git push -f --tags target
+        git -c "core.sshCommand=ssh -i ~/.ssh/id" remote add target $TARGET_REPO
+        git -c "core.sshCommand=ssh -i ~/.ssh/id" push -f --all target
+        git -c "core.sshCommand=ssh -i ~/.ssh/id" push -f --tags target
     - name: Sync delete 
       if: ${{ github.event_name == 'delete' }}
       run: |
-        git remote add target $TARGET_REPO
-        git push -d target ${GITHUB_EVENT_REF}
+        git -c "core.sshCommand=ssh -i ~/.ssh/id" remote add target $TARGET_REPO
+        git -c "core.sshCommand=ssh -i ~/.ssh/id" push -d target ${GITHUB_EVENT_REF}
