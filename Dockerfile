@@ -1,27 +1,41 @@
 FROM ruby:3.3.3-slim
-MAINTAINER Meedan <sysops@meedan.com>
+LABEL maintainer=sysops@meedan.com
 
-# the Rails stage can be overridden from the caller
-ENV RAILS_ENV development
+# Build-time variables
+ARG DIRPATH=/app/pender
+ARG BUNDLER_VERSION="2.3.5"
+ARG RAILS_ENV=development
+ARG BUNDLE_DEPLOYMENT=""
+ARG BUNDLE_WITHOUT=""
 
+ENV APP=pender
 # Set a UTF-8 capabable locale
-ENV LC_ALL C.UTF-8
-ENV LANG C.UTF-8
-ENV LANGUAGE C.UTF-8
+ENV LANG=C.UTF-8
 
-# install dependencies
-RUN apt-get update -qq && apt-get install -y curl build-essential git graphicsmagick inotify-tools libpq-dev --no-install-recommends
+ENV RAILS_ENV=$RAILS_ENV \
+    SERVER_PORT=3200 \
+    BUNDLE_DEPLOYMENT=$BUNDLE_DEPLOYMENT \
+    BUNDLE_WITHOUT=$BUNDLE_WITHOUT
 
-# install our app
-RUN mkdir -p /app
-WORKDIR /app
-COPY Gemfile Gemfile.lock /app/
-RUN gem install bundler -v "2.3.5" --no-document && bundle install --jobs 20 --retry 5
-COPY . /app/
+RUN apt-get update && apt-get install -y curl \
+    build-essential \
+    git \
+    libpq-dev --no-install-recommends
 
-# startup
-RUN chmod +x /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-background.sh
+RUN useradd "${APP}" --shell /bin/bash --create-home
+WORKDIR "${DIRPATH}"
+
+COPY Gemfile Gemfile.lock .
+RUN gem install bundler -v "${BUNDLER_VERSION}" --no-document \
+    && bundle install --jobs 20 --retry 5
+# FIXME: chown flags required for local macos (and likely windows) builds
+COPY --chown=${APP} ./ .
+COPY --chown=${APP} bin/ /opt/bin/
+COPY --chown=${APP} db/schema.rb /opt/db/
+RUN chmod a+w /opt/db/schema.rb
+
+USER ${APP}
+
 EXPOSE 3200
-
-CMD ["/app/docker-entrypoint.sh"]
+# EXPOSE 8000
+ENTRYPOINT ["/opt/bin/docker-entrypoint.sh"]

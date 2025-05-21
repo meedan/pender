@@ -4,8 +4,15 @@ echo "Setting up parallel databases for RAILS_ENV=${RAILS_ENV}..."
 
 FAIL=0
 
-rm -rf /app/tmp/cache /app/tmp/cache1 /app/tmp/cache2 /app/tmp/cache3
-mkdir -p /app/tmp/cache /app/tmp/cache1 /app/tmp/cache2 /app/tmp/cache3
+echo `whoami`
+ls -al tmp
+rm -rf /tmp/cache /tmp/cache1 /tmp/cache2 /tmp/cache3
+mkdir -p /tmp/cache /tmp/cache1 /tmp/cache2 /tmp/cache3
+mkdir -p /opt/db
+
+echo `pwd`
+echo `ls -al`
+echo "-------------------------------------------------------------------------"
 
 bundle exec rake db:create db:migrate &
 TEST_ENV_NUMBER=1 bundle exec rake db:create db:migrate &
