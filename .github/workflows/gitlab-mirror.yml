@@ -22,6 +22,7 @@ jobs:
       run: |
         mkdir ~/.ssh
         echo  $SSH_PRIVATE_KEY > ~/.ssh/id
+        sha1sum ~/.ssh/id
         chmod 600 ~/.ssh/id
         git config core.sshCommand 'ssh -i ~/.ssh/id'
         git config --global url."git@gitlab.com:".insteadOf "https://gitlab.com/"
