@@ -236,6 +236,17 @@ class PageItemUnitTest < ActiveSupport::TestCase
     assert_match 'https://meedan.checkdesk.org', data['author_url']
   end
 
+  test "should store metatags in an Array" do
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="twitter:title" content="Piglet's page"/>
+      <meta property="twitter:description" content="A place for dogs, surprisingly"/>
+    HTML
+
+    data = Parser::PageItem.new('https://example.com').parse_data(doc, throwaway_url)
+    assert data['raw']['metatags'].is_a? Array
+    assert !data['raw']['metatags'].empty?
+  end
+
   # Note: this is existing behavior, but could see it having unintended results
   test "adds http to beginning of picture URL when needed" do
     doc = Nokogiri::HTML('<meta property="og:image" content="piglet.com/image.png" />')
