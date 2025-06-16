@@ -65,7 +65,7 @@ development: &default
   #
   # REQUIRED for Facebook posts and Instagram
   #
-  apify_api_token: 'TOKEN'
+  apify_api_token: # 'SECRET'
 
   # Luminati proxy service https://luminati.io/
   #
