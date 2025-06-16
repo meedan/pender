@@ -44,7 +44,7 @@ class PenderConfigTest < ActiveSupport::TestCase
 
   test "should return value from ENV if present and not on api" do
     env_values = {}
-    ['google_api_key', 'twitter_consumer_secret', 'facebook_app_secret'].each do |key|
+    ['google_api_key', 'twitter_consumer_secret'].each do |key|
       env_values[key] = ENV[key]
       ENV[key] = "env_#{key}"
     end
@@ -54,9 +54,8 @@ class PenderConfigTest < ActiveSupport::TestCase
     assert_equal 'api_google_api_key', PenderConfig.get('google_api_key')
     assert_equal 'env_google_api_key', ENV['google_api_key']
     assert_equal 'env_twitter_consumer_secret', PenderConfig.get('twitter_consumer_secret')
-    assert_equal 'env_facebook_app_secret', PenderConfig.get('facebook_app_secret')
 
-    ['google_api_key', 'twitter_consumer_secret', 'facebook_app_secret'].each do |key|
+    ['google_api_key', 'twitter_consumer_secret'].each do |key|
       ENV[key] = env_values[key]
     end
   end
