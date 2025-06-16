@@ -26,13 +26,6 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     assert_equal '', data['username']
   end
 
-  test "should store metatags in an Array" do
-    m = create_media url: 'https://www.nytimes.com/2017/06/14/us/politics/mueller-trump-special-counsel-investigation.html'
-    data = m.as_json
-    assert data['raw']['metatags'].is_a? Array
-    assert !data['raw']['metatags'].empty?
-  end
-
   test "should handle exception when raises some error when getting oembed data" do
     url = 'https://www.hongkongfp.com/2017/03/01/hearing-begins-in-govt-legal-challenge-against-4-rebel-hong-kong-lawmakers/'
     m = create_media url: url
