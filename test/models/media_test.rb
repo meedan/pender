@@ -451,12 +451,15 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should parse page when json+ld tag content is an empty array" do
+    url = 'https://www.example.com/'
+    WebMock.enable!
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML('<script data-rh="true" type="application/ld+json">[]</script>'))
-    url = 'https://www.nytimes.com/2019/10/13/world/middleeast/syria-turkey-invasion-isis.html'
     m = create_media url: url
     data = m.as_json
     assert_equal url, data['url']
     assert_nil data['error']
+    WebMock.disable!
   end
 
   test "should not raise encoding error when saving data" do
