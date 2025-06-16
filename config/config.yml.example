@@ -61,17 +61,11 @@ development: &default
   #
   twitter_bearer_token: # 'SECRET'
 
-  # Facebook API
-  #
-  # REQUIRED for Facebook social metrics
-  #
-  facebook_app: # 'SECRET'
-
-  # OPTIONAL
-  #
   # Apify API Token
   #
-  apify_api_token: 'TOKEN'
+  # REQUIRED for Facebook posts and Instagram
+  #
+  apify_api_token: # 'SECRET'
 
   # Luminati proxy service https://luminati.io/
   #
