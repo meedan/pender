@@ -2,7 +2,7 @@
 
 [Test Coverage: Overview](https://codeclimate.com/github/meedan/pender)
 [Test Coverage: Issues](https://codeclimate.com/github/meedan/pender/issues)
-![test](https://github.com/meedan/pender/actions/workflows/ci-test-pr.yml/badge.svg?branch=develop)
+![test](https://github.com/meedan/pender/actions/workflows/ci-test-pr.yml/badge.svg?branch=main)
 
 Pender is a service for link parsing, archiving and rendering. It is one of the services that supports [Check](https://meedan.com/check), an open source platform for collaborative fact-checking and media annotation.
 

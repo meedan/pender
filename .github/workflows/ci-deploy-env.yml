@@ -3,7 +3,7 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - 'develop'
+      - 'main'
     tags:
       - 'v*'
 
@@ -91,7 +91,7 @@ jobs:
 
     - name: Kick off Terraform deploy in sysops/
       id: sysops-deploy
-      if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/develop')
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
       run: |
         curl --fail-with-body \
           -X POST \
