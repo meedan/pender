@@ -78,6 +78,15 @@ class RequestHelper
       end
     end
 
+    def parse_nonmandatory_url(url)
+      begin
+        parse_url(url)
+      rescue RequestHelper::UrlFormatError => e
+        Rails.logger.warn level: 'WARN', message: "[RequestHelper] Could not parse url: '#{url}'. Error: #{e.class} - #{e.message}"
+        nil
+      end
+    end
+
     def extended_headers(uri = nil)
       uri = self.parse_url(self.decode_uri(uri)) if uri.is_a?(String)
       ({
