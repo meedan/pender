@@ -639,4 +639,14 @@ class MediaUnitTest < ActiveSupport::TestCase
     assert_not_includes media.url, 'igsh'
     assert_equal media.url, 'https://www.instagram.com/p/xyz?param1=value1&param2=value2'
   end
+
+  test 'invalid image URL should not stop an item from being parsed' do
+    WebMock.stub_request(:get, /example.com/).and_return(status: 200, body: 'fake response body')
+    Parser::PageItem.any_instance.stubs(:parse_data).returns({ picture: 'http://{image}' })
+
+    m = create_media url: 'http://www.example.com'
+    assert_nothing_raised do
+      m.as_json force: true
+    end
+  end
 end
