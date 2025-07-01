@@ -10,7 +10,7 @@ if [ "${APP}" = 'pender' ] ; then
   if [ "${DEPLOY_ENV}" = 'local' ] ; then
     bundle exec rake db:create
     bundle exec rake db:migrate
-    SECRET_KEY_BASE=$(bundle exec rake secret)
+    SECRET_KEY_BASE=$(bundle exec bin/rails secret)
     export SECRET_KEY_BASE
     bundle exec rake lapis:api_keys:create_default
   else # qa, live etc
