@@ -43,6 +43,18 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     JSON
   end
 
+  def apify_content_not_available_response
+    <<~JSON
+    [
+      {
+        "url": "https://www.facebook.com/123456789/posts/123456789",
+        "error": "not_available",
+        "errorDescription": "This content isn't available because the owner only shared it with a small group of people or changed who can see it, or it's been deleted."
+      }
+    ]
+    JSON
+  end
+
   test "returns provider and type" do
     assert_equal Parser::FacebookItem.type, 'facebook_item'
   end
@@ -575,5 +587,19 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     data = parser.parse_data(doc, original_url)
     assert_equal 'Redirected to a dead end', data[:error][:message]
     assert_equal Lapis::ErrorCodes::const_get('DEAD_END'), data[:error][:code]
+  end
+
+  test "event URL: sets fallbacks from metatags for event on apify content not available error" do
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_content_not_available_response)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="this is a page title | Facebook" />
+      <meta property="og:description" content="this is the page description" />
+      <meta property="og:image" content="https://example.com/image" />
+    HTML
+
+    data = Parser::FacebookItem.new('https://www.facebook.com/events/331430157280289').parse_data(doc, throwaway_url)
+    assert_equal 'this is a page title', data['title']
+    assert_equal 'this is the page description', data['description']
   end
 end
