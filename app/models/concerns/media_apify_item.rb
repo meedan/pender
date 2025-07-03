@@ -72,9 +72,10 @@ module MediaApifyItem
       raise ApifyResponseError if response.nil? || !['200', '201'].include?(response.code) || response.body.blank?
       raise ApifyResponseError if response.body.include?("This content isn't available")
 
-      JSON.parse(response.body)
+      parsed_response = JSON.parse(response.body)
+      parsed_response
     rescue ApifyResponseError, JSON::ParserError => error
-      handle_apify_error(error, apify_url)
+      handle_apify_error(error, apify_url, parsed_response)
       nil
     end
 
@@ -85,13 +86,14 @@ module MediaApifyItem
       response
     end
 
-    def self.handle_apify_error(error, uri)
-      apify_url = URI.parse(uri).path
+    def self.handle_apify_error(error, apify_url, parsed_response)
+      apify_url = URI.parse(apify_url).path
 
       PenderSentry.notify(
         ApifyError.new(error),
         apify_url: apify_url,
-        error_message: error.message
+        error_message: error.message,
+        apify_response: parsed_response
       )
       Rails.logger.warn level: 'WARN', message: '[Parser] Could not process Apify request', apify_url: apify_url, error_class: error.class
     end
