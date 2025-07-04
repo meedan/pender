@@ -81,7 +81,8 @@ class Media
       if data[:error].blank?
         cache.write(id, :json, cleanup_data_encoding(data))
       end
-      self.upload_images
+      MediaImageUploader.new(self).upload_images
+      # self.upload_images
     end
     archive_if_conditions_are_met(options, id, cache)
     parser_requests_metrics
