@@ -5,7 +5,8 @@ class MediaImage
     @media = media
     @attribute = attribute
     @media_id = Media.get_id(@media.url)
-    @parsed_url = RequestHelper.parse_nonmandatory_url(url)
+    @url = media.data.dig(attribute)
+    @parsed_url = RequestHelper.parse_nonmandatory_url(@url)
   end
 
   def upload
@@ -16,35 +17,16 @@ class MediaImage
         Pender::Store.current.store_object(filename, content, 'medias/')
       end
 
-      media.data[attribute] = "#{Pender::Store.current.storage_path('medias')}/#{filename}"
+      media.data[attribute] = storage_path
       Media.update_cache(media.url, { attribute => media.data[attribute] })
-
       true
     rescue StandardError => error
-      PenderSentry.notify(
-        StandardError.new("Could not get '#{attribute}' image"),
-        url: media.url,
-        img_url: @parsed_url,
-        error: {
-          class: error.class,
-          message: error.message
-        }
-      )
-      Rails.logger.warn level: 'WARN',
-                        message: "[Parser] Could not get '#{attribute}' image",
-                        url: media.url,
-                        img_url: @parsed_url,
-                        error_class: error.class,
-                        error_message: error.message
+      report_failure(error)
       false
     end
   end
 
   private
-
-  def url
-    media.data.dig(attribute)
-  end
 
   def extension
     ext = File.extname(@parsed_url.path)
@@ -53,5 +35,28 @@ class MediaImage
 
   def filename
     "#{@media_id}/#{attribute}#{extension}"
+  end
+
+  def storage_path
+    "#{Pender::Store.current.storage_path('medias')}/#{filename}"
+  end
+
+  def report_failure(error)
+    PenderSentry.notify(
+      StandardError.new("Could not get '#{attribute}' image"),
+      url: media.url,
+      img_url: @parsed_url,
+      error: {
+        class: error.class,
+        message: error.message
+      }
+    )
+    Rails.logger.warn level: 'WARN',
+                      message: "[Parser] Could not get '#{attribute}' image",
+                      url: media.url,
+                      img_url: @parsed_url,
+                      error_class: error.class,
+                      error_message: error.message
+    false
   end
 end
