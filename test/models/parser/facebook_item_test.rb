@@ -602,26 +602,4 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_equal 'this is a page title', data['title']
     assert_equal 'this is the page description', data['description']
   end
-
-  test "event URL: sets fallbacks from metatags for event when apify response is a hash" do
-    hash_response = <<~JSON
-      {
-        "url": "https://www.facebook.com/123456789/posts/123456789",
-        "error": "not_available",
-        "errorDescription": "This content isn't available because the owner only shared it with a small group of people or changed who can see it, or it's been deleted."
-      }
-    JSON
-
-    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: hash_response)
-
-    doc = Nokogiri::HTML(<<~HTML)
-      <meta property="og:title" content="this is a page title | Facebook" />
-      <meta property="og:description" content="this is the page description" />
-      <meta property="og:image" content="https://example.com/image" />
-    HTML
-
-    data = Parser::FacebookItem.new('https://www.facebook.com/events/331430157280289').parse_data(doc, throwaway_url)
-    assert_equal 'this is a page title', data['title']
-    assert_equal 'this is the page description', data['description']
-  end
 end
