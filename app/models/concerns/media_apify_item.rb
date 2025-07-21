@@ -102,7 +102,15 @@ module MediaApifyItem
     end
 
     def self.parsed_apify_response(parsed_response)
-      apify_response = parsed_response.nil? ? {} : parsed_response.first
+        apify_response =
+          case parsed_response
+          when Array
+            parsed_response.first || {}
+          when Hash
+            parsed_response
+          else
+            {}
+          end
 
       apify_response_url = apify_response['url'].presence
       apify_response_error = apify_response['error'].presence
