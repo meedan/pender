@@ -1,5 +1,5 @@
 FROM ruby:3.3.3-slim
-LABEL maintainer=sysops@meedan.com
+LABEL maintainer="sysops@meedan.com"
 
 # Build-time variables
 ARG DIRPATH=/app/pender
