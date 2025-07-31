@@ -189,7 +189,7 @@ class RequestHelper
     end
 
     def redirect_https_to_http?(header_options, message)
-      message.match?('redirection forbidden') && header_options[:allow_redirections] != :all
+      message.match?('redirection forbidden')
     end
 
     def proxy_format(proxy, format = :array)
