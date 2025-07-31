@@ -13,7 +13,7 @@ class RequestHelper
         proxy = self.get_proxy(uri, :array, force_proxy)
         options = proxy ? { proxy_http_basic_authentication: proxy, 'Accept-Language' => LANG } : header_options
         html = ''.freeze
-        OpenURI.open_uri(uri, options.merge(read_timeout: PenderConfig.get('timeout', 30).to_i)) do |f|
+        URI.open(uri, options.merge(read_timeout: PenderConfig.get('timeout', 30).to_i)) do |f|
           f.binmode
           html = f.read
         end
@@ -57,7 +57,7 @@ class RequestHelper
 
     def html_options(url)
       uri = url.is_a?(String) ? self.parse_url(url) : url
-      uri.host.match?(/twitter\.com/) ? self.extended_headers(url) : { allow_redirections: :safe, proxy: nil, 'User-Agent' => 'Mozilla/5.0 (X11)', 'Accept' => '*/*', 'Accept-Language' => LANG, 'Cookie' => self.set_cookies(uri) }.merge(self.get_cf_credentials(uri))
+      uri.host.match?(/twitter\.com/) ? self.extended_headers(url) : { proxy: nil, 'User-Agent' => 'Mozilla/5.0 (X11)', 'Accept' => '*/*', 'Accept-Language' => LANG, 'Cookie' => self.set_cookies(uri) }.merge(self.get_cf_credentials(uri))
     end
 
     def encode_url(url)
