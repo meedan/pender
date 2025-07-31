@@ -60,8 +60,8 @@ class MediaTest < ActiveSupport::TestCase
       header_options_with_cf = RequestHelper.html_options(url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
       assert_equal '1234', header_options_with_cf['CF-Access-Client-Id']
       assert_equal '5678', header_options_with_cf['CF-Access-Client-Secret']
-      OpenURI.stubs(:open_uri).with(parsed_url, header_options_without_cf).raises(RuntimeError.new('unauthorized'))
-      OpenURI.stubs(:open_uri).with(parsed_url, header_options_with_cf)
+      URI.stubs(:open).with(parsed_url, header_options_without_cf).raises(RuntimeError.new('unauthorized'))
+      URI.stubs(:open).with(parsed_url, header_options_with_cf)
       assert_equal Nokogiri::HTML::Document, m.send(:get_html, RequestHelper.html_options(m.url)).class
   ensure
     ENV['hosts'] = host
@@ -128,7 +128,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should handle connection reset by peer error" do
     url = 'https://br.yahoo.com/'
     parsed_url = RequestHelper.parse_url(url)
-    OpenURI.stubs(:open_uri).raises(Errno::ECONNRESET)
+    URI.stubs(:open).raises(Errno::ECONNRESET)
     m = create_media url: url
     assert_nothing_raised do
       m.send(:get_html, RequestHelper.html_options(m.url))
@@ -139,8 +139,8 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://ca.yahoo.com'
     parsed_url = RequestHelper.parse_url( m.url)
     header_options = RequestHelper.html_options(m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Zlib::DataError)
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
+    URI.stubs(:open).with(parsed_url, header_options).raises(Zlib::DataError)
+    URI.stubs(:open).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
     m.send(:get_html, RequestHelper.html_options(m.url))
     OpenURI.unstub(:open_uri)
   end
@@ -149,8 +149,8 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.businessdailyafrica.com/'
     parsed_url = RequestHelper.parse_url( m.url)
     header_options = RequestHelper.html_options(m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Zlib::BufError)
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
+    URI.stubs(:open).with(parsed_url, header_options).raises(Zlib::BufError)
+    URI.stubs(:open).with(parsed_url, header_options.merge('Accept-Encoding' => 'identity'))
     m.send(:get_html, RequestHelper.html_options(m.url))
     OpenURI.unstub(:open_uri)
   end
@@ -163,7 +163,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.scmp.com/news/china/diplomacy-defence/article/2110488/china-tries-build-bigger-bloc-stop-brics-crumbling'
     parsed_url = RequestHelper.parse_url(m.url)
     header_options = RequestHelper.html_options(m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises('redirection forbidden')
+    URI.stubs(:open).with(parsed_url, header_options).raises('redirection forbidden')
 
     m.send(:get_html, header_options)
   end
@@ -417,8 +417,8 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.nbcnews.com/'
     parsed_url = RequestHelper.parse_url m.url
     header_options = RequestHelper.html_options(m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0', 'Accept-Language' => 'en-US;q=0.6,en;q=0.4')).raises(EOFError)
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0 (X11)', 'Accept-Language' => 'en-US;q=0.6,en;q=0.4'))
+    URI.stubs(:open).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0', 'Accept-Language' => 'en-US;q=0.6,en;q=0.4')).raises(EOFError)
+    URI.stubs(:open).with(parsed_url, header_options.merge('User-Agent' => 'Mozilla/5.0 (X11)', 'Accept-Language' => 'en-US;q=0.6,en;q=0.4'))
     assert_nothing_raised do
       m.send(:get_html, header_options)
     end
@@ -430,7 +430,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.nbcnews.com/'
     parsed_url = RequestHelper.parse_url(m.url)
     header_options = RequestHelper.html_options(m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(EOFError)
+    URI.stubs(:open).with(parsed_url, header_options).raises(EOFError)
     assert_nothing_raised do
       m.send(:get_html, header_options)
     end
@@ -443,7 +443,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.nbcnews.com/'
     parsed_url = RequestHelper.parse_url(m.url)
     header_options = RequestHelper.html_options(m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(Net::ReadTimeout)
+    URI.stubs(:open).with(parsed_url, header_options).raises(Net::ReadTimeout)
     assert_nothing_raised do
       m.send(:get_html, header_options)
     end
@@ -514,9 +514,9 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'https://nasional.tempo.co/read/1457804/opm-kkb-dicap-teroris-amnesty-nilai-pemerintah-tak-paham-masalah-papua'
     parsed_url = RequestHelper.parse_url(m.url)
     header_options = RequestHelper.html_options(m.url).merge(read_timeout: PenderConfig.get('timeout', 30).to_i)
-    OpenURI.stubs(:open_uri).with(parsed_url, header_options).raises(OpenURI::HTTPError.new('','403 Forbidden'))
+    URI.stubs(:open).with(parsed_url, header_options).raises(OpenURI::HTTPError.new('','403 Forbidden'))
     header_with_proxy = { proxy_http_basic_authentication: RequestHelper.get_proxy(RequestHelper.parse_url(m.url), :array, true), 'Accept-Language' => Media::LANG, read_timeout: PenderConfig.get('timeout', 30).to_i }
-    OpenURI.stubs(:open_uri).with(parsed_url, header_with_proxy).raises(OpenURI::HTTPError.new('','403 Forbidden'))
+    URI.stubs(:open).with(parsed_url, header_with_proxy).raises(OpenURI::HTTPError.new('','403 Forbidden'))
     m.send(:get_html, RequestHelper.html_options(m.url))
   end
 end
