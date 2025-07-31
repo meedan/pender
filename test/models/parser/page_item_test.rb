@@ -35,7 +35,7 @@ class PageItemUnitTest < ActiveSupport::TestCase
 
   test "re-fetches HTML and re-sets metatags, following all redirects, if doc is empty" do
     url = 'https://example.com'
-    RequestHelper.stubs(:get_html).with(url, kind_of(Method), false).returns(Nokogiri::HTML('<meta name="description" content="hello" />'))
+    RequestHelper.stubs(:get_html).with(url, kind_of(Method), {}, false).returns(Nokogiri::HTML('<meta name="description" content="hello" />'))
 
     data = Parser::PageItem.new('https://example.com').parse_data(nil, 'https://example.com/original')
     assert_equal data.dig('raw', 'metatags').size, 1
