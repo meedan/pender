@@ -41,7 +41,6 @@
 #    2. If the page has an oEmbed url, request it and get the response
 #    2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media json data
 
-require 'open_uri_redirections'
 require 'nokogiri'
 
 class Media
