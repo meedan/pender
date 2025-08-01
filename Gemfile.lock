@@ -262,7 +262,6 @@ GEM
       racc (~> 1.4)
     nokogiri (1.18.9-x86_64-linux-musl)
       racc (~> 1.4)
-    open_uri_redirections (0.2.1)
     opentelemetry-api (1.4.0)
     opentelemetry-common (0.21.0)
       opentelemetry-api (~> 1.0)
@@ -547,7 +546,6 @@ DEPENDENCIES
   net-http
   net-protocol
   nokogiri (= 1.18.9)
-  open_uri_redirections
   opentelemetry-exporter-otlp
   opentelemetry-instrumentation-action_pack
   opentelemetry-instrumentation-action_view
