@@ -214,7 +214,7 @@ class Media
 
   def skip_get_canonical_url?
     skip_hosts = ['instagram']
-    host = URI(self.original_url).host
+    host = RequestHelper.parse_url(self.original_url).host
     if host && skip_hosts.any? { |skip_host| host.include?(skip_host) }
       Rails.logger.info level: 'INFO', message: "[Parser] Skipped get_canonical_url", url: self.url
       true
