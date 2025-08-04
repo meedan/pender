@@ -201,6 +201,8 @@ class Media
   # Parse the page and set it to media `doc`. If the `doc` has a tag (`og:url`, `twitter:url`, `rel='canonical`) with a different url, the media `url` is updated with the url found, the page is parsed and the media `doc` is updated
 
   def get_canonical_url
+    return nil if skip_get_canonical_url?
+
     self.doc = self.get_html(RequestHelper.html_options(self.url))
     tag = self.doc&.at_css("meta[property='og:url']") || self.doc&.at_css("meta[property='twitter:url']") || self.doc&.at_css("link[rel='canonical']")
     
@@ -208,6 +210,17 @@ class Media
     return get_parsed_url(canonical_url) if canonical_url.is_a?(String) && !canonical_url.empty? # Ensure it only returns a string
   
     nil # Return nil, since url is empty/not a string
+  end
+
+  def skip_get_canonical_url?
+    skip_hosts = ['instagram']
+    host = URI(self.url).host
+    if host && skip_hosts.any? { |skip_host| host.include?(skip_host) }
+      Rails.logger.info level: 'INFO', message: "[Parser] Skipped get_canonical_url", url: self.url
+      true
+    else
+      false
+    end
   end
 
   def get_parsed_url(canonical_url)
