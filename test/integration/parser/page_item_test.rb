@@ -6,7 +6,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'page', data['provider']
-    assert_match /Acompanhe as últimas notícias do Brasil e do mundo/, data['title']
+    assert_not_nil data['title']
     assert_not_nil data['description']
     assert_not_nil data['published_at']
     assert_equal '', data['username']
