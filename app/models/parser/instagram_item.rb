@@ -3,8 +3,8 @@ module Parser
     include ProviderInstagram
 
     INSTAGRAM_ITEM_URL = /^https?:\/\/(www\.)?instagram\.com\/(p|tv|reel)\/([^\/]+)/
-    INSTAGRAM_HOME_URL = /^https?:\/\/(www\.)?instagram\.com\/?$/
-    
+    INSTAGRAM_HOME_URL = /^(https?:\/\/)?(www\.)?instagram\.com\/?$/
+
     class << self
       def type
         'instagram_item'.freeze

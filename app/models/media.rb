@@ -213,9 +213,10 @@ class Media
   end
 
   def skip_get_canonical_url?
-    skip_hosts = ['instagram']
+    # FIX-ME: This is Parser logic inside of Media, but it needs bigger refactoring before we can move it out
+    skip_hosts = [Parser::InstagramItem.patterns].flatten
     host = RequestHelper.parse_url(self.original_url).host
-    if host && skip_hosts.any? { |skip_host| host.include?(skip_host) }
+    if host && skip_hosts.any? { |skip_host| host.match?(skip_host) }
       Rails.logger.info level: 'INFO', message: "[Parser] Skipped get_canonical_url", url: self.url
       true
     else
