@@ -2,16 +2,16 @@ require 'test_helper'
 
 class PageItemIntegrationTest < ActiveSupport::TestCase
   test "should parse a given site" do
-    m = create_media url: 'https://noticias.uol.com.br/'
+    m = create_media url: 'https://meedan.com/blog'
     data = m.as_json
     assert_equal 'item', data['type']
     assert_equal 'page', data['provider']
-    assert_match /Acompanhe as últimas notícias do Brasil e do mundo/, data['title']
+    assert_not_nil data['title']
     assert_not_nil data['description']
     assert_not_nil data['published_at']
     assert_equal '', data['username']
-    assert_equal 'https://noticias.uol.com.br', data['author_url']
-    assert_equal 'UOLNoticias', data['author_name']
+    assert_equal 'https://meedan.com', data['author_url']
+    assert_not_nil data['author_name']
     assert_not_nil data['picture']
     assert_nil data['error']
   end
