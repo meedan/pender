@@ -78,13 +78,13 @@ class Media
       self.data['title'] = self.url if self.data['title'].blank?
       data = self.data.merge(Media.required_fields(self)).with_indifferent_access
       if data[:error].blank?
-        cache.write(id, :json, cleanup_data_encoding(data))
+        cache.write(id, :json, clean_json(data))
       end
       self.upload_images
     end
     archive_if_conditions_are_met(options, id, cache)
     parser_requests_metrics
-    cache.read(id, :json) || cleanup_data_encoding(data)
+    cache.read(id, :json) || clean_json(data)
   end
 
   PARSERS = [
@@ -205,10 +205,10 @@ class Media
 
     self.doc = self.get_html(RequestHelper.html_options(self.url))
     tag = self.doc&.at_css("meta[property='og:url']") || self.doc&.at_css("meta[property='twitter:url']") || self.doc&.at_css("link[rel='canonical']")
-    
+
     canonical_url = tag&.attr('content') || tag&.attr('href')
     return get_parsed_url(canonical_url) if canonical_url.is_a?(String) && !canonical_url.empty? # Ensure it only returns a string
-  
+
     nil # Return nil, since url is empty/not a string
   end
 
@@ -333,7 +333,7 @@ class Media
   end
 
   def archive_if_conditions_are_met(options, id, cache)
-    if options.delete(:force) || 
+    if options.delete(:force) ||
       cache.read(id, :json).nil? ||
       cache.read(id, :json).dig('archives').blank? ||
       # if the user adds a new  or changes the archiver, and the cache exists only for the old archiver it refreshes the cache

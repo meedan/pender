@@ -74,7 +74,7 @@ class MediasHelperTest < ActionView::TestCase
     assert_match /#{Pender::Store.current.storage_path('medias')}\/#{id}\/picture.(jpg|png)/, data[:picture], "Can't get `picture` from url #{url}"
   end
 
-  test "#cleanup_data_encoding should only encode URLs on raw key" do
+  test "#clean_json should only encode URLs on raw key" do
     original_url = "https://www.facebook.com/people/á<80><99>á<80><84>á<80>ºá<80>¸á<80><91>á<80>®á<80>¸/100056594476400"
     raw_data = {
       picture: original_url,
@@ -86,12 +86,12 @@ class MediasHelperTest < ActionView::TestCase
     }.with_indifferent_access
 
     encoded_url = 'https://www.facebook.com/people/%C3%A1%3C80%3E%3C99%3E%C3%A1%3C80%3E%3C84%3E%C3%A1%3C80%3E%C2%BA%C3%A1%3C80%3E%C2%B8%C3%A1%3C80%3E%3C91%3E%C3%A1%3C80%3E%C2%AE%C3%A1%3C80%3E%C2%B8/100056594476400'
-    cleaned_data = cleanup_data_encoding(raw_data)
+    cleaned_data = clean_json(raw_data)
     assert_equal original_url, cleaned_data[:picture]
     assert_equal encoded_url, cleaned_data[:raw][:oembed][:url]
   end
 
-  test "#cleanup_data_encoding should handle error when cannot encode URLs on raw key" do
+  test "#clean_json should handle error when cannot encode URLs on raw key" do
     unencoded_url = "https://www.facebook.com/people/á<80><99>á<80><84>á<80>ºá<80>¸á<80><91>á<80>®á<80>¸/100056594476400"
     raw_data = {
       picture: unencoded_url,
@@ -115,7 +115,7 @@ class MediasHelperTest < ActionView::TestCase
       m = create_media url: "https://example.com"
       # A media instance is needed in this situation because
       # of the way we are current logging (requires self.url)
-      cleaned_data = m.cleanup_data_encoding(raw_data)
+      cleaned_data = m.clean_json(raw_data)
       assert_equal unencoded_url, cleaned_data[:picture]
       assert_equal unencoded_url, cleaned_data[:raw][:oembed][:url]
     end
