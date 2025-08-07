@@ -67,7 +67,7 @@ class MediasHelperTest < ActionView::TestCase
 
   test 'should upload images to s3 and update media data' do
     url = 'https://hacktoberfest.com/'
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     m = Media.new url: url
     data = m.process_and_return_json
     assert_match /#{Pender::Store.current.storage_path('medias')}\/#{id}\/author_picture.(jpg|png)/, data[:author_picture], "Can't get `author_picture` from url #{url}"

@@ -106,7 +106,7 @@ class MediaTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, /github.com/).to_return(status: 200, body: "<meta property='og:image' content='https://github.githubassets.com/images/modules/open_graph/github-logo.png'>")
     url = 'https://github.com/'
     m = create_media url: url
-    id = Media.get_id m.url
+    id = Media.cache_key m.url
     data = m.process_and_return_json
     assert_match /\/medias\/#{id}\/author_picture/, data['author_picture']
   end
@@ -380,7 +380,7 @@ class MediaTest < ActiveSupport::TestCase
   test "should update media cache" do
     url = 'http://www.example.com'
     m = create_media url: url
-    id = Media.get_id(m.url)
+    id = Media.cache_key(m.url)
     m.process_and_return_json
 
     assert_equal({}, Pender::Store.current.read(id, :json)['archives'])
@@ -471,7 +471,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:parse)
 
     assert_raises JSON::GeneratorError do
-      Pender::Store.current.write(Media.get_id(m.original_url), :json, data_with_encoding_error)
+      Pender::Store.current.write(Media.cache_key(m.original_url), :json, data_with_encoding_error)
     end
 
     assert_nothing_raised do
@@ -536,7 +536,7 @@ class MediaUnitTest < ActiveSupport::TestCase
 
     url = 'http://www.example.com/'
     m = create_media url: url
-    id = Media.get_id(m.url)
+    id = Media.cache_key(m.url)
 
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?
@@ -553,7 +553,7 @@ class MediaUnitTest < ActiveSupport::TestCase
 
     url = 'http://www.example.com'
     m = create_media url: url
-    id = Media.get_id(m.url)
+    id = Media.cache_key(m.url)
 
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?
@@ -570,7 +570,7 @@ class MediaUnitTest < ActiveSupport::TestCase
     url = 'http://www.example.com'
 
     m = create_media url: url
-    id = Media.get_id(m.url)
+    id = Media.cache_key(m.url)
 
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?

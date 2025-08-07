@@ -71,7 +71,7 @@ class Media
   end
 
   def process_and_return_json(options = {})
-    id = Media.get_id(self.url)
+    id = Media.cache_key(self.url)
     cache = Pender::Store.current
     if options.delete(:force) || cache.read(id, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
@@ -125,12 +125,12 @@ class Media
     { url: instance.url, provider: provider || 'page', type: type || 'item', parsed_at: Time.now.to_s, favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}" }
   end
 
-  def self.get_id(url)
+  def self.cache_key(url)
     Digest::MD5.hexdigest(RequestHelper.normalize_url(url))
   end
 
   def self.update_cache(url, newdata)
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     data = Pender::Store.current.read(id, :json)
     unless data.blank?
       newdata.each { |key, value| data[key] = data[key].is_a?(Hash) ? data[key].merge(value) : value }

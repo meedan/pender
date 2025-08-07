@@ -18,7 +18,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
 
   test "should parse arabic url page" do
     url = 'http://www.youm7.com/story/2016/7/6/بالصور-مياه-الشرب-بالإسماعيلية-تواصل-عملها-لحل-مشكلة-طفح-الصرف/2790125'
-    id = Media.get_id url
+    id = Media.cache_key url
     m = create_media url: url
     data = m.process_and_return_json
     assert !data['title'].blank?

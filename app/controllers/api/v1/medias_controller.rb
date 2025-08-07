@@ -21,7 +21,7 @@ module Api
           (render_parameters_missing; return) if @url.blank?
           (render_url_invalid; return) unless is_url?(@url)
 
-          @id = Media.get_id(@url)
+          @id = Media.cache_key(@url)
 
           (render_uncached_media and return) if @refresh || Pender::Store.current.read(@id, :json).nil?
           respond_to do |format|
@@ -37,7 +37,7 @@ module Api
 
         urls = params[:url].is_a?(Array) ? params[:url] : params[:url].split(' ')
         urls.each do |url|
-          @id = Media.get_id(url)
+          @id = Media.cache_key(url)
           Pender::Store.current.delete(@id, :json, :html)
         end
         render json: { type: 'success' }, status: 200
@@ -68,7 +68,7 @@ module Api
           handle_exceptions(OpenSSL::SSL::SSLError, rescue_block, {url: @url, request: request}) do
             @media = Media.new(url: @url, request: request)
             @url = @media.url
-            @id = Media.get_id(@url)
+            @id = Media.cache_key(@url)
           end
         end and return true
         false

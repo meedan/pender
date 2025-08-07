@@ -121,7 +121,7 @@ module MediasHelper
   end
 
   def upload_images
-    id = Media.get_id(self.url)
+    id = Media.cache_key(self.url)
     updates = {}
     [:author_picture, :picture].each do |attr|
       img_url = self.data.dig(attr)

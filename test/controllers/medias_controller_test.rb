@@ -17,7 +17,7 @@ class MediasControllerTest < ActionController::TestCase
     get :index, params: { url: 'https://meedan.com/post/annual-report-2022', refresh: '1', format: :json }
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     get :index, params: { url: 'https://meedan.com/post/annual-report-2022', format: :html }
-    name = Media.get_id('https://meedan.com/post/annual-report-2022')
+    name = Media.cache_key('https://meedan.com/post/annual-report-2022')
     [:html, :json].each do |type|
       assert Pender::Store.current.read(name, type), "#{name}.#{type} is missing"
     end
@@ -42,7 +42,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     url = 'https://meedan.com/post/annual-report-2022'
     get :index, params: { url: url, refresh: '1', format: :html }
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     first_parsed_at = Pender::Store.current.get(id, :html).last_modified
     sleep 1
     get :index, params: { url: url, refresh: '1', format: :html }
@@ -53,7 +53,7 @@ class MediasControllerTest < ActionController::TestCase
   test "should not ask to refresh cache with html format" do
     authenticate_with_token
     url = 'https://meedan.com/post/annual-report-2022'
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     get :index, params: { url: url, refresh: '0', format: :html }
     first_parsed_at = Pender::Store.current.get(id, :html).last_modified
     sleep 1
@@ -93,7 +93,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return message with HTML error 2" do
     url = 'https://example.com'
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     Pender::Store.any_instance.stubs(:read).with(id, :json)
     Pender::Store.any_instance.stubs(:read).with(id, :html).raises
     get :index, params: { url: url, format: :html }
@@ -181,8 +181,8 @@ class MediasControllerTest < ActionController::TestCase
     normalized_url1 = 'https://meedan.com/'
     normalized_url2 = 'https://meedan.com/post/annual-report-2022'
 
-    id1 = Media.get_id(normalized_url1)
-    id2 = Media.get_id(normalized_url2)
+    id1 = Media.cache_key(normalized_url1)
+    id2 = Media.cache_key(normalized_url2)
 
     [:html, :json].each do |type|
       [id1, id2].each do |id|
@@ -303,7 +303,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token(a)
     url = 'https://meedan.com/post/annual-report-2022'
     get :index, params: { url: url, format: :json }
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives].sort.to_h)
   ensure
     WebMock.disable!
@@ -321,7 +321,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token(a)
     url = 'https://meedan.com/post/annual-report-2022'
     get :index, params: { url: url, archivers: 'none', format: :json }
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
   ensure
     WebMock.disable!
@@ -349,7 +349,7 @@ class MediasControllerTest < ActionController::TestCase
 
       authenticate_with_token(a)
       get :index, params: { url: url, archivers: archivers.join(','), format: :json }
-      id = Media.get_id(url)
+      id = Media.cache_key(url)
       data = Pender::Store.current.read(id, :json)
       archivers.each do |archiver|
         archiver.strip!
@@ -395,8 +395,8 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token
     url1 = 'https://meedan.com/check'
     url2 = 'https://meedan.com/about-us'
-    id1 = Media.get_id(url1)
-    id2 = Media.get_id(url2)
+    id1 = Media.cache_key(url1)
+    id2 = Media.cache_key(url2)
     assert_nil Pender::Store.current.read(id1, :json)
     assert_nil Pender::Store.current.read(id2, :json)
 
@@ -422,7 +422,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token(a)
 
     url = 'https://meedan.com'
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     timeout_error = {"message" => "Timeout", "code" => Lapis::ErrorCodes::const_get('TIMEOUT')}
 
     assert_equal 0, MediaParserWorker.jobs.size
@@ -596,7 +596,7 @@ class MediasControllerTest < ActionController::TestCase
   test "should cache json and html on file" do
     authenticate_with_token
     url = 'https://meedan.com/post/annual-report-2022'
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     [:html, :json].each do |type|
       assert !Pender::Store.current.read(id, type), "#{id}.#{type} should not exist"
     end
@@ -666,7 +666,7 @@ class MediasControllerTest < ActionController::TestCase
     WebMock.enable!
     WebMock.disable_net_connect!(allow: [/minio/])
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
-    Media.stubs(:get_id).returns('foo', 'bar', 'foo', 'bar')
+    Media.stubs(:cache_key).returns('foo', 'bar', 'foo', 'bar')
     Pender::Store.current.write('foo', :json, { title: 'Meedan 1' })
     Pender::Store.current.write('bar', :json, { title: 'Meedan 2' })
 
@@ -714,7 +714,7 @@ class MediasControllerUnitTest < ActionController::TestCase
     RequestHelper.stubs(:validate_url).returns(true)
     Semaphore.any_instance.stubs(:locked?).returns(false)
 
-    id = Media.get_id('https://www.instagram.com/fakeaccount/')
+    id = Media.cache_key('https://www.instagram.com/fakeaccount/')
     Pender::Store.any_instance.expects(:write).with(id).never
 
     Pender::Store.current.delete(id, :json)
