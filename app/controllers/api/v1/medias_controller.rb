@@ -82,7 +82,7 @@ module Api
         @request = request
         begin
           Pender::Store.current.delete(@id, :html) if @refresh
-          render_timeout(true) { render_media(@media.as_json({ force: @refresh, archivers: @archivers })) and return }
+          render_timeout(true) { render_media(@media.process_and_return_json({ force: @refresh, archivers: @archivers })) and return }
         rescue Pender::Exception::ApiLimitReached => e
           render_error e.reset_in, 'API_LIMIT_REACHED', 429
         rescue Pender::Exception::UnsafeUrl
@@ -142,7 +142,7 @@ module Api
       def save_cache
         template = locals = nil
         cache = Pender::Store.current.read(@id, :json)
-        data = cache && !@refresh ? cache : @media.as_json({ force: @refresh, archivers: @archivers })
+        data = cache && !@refresh ? cache : @media.process_and_return_json({ force: @refresh, archivers: @archivers })
         if should_serve_external_embed?(data)
           title = data['title'].truncate(50, separator: ' ')
           locals = { html: data['html'].html_safe, title: title }

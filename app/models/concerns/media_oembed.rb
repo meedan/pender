@@ -37,7 +37,7 @@ module MediaOembed
     elsif Media.valid_raw_oembed?(self.data)
       self.data['oembed'] = self.data['raw']['oembed'].merge(width: maxwidth, height: maxheight, html: Media.default_oembed_html(url, maxwidth, maxheight))
     else
-      self.as_json if self.data.empty?
+      self.process_and_return_json if self.data.empty?
       %w(type provider).each { |key| self.data[key] = self.send(key.to_sym) }
       self.data['oembed'] = get_raw_oembed_data(url) || Media.default_oembed(self.data, url, maxwidth, maxheight)
     end

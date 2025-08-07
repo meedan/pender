@@ -74,8 +74,8 @@ class MediasControllerTest < ActionController::TestCase
     assert_not_nil data['embed_tag']
   end
 
-  test "should return error message on hash if as_json raises error" do
-    Media.any_instance.stubs(:as_json).raises(RuntimeError)
+  test "should return error message on hash if process_and_return_json raises error" do
+    Media.any_instance.stubs(:process_and_return_json).raises(RuntimeError)
     authenticate_with_token
     get :index, params: { url: 'http://example.com/', format: :json }
     assert_response 200
@@ -705,7 +705,7 @@ class MediasControllerUnitTest < ActionController::TestCase
         RESPONSE
       end
 
-      def as_json(**args)
+      def process_and_return_json(**args)
         RESPONSE
       end
     end

@@ -133,7 +133,7 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, /apify.com/).to_return(status: 200)
 
     media = Media.new(url: url)
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert_equal 'https://www.instagram.com/p/CdOk-lLKmyH', data['title']
     assert_equal 'instagram', data['provider']

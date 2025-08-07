@@ -23,7 +23,7 @@ class MediaParserWorker
     begin
       return ['error', invalid_url_error] unless RequestHelper.validate_url(url)
       media = Media.new(url: url, key: key)
-      data = media.as_json(force: refresh, archivers: archivers)
+      data = media.process_and_return_json(force: refresh, archivers: archivers)
     rescue Net::ReadTimeout
       data = get_timeout_data(nil, url, id)
     rescue StandardError => e

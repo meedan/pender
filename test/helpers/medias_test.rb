@@ -69,7 +69,7 @@ class MediasHelperTest < ActionView::TestCase
     url = 'https://hacktoberfest.com/'
     id = Media.get_id(url)
     m = Media.new url: url
-    data = m.as_json
+    data = m.process_and_return_json
     assert_match /#{Pender::Store.current.storage_path('medias')}\/#{id}\/author_picture.(jpg|png)/, data[:author_picture], "Can't get `author_picture` from url #{url}"
     assert_match /#{Pender::Store.current.storage_path('medias')}\/#{id}\/picture.(jpg|png)/, data[:picture], "Can't get `picture` from url #{url}"
   end
@@ -129,7 +129,7 @@ class MediasHelperTest < ActionView::TestCase
     )
 
     m = create_media url: 'https://www.facebook.com/voice.myanmarnewsmm/posts/148110680335452'
-    data = m.as_json
+    data = m.process_and_return_json
 
     assert_equal 'https://www.facebook.com/people/%C3%A1%3C80%3E%3C99%3E%C3%A1%3C80%3E%3C84%3E%C3%A1%3C80%3E%C2%BA%C3%A1%3C80%3E%C2%B8%C3%A1%3C80%3E%3C91%3E%C3%A1%3C80%3E%C2%AE%C3%A1%3C80%3E%C2%B8/100056594476400',
       data['raw']['apify']['url']

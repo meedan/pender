@@ -90,7 +90,7 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, picture_url).to_return(status: 200)
 
     media = create_media url: url
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert_equal canonical_url, data['url']
     assert_equal 'Meedan', data['title']
@@ -410,14 +410,14 @@ class FacebookProfileUnitTest < ActiveSupport::TestCase
     url = 'https://facebook.com/513415662050479'
     canonical_url = 'https://www.facebook.com/heymeedan'
     picture_url = 'https://scontent-lax3-1.xx.fbcdn.net/v/t39.30808-1/310513247_435753678699138_2623398131510754475_n.png?_nc_cat=110&_nc_ht=scontent-lax3-1.xx&_nc_ohc=d6UgzKKHMJ8AX9tPN2o&_nc_sid=d36de4&ccb=1-7&oe=63DDB83C&oh=00_AfDH7lP98qp_etN0a2ZMms1tp6vx51198IAobPHbRLnSyA'
-    
+
     WebMock.stub_request(:get, url).to_return(status: 200, body: meedan_doc.to_s)
     WebMock.stub_request(:get, canonical_url).to_return(status: 200)
     WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{canonical_url}").to_return(status: 200)
     WebMock.stub_request(:get, picture_url).to_return(status: 200)
 
     media = create_media url: url
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert data['oembed'].is_a?(Hash), "Expected #{data['oembed']} to be a Hash"
     assert_equal 'heymeedan', data['oembed']['author_name']

@@ -70,7 +70,7 @@ class Media
     TYPES[type] = patterns
   end
 
-  def as_json(options = {})
+  def process_and_return_json(options = {})
     id = Media.get_id(self.url)
     cache = Pender::Store.current
     if options.delete(:force) || cache.read(id, :json).nil?

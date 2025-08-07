@@ -39,7 +39,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     m = create_media url: url, key: api_key
-    data = m.as_json
+    data = m.process_and_return_json
 
     stub_configs({'archiver_skip_hosts' => 'checkmedia.org' })
 
@@ -47,7 +47,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
     m = create_media url: url, key: api_key
-    data = m.as_json
+    data = m.process_and_return_json
   end
 
   test "should archive to Archive.org" do
@@ -64,9 +64,9 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'timestamp'})
 
     media = create_media url: url, key: api_key
-    data = media.as_json(archivers: 'archive_org')
+    data = media.process_and_return_json(archivers: 'archive_org')
 
-    assert_equal "https://web.archive.org/web/timestamp/#{url}", data.dig('archives', 'archive_org', 'location') 
+    assert_equal "https://web.archive.org/web/timestamp/#{url}", data.dig('archives', 'archive_org', 'location')
   end
 
   test "should log archiver information when archiving URLs" do
@@ -86,8 +86,8 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'timestamp'})
 
     media = create_media url: url, key: api_key
-    media.as_json(archivers: 'archive_org')
-    
+    media.process_and_return_json(archivers: 'archive_org')
+
     assert_match '[Archiver] Archiving new URL', log.string
     assert_match url, log.string
   end
@@ -106,7 +106,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     assert_nothing_raised do
       m = create_media url: url, key: api_key
-      m.as_json
+      m.process_and_return_json
     end
   end
 
@@ -122,7 +122,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid' })
 
     media = create_media url: url, key: api_key
-    data = media.as_json(archivers: 'perma_cc')
+    data = media.process_and_return_json(archivers: 'perma_cc')
 
     assert_equal "http://perma.cc/perma-cc-guid", data.dig('archives', 'perma_cc', 'location') 
   end
@@ -142,7 +142,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     urls.each_pair do |url, data|
       m = Media.new url: url
-      m.as_json(archivers: 'none')
+      m.process_and_return_json(archivers: 'none')
       assert_nil m.data.dig('archives', 'archive_org')
 
       WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
@@ -179,7 +179,7 @@ class ArchiverTest < ActiveSupport::TestCase
     media = create_media url: url, key: api_key
     PenderSentry.stub(:notify, arguments_checker) do
       assert_raises StandardError do
-        media.as_json(archivers: 'archive_org')
+        media.process_and_return_json(archivers: 'archive_org')
       end
     end
 
@@ -210,7 +210,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     PenderSentry.stub(:notify, arguments_checker) do
       assert_nothing_raised do
-        m.as_json(archivers: 'archive_org')
+        m.process_and_return_json(archivers: 'archive_org')
       end
     end
     assert_equal 1, sentry_call_count
@@ -240,7 +240,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     PenderSentry.stub(:notify, arguments_checker) do
       assert_nothing_raised do
-        m.as_json(archivers: 'archive_org')
+        m.process_and_return_json(archivers: 'archive_org')
       end
     end
     assert_equal 1, sentry_call_count
@@ -270,7 +270,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     PenderSentry.stub(:notify, arguments_checker) do
       assert_nothing_raised do
-        m.as_json(archivers: 'archive_org')
+        m.process_and_return_json(archivers: 'archive_org')
       end
     end
     assert_equal 1, sentry_call_count
@@ -290,11 +290,11 @@ class ArchiverTest < ActiveSupport::TestCase
 
     m = create_media url: url, key: api_key
     assert_raises StandardError do
-      data = m.as_json(archivers: 'archive_org')
+      data = m.process_and_return_json(archivers: 'archive_org')
       assert_nil data.dig('archives', 'archive_org')
     end
 
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal 'Net::ReadTimeout with "Exception from WebMock"', data.dig('archives', 'archive_org', 'error', 'message')
   end
@@ -311,7 +311,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     m = Media.new url: url, key: api_key
     assert_raises StandardError do
-      m.as_json(archivers: 'perma_cc')
+      m.process_and_return_json(archivers: 'perma_cc')
     end
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), media_data.dig('archives', 'perma_cc', 'error', 'code')
@@ -330,7 +330,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     m = Media.new url: url, key: api_key
     assert_nothing_raised do
-      m.as_json(archivers: 'perma_cc')
+      m.process_and_return_json(archivers: 'perma_cc')
     end
 
     media_data = Pender::Store.current.read(Media.get_id(url), :json)
@@ -349,11 +349,11 @@ class ArchiverTest < ActiveSupport::TestCase
 
     m = create_media url: url, key: api_key
     assert_raises StandardError do
-      data = m.as_json(archivers: 'perma_cc')
+      data = m.process_and_return_json(archivers: 'perma_cc')
       assert_nil data.dig('archives', 'perma_cc')
     end
 
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), data.dig('archives', 'perma_cc', 'error', 'code')
     assert_equal 'Net::ReadTimeout with "Exception from WebMock"', data.dig('archives', 'perma_cc', 'error', 'message')
   end
@@ -372,7 +372,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     media = Media.new url: url, key: api_key
     assert_raises StandardError do
-      media.as_json(archivers: 'archive_org')
+      media.process_and_return_json(archivers: 'archive_org')
     end
     Media.give_up({ args: [url, 'archive_org', api_key], error_message: 'Gave Up', error_class: 'error class'})
 
@@ -397,7 +397,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'archive-timestamp-FIRST'})
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
-    m.as_json(archivers: 'archive_org')
+    m.process_and_return_json(archivers: 'archive_org')
 
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['archive_org'], cached.keys
@@ -406,7 +406,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'archive-timestamp-SECOND'})
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
-    m.as_json(archivers: 'archive_org')
+    m.process_and_return_json(archivers: 'archive_org')
 
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['archive_org'], cached.keys
@@ -429,7 +429,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'archive-timestamp-FIRST'})
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
-    m.as_json(archivers: 'archive_org')
+    m.process_and_return_json(archivers: 'archive_org')
 
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['archive_org'], cached.keys
@@ -438,7 +438,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'archive-timestamp-SECOND'})
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
-    m.as_json(force: true, archivers: 'archive_org')
+    m.process_and_return_json(force: true, archivers: 'archive_org')
 
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['archive_org'], cached.keys
@@ -459,7 +459,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid-FIRST' })
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
-    m.as_json(archivers: 'perma_cc')
+    m.process_and_return_json(archivers: 'perma_cc')
 
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
@@ -467,7 +467,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid-SECOND' })
 
-    m.as_json(archivers: 'perma_cc')
+    m.process_and_return_json(archivers: 'perma_cc')
 
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
@@ -489,7 +489,7 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid-FIRST' })
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
-    m.as_json(archivers: 'perma_cc')
+    m.process_and_return_json(archivers: 'perma_cc')
 
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
@@ -497,7 +497,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     WebMock.stub_request(:post, /api.perma.cc/).to_return_json(body: { guid: 'perma-cc-guid-SECOND' })
 
-    m.as_json(force: true, archivers: 'perma_cc')
+    m.process_and_return_json(force: true, archivers: 'perma_cc')
 
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
@@ -519,19 +519,19 @@ class ArchiverTest < ActiveSupport::TestCase
 
     id = Media.get_id(url)
     m = create_media url: url, key: api_key
-    m.as_json
+    m.process_and_return_json
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
 
-    m.as_json(archivers: '')
+    m.process_and_return_json(archivers: '')
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
 
-    m.as_json(archivers: nil)
+    m.process_and_return_json(archivers: nil)
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
 
-    m.as_json(archivers: 'none')
+    m.process_and_return_json(archivers: 'none')
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
 
-    m.as_json(archivers: 'archive_org')
+    m.process_and_return_json(archivers: 'archive_org')
     assert_equal({'archive_org' => {"location" => 'https://web.archive.org/web/archive-timestamp/https://example.com/'}}, Pender::Store.current.read(id, :json)[:archives])
   end
 
@@ -549,14 +549,14 @@ class ArchiverTest < ActiveSupport::TestCase
 
     id = Media.get_id(url)
     m = create_media url: url, key: api_key
-    m.as_json(archivers: 'perma_cc')
+    m.process_and_return_json(archivers: 'perma_cc')
     assert_equal({'perma_cc' => {"location" => 'http://perma.cc/perma-cc-guid-1'}}, Pender::Store.current.read(id, :json)[:archives])
 
     WebMock.stub_request(:get, /archive.org\/wayback/).to_return(body: {"archived_snapshots":{}}.to_json, headers: {})
     WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'timestamp'})
 
-    m.as_json(archivers: 'perma_cc, archive_org')
+    m.process_and_return_json(archivers: 'perma_cc, archive_org')
     assert_equal({'perma_cc' => {'location' => 'http://perma.cc/perma-cc-guid-1'}, 'archive_org' => {'location' => "https://web.archive.org/web/timestamp/#{url}" }}, Pender::Store.current.read(id, :json)[:archives])
   end
 
@@ -582,7 +582,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     id = Media.get_id(url)
     m = create_media url: url, key: api_key
-    m.as_json(archivers: 'perma_cc, archive_org')
+    m.process_and_return_json(archivers: 'perma_cc, archive_org')
     assert_equal({'perma_cc' => {'location' => 'http://perma.cc/perma-cc-guid-1'}, 'archive_org' => {'location' => "https://web.archive.org/web/timestamp/#{url}" }}, Pender::Store.current.read(id, :json)[:archives])
 
     # Second archiver request responses
@@ -590,11 +590,11 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, /web.archive.org\/save/).to_return_json(body: {url: url, job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' })
     WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return_json(body: {status: 'success', timestamp: 'timestamp2'})
 
-    m.as_json
+    m.process_and_return_json
     assert_equal({'location' => 'http://perma.cc/perma-cc-guid-1'}, Pender::Store.current.read(id, :json)[:archives][:perma_cc])
     assert_equal({'location' => "https://web.archive.org/web/timestamp/#{url}" }, Pender::Store.current.read(id, :json)[:archives][:archive_org])
 
-    m.as_json(archivers: 'none')
+    m.process_and_return_json(archivers: 'none')
     assert_equal({'location' => 'http://perma.cc/perma-cc-guid-1'}, Pender::Store.current.read(id, :json)[:archives][:perma_cc])
     assert_equal({'location' => "https://web.archive.org/web/timestamp/#{url}" }, Pender::Store.current.read(id, :json)[:archives][:archive_org])
   end
@@ -624,7 +624,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     m = Media.new url: url, key: api_key
     id = Media.get_id(m.url)
-    m.as_json(archivers: 'perma_cc')
+    m.process_and_return_json(archivers: 'perma_cc')
 
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_equal ['perma_cc'], cached.keys
@@ -642,8 +642,8 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:post, "https://example.com/webhook.php").to_return(status: 200, body: '')
 
     m = Media.new url: url, key: api_key
-    m.as_json(archivers: 'perma_cc')
-    
+    m.process_and_return_json(archivers: 'perma_cc')
+
     id = Media.get_id(url)
     cached = Pender::Store.current.read(id, :json)[:archives]
     assert_match 'missing authentication', cached.dig('perma_cc', 'error', 'message').downcase
@@ -730,7 +730,7 @@ class ArchiverTest < ActiveSupport::TestCase
     m = Media.new url: url, key: api_key
     id = Media.get_id(m.url)
     assert_raises Pender::Exception::RetryLater do
-      m.as_json(archivers: 'perma_cc')
+      m.process_and_return_json(archivers: 'perma_cc')
     end
 
     cached = Pender::Store.current.read(id, :json)[:archives]
@@ -763,7 +763,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     PenderSentry.stub(:notify, arguments_checker) do
       assert_nothing_raised do
-        m.as_json(archivers: 'archive_org')
+        m.process_and_return_json(archivers: 'archive_org')
       end
     end
 
@@ -797,7 +797,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     PenderSentry.stub(:notify, arguments_checker) do
       assert_nothing_raised do
-        m.as_json(archivers: 'archive_org')
+        m.process_and_return_json(archivers: 'archive_org')
       end
     end
 
@@ -830,7 +830,7 @@ class ArchiverTest < ActiveSupport::TestCase
 
     PenderSentry.stub(:notify, arguments_checker) do
       assert_nothing_raised do
-        m.as_json(archivers: 'archive_org')
+        m.process_and_return_json(archivers: 'archive_org')
       end
     end
 
