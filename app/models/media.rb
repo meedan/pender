@@ -28,18 +28,25 @@
 #    link tag to update the media url;
 #    3. Escape and normalize the media url;
 #    4. Try to convert the url to HTTPS;
-#  * Parse as json
-#    1. Set the minimal data for media
-#    2. Search the page meta tags and store them on media
-#    3. Search the page to find the oEmbed url and, if it exists, retrieve the
-#    oEmbed data
-#    4. Match the url with the patterns described on specific parsers
-#    5. Parse the page with the parser found on previous step
-#    6. Archives the page in background, for the archivers that apply to the current URL
-#  * Parse as oEmbed
-#    1. Get media the json data
-#    2. If the page has an oEmbed url, request it and get the response
-#    2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media json data
+#  * Process and return the JSON data
+#    1. Try to add/update/read the media data in the cache;
+#    2. Call the parse method;
+#       * Parse
+#         1. Set the minimal data for media
+#         2. Search the page meta tags and store them on media
+#         3. Search the page to find the oEmbed url and, if it exists, retrieve the
+#         oEmbed data
+#         4. Match the url with the patterns described on specific parsers
+#         5. Parse the page with the parser found on previous step
+#         6. Archives the page in background, for the archivers that apply to the current URL
+#       * Parse as oEmbed
+#         1. Get media the json data
+#         2. If the page has an oEmbed url, request it and get the response
+#         2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media json data
+#    3. Set fallbacks;
+#    4. Upload the images to S3;
+#    5. Archive the page to a service like archive.org if the conditions are met;
+#    6. Return the media data as JSON.
 
 require 'nokogiri'
 
