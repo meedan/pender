@@ -342,7 +342,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
 
     media = Media.new(url: url)
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert_equal url, data['title']
     assert_match '', data['description']
@@ -363,7 +363,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{canonical_url}").to_return(status: 200)
 
     media = Media.new(url: url_from_facebook_object)
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert_match canonical_url, data['url']
   end
@@ -407,7 +407,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
 
     media = Media.new(url: url)
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert_equal url, data['url']
   end
@@ -427,7 +427,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{canonical_url}").to_return(status: 200)
 
     media = Media.new(url: url)
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert_equal canonical_url, data['url']
   end
@@ -469,7 +469,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
 
     media = Media.new(url: url)
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert data[:description].empty?
     assert_match "<div class=\"fb-post\" data-href=\"https://www.facebook.com/caiosba/posts/1913749825339929\">", data['html']
@@ -498,14 +498,14 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     url = 'https://www.facebook.com/123456789276277/posts/1127489833985824'
 
     WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response)
-    
+
     WebMock.stub_request(:get, url).to_return(status: 200)
     WebMock.stub_request(:get, "https://www.facebook.com/123456789276277").to_return(status: 200)
     WebMock.stub_request(:get, /fbcdn.net/).to_return(status: 200)
     WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
 
     media = Media.new(url: url)
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert data['oembed'].is_a? Hash
     assert_match /facebook.com/, data['oembed']['provider_url']

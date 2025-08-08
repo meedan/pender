@@ -28,18 +28,25 @@
 #    link tag to update the media url;
 #    3. Escape and normalize the media url;
 #    4. Try to convert the url to HTTPS;
-#  * Parse as json
-#    1. Set the minimal data for media
-#    2. Search the page meta tags and store them on media
-#    3. Search the page to find the oEmbed url and, if it exists, retrieve the
-#    oEmbed data
-#    4. Match the url with the patterns described on specific parsers
-#    5. Parse the page with the parser found on previous step
-#    6. Archives the page in background, for the archivers that apply to the current URL
-#  * Parse as oEmbed
-#    1. Get media the json data
-#    2. If the page has an oEmbed url, request it and get the response
-#    2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media json data
+#  * Process and return the JSON data
+#    1. Try to add/update/read the media data in the cache;
+#    2. Call the parse method;
+#       * Parse
+#         1. Set the minimal data for media
+#         2. Search the page meta tags and store them on media
+#         3. Search the page to find the oEmbed url and, if it exists, retrieve the
+#         oEmbed data
+#         4. Match the url with the patterns described on specific parsers
+#         5. Parse the page with the parser found on previous step
+#         6. Archives the page in background, for the archivers that apply to the current URL
+#       * Parse as oEmbed
+#         1. Get media the json data
+#         2. If the page has an oEmbed url, request it and get the response
+#         2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media json data
+#    3. Set fallbacks;
+#    4. Upload the images to S3;
+#    5. Archive the page to a service like archive.org if the conditions are met;
+#    6. Return the media data as JSON.
 
 require 'nokogiri'
 
@@ -70,21 +77,21 @@ class Media
     TYPES[type] = patterns
   end
 
-  def as_json(options = {})
-    id = Media.get_id(self.url)
+  def process_and_return_json(options = {})
+    id = Media.cache_key(self.url)
     cache = Pender::Store.current
     if options.delete(:force) || cache.read(id, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
       self.data['title'] = self.url if self.data['title'].blank?
       data = self.data.merge(Media.required_fields(self)).with_indifferent_access
       if data[:error].blank?
-        cache.write(id, :json, cleanup_data_encoding(data))
+        cache.write(id, :json, clean_json(data))
       end
       self.upload_images
     end
     archive_if_conditions_are_met(options, id, cache)
     parser_requests_metrics
-    cache.read(id, :json) || cleanup_data_encoding(data)
+    cache.read(id, :json) || clean_json(data)
   end
 
   PARSERS = [
@@ -125,12 +132,12 @@ class Media
     { url: instance.url, provider: provider || 'page', type: type || 'item', parsed_at: Time.now.to_s, favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}" }
   end
 
-  def self.get_id(url)
+  def self.cache_key(url)
     Digest::MD5.hexdigest(RequestHelper.normalize_url(url))
   end
 
   def self.update_cache(url, newdata)
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     data = Pender::Store.current.read(id, :json)
     unless data.blank?
       newdata.each { |key, value| data[key] = data[key].is_a?(Hash) ? data[key].merge(value) : value }
@@ -205,10 +212,10 @@ class Media
 
     self.doc = self.get_html(RequestHelper.html_options(self.url))
     tag = self.doc&.at_css("meta[property='og:url']") || self.doc&.at_css("meta[property='twitter:url']") || self.doc&.at_css("link[rel='canonical']")
-    
+
     canonical_url = tag&.attr('content') || tag&.attr('href')
     return get_parsed_url(canonical_url) if canonical_url.is_a?(String) && !canonical_url.empty? # Ensure it only returns a string
-  
+
     nil # Return nil, since url is empty/not a string
   end
 
@@ -333,7 +340,7 @@ class Media
   end
 
   def archive_if_conditions_are_met(options, id, cache)
-    if options.delete(:force) || 
+    if options.delete(:force) ||
       cache.read(id, :json).nil? ||
       cache.read(id, :json).dig('archives').blank? ||
       # if the user adds a new  or changes the archiver, and the cache exists only for the old archiver it refreshes the cache

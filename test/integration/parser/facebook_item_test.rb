@@ -3,7 +3,7 @@ require 'test_helper'
 class FacebookItemIntegrationTest < ActiveSupport::TestCase
   test "should get facebook post with valid data from apify" do
     m = create_media url: 'https://www.facebook.com/natgeo/posts/pfbid02vFSkQz1Htm7UCRmPVLt8PSEhfgZqyGEQpyAfSCotSPYbdMWy2y4hZSFcMpecSw1Dl'
-    data = m.as_json
+    data = m.process_and_return_json
 
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']
@@ -20,7 +20,7 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
 
   test "should get facebook data even if apify fails" do
     m = create_media url: 'https://www.facebook.com/ECRG.TheBigO/posts/pfbid036xece5JjgLH7rD9RnCr1ASnjETq7QThCHiH1HqYAcfUZNHav4gFJdYUY7nGU8JB6l'
-    data = m.as_json
+    data = m.process_and_return_json
 
     assert data['error'].nil?
     assert !data['title'].blank?
@@ -30,7 +30,7 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
 
   test "should return data even if post does not exist" do
     m = create_media url: 'https://www.facebook.com/111111111111111/posts/1111111111111111'
-    data = m.as_json
+    data = m.process_and_return_json
 
     assert_equal 'facebook', data['provider']
     assert_equal 'item', data['type']

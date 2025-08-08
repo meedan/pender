@@ -69,7 +69,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should get relative canonical URL parsed from html tags" do
     m = create_media url: 'https://www.bbc.com'
-    data = m.as_json
+    data = m.process_and_return_json
     assert_match 'https://www.bbc.com', m.url
     assert_match 'BBC', data['title']
     assert_kind_of String, data['description']
@@ -92,7 +92,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should store the picture address" do
     m = create_media url: 'http://xkcd.com/448/'
-    data = m.as_json
+    data = m.process_and_return_json
     assert_match /Good Morning/, data['title']
     assert_equal '', data['description']
     assert_equal '', data['published_at']
@@ -106,20 +106,20 @@ class MediaTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, /github.com/).to_return(status: 200, body: "<meta property='og:image' content='https://github.githubassets.com/images/modules/open_graph/github-logo.png'>")
     url = 'https://github.com/'
     m = create_media url: url
-    id = Media.get_id m.url
-    data = m.as_json
+    id = Media.cache_key m.url
+    data = m.process_and_return_json
     assert_match /\/medias\/#{id}\/author_picture/, data['author_picture']
   end
 
   test 'should log parser information when parsing a new URL' do
     url = 'https://x.com/search?q=twitter'
     media = Media.new(url: url)
-  
+
     log = StringIO.new
     Rails.logger = Logger.new(log)
-  
-    media.as_json 
-    
+
+    media.process_and_return_json
+
     assert_match '[Parser] Parsing new URL', log.string
     assert_match url, log.string
     assert_match media.type, log.string
@@ -190,7 +190,7 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should return empty html on oembed when frame is not allowed" do
     m = create_media url: 'http://meedan.com/'
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal '', data['html']
   end
 
@@ -216,7 +216,7 @@ class MediaTest < ActiveSupport::TestCase
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta property="og:description" content="James Comey is out as FBI director. "While I greatly appreciate you informing me">'
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(html))
-    tag_description = m.as_json['raw']['metatags'].find { |tag| tag['property'] == 'og:description'}
+    tag_description = m.process_and_return_json['raw']['metatags'].find { |tag| tag['property'] == 'og:description'}
     assert_equal ['property', 'content'], tag_description.keys
     assert_match /\AJames Comey is out as FBI director.\z/, tag_description['content']
   end
@@ -243,7 +243,7 @@ class MediaTest < ActiveSupport::TestCase
     # If we stub within this block, the stub isn't in place when we need it
     Media::PARSERS.each do |parser|
       m = create_media url: 'http://example.com'
-      data = m.as_json
+      data = m.process_and_return_json
       assert_equal "StandardError: StandardError", data['error']['message']
     end
   end
@@ -318,7 +318,7 @@ class MediaTest < ActiveSupport::TestCase
     assert_match "#{config['proxy_user_prefix']}#{config['proxy_country_prefix']}#{country}", user
     assert_equal config['proxy_pass'], pass
 
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal m.url, data['title']
   end
 
@@ -357,7 +357,7 @@ class MediaTest < ActiveSupport::TestCase
       HtmlPreprocessor.stubs(:sharethefacts_replace_element).returns('replaced data')
       assert_nothing_raised do
         assert_no_match /replaced data/, m.send(:get_html, RequestHelper.html_options(m.url))
-        m.as_json
+        m.process_and_return_json
       end
     end
   end
@@ -380,8 +380,8 @@ class MediaTest < ActiveSupport::TestCase
   test "should update media cache" do
     url = 'http://www.example.com'
     m = create_media url: url
-    id = Media.get_id(m.url)
-    m.as_json
+    id = Media.cache_key(m.url)
+    m.process_and_return_json
 
     assert_equal({}, Pender::Store.current.read(id, :json)['archives'])
     Media.update_cache(m.url, { archives: { 'archive_org' => 'new-data' } })
@@ -397,7 +397,7 @@ class MediaTest < ActiveSupport::TestCase
 
     url = 'https://example.com'
     m = create_media url: url
-    data = m.as_json
+    data = m.process_and_return_json
     assert_match error, data[:raw][:oembed]['error']['message']
     assert_match(/Example Domain/, data['oembed']['title'])
     assert_equal 'page', data['oembed']['provider_name']
@@ -456,7 +456,7 @@ class MediaTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A page</html>')
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML('<script data-rh="true" type="application/ld+json">[]</script>'))
     m = create_media url: url
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal url, data['url']
     assert_nil data['error']
     WebMock.disable!
@@ -471,11 +471,11 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:parse)
 
     assert_raises JSON::GeneratorError do
-      Pender::Store.current.write(Media.get_id(m.original_url), :json, data_with_encoding_error)
+      Pender::Store.current.write(Media.cache_key(m.original_url), :json, data_with_encoding_error)
     end
 
     assert_nothing_raised do
-      data = m.as_json
+      data = m.process_and_return_json
       assert_equal "कर�", data['description']
       assert_equal "कर�", data['oembed']['title']
       assert_equal "कर�", data['raw']['metatags'].first['content']
@@ -489,7 +489,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML("<meta property='og:url' content='aosfatos.org/noticias/em-video-difundido-por-trump-medica-engana-ao-dizer-que-cloroquina-cura-covid19'>"))
     url = 'https://www.aosfatos.org/noticias/em-video-difundido-por-trump-medica-engana-ao-dizer-que-cloroquina-cura-covid19'
     m = Media.new url: url
-    m.as_json
+    m.process_and_return_json
     assert_equal url, m.url
   end
 
@@ -498,7 +498,7 @@ class MediaTest < ActiveSupport::TestCase
     RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<meta property='og:url' />"))
     url = 'https://www.mcdonalds.com/'
     m = Media.new url: url
-    m.as_json
+    m.process_and_return_json
     assert_equal url, m.url
   end
 
@@ -506,7 +506,7 @@ class MediaTest < ActiveSupport::TestCase
     Media.any_instance.stubs(:doc).returns(nil)
     url = 'http://example.com/empty-page'
     m = Media.new url: url
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal url, data['title']
   end
 
@@ -536,12 +536,12 @@ class MediaUnitTest < ActiveSupport::TestCase
 
     url = 'http://www.example.com/'
     m = create_media url: url
-    id = Media.get_id(m.url)
+    id = Media.cache_key(m.url)
 
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?
 
-    data = m.as_json
+    data = m.process_and_return_json
 
     assert_equal data[:title], 'a title'
     assert_equal Pender::Store.current.read(id, :json)[:title], 'a title'
@@ -553,12 +553,12 @@ class MediaUnitTest < ActiveSupport::TestCase
 
     url = 'http://www.example.com'
     m = create_media url: url
-    id = Media.get_id(m.url)
+    id = Media.cache_key(m.url)
 
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?
 
-    data = m.as_json
+    data = m.process_and_return_json
 
     assert Pender::Store.current.read(id, :json).blank?
   end
@@ -570,12 +570,12 @@ class MediaUnitTest < ActiveSupport::TestCase
     url = 'http://www.example.com'
 
     m = create_media url: url
-    id = Media.get_id(m.url)
+    id = Media.cache_key(m.url)
 
     Pender::Store.current.delete(id, :json)
     assert Pender::Store.current.read(id, :json).blank?
 
-    data = m.as_json
+    data = m.process_and_return_json
 
     assert Pender::Store.current.read(id, :json).blank?
     assert_equal 'this is a title', data[:title]
@@ -646,7 +646,7 @@ class MediaUnitTest < ActiveSupport::TestCase
 
     m = create_media url: 'http://www.example.com'
     assert_nothing_raised do
-      m.as_json force: true
+      m.process_and_return_json force: true
     end
   end
 end

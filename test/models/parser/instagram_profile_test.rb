@@ -3,7 +3,7 @@ require 'test_helper'
 class InstagramProfileIntegrationTest < ActiveSupport::TestCase
   test "should parse Instagram profile link for real" do
     m = Media.new url: 'https://www.instagram.com/ironmaiden?absolute_url_processed=1'
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal 'profile', data['type']
     assert data['title'].present?
   end

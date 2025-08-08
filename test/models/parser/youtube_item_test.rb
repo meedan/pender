@@ -3,7 +3,7 @@ require 'test_helper'
 class YoutubeItemIntegrationTest < ActiveSupport::TestCase
   test "should parse YouTube item" do
     m = create_media url: 'https://youtube.com/watch?v=S49CN57Y58o'
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal 'Full Length Freight Trains! 1 Hour of Trains!', data['title']
     assert_equal 'CoasterFan2105', data['username']
     assert_equal 'CoasterFan2105', data['author_name']
@@ -16,8 +16,8 @@ class YoutubeItemIntegrationTest < ActiveSupport::TestCase
 
   test "should store oembed data of a youtube item" do
     RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<link rel='alternate' type='application/json+oembed' href='https://www.youtube.com/oembed?format=json&url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DfHatsiQvDWc' title='RubyConf Portugal 2016 - Best Of'>"))
-    m = create_media url: 'https://www.youtube.com/watch?v=fHatsiQvDWc' 
-    data = m.as_json
+    m = create_media url: 'https://www.youtube.com/watch?v=fHatsiQvDWc'
+    data = m.process_and_return_json
 
     assert data['raw']['oembed'].is_a? Hash
     assert_equal "https:\/\/www.youtube.com\/", data['raw']['oembed']['provider_url']
@@ -32,7 +32,7 @@ class YoutubeItemIntegrationTest < ActiveSupport::TestCase
     url = 'https://www.youtube.com/watch?v=bEAdvXRJ9mU'
     Media.any_instance.stubs(:request_media_url).with(url).returns(response)
     m = create_media url: url
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal 'item', data['type']
     assert_equal 'youtube', data['provider']
     assert_match /Co·Insights: Fostering community collaboration/, data['title']
