@@ -113,12 +113,22 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     assert_equal "Retro Bay Area", data['author_name']
     assert_equal "https://instagram.com/retrobayarea", data['author_url']
     assert_equal Time.parse("2024-08-21T17:27:17.000Z"), data['published_at']
-  end  
+  end
+
+  test 'should set item fields from successful restricted page Apify response' do
+    WebMock.stub_request(:post, INSTAGRAM_ITEM_API_REGEX)
+        .to_return(body: '[{"url": "https://www.instagram.com/p/fake-post", "image": "https://example.com/image.jpg", "title": "This cool title", "description": "A really interesting description", "error": "restricted_page", "errorDescription": "Restricted access, only partial data available" }]', status: 200)
+
+    data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
+    assert_equal "A really interesting description", data['description']
+    assert_equal "This cool title", data['title']
+    assert_equal "https://example.com/image.jpg", data['picture']
+  end
 
   test "should preserve all raw data, without overwriting" do
     WebMock.stub_request(:post, INSTAGRAM_ITEM_API_REGEX)
            .to_return(body: '[{"inputUrl": "https://www.instagram.com/p/fake-post", "id": "fake-post", "caption": "Test caption", "displayUrl": "https://example.com/image.jpg"}]', status: 200)
-    
+
     data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
     assert data['raw']['metatags'].present?
     assert data['raw']['apify'].present?

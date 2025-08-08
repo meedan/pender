@@ -31,10 +31,10 @@ module Parser
         if apify_data
           @parsed_data['raw']['apify'] = apify_data[0]
 
-          set_data_field('title', @parsed_data['raw']['apify']['caption'])
-          set_data_field('description', @parsed_data['raw']['apify']['caption'])
+          set_data_field('title', title(@parsed_data['raw']['apify']))
+          set_data_field('description', description(@parsed_data['raw']['apify']))
           set_data_field('username', "@#{@parsed_data['raw']['apify']['ownerUsername']}")
-          set_data_field('picture', @parsed_data['raw']['apify']['displayUrl'])
+          set_data_field('picture', image(@parsed_data['raw']['apify']))
           set_data_field('author_name', @parsed_data['raw']['apify']['ownerFullName'])
           set_data_field('author_url', "https://instagram.com/#{@parsed_data['raw']['apify']['ownerUsername']}")
           set_data_field('author_picture', @parsed_data['raw']['apify'].dig('latestComments', 0, 'ownerProfilePicUrl'))
@@ -72,6 +72,18 @@ module Parser
       request_url = request_url + "/" unless request_url.end_with? "/"
 
       '<div><iframe src="' + request_url + 'embed" width="397" height="477" frameborder="0" scrolling="no" allowtransparency="true"></iframe></div>'
+    end
+
+    def title(apify_data)
+      apify_data['caption'] || apify_data['title']
+    end
+
+    def description(apify_data)
+      apify_data['caption'] || apify_data['description']
+    end
+
+    def image(apify_data)
+      apify_data['displayUrl'] || apify_data['image']
     end
   end
 end
