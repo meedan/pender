@@ -117,11 +117,12 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
 
   test 'should set item fields from successful restricted page Apify response' do
     WebMock.stub_request(:post, INSTAGRAM_ITEM_API_REGEX)
-        .to_return(body: '[{"url": "https://www.instagram.com/p/fake-post", "image": "https://example.com/image.jpg", "title": "This cool title", "description": "A really interesting description", "error": "restricted_page", "errorDescription": "Restricted access, only partial data available" }]', status: 200)
+        .to_return(body: '[{"url": "https://www.instagram.com/p/fake-post", "image": "https://example.com/image.jpg", "title": "Page Title • Instagram photos and videos", "description": "A really interesting description", "error": "restricted_page", "errorDescription": "Restricted access, only partial data available" }]', status: 200)
 
     data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
     assert_equal "A really interesting description", data['description']
-    assert_equal "This cool title", data['title']
+    assert_equal "A really interesting description", data['title']
+    assert_equal "Page Title", data['author_name']
     assert_equal "https://example.com/image.jpg", data['picture']
   end
 
