@@ -84,7 +84,8 @@ module Parser
     end
 
     def author_name(apify_data)
-      apify_data['ownerFullName'] || apify_data['title'].split('•').first.strip
+      name = apify_data['ownerFullName'] || apify_data['title']
+      name.split('•').first.strip if name.present?
     end
   end
 end
