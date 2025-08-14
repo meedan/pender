@@ -480,6 +480,7 @@ To define URL parameters to be removed, a parser class should implement the `url
 def urls_parameters_to_remove
   ['ighs']
 end
+```
 
 #### Environment overrides
 
