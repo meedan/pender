@@ -10,7 +10,9 @@ Pender is a service for link parsing, archiving and rendering. It is one of the 
 
 The url is visited, parsed and the data found is used to create a media and its attributes. The data can be obtained by API or parsing directly the HTML.
 
-In addition to parsing any link with an oEmbed endpoint or metatags, Pender supports a few [page-specific parsers](https://github.com/meedan/pender/wiki/Supported-Page%E2%80%90Specific-Parsers).
+In addition to parsing any link with an oEmbed endpoint or metatags, Pender supports a few page-specific parsers.
+
+##### You can find a list of page-specific parsers in the [Pender wiki](https://github.com/meedan/pender/wiki/Supported-Page%E2%80%90Specific-Parsers).
 
 ## Archiving
 
@@ -192,7 +194,7 @@ We use Sentry for tracking exceptions in our application.
 By default we unset `sentry_dsn` in the `config.yml`, which prevents
 information from being reported to Sentry. If you would like to see data reported from your local machine, set `sentry_dsn` to the value provided for Pender in the Sentry app.
 
-Additional configuration:
+### Additional configuration
 
 **In config.yml**
   * `sentry_dsn` - the secret that allows us to send information to Sentry, available in the Sentry web app. Scoped to a service (e.g. Pender)
