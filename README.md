@@ -6,31 +6,23 @@
 
 Pender is a service for link parsing, archiving and rendering. It is one of the services that supports [Check](https://meedan.com/check), an open source platform for collaborative fact-checking and media annotation.
 
-## General Info
+## Parsing
 
 The url is visited, parsed and the data found is used to create a media and its attributes. The data can be obtained by API or parsing directly the HTML.
 
-These are the specific parsers supported:
-* Twitter profiles
-* Twitter posts
-* YouTube profiles (users and channels)
-* YouTube videos
-* Facebook profiles (users and pages)
-* Facebook posts (from pages and users)
-* Instagram posts
-* Instagram profiles
-* TikTok posts
-* TikTok profiles
-* Dropbox links
+In addition to parsing any link with an oEmbed endpoint or metatags, Pender supports a few page-specific parsers.
 
-Besides the specific parsers Pender can parse any link with an oEmbed endpoint or metatags.
+##### You can find a list of page-specific parsers in the [Pender wiki](https://github.com/meedan/pender/wiki/Supported-Page%E2%80%90Specific-Parsers).
 
-### Archivers supported
+## Archiving
 
-* Archive.org
-  * This archiver requires `archive_org_access_key` and `archive_org_secret_key` on `config/config.yml` file to be enabled. Get your account’s keys at https://archive.org/account/s3.php
-* Perma.cc
-  * This archiver requires a `perma_cc_key` on `config/config.yml` file or the requesting API key to be enabled. Get your account key at https://perma.cc
+When making a request to parse a URL, you can also request that the URL be archived. Currently, we support:
+
+* **Archive.org**
+  * This archiver requires `archive_org_access_key` and `archive_org_secret_key` to be set in `config/config.yml`. Get your account keys at [archive.org](https://archive.org/account/s3.php).
+
+* **Perma.cc**
+  * This archiver requires a `perma_cc_key` to be set in `config/config.yml`. Get your account key at [perma.cc](https://perma.cc).
 
 ## Setup
 
@@ -42,7 +34,7 @@ cd pender
 find -name '*.example' | while read f; do cp "$f" "${f%%.example}"; done
 ```
 
-To run Pender in development mode, follow these steps:
+To run Pender in development mode:
 
 ```
 $ docker-compose build
@@ -50,6 +42,7 @@ $ docker-compose up --abort-on-container-exit
 ```
 Open http://localhost:3200/api-docs/index.html to access Pender API directly.
 
+## Running tests as CI
 To run the full test suite of Pender tests locally the way CI runs them:
 
 ```
@@ -61,7 +54,7 @@ docker compose -f docker-test.yml exec pender bundle exec rake "parallel:test[3]
 docker compose -f docker-test.yml exec pender bundle exec rake "parallel:spec"
 ```
 
-### Setting Cookies for Requests
+## Setting Cookies for Requests
 
 We send cookies with certain requests that require logged-in users (e.g. Instagram, TikTok).
 
@@ -81,237 +74,9 @@ Deployed environment cookies are stored in S3. To update them, use steps 1-3 abo
 
 ## API
 
-To make requests to the API, you must set a request header with the value of the configuration option `authorization_header` - by default, this is `X-Pender-Token`. The value of that header should be the API key that you have generated using `bundle exec rake lapis:api_keys:create`, or any API key that was given to you.
+To make requests to the API, you must set a request header with the value of the configuration option `authorization_header` – by default, this is `X-Pender-Token`. The value of that header should be the API key that you have generated using `bundle exec rake lapis:api_keys:create`, or any API key that was given to you.
 
-### GET /api/about
-
-Use this method in order to get the archivers enabled on this application
-
-**Parameters**
-
-**Response**
-
-200: Information about the application
-```json
-{
-  "type": "about",
-  "data": {
-    "name": "Keep",
-    "version": "v0.68.0",
-    "archivers": [
-      {
-        "key": "archive_org",
-        "label": "Archive.org"
-      }
-    ]
-  }
-}
-```
-
-401: Access denied
-```json
-{
-  "type": "error",
-  "data": {
-    "message": "Unauthorized",
-    "code": 1
-  }
-}
-```
-
-### GET /api/medias.format
-
-Get parseable data for a given URL, that can be a post or a profile, from different providers. `format` can be one of the following, see responses below:
-- `html`
-- `js`
-- `json`
-
-**Parameters**
-
-* `url`: URL to be parsed/rendered _(required)_
-* `refresh`: boolean to indicate that Pender should re-fetch and re-parse the URL if it already exists in its cache _(optional)_
-* `archivers`: list of archivers to target. Possible values:
-  * empty: the URL will be archived in all available archivers
-  * `none`: the URL will not be archived
-  * string with a list of archives separated by commas: the URL will be archived only on specified archivers
-
-**Request Example**
-```bash
-curl \
--H 'X-Pender-Token: <your_token>' \
--H 'Content-type: application/json' \
-http://localhost:3200/api/medias.json?url=<your_url>&refresh=1
-```
-
-**Response**
-
-**HTML**
-
-A card-representation of the URL, like the ones below:
-
-![YouTube](screenshots/youtube.png?raw=true "YouTube")
-![Facebook](screenshots/facebook.png?raw=true "Facebook")
-![Twitter](screenshots/twitter.png?raw=true "Twitter")
-
-**JavaScript**
-
-An embed code for the item, which should be called this way:
-
-```html
-<script src="http://pender.host/api/medias.js?url=https%3A%2F%2Fwww.youtube.com%2Fchannel%2FUCEWHPFNilsT0IfQfutVzsag"></script>
-```
-
-**JSON**
-
-200: Parsed data
-```json
-{
-  "type": "media",
-  "data": {
-    "url": "https://www.youtube.com/user/MeedanTube",
-    "provider": "youtube",
-    "type": "profile",
-    "title": "MeedanTube",
-    "description": "",
-    "published_at": "2009-03-06T00:44:31.000Z",
-    "picture": "https://yt3.ggpht.com/-MPd3Hrn0msk/AAAAAAAAAAI/AAAAAAAAAAA/I1ftnn68v8U/s88-c-k-no/photo.jpg",
-    "username": "MeedanTube",
-    "author_url": "https://www.youtube.com/user/MeedanTube",
-    "author_name": "MeedanTube",
-    "raw": {
-      "metatags": [],
-      "oembed": {},
-      "api": {}
-    },
-    "schema": {},
-    "html": "",
-    "embed_tag": "<embed_tag>"
-  }
-}
-```
-
-400: URL not provided
-```json
-{
-  "type": "error",
-  "data": {
-    "message": "Parameters missing",
-    "code": 2
-  }
-}
-```
-
-401: Access denied
-```json
-{
-  "type": "error",
-  "data": {
-    "message": "Unauthorized",
-    "code": 1
-  }
-}
-```
-
-408: Timeout
-```json
-{
-  "type": "error",
-  "data": {
-    "message": "Timeout",
-    "code": 10
-  }
-}
-```
-
-429: API limit reached
-```json
-{
-  "type": "error",
-  "data": {
-    "message": 354, // Waiting time in seconds
-    "code": 11
-  }
-}
-```
-
-409: Conflict
-```json
-{
-  "type": "error",
-  "data": {
-    "message": "This URL is already being processed. Please try again in a few seconds.",
-    "code": 9
-  }
-}
-```
-
-### POST /api/medias
-
-Create background jobs to parse each URL and notify the caller with the result
-
-**Parameters**
-
-* `url`: URL(s) to be parsed. Can be an array of URLs, a single URL or a list of URLs separated by a commas
- _(required)_
-* `refresh`: Force a refresh from the URL instead of the cache. Will be applied to all URLs
-* `archivers`: List of archivers to target. Can be empty, `none` or a list of archives separated by commas. Will be applied to all URLs
-
-**Response**
-
-200: Enqueued URLs
-```json
-{
-  "type": "success",
-  "data": {
-    "enqueued": [
-      "https://www.youtube.com/user/MeedanTube",
-      "https://twitter.com/meedan"
-    ],
-    "failed": [
-
-    ]
-  }
-}
-```
-
-401: Access denied
-```json
-{
-  "type": "error",
-  "data": {
-    "message": "Unauthorized",
-    "code": 1
-  }
-}
-```
-
-### DELETE|PURGE /api/medias
-
-Clears the cache for the URL(s) passed as parameter.
-
-**Parameters**
-
-* `url`: URL(s) to be deleted, either as an array or a string with one URL or multiple URLs separated by a space  _(required)_
-
-**Response**
-
-200: Success
-```json
-{
-  "type": "success",
-}
-```
-
-401: Access denied
-```json
-{
-  "type": "error",
-  "data": {
-    "message": "Unauthorized",
-    "code": 1
-  }
-}
-```
+##### In the wiki you'll find examples of [requests and responses](https://github.com/meedan/pender/wiki/Requests-and-Responses).
 
 ## Webhook Notification
 
@@ -387,6 +152,18 @@ end
 If shared behavior is needed between parsers of the same provider, make a provider class as a concern and include it in the class.
 See ProviderInstagram, ProviderYoutube, ProviderFacebook, ProviderTwitter, or ProviderTiktok for examples.
 
+### URL Parameters Normalization
+
+Some service providers include URL parameters for tracking purposes that can be safely removed. Pender parsers can define a list of such parameters to be removed during the URL normalization process.
+
+To define URL parameters to be removed, a parser class should implement the `urls_parameters_to_remove` method, which returns an array of strings representing the parameters to be stripped. For example:
+
+```ruby
+def urls_parameters_to_remove
+  ['ighs']
+end
+```
+
 ## How to add a new archiver
 
 * Add a new file at `app/models/concerns/media_<name>_archiver.rb`
@@ -410,22 +187,6 @@ module Media<Name>Archiver
 end
 ```
 
-## Profiling
-
-It's possible to profile Pender in order to look for bottlenecks, slownesses, performance issues, etc. To profile a Rails application it is vital to run it using production like settings (cache classes, cache view lookups, etc.). Otherwise, Rail's dependency loading code will overwhelm any time spent in the application itself. The best way to do this is create a new Rails environment. So, follow the steps below:
-
-* Copy `config/environments/profile.rb.example` to `config/environments/profile.rb`
-* Make sure you have a `profile` environment setup on `config/config.yml` and `config/database.yml`
-* Run `bundle exec rake db:migrate RAILS_ENV=profile` (only needed at the first time)
-* Create an API key for the profile environment: `bundle exec rake lapis:api_keys:create RAILS_ENV=profile`
-* Start the server in profile mode: `bundle exec rails s -e profile -p 3005`
-* Make a request you want to profile using the key you created before: `curl -XGET -H 'X-Pender-Token: <API key>' 'http://localhost:3005/api/medias.json?url=https://twitter.com/meedan/status/773947372527288320'`
-* Check the results at `tmp/profile`
-
-_Everytime you make a new request, the results on tmp/profile are overwritten_
-
-We can also run performance tests. It calculates the amount of time taken to validate, instantiate and parse a link for each of the supported types/providers. In order to do that, run: `bundle exec rake test:performance`. It will generate a CSV at `tmp/performance.csv`, so that you can compare the time take for each provider.
-
 ## Error reporting
 
 We use Sentry for tracking exceptions in our application.
@@ -433,7 +194,7 @@ We use Sentry for tracking exceptions in our application.
 By default we unset `sentry_dsn` in the `config.yml`, which prevents
 information from being reported to Sentry. If you would like to see data reported from your local machine, set `sentry_dsn` to the value provided for Pender in the Sentry app.
 
-Additional configuration:
+### Additional configuration
 
 **In config.yml**
   * `sentry_dsn` - the secret that allows us to send information to Sentry, available in the Sentry web app. Scoped to a service (e.g. Pender)
@@ -447,6 +208,7 @@ Additional configuration:
 
 We use Honeycomb for monitoring information about our application. It is currently configured to suppress Honeycomb reporting when the Open Telemetry required config is unset, which we would expect in development; however it is possible to report data from your local environment to either console or remotely to Honeycomb for troubleshooting purposes.
 
+### Enable reporting of Data from your local machine
 If you would like to see data reported from your local machine, do the following:
 
 **Local console**
@@ -470,19 +232,7 @@ To enable sampling for Honeycomb, set the following configuration (either in `co
 
 **Note**: If sampling behavior is changed in Pender, we will also need to update the behavior to match in any other application reporting to Honeycomb. More [here](https://docs.honeycomb.io/getting-data-in/opentelemetry/ruby/#sampling)
 
-### URL Parameters Normalization
-
-Some service providers include URL parameters for tracking purposes that can be safely removed. Pender parsers can define a list of such parameters to be removed during the URL normalization process.
-
-To define URL parameters to be removed, a parser class should implement the `urls_parameters_to_remove` method, which returns an array of strings representing the parameters to be stripped. For example:
-
-```ruby
-def urls_parameters_to_remove
-  ['ighs']
-end
-```
-
-#### Environment overrides
+### Environment overrides
 
 Often for rake tasks or background jobs, we will either want none of the data (skip reporting) or all of the data (skip sampling). For these cases we can set specific environment variables:
 
