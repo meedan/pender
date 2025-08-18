@@ -6,24 +6,11 @@
 
 Pender is a service for link parsing, archiving and rendering. It is one of the services that supports [Check](https://meedan.com/check), an open source platform for collaborative fact-checking and media annotation.
 
-## General Info
+## Parsing
 
 The url is visited, parsed and the data found is used to create a media and its attributes. The data can be obtained by API or parsing directly the HTML.
 
-These are the specific parsers supported:
-* Twitter profiles
-* Twitter posts
-* YouTube profiles (users and channels)
-* YouTube videos
-* Facebook profiles (users and pages)
-* Facebook posts (from pages and users)
-* Instagram posts
-* Instagram profiles
-* TikTok posts
-* TikTok profiles
-* Dropbox links
-
-Besides the specific parsers Pender can parse any link with an oEmbed endpoint or metatags.
+In addition to parsing any link with an oEmbed endpoint or metatags, Pender supports a few [page-specific parsers](https://github.com/meedan/pender/wiki/Supported-Page%E2%80%90Specific-Parsers).
 
 ### Archivers supported
 
