@@ -51,7 +51,7 @@ docker compose -f docker-test.yml exec pender bundle exec rake "parallel:test[3]
 docker compose -f docker-test.yml exec pender bundle exec rake "parallel:spec"
 ```
 
-### Setting Cookies for Requests
+## Setting Cookies for Requests
 
 We send cookies with certain requests that require logged-in users (e.g. Instagram, TikTok).
 
