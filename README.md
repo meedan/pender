@@ -32,7 +32,7 @@ cd pender
 find -name '*.example' | while read f; do cp "$f" "${f%%.example}"; done
 ```
 
-To run Pender in development mode, follow these steps:
+To run Pender in development mode:
 
 ```
 $ docker-compose build
@@ -40,6 +40,7 @@ $ docker-compose up --abort-on-container-exit
 ```
 Open http://localhost:3200/api-docs/index.html to access Pender API directly.
 
+## Running tests as CI
 To run the full test suite of Pender tests locally the way CI runs them:
 
 ```
@@ -71,9 +72,9 @@ Deployed environment cookies are stored in S3. To update them, use steps 1-3 abo
 
 ## API
 
-To make requests to the API, you must set a request header with the value of the configuration option `authorization_header` - by default, this is `X-Pender-Token`. The value of that header should be the API key that you have generated using `bundle exec rake lapis:api_keys:create`, or any API key that was given to you.
+To make requests to the API, you must set a request header with the value of the configuration option `authorization_header` – by default, this is `X-Pender-Token`. The value of that header should be the API key that you have generated using `bundle exec rake lapis:api_keys:create`, or any API key that was given to you.
 
-In the wiki you'll find examples of [requests and responses](https://github.com/meedan/pender/wiki/Requests-and-Responses).
+##### In the wiki you'll find examples of [requests and responses](https://github.com/meedan/pender/wiki/Requests-and-Responses).
 
 ## Webhook Notification
 
@@ -149,6 +150,18 @@ end
 If shared behavior is needed between parsers of the same provider, make a provider class as a concern and include it in the class.
 See ProviderInstagram, ProviderYoutube, ProviderFacebook, ProviderTwitter, or ProviderTiktok for examples.
 
+### URL Parameters Normalization
+
+Some service providers include URL parameters for tracking purposes that can be safely removed. Pender parsers can define a list of such parameters to be removed during the URL normalization process.
+
+To define URL parameters to be removed, a parser class should implement the `urls_parameters_to_remove` method, which returns an array of strings representing the parameters to be stripped. For example:
+
+```ruby
+def urls_parameters_to_remove
+  ['ighs']
+end
+```
+
 ## How to add a new archiver
 
 * Add a new file at `app/models/concerns/media_<name>_archiver.rb`
@@ -193,6 +206,7 @@ Additional configuration:
 
 We use Honeycomb for monitoring information about our application. It is currently configured to suppress Honeycomb reporting when the Open Telemetry required config is unset, which we would expect in development; however it is possible to report data from your local environment to either console or remotely to Honeycomb for troubleshooting purposes.
 
+### Enable reporting of Data from your local machine
 If you would like to see data reported from your local machine, do the following:
 
 **Local console**
@@ -216,19 +230,7 @@ To enable sampling for Honeycomb, set the following configuration (either in `co
 
 **Note**: If sampling behavior is changed in Pender, we will also need to update the behavior to match in any other application reporting to Honeycomb. More [here](https://docs.honeycomb.io/getting-data-in/opentelemetry/ruby/#sampling)
 
-### URL Parameters Normalization
-
-Some service providers include URL parameters for tracking purposes that can be safely removed. Pender parsers can define a list of such parameters to be removed during the URL normalization process.
-
-To define URL parameters to be removed, a parser class should implement the `urls_parameters_to_remove` method, which returns an array of strings representing the parameters to be stripped. For example:
-
-```ruby
-def urls_parameters_to_remove
-  ['ighs']
-end
-```
-
-#### Environment overrides
+### Environment overrides
 
 Often for rake tasks or background jobs, we will either want none of the data (skip reporting) or all of the data (skip sampling). For these cases we can set specific environment variables:
 
