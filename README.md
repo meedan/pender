@@ -12,12 +12,15 @@ The url is visited, parsed and the data found is used to create a media and its 
 
 In addition to parsing any link with an oEmbed endpoint or metatags, Pender supports a few [page-specific parsers](https://github.com/meedan/pender/wiki/Supported-Page%E2%80%90Specific-Parsers).
 
-### Archivers supported
+## Archiving
 
-* Archive.org
-  * This archiver requires `archive_org_access_key` and `archive_org_secret_key` on `config/config.yml` file to be enabled. Get your account’s keys at https://archive.org/account/s3.php
-* Perma.cc
-  * This archiver requires a `perma_cc_key` on `config/config.yml` file or the requesting API key to be enabled. Get your account key at https://perma.cc
+When making a request to parse a URL, you can also request that the URL be archived. Currently, we support:
+
+* **Archive.org**
+  * This archiver requires `archive_org_access_key` and `archive_org_secret_key` to be set in `config/config.yml`. Get your account keys at [archive.org](https://archive.org/account/s3.php).
+
+* **Perma.cc**
+  * This archiver requires a `perma_cc_key` to be set in `config/config.yml`. Get your account key at [perma.cc](https://perma.cc).
 
 ## Setup
 
