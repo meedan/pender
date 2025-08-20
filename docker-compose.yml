@@ -61,6 +61,8 @@ services:
       SERVER_PORT: 3200
   otel-collector:
     image: otel/opentelemetry-collector-contrib
+    env_file:
+      - .collector.env
     volumes:
       - ./config/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
     depends_on:
