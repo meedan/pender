@@ -17,5 +17,8 @@ else
     VALUE=$(aws ssm get-parameters --region $REGION --with-decryption --name "$NAME" | jq .Parameters[].Value)
     VARNAME=$(basename "$NAME")
     echo "$VARNAME=$VALUE" >> .env
+    if [[ "$VARNAME" = "x_honeycomb_team" ]]; then
+      echo "$VARNAME=$VALUE" >> .collector.env
+    fi
   done
 fi

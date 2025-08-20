@@ -5,7 +5,7 @@ receivers:
         - job_name: "prometheus"
           scrape_interval: 15s
           static_configs:
-            - targets: ["pender:3200"] 
+            - targets: ["pender:3200"]
 
 processors:
   batch:
@@ -15,7 +15,7 @@ exporters:
     endpoint: "api.honeycomb.io:443" # US instance
     #endpoint: "api.eu1.honeycomb.io:443" # EU instance
     headers:
-      "x-honeycomb-team": "<Honeycomb API KEY>"
+      "x-honeycomb-team": ${env:x_honeycomb_team} # Honeycomb API KEY
       "x-honeycomb-dataset": "pender"
 
 service:
