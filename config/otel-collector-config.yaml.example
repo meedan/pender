@@ -8,7 +8,13 @@ receivers:
             - targets: ["pender:3200"]
 
 processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 80
+    spike_limit_percentage: 20
   batch:
+    timeout: 200ms
+    send_batch_size: 8192
 
 exporters:
   otlp/metrics:
@@ -25,5 +31,5 @@ service:
   pipelines:
     metrics:
       receivers: [prometheus]
-      processors: []
+      processors: [memory_limiter, batch]
       exporters: [otlp/metrics]
