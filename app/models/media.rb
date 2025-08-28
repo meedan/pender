@@ -82,7 +82,6 @@ class Media
     cache = Pender::Store.current
     if options.delete(:force) || cache.read(id, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
-      self.data['title'] = self.url if self.data['title'].blank?
       data = self.data.merge(Media.required_fields(self)).with_indifferent_access
       if data[:error].blank?
         cache.write(id, :json, clean_json(data))
@@ -121,7 +120,7 @@ class Media
 
   def self.minimal_data(instance)
     data = {}
-    %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field.to_sym] = ''.freeze }
+    %w(published_at username description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field.to_sym] = ''.freeze }
     data[:raw] = data[:archives] = {}
     data.merge(Media.required_fields(instance)).with_indifferent_access
   end
@@ -129,7 +128,14 @@ class Media
   def self.required_fields(instance = nil)
     provider = instance.respond_to?(:provider) ? instance.provider : 'page'
     type = instance.respond_to?(:type) ? instance.type : 'item'
-    { url: instance.url, provider: provider || 'page', type: type || 'item', parsed_at: Time.now.to_s, favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}" }
+    {
+      url: instance.url,
+      title: instance.url,
+      provider: provider || 'page',
+      type: type || 'item',
+      parsed_at: Time.now.to_s,
+      favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}"
+    }
   end
 
   def self.cache_key(url)
