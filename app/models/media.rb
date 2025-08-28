@@ -82,7 +82,6 @@ class Media
     cache = Pender::Store.current
     if options.delete(:force) || cache.read(id, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
-      data = self.data.merge(Media.required_fields(self)).with_indifferent_access
       if data[:error].blank?
         cache.write(id, :json, clean_json(data))
       end
