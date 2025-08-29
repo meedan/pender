@@ -125,13 +125,11 @@ class Media
   end
 
   def self.required_fields(instance = nil)
-    provider = instance.respond_to?(:provider) ? instance.provider : 'page'
-    type = instance.respond_to?(:type) ? instance.type : 'item'
     {
       url: instance.url,
       title: instance.url,
-      provider: provider || 'page',
-      type: type || 'item',
+      provider: 'page',
+      type: 'item',
       parsed_at: Time.now.to_s,
       favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}"
     }
@@ -197,15 +195,22 @@ class Media
       if parseable = parser.match?(self.url)
         self.parser = parseable
         self.provider, self.type = self.parser.type.split('_')
-        self.data.deep_merge!(self.parser.parse_data(self.doc, self.original_url, self.data.dig('raw', 'json+ld')))
-        self.url = self.parser.url
-        self.get_oembed_data
+        parsed_data = self.parser.parse_data(self.doc, self.original_url, self.data.dig('raw', 'json+ld'))
+        self.data.deep_merge!(
+          {
+            provider: self.provider,
+            type: self.type,
+            url: self.parser.url,
+            oembed: self.get_oembed_data,
+          }.merge(parsed_data)
+        )
         parsed = true
         Rails.logger.info level: 'INFO', message: '[Parser] Parsing new URL', url: self.url, parser: self.parser.to_s, provider: self.provider, type: self.type
       end
-      break if parsed
+    break if parsed
     end
 
+    # return cleaned up data for username title description author_name
     cleanup_html_entities(self)
   end
 
