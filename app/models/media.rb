@@ -78,6 +78,8 @@ class Media
   end
 
   def process_and_return_json(options = {})
+    self.data.merge!(Media.minimal_data(self))
+
     id = Media.cache_key(self.url)
     cache = Pender::Store.current
     if options.delete(:force) || cache.read(id, :json).nil?
@@ -187,7 +189,6 @@ class Media
   protected
 
   def parse
-    self.data.merge!(Media.minimal_data(self))
     get_jsonld_data(self) unless self.doc.nil?
     parsed = false
 
