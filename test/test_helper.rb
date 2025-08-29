@@ -1,5 +1,10 @@
 require 'simplecov'
 
+# Clean cache directory before tests start
+require 'fileutils'
+CACHE_PATH = "/tmp/cache#{ENV['TEST_ENV_NUMBER']}"
+FileUtils.rm_rf(CACHE_PATH)
+
 ENV['RAILS_ENV'] ||= 'test'
 require File.expand_path('../../config/environment', __FILE__)
 require 'rails/test_help'
