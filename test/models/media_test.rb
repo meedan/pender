@@ -295,6 +295,7 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should use specific country on proxy for domains on hosts" do
+    # I'm not sure we should stub parse here, because we are checking the title and the parser might overwrite it
     Media.any_instance.stubs(:follow_redirections)
     Media.any_instance.stubs(:get_canonical_url).returns(true)
     Media.any_instance.stubs(:try_https)

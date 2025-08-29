@@ -24,12 +24,15 @@ module Parser
         title = get_kwai_text_from_tag(doc, '.info .title') 
         name = get_kwai_text_from_tag(doc, '.name') || jsonld.dig('creator','name')&.strip || match_username(url)
         description = get_kwai_text_from_tag(doc, '.info .title') || jsonld.dig('transcript')&.strip || jsonld.dig('description')&.strip
-        @parsed_data.merge!({
-          title: title,
+
+        parser_data = {
           description: description,
           author_name: name,
           username: name
-        })
+        }
+        parser_data[:title] = title if title.present?
+
+        @parsed_data.merge!(parser_data)
       end
 
       parsed_data
