@@ -18,7 +18,6 @@ config/database.yml
 config/sidekiq.yml
 coverage/*
 dump.rdb
-otel-collector-config.yaml
 public/assets
 public/cache
 public/screenshots
