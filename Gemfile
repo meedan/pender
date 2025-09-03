@@ -22,7 +22,7 @@ group :test do
   gem 'simplecov-console', require: false
   gem 'codeclimate-test-reporter', '1.0.8', group: :test, require: nil
   gem 'rails-controller-testing'
-  gem 'minitest', '5.25.0'
+  gem 'minitest', '5.25.5'
   gem 'minitest-retry'
   gem 'webmock'
 end
