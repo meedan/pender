@@ -65,7 +65,7 @@ class Media
     ApiKey.current = key if key
     attributes.each { |name, value| send("#{name}=", value) }
     self.original_url = self.url.strip
-    self.data = {}.with_indifferent_access
+    self.data = self.parser_required_keys
     self.follow_redirections
     self.url = RequestHelper.normalize_url(self.url) unless self.get_canonical_url
     self.try_https
@@ -82,13 +82,12 @@ class Media
     cache = Pender::Store.current
     if options.delete(:force) || cache.read(id, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
-      self.data['title'] = self.url if self.data['title'].blank?
-      data = self.data.merge(Media.required_fields(self)).with_indifferent_access
       if data[:error].blank?
         cache.write(id, :json, clean_json(data))
       end
       self.upload_images
     end
+    self.fallback
     archive_if_conditions_are_met(options, id, cache)
     parser_requests_metrics
     cache.read(id, :json) || clean_json(data)
@@ -121,15 +120,28 @@ class Media
 
   def self.minimal_data(instance)
     data = {}
-    %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field.to_sym] = ''.freeze }
-    data[:raw] = data[:archives] = {}
+    %w(
+        published_at
+        username
+        picture
+        author_url
+        author_picture
+        author_name
+        screenshot
+        external_id
+        html
+        ).each { |field| data[field.to_sym] = ''.freeze }
     data.merge(Media.required_fields(instance)).with_indifferent_access
   end
 
   def self.required_fields(instance = nil)
-    provider = instance.respond_to?(:provider) ? instance.provider : 'page'
-    type = instance.respond_to?(:type) ? instance.type : 'item'
-    { url: instance.url, provider: provider || 'page', type: type || 'item', parsed_at: Time.now.to_s, favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}" }
+    { url: instance.url,
+      provider: 'page',
+      type: 'item',
+      title: instance.url,
+      description: instance.url,
+      parsed_at: Time.now.to_s,
+      favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}" }
   end
 
   def self.cache_key(url)
@@ -184,7 +196,6 @@ class Media
   protected
 
   def parse
-    self.data.merge!(Media.minimal_data(self))
     get_jsonld_data(self) unless self.doc.nil?
     parsed = false
 
@@ -192,7 +203,12 @@ class Media
       if parseable = parser.match?(self.url)
         self.parser = parseable
         self.provider, self.type = self.parser.type.split('_')
-        self.data.deep_merge!(self.parser.parse_data(self.doc, self.original_url, self.data.dig('raw', 'json+ld')))
+        parsed_data = self.parser.parse_data(
+          self.doc,
+          self.original_url,
+          self.data.dig('raw', 'json+ld')
+        )
+        self.data.deep_merge!(parsed_data)
         self.url = self.parser.url
         self.get_oembed_data
         parsed = true
@@ -202,6 +218,21 @@ class Media
     end
 
     cleanup_html_entities(self)
+  end
+
+  def fallback
+    minimal_data = Media.minimal_data(self)
+
+    self.data.merge!(minimal_data) do |_key, current_val, default_val|
+      current_val.presence || default_val
+    end
+  end
+
+  def parser_required_keys
+    {
+      raw: {},
+      archives: {}
+    }.with_indifferent_access
   end
 
   ##
