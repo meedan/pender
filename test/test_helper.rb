@@ -31,20 +31,20 @@ class ActiveSupport::TestCase
   # Shared setup/teardown for tests as we make
   # the unit tests isolated
   def isolated_setup
-    Rails.cache.clear
     WebMock.enable!
     WebMock.disable_net_connect!(allow: [/minio/])
     Sidekiq::Testing.fake!
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
+    clear_bucket
   end
 
   def isolated_teardown
-    Rails.cache.clear
     Sidekiq::Worker.clear_all
     Sidekiq::Testing.inline! # reset, to match current test_helper teardown
     WebMock.reset!
     WebMock.allow_net_connect!
     WebMock.disable!
+    clear_bucket
   end
 
   # This will run before any test
@@ -52,7 +52,6 @@ class ActiveSupport::TestCase
   def setup
     # For debugging only: print the test name before it runs
     # puts "#{self.class.name}::#{self.method_name}"
-    Rails.cache.clear
     Sidekiq::Testing.inline!
     Rails.application.reload_routes!
     Media.any_instance.stubs(:archive_to_archive_org).returns(nil)
@@ -66,7 +65,6 @@ class ActiveSupport::TestCase
   # This will run after any test
 
   def teardown
-    Rails.cache.clear
     WebMock.reset!
     WebMock.allow_net_connect!
     Media::ARCHIVERS['perma_cc'][:enabled] = false
