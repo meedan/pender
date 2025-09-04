@@ -26,7 +26,6 @@ class MediasHelperTest < ActionView::TestCase
   test "should not crash if jsonld content is null" do
     null_content = '<script type="application/ld+json">null</script>'
     m = create_media url: 'https://www.facebook.com/dina.samak/posts/10153679232246949'
-    m.data = Media.minimal_data(m)
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(null_content))
     assert_nothing_raised do
       get_jsonld_data(m)
@@ -39,7 +38,6 @@ class MediasHelperTest < ActionView::TestCase
     doc = ''
     File.open('test/data/page-with-json-ld.html') { |f| doc = f.read }
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
-    m.data = Media.minimal_data(m)
     assert_nothing_raised do
       m.get_jsonld_data(m)
     end

@@ -37,12 +37,11 @@ class FacebookProfileIntegrationTest < ActiveSupport::TestCase
     data = media.process_and_return_json
 
     assert_match(/facebook.com\/pages\/fakepage\/1111111111111/, data['title'])
+    assert_match(/facebook.com\/pages\/fakepage\/1111111111111/, data['description'])
     assert_equal 'fakepage', data['username']
-    assert data['description'].blank?
     assert data['picture'].blank?
     assert data['published_at'].blank?
     assert_equal 'facebook', data['provider']
     assert_equal 'profile', data['type']
   end
 end
-

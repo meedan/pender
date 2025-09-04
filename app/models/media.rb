@@ -82,12 +82,15 @@ class Media
     cache = Pender::Store.current
     if options.delete(:force) || cache.read(id, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
+      clean_data = clean_json(self.data)
+      self.fallback
+
       if data[:error].blank?
-        cache.write(id, :json, clean_json(data))
+        cache.write(id, :json, clean_data)
       end
       self.upload_images
     end
-    self.fallback
+
     archive_if_conditions_are_met(options, id, cache)
     parser_requests_metrics
     cache.read(id, :json) || clean_json(data)
@@ -207,8 +210,14 @@ class Media
           self.doc,
           self.original_url,
           self.data.dig('raw', 'json+ld')
+          )
+        self.data.deep_merge!(
+          {
+            provider: self.provider,
+            type: self.type,
+            url: self.parser.url
+          }.merge(parsed_data)
         )
-        self.data.deep_merge!(parsed_data)
         self.url = self.parser.url
         self.get_oembed_data
         parsed = true

@@ -94,7 +94,7 @@ class MediaTest < ActiveSupport::TestCase
     m = create_media url: 'http://xkcd.com/448/'
     data = m.process_and_return_json
     assert_match /Good Morning/, data['title']
-    assert_equal '', data['description']
+    assert_equal 'https://xkcd.com/448/', data['description']
     assert_equal '', data['published_at']
     assert_equal '', data['username']
     assert_match 'https://xkcd.com', data['author_url']
@@ -226,12 +226,11 @@ class MediaTest < ActiveSupport::TestCase
     doc = ''
     File.open('test/data/page-with-json-ld.html') { |f| doc = f.read }
     Media.any_instance.stubs(:doc).returns(Nokogiri::HTML(doc))
-    m.data = Media.minimal_data(m)
-    m.get_jsonld_data(m)
+    data = m.process_and_return_json
 
-    assert !m.data['raw']['json+ld'].empty?
-    assert m.data['raw']['json+ld'].is_a? Array
-    assert m.data['raw']['json+ld'].first.is_a? Hash
+    assert_not_empty data['raw']['json+ld']
+    assert_kind_of Array, data['raw']['json+ld']
+    assert_kind_of Hash, data['raw']['json+ld'].first
   end
 
   test "should handle errors when call parse on each parser" do
