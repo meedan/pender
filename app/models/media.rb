@@ -60,12 +60,36 @@ class Media
 
   LANG = 'en-US;q=0.6,en;q=0.4'
 
+  DATA_STRUCTURE = {
+    # required – value should always be present
+    url: "",
+    provider: "",
+    type: "",
+    title: "",
+    description: "",
+    favicon: "",
+    parsed_at: "",
+    # non-required – values can be blank
+    published_at: "",
+    username: "",
+    picture: "",
+    author_url: "",
+    author_picture: "",
+    author_name: "",
+    screenshot: "",
+    external_id: "",
+    html: "",
+    # required keys – some methods expect them to be present
+    raw: {},
+    archives: {},
+  }.with_indifferent_access.freeze
+
   def initialize(attributes = {})
     key = attributes.delete(:key)
     ApiKey.current = key if key
     attributes.each { |name, value| send("#{name}=", value) }
     self.original_url = self.url.strip
-    self.data = self.parser_required_keys
+    self.data = DATA_STRUCTURE.deep_dup
     self.follow_redirections
     self.url = RequestHelper.normalize_url(self.url) unless self.get_canonical_url
     self.try_https
@@ -82,18 +106,17 @@ class Media
     cache = Pender::Store.current
     if options.delete(:force) || cache.read(id, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
-      clean_data = clean_json(self.data)
-      self.fallback
+      self.set_fallbacks(clean_json(data))
 
       if data[:error].blank?
-        cache.write(id, :json, clean_data)
+        cache.write(id, :json, data)
       end
       self.upload_images
     end
 
     archive_if_conditions_are_met(options, id, cache)
     parser_requests_metrics
-    cache.read(id, :json) || clean_json(data)
+    cache.read(id, :json) || self.set_fallbacks(data)
   end
 
   PARSERS = [
@@ -120,32 +143,6 @@ class Media
     MediaPermaCcArchiver,
     MediaApifyItem
   ].each { |concern| include concern }
-
-  def self.minimal_data(instance)
-    data = {}
-    %w(
-        published_at
-        username
-        picture
-        author_url
-        author_picture
-        author_name
-        screenshot
-        external_id
-        html
-        ).each { |field| data[field.to_sym] = ''.freeze }
-    data.merge(Media.required_fields(instance)).with_indifferent_access
-  end
-
-  def self.required_fields(instance = nil)
-    { url: instance.url,
-      provider: 'page',
-      type: 'item',
-      title: instance.url,
-      description: instance.url,
-      parsed_at: Time.now.to_s,
-      favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}" }
-  end
 
   def self.cache_key(url)
     Digest::MD5.hexdigest(RequestHelper.normalize_url(url))
@@ -196,6 +193,32 @@ class Media
     end
   end
 
+  # I don't think we should need this method
+  # And I think required_fields should be an instance method
+  # But it is used in get_error_data, and I have not found a better way to do it right now
+  def self.minimal_data(instance)
+    data = DATA_STRUCTURE.deep_dup
+    data.merge(required_fields(instance)).with_indifferent_access
+  end
+
+  def self.required_fields(instance)
+    {
+      url: instance.url,
+      provider: 'page',
+      type: 'item',
+      title: instance.url,
+      description: instance.url,
+      parsed_at: Time.now.to_s,
+      favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}"
+    }.with_indifferent_access
+  end
+
+  def set_fallbacks(data)
+    data.merge!(Media.required_fields(self)) do |_key, current_val, default_val|
+      current_val.presence || default_val
+    end
+  end
+
   protected
 
   def parse
@@ -227,21 +250,6 @@ class Media
     end
 
     cleanup_html_entities(self)
-  end
-
-  def fallback
-    minimal_data = Media.minimal_data(self)
-
-    self.data.merge!(minimal_data) do |_key, current_val, default_val|
-      current_val.presence || default_val
-    end
-  end
-
-  def parser_required_keys
-    {
-      raw: {},
-      archives: {}
-    }.with_indifferent_access
   end
 
   ##
