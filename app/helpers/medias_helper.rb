@@ -80,7 +80,6 @@ module MediasHelper
 
   def get_error_data(error_data, media, url, id = nil)
     data = media.nil? ? Media.minimal_data(OpenStruct.new(url: url)) : media.data
-    data['title'] = url if data['title'].blank?
     code = error_data[:code]
     error_data[:code] = Lapis::ErrorCodes::const_get(code)
     data.merge(error: error_data)
