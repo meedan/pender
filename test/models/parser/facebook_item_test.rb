@@ -454,7 +454,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_match "<div class=\"fb-post\" data-href=\"#{url}\"></div>", data['html']
   end
 
-  test "should return html and empty description when FB url is private" do
+  test "should return html and description with the original url when FB url is private" do
     url = 'https://www.facebook.com/caiosba/posts/1913749825339929'
 
     WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
@@ -471,7 +471,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     media = Media.new(url: url)
     data = media.process_and_return_json
 
-    assert data[:description].empty?
+    assert_equal url, data[:description]
     assert_match "<div class=\"fb-post\" data-href=\"https://www.facebook.com/caiosba/posts/1913749825339929\">", data['html']
   end
 
