@@ -60,36 +60,12 @@ class Media
 
   LANG = 'en-US;q=0.6,en;q=0.4'
 
-  DATA_STRUCTURE = {
-    # required – value should always be present
-    url: "",
-    provider: "",
-    type: "",
-    title: "",
-    description: "",
-    favicon: "",
-    parsed_at: "",
-    # non-required – values can be blank
-    published_at: "",
-    username: "",
-    picture: "",
-    author_url: "",
-    author_picture: "",
-    author_name: "",
-    screenshot: "",
-    external_id: "",
-    html: "",
-    # required keys – some methods expect them to be present
-    raw: {},
-    archives: {},
-  }.with_indifferent_access.freeze
-
   def initialize(attributes = {})
     key = attributes.delete(:key)
     ApiKey.current = key if key
     attributes.each { |name, value| send("#{name}=", value) }
     self.original_url = self.url.strip
-    self.data = DATA_STRUCTURE.deep_dup
+    self.data = MediaData.empty_structure
     self.follow_redirections
     self.url = RequestHelper.normalize_url(self.url) unless self.get_canonical_url
     self.try_https
@@ -193,28 +169,8 @@ class Media
     end
   end
 
-  # I don't think we should need this method
-  # And I think required_fields should be an instance method
-  # But it is used in get_error_data, and I have not found a better way to do it right now
-  def self.minimal_data(instance)
-    data = DATA_STRUCTURE.deep_dup
-    data.merge(required_fields(instance)).with_indifferent_access
-  end
-
-  def self.required_fields(instance)
-    {
-      url: instance.url,
-      provider: 'page',
-      type: 'item',
-      title: instance.url,
-      description: instance.url,
-      parsed_at: Time.now.to_s,
-      favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}"
-    }.with_indifferent_access
-  end
-
   def set_fallbacks(data)
-    data.merge!(Media.required_fields(self)) do |_key, current_val, default_val|
+    data.merge!(MediaData.required_fields(self.url)) do |_key, current_val, default_val|
       current_val.presence || default_val
     end
   end
