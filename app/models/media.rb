@@ -78,21 +78,21 @@ class Media
   end
 
   def process_and_return_json(options = {})
-    id = Media.cache_key(self.url)
+    key = Media.cache_key(self.url)
     cache = Pender::Store.current
-    if options.delete(:force) || cache.read(id, :json).nil?
+    if options.delete(:force) || cache.read(key, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
       self.set_fallbacks(clean_json(data))
 
       if data[:error].blank?
-        cache.write(id, :json, data)
+        cache.write(key, :json, data)
       end
       self.upload_images
     end
 
-    archive_if_conditions_are_met(options, id, cache)
+    archive_if_conditions_are_met(options, key, cache)
     parser_requests_metrics
-    cache.read(id, :json) || self.set_fallbacks(data)
+    cache.read(key, :json) || self.set_fallbacks(data)
   end
 
   PARSERS = [
