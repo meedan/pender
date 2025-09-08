@@ -39,12 +39,13 @@ Rails.application.configure do
 
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
-  
+
   config.allow_concurrency = true
 
   config.cache_store = :file_store, "/tmp/cache#{ENV['TEST_ENV_NUMBER']}"
 
-  config.lograge.enabled = true
+  # Pender swallows a lot of errors, enable logging as needed
+  config.lograge.enabled = false
 
   config.logger = ActiveSupport::Logger.new(STDOUT)
   config.lograge.logger = ActiveSupport::Logger.new(STDOUT)
@@ -55,7 +56,8 @@ Rails.application.configure do
     options
   end
   config.lograge.formatter = Lograge::Formatters::Json.new
-  config.log_level = :warn
+  # Pender swallows a lot of errors, update to :warn or :debug as needed
+  config.log_level = :error
   config.paths['log'] = "/var/log/#{ENV['DEPLOY_ENV']}.log"
   config.paths['tmp'] = "/tmp"
   config.paths['db'] = "/opt/db"
