@@ -179,33 +179,43 @@ class Media
 
   def parse
     get_jsonld_data(self) unless self.doc.nil?
-    parsed = false
 
-    PARSERS.each do |parser|
-      if parseable = parser.match?(self.url)
-        self.parser = parseable
-        self.provider, self.type = self.parser.type.split('_')
-        parsed_data = self.parser.parse_data(
-          self.doc,
-          self.original_url,
-          self.data.dig('raw', 'json+ld')
-          )
-        self.data.deep_merge!(
-          {
-            provider: self.provider,
-            type: self.type,
-            url: self.parser.url
-          }.merge(parsed_data)
-        )
-        self.url = self.parser.url
-        self.get_oembed_data
-        parsed = true
-        Rails.logger.info level: 'INFO', message: '[Parser] Parsing new URL', url: self.url, parser: self.parser.to_s, provider: self.provider, type: self.type
-      end
-      break if parsed
+    # Parser.match? returns an array with nil for each parser it did not match, and the new instance for the one it did
+    # So we have to look for it. I think it should only return the new instance (and then maybe we should rename it)
+    self.parser = PARSERS.map { |parser| parser.match?(self.url) }.find(&:present?)
+
+    if self.parser
+      # required_data is not a good name – here we are setting values that are required, are not set inside the parser, but are available at this point
+      # I feel like provider and parser should be set in the parser?
+      required_data  = self.required_data
+      parser_parsed_data = self.parser_parsed_data
+      self.data.deep_merge!(
+        required_data.merge(parser_parsed_data)
+      )
+
+      self.get_oembed_data
+
+      Rails.logger.info level: 'INFO', message: '[Parser] Parsing new URL', url: self.url, parser: self.parser.to_s, provider: self.provider, type: self.type
     end
 
     cleanup_html_entities(self)
+  end
+
+  def parser_parsed_data
+    self.parser.parse_data(
+      self.doc,
+      self.original_url,
+      self.data.dig('raw', 'json+ld')
+    )
+  end
+
+  def required_data
+    self.provider, self.type = self.parser.type.split('_')
+    {
+      provider: self.provider,
+      type: self.type,
+      url: self.parser.url
+    }
   end
 
   ##
