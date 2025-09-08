@@ -80,7 +80,7 @@ class Media
   def process_and_return_json(options = {})
     key = Media.cache_key(self.url)
     cache = Pender::Store.current
-    if options.delete(:force) || cache.read(key, :json).nil?
+    if options[:force].present? || cache.read(key, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
       self.set_fallbacks(clean_json(data))
 
@@ -345,7 +345,7 @@ class Media
   end
 
   def archive_if_conditions_are_met(options, id, cache)
-    if options.delete(:force) ||
+    if options[:force].present? ||
       cache.read(id, :json).nil? ||
       cache.read(id, :json).dig('archives').blank? ||
       # if the user adds a new  or changes the archiver, and the cache exists only for the old archiver it refreshes the cache
