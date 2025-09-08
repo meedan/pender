@@ -92,7 +92,7 @@ class Media
 
     archive_if_conditions_are_met(options, key, cache)
     parser_requests_metrics
-    cache.read(key, :json) || self.set_fallbacks(data)
+    cache.read(key, :json) || data
   end
 
   PARSERS = [

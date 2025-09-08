@@ -82,7 +82,7 @@ module MediasHelper
     data = media.nil? ? MediaData.minimal_data(OpenStruct.new(url: url)) : media.data
     code = error_data[:code]
     error_data[:code] = Lapis::ErrorCodes::const_get(code)
-    data.merge(error: error_data)
+    data.merge!(error: error_data)
   end
 
   def get_timeout_data(media, url, id)
