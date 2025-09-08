@@ -446,7 +446,7 @@ class MediasControllerTest < ActionController::TestCase
     webhook_info = { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     url = 'https://meedan.com/post/annual-report-2022'
     parse_error = { error: { "message"=>"RuntimeError: RuntimeError", "code"=>5}}
-    required_fields = Media.required_fields(OpenStruct.new(url: url))
+    required_fields = MediaData.required_fields(url)
     Media.stubs(:required_fields).returns(required_fields)
     Media.stubs(:notify_webhook)
     Media.stubs(:notify_webhook).with('media_parsed', url, parse_error.merge(required_fields).with_indifferent_access, webhook_info)
