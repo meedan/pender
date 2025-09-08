@@ -29,8 +29,8 @@ class MediaData
     EMPTY_DATA_STRUCTURE.deep_dup
   end
 
-  def self.minimal_data(media)
-    MediaData.empty_structure.merge!(MediaData.required_fields(media.url))
+  def self.minimal_data(url)
+    MediaData.empty_structure.merge!(MediaData.required_fields(url))
   end
 
   def self.required_fields(url)
