@@ -185,9 +185,9 @@ class Media
     self.parser = PARSERS.map { |parser| parser.match?(self.url) }.find(&:present?)
 
     if self.parser
+      self.data.deep_merge!(self.parser_parsed_data)
       self.provider, self.type = self.parser.type.split('_')
       self.set_required_parser_data
-      self.data.deep_merge!(self.parser_parsed_data)
       self.get_oembed_data
       Rails.logger.info level: 'INFO', message: '[Parser] Parsing new URL', url: self.url, parser: self.parser.to_s, provider: self.provider, type: self.type
     end
@@ -196,7 +196,7 @@ class Media
   end
 
   def set_required_parser_data
-    %w(type provider url).each { |key| self.data[key] = self.send(key.to_sym) }
+    %w(type provider url).each { |key| self.data[key] = self.data[key].presence || self.send(key.to_sym) }
   end
 
   def parser_parsed_data
