@@ -82,7 +82,7 @@ class Media
     cache = Pender::Store.current
     if options[:force].present? || cache.read(key, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
-      self.set_fallbacks(clean_json(data))
+      self.set_fallbacks(clean_data(data))
 
       if data[:error].blank?
         cache.write(key, :json, data)
