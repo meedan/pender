@@ -89,7 +89,7 @@ module MediasHelper
     get_error_data({ message: 'Timeout', code: 'TIMEOUT' }, media, url, id)
   end
 
-  def clean_json(data)
+  def clean_data(data)
     data.each do |field, value|
       data[field] = cleanup_text(value, field)
     end
