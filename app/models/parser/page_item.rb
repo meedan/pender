@@ -49,6 +49,7 @@ module Parser
 
         cookie_metatag = get_metadata_from_tags({ cookie: 'pbContext' })
         @url = original_url if !cookie_metatag.empty? && !cookie_metatag[:cookie]&.match(/Cookie Absent/).nil?
+        set_data_field('url', @url)
       end
 
       urls_to_check = [url, parsed_data['author_url'], parsed_data['author_picture'], parsed_data['picture']].reject(&:blank?)
