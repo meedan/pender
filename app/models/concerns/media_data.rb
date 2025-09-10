@@ -44,4 +44,16 @@ class MediaData
       favicon: "https://www.google.com/s2/favicons?domain_url=#{url.gsub(/^https?:\/\//, ''.freeze)}"
     }.with_indifferent_access
   end
+
+  def self.minimal_parser_data(type, url)
+    provider, type = type.split('_')
+    {
+      # required – value should always be present
+      provider: provider,
+      type: type,
+      url: url,
+      # required keys – some methods expect them to be present
+      raw: {}
+    }.with_indifferent_access
+  end
 end
