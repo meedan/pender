@@ -65,7 +65,7 @@ class Media
     ApiKey.current = key if key
     attributes.each { |name, value| send("#{name}=", value) }
     self.original_url = self.url.strip
-    self.data = {}.with_indifferent_access
+    self.data = MediaData.empty_structure
     self.follow_redirections
     self.url = RequestHelper.normalize_url(self.url) unless self.get_canonical_url
     self.try_https
@@ -78,20 +78,21 @@ class Media
   end
 
   def process_and_return_json(options = {})
-    id = Media.cache_key(self.url)
+    key = Media.cache_key(self.url)
     cache = Pender::Store.current
-    if options.delete(:force) || cache.read(id, :json).nil?
+    if options[:force].present? || cache.read(key, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
-      self.data['title'] = self.url if self.data['title'].blank?
-      data = self.data.merge(Media.required_fields(self)).with_indifferent_access
+      self.set_fallbacks(clean_data(data))
+
       if data[:error].blank?
-        cache.write(id, :json, clean_json(data))
+        cache.write(key, :json, data)
       end
       self.upload_images
     end
-    archive_if_conditions_are_met(options, id, cache)
+
+    archive_if_conditions_are_met(options, key, cache)
     parser_requests_metrics
-    cache.read(id, :json) || clean_json(data)
+    cache.read(key, :json) || data
   end
 
   PARSERS = [
@@ -118,19 +119,6 @@ class Media
     MediaPermaCcArchiver,
     MediaApifyItem
   ].each { |concern| include concern }
-
-  def self.minimal_data(instance)
-    data = {}
-    %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field.to_sym] = ''.freeze }
-    data[:raw] = data[:archives] = {}
-    data.merge(Media.required_fields(instance)).with_indifferent_access
-  end
-
-  def self.required_fields(instance = nil)
-    provider = instance.respond_to?(:provider) ? instance.provider : 'page'
-    type = instance.respond_to?(:type) ? instance.type : 'item'
-    { url: instance.url, provider: provider || 'page', type: type || 'item', parsed_at: Time.now.to_s, favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}" }
-  end
 
   def self.cache_key(url)
     Digest::MD5.hexdigest(RequestHelper.normalize_url(url))
@@ -181,27 +169,37 @@ class Media
     end
   end
 
+  def set_fallbacks(data)
+    data.merge!(MediaData.required_fields(self.url)) do |_key, current_val, default_val|
+      current_val.presence || default_val
+    end
+  end
+
   protected
 
   def parse
-    self.data.merge!(Media.minimal_data(self))
     get_jsonld_data(self) unless self.doc.nil?
-    parsed = false
 
-    PARSERS.each do |parser|
-      if parseable = parser.match?(self.url)
-        self.parser = parseable
-        self.provider, self.type = self.parser.type.split('_')
-        self.data.deep_merge!(self.parser.parse_data(self.doc, self.original_url, self.data.dig('raw', 'json+ld')))
-        self.url = self.parser.url
-        self.get_oembed_data
-        parsed = true
-        Rails.logger.info level: 'INFO', message: '[Parser] Parsing new URL', url: self.url, parser: self.parser.to_s, provider: self.provider, type: self.type
-      end
-      break if parsed
+    # Parser.match? returns an array with nil for each parser it did not match, and the new instance for the one it did
+    # So we have to look for it. I think it should only return the new instance (and then maybe we should rename it)
+    self.parser = PARSERS.map { |parser| parser.match?(self.url) }.find(&:present?)
+
+    if self.parser
+      self.provider, self.type = self.parser.type.split('_')
+      self.data.deep_merge!(self.parser_parsed_data)
+      self.get_oembed_data
+      Rails.logger.info level: 'INFO', message: '[Parser] Parsing new URL', url: self.url, parser: self.parser.to_s, provider: self.provider, type: self.type
     end
 
     cleanup_html_entities(self)
+  end
+
+  def parser_parsed_data
+    self.parser.parse_data(
+      self.doc,
+      self.original_url,
+      self.data.dig('raw', 'json+ld')
+    )
   end
 
   ##
@@ -341,7 +339,7 @@ class Media
   end
 
   def archive_if_conditions_are_met(options, id, cache)
-    if options.delete(:force) ||
+    if options[:force].present? ||
       cache.read(id, :json).nil? ||
       cache.read(id, :json).dig('archives').blank? ||
       # if the user adds a new  or changes the archiver, and the cache exists only for the old archiver it refreshes the cache

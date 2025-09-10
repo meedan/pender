@@ -669,7 +669,6 @@ class ArchiverTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: '<html>A Page</html>')
 
     m = Media.new url: url
-    m.data = Media.minimal_data(m)
 
     m.archive('archive_org')
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_HOST_SKIPPED'), m.data.dig('archives', 'archive_org', 'error', 'code')
