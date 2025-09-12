@@ -1,13 +1,3 @@
-GIT
-  remote: https://github.com/postrank-labs/postrank-uri.git
-  revision: 485ac465f3e989b4a6e52cdd5bf35291d78bd815
-  ref: 485ac46
-  specs:
-    postrank-uri (1.0.24)
-      addressable (>= 2.4.0)
-      nokogiri (>= 1.8.0)
-      public_suffix (>= 4.0.0, < 5)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -341,6 +331,10 @@ GEM
     parallel_tests (4.7.2)
       parallel
     pg (1.5.9)
+    postrank-uri (1.1)
+      addressable (>= 2.4.0)
+      nokogiri (>= 1.8.0)
+      public_suffix (>= 4.0.0, < 5)
     prometheus-client (4.2.3)
       base64
     psych (3.3.4)
@@ -563,7 +557,7 @@ DEPENDENCIES
   opentelemetry-sdk
   parallel_tests
   pg (~> 1.4)
-  postrank-uri!
+  postrank-uri (= 1.1)
   prometheus-client
   psych (< 4)
   puma (= 5.6.9)
