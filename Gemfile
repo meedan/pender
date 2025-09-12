@@ -8,7 +8,7 @@ group :development, :test do
   gem 'rswag-specs'
   gem 'get_process_mem'
   gem 'derailed'
-  gem "spring"
+  gem 'spring', '4.3.0'
 end
 gem 'memory_profiler'
 group :development do
