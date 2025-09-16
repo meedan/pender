@@ -37,8 +37,7 @@ module Parser
     def initialize(url)
       @url = url
       @unavailable_page = ignore_url?(url)
-      @parsed_data = {}.with_indifferent_access
-      @parsed_data[:raw] = {}
+      @parsed_data = MediaData.minimal_parser_data(self.type, url)
     end
 
     # This is the entry function for the class, which performs

@@ -18,7 +18,7 @@ class KwaiIntegrationTest < ActiveSupport::TestCase
     data = m.process_and_return_json
 
     assert_equal 'https://kwai-video.com/p/aaaaaaaa', data['title']
-    assert data['description'].blank?
+    assert_equal 'https://kwai-video.com/p/aaaaaaaa', data['description']
     assert data['username'].blank?
     assert_equal 'kwai', data['provider']
     assert_equal 'item', data['type']

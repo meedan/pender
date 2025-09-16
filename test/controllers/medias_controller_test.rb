@@ -281,7 +281,7 @@ class MediasControllerTest < ActionController::TestCase
       authenticate_with_token
       get :index, params: { url: url, refresh: '1', format: :json }
       assert_response 200
-      Media.minimal_data(OpenStruct.new(url: url)).except(:parsed_at).each_pair do |key, value|
+      MediaData.minimal_data(url).except(:parsed_at).each_pair do |key, value|
         assert_equal value, JSON.parse(@response.body)['data'][key]
       end
       error = JSON.parse(@response.body)['data']['error']
@@ -446,7 +446,7 @@ class MediasControllerTest < ActionController::TestCase
     webhook_info = { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     url = 'https://meedan.com/post/annual-report-2022'
     parse_error = { error: { "message"=>"RuntimeError: RuntimeError", "code"=>5}}
-    required_fields = Media.required_fields(OpenStruct.new(url: url))
+    required_fields = MediaData.required_fields(url)
     Media.stubs(:required_fields).returns(required_fields)
     Media.stubs(:notify_webhook)
     Media.stubs(:notify_webhook).with('media_parsed', url, parse_error.merge(required_fields).with_indifferent_access, webhook_info)
@@ -475,7 +475,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal 1, MediaParserWorker.jobs.size
 
     parse_error = { error: { "message"=>"OpenSSL::SSL::SSLError", "code"=> Lapis::ErrorCodes::const_get('UNKNOWN')}}
-    minimal_data = Media.minimal_data(OpenStruct.new(url: url)).merge(title: url)
+    minimal_data = MediaData.minimal_data(url)
     Media.stubs(:minimal_data).returns(minimal_data)
     Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(parse_error), webhook_info)
     Media.any_instance.stubs(:get_canonical_url).raises(OpenSSL::SSL::SSLError)

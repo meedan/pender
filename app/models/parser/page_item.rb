@@ -47,8 +47,10 @@ module Parser
         set_data_field('author_name', parsed_data['author_name'], parsed_data['username'], parsed_data['title'])
         set_data_field('author_picture', parsed_data['picture'])
 
+        # set original url if redirected page requires cookies
         cookie_metatag = get_metadata_from_tags({ cookie: 'pbContext' })
         @url = original_url if !cookie_metatag.empty? && !cookie_metatag[:cookie]&.match(/Cookie Absent/).nil?
+        @parsed_data.merge!({url: @url})
       end
 
       urls_to_check = [url, parsed_data['author_url'], parsed_data['author_picture'], parsed_data['picture']].reject(&:blank?)

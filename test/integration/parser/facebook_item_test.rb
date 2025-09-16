@@ -36,11 +36,11 @@ class FacebookItemIntegrationTest < ActiveSupport::TestCase
     assert_equal 'item', data['type']
     assert_equal '111111111111111_1111111111111111', data['external_id']
     assert_match(/facebook.com\/111111111111111\/posts\/1111111111111111/, data['title'])
+    assert_match(/facebook.com\/111111111111111\/posts\/1111111111111111/, data['description'])
     assert_equal '', data['username']
     assert_equal '', data['author_name']
     assert_equal '', data['author_picture']
     assert_equal '', data['author_url']
-    assert_equal '', data['description']
     assert_equal '', data['picture']
     assert_equal '', data['published_at']
   end

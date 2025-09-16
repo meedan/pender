@@ -79,18 +79,17 @@ module MediasHelper
   end
 
   def get_error_data(error_data, media, url, id = nil)
-    data = media.nil? ? Media.minimal_data(OpenStruct.new(url: url)) : media.data
-    data['title'] = url if data['title'].blank?
+    data = media.nil? ? MediaData.minimal_data(url) : media.data
     code = error_data[:code]
     error_data[:code] = Lapis::ErrorCodes::const_get(code)
-    data.merge(error: error_data)
+    data.merge!(error: error_data)
   end
 
   def get_timeout_data(media, url, id)
     get_error_data({ message: 'Timeout', code: 'TIMEOUT' }, media, url, id)
   end
 
-  def clean_json(data)
+  def clean_data(data)
     data.each do |field, value|
       data[field] = cleanup_text(value, field)
     end
