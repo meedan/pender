@@ -402,7 +402,7 @@ GEM
       actionpack (>= 5.2)
       railties (>= 5.2)
     retryable (3.0.5)
-    rexml (3.4.0)
+    rexml (3.4.2)
     rspec-core (3.13.2)
       rspec-support (~> 3.13.0)
     rspec-expectations (3.13.3)
