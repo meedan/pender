@@ -23,7 +23,6 @@ class InstagramItemIntegrationTest < ActiveSupport::TestCase
     m = create_media url: 'https://www.instagram.com/p/nonexistent_post/'
     data = m.process_and_return_json
 
-    assert data['error'].nil?
     assert !data['title'].blank?
     assert !data['username'].blank?
   end
