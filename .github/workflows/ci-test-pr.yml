@@ -87,8 +87,8 @@ jobs:
         docker compose -f docker-test.yml exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -e DEPLOY_ENV=ci -T pender bundle exec rake "parallel:test[3]"
         docker compose -f docker-test.yml exec -e TEST_RETRY_COUNT=$TEST_RETRY_COUNT -e DEPLOY_ENV=ci -T pender bundle exec rake parallel:spec
 
-    - name: Upload coverage to CodeClimate
-      id: upload-coverage
+    - name: Test Coverage
+      id: test-coverage
       env:
         GIT_SHA: ${{ github.sha }}
         GIT_COMMITED_AT: ${{ github.event.head_commit.timestamp }}
@@ -99,16 +99,6 @@ jobs:
         docker compose -f docker-test.yml exec -T pender ls -l coverage/
         docker cp pender-pender-1:/app/pender/tmp/performance.csv performance.csv
         docker cp pender-pender-1:/app/pender/coverage/.resultset.json test/.resultset.json
-
-        # pulled from test/test-coverage
-        cd test
-        curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 -o cc-test-reporter
-        chmod +x cc-test-reporter
-        sed -i 's/\/app\/pender/\/home\/runner\/work\/pender\/pender/g' .resultset.json # convert container-paths to local-paths
-        GIT_COMMIT_SHA=$(git rev-parse HEAD) GIT_COMMITTED_AT=$(git log -1 --format=%ct) ./cc-test-reporter format-coverage .resultset.json -t simplecov -o codeclimate.json
-        sed -i 's/\/home\/runner\/work\/pender\///g' codeclimate.json
-        cp codeclimate.json ../coverage/
-        ./cc-test-reporter upload-coverage -r $CC_TEST_REPORTER_ID -i codeclimate.json
 
     - name: Reset cache
       id: reset-cache
