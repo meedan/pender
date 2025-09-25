@@ -20,7 +20,6 @@ group :test do
   gem "mocha", '~> 2.7', require: false
   gem 'simplecov', '0.13.0', require: false
   gem 'simplecov-console', require: false
-  gem 'codeclimate-test-reporter', '1.0.8', group: :test, require: nil
   gem 'rails-controller-testing'
   gem 'minitest', '5.25.5'
   gem 'minitest-retry'
