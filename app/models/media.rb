@@ -149,7 +149,20 @@ class Media
         # exception if request failed and still return a successful response if present.
         response.value || response
       rescue Net::HTTPExceptions => e
-        Rails.logger.warn level: 'WARN', message: '[Webhook Notification] HTTPException while trying to notify webhook', url: url, type: type, error_class: e.class, error_message: e.message, webhook_url: settings['webhook_url']
+        Rails.logger.warn(
+          level: 'WARN',
+          message: '[Webhook Notification] HTTPException while trying to notify webhook',
+          url: url,
+          type: type,
+          error_class: e.class,
+          error_message: e.message,
+          webhook_url: settings['webhook_url'],
+          request_headers: headers,
+          request_body: payload.truncate(500),
+          response_code: response&.code,
+          response_message: response&.message,
+          response_body: response&.body&.truncate(500),
+        )
         raise Pender::Exception::RetryLater, "(#{response.code}) #{response.message}"
       rescue StandardError => e
         PenderSentry.notify(
