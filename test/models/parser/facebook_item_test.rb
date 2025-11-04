@@ -237,7 +237,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     sentry_call_count = 0
     arguments_checker = Proc.new do |e|
       sentry_call_count += 1
-      assert_includes [MediaApifyItem::ApifyError, NoMethodError], e.class
+      assert_includes [Pender::Exception::ApifyError, NoMethodError], e.class
     end
     PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::FacebookItem.new('https://www.facebook.com/555555/posts/123456789').parse_data(empty_doc, throwaway_url)

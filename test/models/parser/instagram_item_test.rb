@@ -75,7 +75,7 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     sentry_call_count = 0
     arguments_checker = Proc.new do |e|
       sentry_call_count += 1
-      assert_equal MediaApifyItem::ApifyError, e.class
+      assert_equal Pender::Exception::ApifyError, e.class
     end
     PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
@@ -91,7 +91,7 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     sentry_call_count = 0
     arguments_checker = Proc.new do |e|
       sentry_call_count += 1
-      assert_equal MediaApifyItem::ApifyError, e.class
+      assert_equal Pender::Exception::ApifyError, e.class
     end
     PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(doc)
