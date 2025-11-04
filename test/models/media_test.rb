@@ -181,11 +181,14 @@ class MediaTest < ActiveSupport::TestCase
   test "should not redirect to HTTPS if not available" do
     url = 'http://www.angra.net/website'
     https_url = 'https://www.angra.net/website'
+    WebMock.enable!
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html></html>')
     response = 'mock'; response.stubs(:code).returns(200)
     RequestHelper.stubs(:request_url).with(url, 'Get').returns(response)
     RequestHelper.stubs(:request_url).with(https_url, 'Get').raises(OpenSSL::SSL::SSLError)
     m = create_media url: url
     assert_equal 'http://www.angra.net/website', m.url
+    WebMock.disable!
   end
 
   test "should return empty html on oembed when frame is not allowed" do
