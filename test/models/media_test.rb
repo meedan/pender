@@ -181,11 +181,14 @@ class MediaTest < ActiveSupport::TestCase
   test "should not redirect to HTTPS if not available" do
     url = 'http://www.angra.net/website'
     https_url = 'https://www.angra.net/website'
+    WebMock.enable!
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html></html>')
     response = 'mock'; response.stubs(:code).returns(200)
     RequestHelper.stubs(:request_url).with(url, 'Get').returns(response)
     RequestHelper.stubs(:request_url).with(https_url, 'Get').raises(OpenSSL::SSL::SSLError)
     m = create_media url: url
     assert_equal 'http://www.angra.net/website', m.url
+    WebMock.disable!
   end
 
   test "should return empty html on oembed when frame is not allowed" do
@@ -464,6 +467,8 @@ class MediaTest < ActiveSupport::TestCase
   test "should not raise encoding error when saving data" do
     url = 'https://bastitimes.page/article/raajy-sarakaaren-araajak-tatvon-ke-viruddh-karen-kathoratam-kaarravaee-sonoo-jha/5CvP5F.html'
     data_with_encoding_error = {"published_at"=>"", "description"=>"कर\xE0\xA5", "raw"=>{"metatags"=>[{"content"=>"कर\xE0\xA5"}]}, "schema"=>{"NewsArticle"=>[{"author"=>[{"name"=>"कर\xE0\xA5"}], "headline"=>"कर\xE0\xA5", "publisher"=>{"@type"=>"Organization", "name"=>"कर\xE0\xA5"}}]}, "oembed"=>{"type"=>"rich", "version"=>"1.0", "title"=>"कर\xE0\xA5"}}
+    WebMock.enable!
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html></html>')
 
     m = create_media url: url
     Media.any_instance.stubs(:data).returns(data_with_encoding_error)
@@ -482,6 +487,7 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal "कर�", data['schema']['NewsArticle'].first['author'].first['name']
       assert_equal "कर�", data['schema']['NewsArticle'].first['publisher']['name']
     end
+    WebMock.disable!
   end
 
   test "should not change media url if url parsed on metatags is not valid" do
