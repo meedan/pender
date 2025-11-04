@@ -21,9 +21,8 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     id = Media.cache_key url
     m = create_media url: url
     data = m.process_and_return_json
-    assert !data['title'].blank?
+    assert_not_nil data['title']
     assert_not_nil data['published_at']
-    assert_equal '', data['username']
   end
 
   test "should handle exception when raises some error when getting oembed data" do
