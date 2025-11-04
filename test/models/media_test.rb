@@ -464,6 +464,8 @@ class MediaTest < ActiveSupport::TestCase
   test "should not raise encoding error when saving data" do
     url = 'https://bastitimes.page/article/raajy-sarakaaren-araajak-tatvon-ke-viruddh-karen-kathoratam-kaarravaee-sonoo-jha/5CvP5F.html'
     data_with_encoding_error = {"published_at"=>"", "description"=>"कर\xE0\xA5", "raw"=>{"metatags"=>[{"content"=>"कर\xE0\xA5"}]}, "schema"=>{"NewsArticle"=>[{"author"=>[{"name"=>"कर\xE0\xA5"}], "headline"=>"कर\xE0\xA5", "publisher"=>{"@type"=>"Organization", "name"=>"कर\xE0\xA5"}}]}, "oembed"=>{"type"=>"rich", "version"=>"1.0", "title"=>"कर\xE0\xA5"}}
+    WebMock.enable!
+    WebMock.stub_request(:get, url).to_return(status: 200, body: '<html></html>')
 
     m = create_media url: url
     Media.any_instance.stubs(:data).returns(data_with_encoding_error)
@@ -482,6 +484,7 @@ class MediaTest < ActiveSupport::TestCase
       assert_equal "कर�", data['schema']['NewsArticle'].first['author'].first['name']
       assert_equal "कर�", data['schema']['NewsArticle'].first['publisher']['name']
     end
+    WebMock.disable!
   end
 
   test "should not change media url if url parsed on metatags is not valid" do
