@@ -58,6 +58,7 @@ module Parser
 
     # Helper method to retrieve meta tag content
     def get_metadata_from_tag(doc, tag_name)
+      return if doc.nil?
       tag = doc.at("meta[property='#{tag_name}']") || doc.at("meta[name='#{tag_name}']")
       tag['content'] if tag
     end
