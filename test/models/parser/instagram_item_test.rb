@@ -150,4 +150,20 @@ class InstagramItemUnitTest < ActiveSupport::TestCase
     assert_equal 'instagram', data['provider']
     assert_equal 'item', data['type']
   end
+
+  test "should handle nil doc in get_metadata_from_tag" do
+    instagram_item = Parser::InstagramItem.new('https://www.instagram.com/p/fake-post')
+
+    assert_nothing_raised do
+      instagram_item.send(:get_metadata_from_tag, nil, 'og:title')
+    end
+  end
+
+  test "should handle nil doc in parse_data" do
+    WebMock.stub_request(:post, INSTAGRAM_ITEM_API_REGEX).to_return(status: 401)
+
+    assert_nothing_raised do
+      Parser::InstagramItem.new('https://www.instagram.com/p/fake-post').parse_data(nil)
+    end
+  end
 end
