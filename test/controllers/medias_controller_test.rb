@@ -8,21 +8,21 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should be able to fetch HTML without token" do
-    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', format: :html }
+    get :index, params: { url: 'https://meedan.org/post/annual-report-2022', format: :html }
     assert_response :success
   end
 
   test "should ask to refresh cache" do
     authenticate_with_token
-    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', refresh: '1', format: :json }
+    get :index, params: { url: 'https://meedan.org/post/annual-report-2022', refresh: '1', format: :json }
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
-    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', format: :html }
-    name = Media.cache_key('https://meedan.com/post/annual-report-2022')
+    get :index, params: { url: 'https://meedan.org/post/annual-report-2022', format: :html }
+    name = Media.cache_key('https://meedan.org/post/annual-report-2022')
     [:html, :json].each do |type|
       assert Pender::Store.current.read(name, type), "#{name}.#{type} is missing"
     end
     sleep 1
-    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', refresh: '1', format: :json }
+    get :index, params: { url: 'https://meedan.org/post/annual-report-2022', refresh: '1', format: :json }
     assert !Pender::Store.current.read(name, :html), "#{name}.html should not exist"
     second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     assert second_parsed_at > first_parsed_at
@@ -40,7 +40,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://meedan.com/post/annual-report-2022'
+    url = 'https://meedan.org/post/annual-report-2022'
     get :index, params: { url: url, refresh: '1', format: :html }
     id = Media.cache_key(url)
     first_parsed_at = Pender::Store.current.get(id, :html).last_modified
@@ -52,7 +52,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should not ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://meedan.com/post/annual-report-2022'
+    url = 'https://meedan.org/post/annual-report-2022'
     id = Media.cache_key(url)
     get :index, params: { url: url, refresh: '0', format: :html }
     first_parsed_at = Pender::Store.current.get(id, :html).last_modified
@@ -175,11 +175,11 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should clear cache for multiple URLs sent as array" do
     authenticate_with_token
-    url1 = 'https://meedan.com'
-    url2 = 'https://meedan.com/post/annual-report-2022'
+    url1 = 'https://meedan.org'
+    url2 = 'https://meedan.org/post/annual-report-2022'
 
-    normalized_url1 = 'https://meedan.com/'
-    normalized_url2 = 'https://meedan.com/post/annual-report-2022'
+    normalized_url1 = 'https://meedan.org/'
+    normalized_url2 = 'https://meedan.org/post/annual-report-2022'
 
     id1 = Media.cache_key(normalized_url1)
     id2 = Media.cache_key(normalized_url2)
@@ -301,7 +301,7 @@ class MediasControllerTest < ActionController::TestCase
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     authenticate_with_token(a)
-    url = 'https://meedan.com/post/annual-report-2022'
+    url = 'https://meedan.org/post/annual-report-2022'
     get :index, params: { url: url, format: :json }
     id = Media.cache_key(url)
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives].sort.to_h)
@@ -319,7 +319,7 @@ class MediasControllerTest < ActionController::TestCase
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     authenticate_with_token(a)
-    url = 'https://meedan.com/post/annual-report-2022'
+    url = 'https://meedan.org/post/annual-report-2022'
     get :index, params: { url: url, archivers: 'none', format: :json }
     id = Media.cache_key(url)
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
@@ -344,7 +344,7 @@ class MediasControllerTest < ActionController::TestCase
       WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
       WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
 
-      url = 'https://meedan.com/post/annual-report-2022'
+      url = 'https://meedan.org/post/annual-report-2022'
       archived = {"perma_cc"=>{"location"=>"http://perma.cc/perma-cc-guid-1"}, "archive_org"=>{"location"=>"https://web.archive.org/web/timestamp/#{url}"}}
 
       authenticate_with_token(a)
@@ -393,8 +393,8 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should parse multiple URLs sent as list" do
     authenticate_with_token
-    url1 = 'https://meedan.com/check'
-    url2 = 'https://meedan.com/about-us'
+    url1 = 'https://meedan.org/check'
+    url2 = 'https://meedan.org/about-us'
     id1 = Media.cache_key(url1)
     id2 = Media.cache_key(url2)
     assert_nil Pender::Store.current.read(id1, :json)
@@ -508,7 +508,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should rescue and unlock url when raises error" do
     authenticate_with_token
-    url = 'https://meedan.com/post/annual-report-2022'
+    url = 'https://meedan.org/post/annual-report-2022'
     assert !Semaphore.new(url).locked?
     [:js, :json, :html].each do |format|
       @controller.stubs("render_as_#{format}".to_sym).raises(RuntimeError.new('error'))
@@ -595,7 +595,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should cache json and html on file" do
     authenticate_with_token
-    url = 'https://meedan.com/post/annual-report-2022'
+    url = 'https://meedan.org/post/annual-report-2022'
     id = Media.cache_key(url)
     [:html, :json].each do |type|
       assert !Pender::Store.current.read(id, type), "#{id}.#{type} should not exist"

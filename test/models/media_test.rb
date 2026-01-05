@@ -8,28 +8,28 @@ class MediaTest < ActiveSupport::TestCase
 
   test "should normalize URL" do
     variations = %w(
-      https://meedan.com
-      meedan.com
-      https://meedan.com:443
-      https://meedan.com//
-      https://meedan.com/?
-      https://meedan.com/#foo
-      https://meedan.com/
-      https://meedan.com
-      https://meedan.com/foo/..
-      https://meedan.com/?#
+      https://meedan.org
+      meedan.org
+      https://meedan.org:443
+      https://meedan.org//
+      https://meedan.org/?
+      https://meedan.org/#foo
+      https://meedan.org/
+      https://meedan.org
+      https://meedan.org/foo/..
+      https://meedan.org/?#
     )
     variations.each do |url|
       media = Media.new(url: url)
-      assert_equal 'https://meedan.com/', media.url
+      assert_equal 'https://meedan.org/', media.url
     end
   end
 
   test "should not normalize URL" do
     urls = %w(
-      https://meedan.com/
-      https://example.com/
-      https://meedan.com/?foo=bar
+      https://meedan.org/
+      https://example.org/
+      https://meedan.org/?foo=bar
     )
     urls.each do |url|
       media = Media.new(url: url)
