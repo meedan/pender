@@ -10,7 +10,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     assert_not_nil data['description']
     assert_not_nil data['published_at']
     assert_equal '', data['username']
-    assert_equal 'https://meedan.com', data['author_url']
+    assert_equal 'https://meedan.org', data['author_url']
     assert_not_nil data['author_name']
     assert_not_nil data['picture']
     assert_nil data['error']
