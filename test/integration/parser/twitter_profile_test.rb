@@ -3,7 +3,7 @@ require 'test_helper'
 class TwitterProfileIntegrationTest < ActiveSupport::TestCase
   test "should parse shortened URL" do
     m = create_media url: 'http://bit.ly/23qFxCn'
-    data = m.as_json
+    data = m.process_and_return_json
     assert_match /caiosba/, data['url']
     assert_not_nil data['title']
     assert_match '@caiosba', data['username']
@@ -15,7 +15,7 @@ class TwitterProfileIntegrationTest < ActiveSupport::TestCase
 
   test "should return data even if a the twitter profile does not exist" do
     m = create_media url: 'https://twitter.com/dlihfbfyhugsrb'
-    data = m.as_json
+    data = m.process_and_return_json
     assert_match /dlihfbfyhugsrb/, data['url']
     assert_equal 'dlihfbfyhugsrb', data['title']
     assert_match '@dlihfbfyhugsrb', data['username']

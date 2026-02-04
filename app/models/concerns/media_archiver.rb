@@ -48,7 +48,7 @@ module MediaArchiver
   end
 
   def filter_archivers(archivers)
-    id = Media.get_id(self.url)
+    id = Media.cache_key(self.url)
     data = Pender::Store.current.read(id, :json)
     return archivers if data.nil? || data.dig(:archives).nil?
     archivers - data[:archives].keys
@@ -70,7 +70,7 @@ module MediaArchiver
     def notify_webhook_and_update_cache(archiver, url, data, key_id)
       settings = Media.api_key_settings(key_id)
 
-      id = Media.get_id(url)
+      id = Media.cache_key(url)
       archiver_data = Pender::Store.current.read(id, :json).to_h.dig('archives', archiver).to_h
       archiver_data.delete('error')
       Media.update_cache(url, { archives: { archiver => archiver_data.merge(data) } })

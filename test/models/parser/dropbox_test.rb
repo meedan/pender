@@ -3,7 +3,7 @@ require 'test_helper'
 class DropboxIntegrationTest < ActiveSupport::TestCase
   test "should parse dropbox URL" do
     m = create_media url: 'https://www.dropbox.com/s/fa5w5erdkrdu4uo/How%20to%20use%20the%20Public%20folder.rtf?dl=0'
-    data = m.as_json
+    data = m.process_and_return_json
 
     assert_equal 'item', data['type']
     assert_equal 'dropbox', data['provider']

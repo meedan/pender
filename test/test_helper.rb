@@ -1,5 +1,10 @@
 require 'simplecov'
 
+# Clean cache directory before tests start
+require 'fileutils'
+CACHE_PATH = "/tmp/cache#{ENV['TEST_ENV_NUMBER']}"
+FileUtils.rm_rf(CACHE_PATH)
+
 ENV['RAILS_ENV'] ||= 'test'
 require File.expand_path('../../config/environment', __FILE__)
 require 'rails/test_help'
@@ -30,6 +35,7 @@ class ActiveSupport::TestCase
     WebMock.disable_net_connect!(allow: [/minio/])
     Sidekiq::Testing.fake!
     ApiKey.current = PenderConfig.current = Pender::Store.current = nil
+    clear_bucket
   end
 
   def isolated_teardown
@@ -38,6 +44,7 @@ class ActiveSupport::TestCase
     WebMock.reset!
     WebMock.allow_net_connect!
     WebMock.disable!
+    clear_bucket
   end
 
   # This will run before any test

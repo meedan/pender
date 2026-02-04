@@ -3,10 +3,8 @@ require 'lograge'
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
-  # In the development environment your application's code is reloaded on
-  # every request. This slows down response time but is perfect for development
-  # since you don't have to restart the web server when you make code changes.
-  config.cache_classes = false
+  # Spring reloads application code, and therefore needs the application to have reloading enabled.
+  config.enable_reloading = true
 
   # Do not eager load code on boot.
   config.eager_load = false
@@ -43,11 +41,11 @@ Rails.application.configure do
 
   # Whitelist docker access
   config.web_console.whitelisted_ips = '172.0.0.0/8'
-  
+
   # Enable the logstasher logs for the current environment
-  # config.logger = LogStashLogger.new(type: :udp, host: 'logstash', port: 5228)  
+  # config.logger = LogStashLogger.new(type: :udp, host: 'logstash', port: 5228)
   # config.logstash.uri = 'udp://logstash:5228'
-  
+
   config.allow_concurrency = true
 
   config.lograge.enabled = true

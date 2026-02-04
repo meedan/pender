@@ -18,8 +18,8 @@
 # media data.
 # If the page has an oEmbed link, the oEmbed data is also retrieved and merged.
 #
-# If there's an error when parsing the url, the media is created with the
-# minimal data and the error message is merged to the data.
+# If there's an error when parsing the url, the parsed data is returned but not cached,
+# the error message is merged to the data.
 #
 # Parsing steps:
 #  * Initialize
@@ -28,20 +28,24 @@
 #    link tag to update the media url;
 #    3. Escape and normalize the media url;
 #    4. Try to convert the url to HTTPS;
-#  * Parse as json
-#    1. Set the minimal data for media
-#    2. Search the page meta tags and store them on media
-#    3. Search the page to find the oEmbed url and, if it exists, retrieve the
-#    oEmbed data
-#    4. Match the url with the patterns described on specific parsers
-#    5. Parse the page with the parser found on previous step
-#    6. Archives the page in background, for the archivers that apply to the current URL
-#  * Parse as oEmbed
-#    1. Get media the json data
-#    2. If the page has an oEmbed url, request it and get the response
-#    2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media json data
+#  * Process and return the JSON data
+#    1. Try to add/update/read the media data in the cache;
+#    2. Call the parse method if we need to add/update the cache;
+#       * Parse
+#         1. Try to get JSON-LD data and merge it to data if present;
+#         2. Match the url with the patterns described on specific parsers;
+#         3. Parse the page with the parser found on previous step;
+#         4. Merge the parser parsed data with the media instance data;
+#         5. Try to retrieve the oEmbed data;
+#           1. If the page has an oEmbed url, request it and get the response;
+#           2. If the page doesn't have an oEmbed url, generate the oEmbed info based on the media data;
+#         6. Clean data html entities and return it;
+#    3. Set fallback values and merge to data;
+#    4. Write data to cache if no error is present;
+#    5. Upload the images to S3;
+#    6. Archive the page to a service like archive.org if the conditions are met;
+#    7. Read and return the media data from cache, or the current object's data.
 
-require 'open_uri_redirections'
 require 'nokogiri'
 
 class Media
@@ -59,7 +63,7 @@ class Media
     ApiKey.current = key if key
     attributes.each { |name, value| send("#{name}=", value) }
     self.original_url = self.url.strip
-    self.data = {}.with_indifferent_access
+    self.data = MediaData.empty_structure
     self.follow_redirections
     self.url = RequestHelper.normalize_url(self.url) unless self.get_canonical_url
     self.try_https
@@ -71,21 +75,22 @@ class Media
     TYPES[type] = patterns
   end
 
-  def as_json(options = {})
-    id = Media.get_id(self.url)
+  def process_and_return_json(options = {})
+    key = Media.cache_key(self.url)
     cache = Pender::Store.current
-    if options.delete(:force) || cache.read(id, :json).nil?
+    if options[:force].present? || cache.read(key, :json).nil?
       handle_exceptions(self, StandardError) { self.parse }
-      self.data['title'] = self.url if self.data['title'].blank?
-      data = self.data.merge(Media.required_fields(self)).with_indifferent_access
+      self.set_fallbacks(clean_data(data))
+
       if data[:error].blank?
-        cache.write(id, :json, cleanup_data_encoding(data))
+        cache.write(key, :json, data)
       end
       self.upload_images
     end
-    archive_if_conditions_are_met(options, id, cache)
+
+    archive_if_conditions_are_met(options, key, cache)
     parser_requests_metrics
-    cache.read(id, :json) || cleanup_data_encoding(data)
+    cache.read(key, :json) || data
   end
 
   PARSERS = [
@@ -113,25 +118,12 @@ class Media
     MediaApifyItem
   ].each { |concern| include concern }
 
-  def self.minimal_data(instance)
-    data = {}
-    %w(published_at username title description picture author_url author_picture author_name screenshot external_id html).each { |field| data[field.to_sym] = ''.freeze }
-    data[:raw] = data[:archives] = {}
-    data.merge(Media.required_fields(instance)).with_indifferent_access
-  end
-
-  def self.required_fields(instance = nil)
-    provider = instance.respond_to?(:provider) ? instance.provider : 'page'
-    type = instance.respond_to?(:type) ? instance.type : 'item'
-    { url: instance.url, provider: provider || 'page', type: type || 'item', parsed_at: Time.now.to_s, favicon: "https://www.google.com/s2/favicons?domain_url=#{instance.url.gsub(/^https?:\/\//, ''.freeze)}" }
-  end
-
-  def self.get_id(url)
+  def self.cache_key(url)
     Digest::MD5.hexdigest(RequestHelper.normalize_url(url))
   end
 
   def self.update_cache(url, newdata)
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     data = Pender::Store.current.read(id, :json)
     unless data.blank?
       newdata.each { |key, value| data[key] = data[key].is_a?(Hash) ? data[key].merge(value) : value }
@@ -157,7 +149,20 @@ class Media
         # exception if request failed and still return a successful response if present.
         response.value || response
       rescue Net::HTTPExceptions => e
-        Rails.logger.warn level: 'WARN', message: '[Webhook Notification] HTTPException while trying to notify webhook', url: url, type: type, error_class: e.class, error_message: e.message, webhook_url: settings['webhook_url']
+        Rails.logger.warn(
+          level: 'WARN',
+          message: '[Webhook Notification] HTTPException while trying to notify webhook',
+          url: url,
+          type: type,
+          error_class: e.class,
+          error_message: e.message,
+          webhook_url: settings['webhook_url'],
+          request_headers: headers,
+          request_body: payload.truncate(500),
+          response_code: response&.code,
+          response_message: response&.message,
+          response_body: response&.body&.truncate(500),
+        )
         raise Pender::Exception::RetryLater, "(#{response.code}) #{response.message}"
       rescue StandardError => e
         PenderSentry.notify(
@@ -175,40 +180,65 @@ class Media
     end
   end
 
+  def set_fallbacks(data)
+    data.merge!(MediaData.required_fields(self.url)) do |_key, current_val, default_val|
+      current_val.presence || default_val
+    end
+  end
+
   protected
 
   def parse
-    self.data.merge!(Media.minimal_data(self))
     get_jsonld_data(self) unless self.doc.nil?
-    parsed = false
 
-    PARSERS.each do |parser|
-      if parseable = parser.match?(self.url)
-        self.parser = parseable
-        self.provider, self.type = self.parser.type.split('_')
-        self.data.deep_merge!(self.parser.parse_data(self.doc, self.original_url, self.data.dig('raw', 'json+ld')))
-        self.url = self.parser.url
-        self.get_oembed_data
-        parsed = true
-        Rails.logger.info level: 'INFO', message: '[Parser] Parsing new URL', url: self.url, parser: self.parser.to_s, provider: self.provider, type: self.type
-      end
-      break if parsed
+    # Parser.match? returns an array with nil for each parser it did not match, and the new instance for the one it did
+    # So we have to look for it. I think it should only return the new instance (and then maybe we should rename it)
+    self.parser = PARSERS.map { |parser| parser.match?(self.url) }.find(&:present?)
+
+    if self.parser
+      self.provider, self.type = self.parser.type.split('_')
+      self.data.deep_merge!(self.parser_parsed_data)
+      self.get_oembed_data
+      Rails.logger.info level: 'INFO', message: '[Parser] Parsing new URL', url: self.url, parser: self.parser.to_s, provider: self.provider, type: self.type
     end
 
     cleanup_html_entities(self)
+  end
+
+  def parser_parsed_data
+    self.parser.parse_data(
+      self.doc,
+      self.original_url,
+      self.data.dig('raw', 'json+ld')
+    )
   end
 
   ##
   # Parse the page and set it to media `doc`. If the `doc` has a tag (`og:url`, `twitter:url`, `rel='canonical`) with a different url, the media `url` is updated with the url found, the page is parsed and the media `doc` is updated
 
   def get_canonical_url
+    return nil if skip_get_canonical_url?
+
     self.doc = self.get_html(RequestHelper.html_options(self.url))
     tag = self.doc&.at_css("meta[property='og:url']") || self.doc&.at_css("meta[property='twitter:url']") || self.doc&.at_css("link[rel='canonical']")
-    
+
     canonical_url = tag&.attr('content') || tag&.attr('href')
     return get_parsed_url(canonical_url) if canonical_url.is_a?(String) && !canonical_url.empty? # Ensure it only returns a string
-  
+
     nil # Return nil, since url is empty/not a string
+  end
+
+  def skip_get_canonical_url?
+    # FIX-ME: This is Parser logic inside of Media, but it needs bigger refactoring before we can move it out
+    skip_hosts = [Parser::InstagramItem.patterns, Parser::TwitterItem.patterns].flatten
+
+    host = RequestHelper.parse_url(self.original_url).host
+    if host && skip_hosts.any? { |skip_host| host.match?(skip_host) }
+      Rails.logger.info level: 'INFO', message: "[Parser] Skipped get_canonical_url", url: self.url
+      true
+    else
+      false
+    end
   end
 
   def get_parsed_url(canonical_url)
@@ -320,7 +350,7 @@ class Media
   end
 
   def archive_if_conditions_are_met(options, id, cache)
-    if options.delete(:force) || 
+    if options[:force].present? ||
       cache.read(id, :json).nil? ||
       cache.read(id, :json).dig('archives').blank? ||
       # if the user adds a new  or changes the archiver, and the cache exists only for the old archiver it refreshes the cache

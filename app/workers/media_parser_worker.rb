@@ -13,7 +13,7 @@ class MediaParserWorker
   end
 
   def parse(url, key, refresh, archivers)
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     ApiKey.current = key
     cached = Pender::Store.current.read(id, :json)
     data = {}
@@ -23,7 +23,7 @@ class MediaParserWorker
     begin
       return ['error', invalid_url_error] unless RequestHelper.validate_url(url)
       media = Media.new(url: url, key: key)
-      data = media.as_json(force: refresh, archivers: archivers)
+      data = media.process_and_return_json(force: refresh, archivers: archivers)
     rescue Net::ReadTimeout
       data = get_timeout_data(nil, url, id)
     rescue StandardError => e
@@ -36,4 +36,3 @@ class MediaParserWorker
     { error: { message: 'The URL is not valid', code: Lapis::ErrorCodes::const_get('INVALID_VALUE') }}
   end
 end
-

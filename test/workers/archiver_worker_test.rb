@@ -25,12 +25,12 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
 
     m = create_media url: url, key: api_key
     assert_raises Pender::Exception::RetryLater do
-      data = m.as_json(archivers: 'archive_org')
+      data = m.process_and_return_json(archivers: 'archive_org')
       assert_nil data.dig('archives', 'archive_org')
     end
 
     ArchiverWorker.retries_exhausted_callback({ 'args' => [url, 'archive_org', nil], 'error_message' => 'Test Archiver' }, StandardError.new)
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_FAILURE'), data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal 'Test Archiver', data.dig('archives', 'archive_org', 'error', 'message')
   end
@@ -46,11 +46,11 @@ class ArchiverWorkerTest < ActiveSupport::TestCase
 
     m = create_media url: url, key: api_key
     assert_raises StandardError do
-      data = m.as_json(archivers: 'archive_org')
+      data = m.process_and_return_json(archivers: 'archive_org')
       assert_nil data.dig('archives', 'archive_org')
     end
 
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal Lapis::ErrorCodes::const_get('ARCHIVER_ERROR'), data.dig('archives', 'archive_org', 'error', 'code')
     assert_equal 'Net::ReadTimeout with "Exception from WebMock"', data.dig('archives', 'archive_org', 'error', 'message')
   end

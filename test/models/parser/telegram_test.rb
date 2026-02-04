@@ -3,7 +3,7 @@ require 'test_helper'
 class TelegramIntegrationTest < ActiveSupport::TestCase
   test "should parse Telegram item URL and set unique title" do
     m = create_media url: 'https://t.me/rechtsanwaeltin_beate_bahner/13285'
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal 'rechtsanwaeltin_beate_bahner', data['username']
     assert_equal 'item', data['type']
     assert_equal 'telegram', data['provider']

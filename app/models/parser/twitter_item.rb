@@ -3,6 +3,7 @@ module Parser
     include ProviderTwitter
 
     TWITTER_ITEM_URL = /^https?:\/\/([^\.]+\.)?(twitter|x)\.com\/((%23|#)!\/)?(?<user>[^\/]+)\/status\/(?<id>[0-9]+).*/
+    TWITTER_HOST = /^(https?:\/\/)?(www\.)?(x\.com|twitter\.com)(?:\/|$)/
 
     class << self
       def type
@@ -10,7 +11,7 @@ module Parser
       end
   
       def patterns
-        [TWITTER_ITEM_URL]
+        [TWITTER_ITEM_URL, TWITTER_HOST]
       end
     end
 

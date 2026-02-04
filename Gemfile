@@ -8,7 +8,7 @@ group :development, :test do
   gem 'rswag-specs'
   gem 'get_process_mem'
   gem 'derailed'
-  gem "spring"
+  gem 'spring', '4.3.0'
 end
 gem 'memory_profiler'
 group :development do
@@ -20,9 +20,8 @@ group :test do
   gem "mocha", '~> 2.7', require: false
   gem 'simplecov', '0.13.0', require: false
   gem 'simplecov-console', require: false
-  gem 'codeclimate-test-reporter', '1.0.8', group: :test, require: nil
   gem 'rails-controller-testing'
-  gem 'minitest', '5.25.0'
+  gem 'minitest', '5.25.5'
   gem 'minitest-retry'
   gem 'webmock'
 end
@@ -38,15 +37,14 @@ gem 'yt', '~> 0.25.5'
 gem 'rswag-api'
 gem 'rswag-ui'
 gem 'sass-rails'
-gem 'open_uri_redirections', require: false
-gem 'postrank-uri', git: 'https://github.com/postrank-labs/postrank-uri.git', ref: '485ac46', require: false # Ruby 3.0 support, as of 2/6/23 no gem relaease
+gem 'postrank-uri', '1.1'
 gem 'retryable'
 gem 'puma', '5.6.9'
 gem 'rack-cors', '>= 2.0.2', :require => 'rack/cors'
 gem 'rails-perftest'
 gem 'sidekiq', '< 8'
 gem 'redis', '4.3.1'
-gem 'nokogiri', '1.18.8', require: false
+gem 'nokogiri', '1.18.9', require: false
 gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
 gem 'loofah', '2.21', require: false

@@ -60,7 +60,7 @@ class KwaiUnitTest <  ActiveSupport::TestCase
     WebMock.stub_request(:any, 'https://www.kwai.com/@fakeuser/111111111').to_return(status: 200, body: doc.to_s)
 
     media = Media.new(url: 'https://www.kwai.com/@fakeuser/111111111')
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert_equal 'video transcript', data['description']
     assert_equal 'https://www.kwai.com/@fakeuser/111111111', data['title']

@@ -35,7 +35,7 @@ class PageItemUnitTest < ActiveSupport::TestCase
 
   test "re-fetches HTML and re-sets metatags, following all redirects, if doc is empty" do
     url = 'https://example.com'
-    RequestHelper.stubs(:get_html).with(url, kind_of(Method), {allow_redirections: :all}, false).returns(Nokogiri::HTML('<meta name="description" content="hello" />'))
+    RequestHelper.stubs(:get_html).with(url, kind_of(Method), {}, false).returns(Nokogiri::HTML('<meta name="description" content="hello" />'))
 
     data = Parser::PageItem.new('https://example.com').parse_data(nil, 'https://example.com/original')
     assert_equal data.dig('raw', 'metatags').size, 1
@@ -234,6 +234,17 @@ class PageItemUnitTest < ActiveSupport::TestCase
     assert_match '', data['description']
     assert_not_nil data['published_at']
     assert_match 'https://meedan.checkdesk.org', data['author_url']
+  end
+
+  test "should store metatags in an Array" do
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="twitter:title" content="Piglet's page"/>
+      <meta property="twitter:description" content="A place for dogs, surprisingly"/>
+    HTML
+
+    data = Parser::PageItem.new('https://example.com').parse_data(doc, throwaway_url)
+    assert data['raw']['metatags'].is_a? Array
+    assert !data['raw']['metatags'].empty?
   end
 
   # Note: this is existing behavior, but could see it having unintended results

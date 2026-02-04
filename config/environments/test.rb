@@ -1,11 +1,8 @@
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
-  # The test environment is used exclusively to run your application's
-  # test suite. You never need to work with it otherwise. Remember that
-  # your test database is "scratch space" for the test suite and is wiped
-  # and recreated between test runs. Don't rely on the data there!
-  config.cache_classes = false
+  # Spring reloads application code, and therefore needs the application to have reloading enabled.
+  config.enable_reloading = true
 
   # Do not eager load code on boot. This avoids loading your whole application
   # just for the purpose of running a single test. If you are using a tool that
@@ -39,13 +36,15 @@ Rails.application.configure do
 
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
-  
+
   config.allow_concurrency = true
 
-  config.cache_store = :file_store, "#{Rails.root}/tmp/cache#{ENV['TEST_ENV_NUMBER']}"
+  config.cache_store = :file_store, "/tmp/cache#{ENV['TEST_ENV_NUMBER']}"
 
-  config.lograge.enabled = true
+  # Pender swallows a lot of errors, enable logging as needed
+  config.lograge.enabled = false
 
+  config.logger = ActiveSupport::Logger.new(STDOUT)
   config.lograge.logger = ActiveSupport::Logger.new(STDOUT)
   config.lograge.custom_options = lambda do |event|
     options = event.payload.slice(:request_id, :user_id)
@@ -54,5 +53,9 @@ Rails.application.configure do
     options
   end
   config.lograge.formatter = Lograge::Formatters::Json.new
-  config.log_level = :warn
+  # Pender swallows a lot of errors, update to :warn or :debug as needed
+  config.log_level = :error
+  config.paths['log'] = "/var/log/#{ENV['DEPLOY_ENV']}.log"
+  config.paths['tmp'] = "/tmp"
+  config.paths['db'] = "/opt/db"
 end

@@ -3,7 +3,7 @@ require 'test_helper'
 class FileItemIntegrationTest < ActiveSupport::TestCase
   test "should return an errored object (for now) when parsing an image file URL, and avoid setting binary data as raw oembed" do
     m = create_media url: 'https://christa.town//img/christatown.gif'
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal 'item', data['type']
     assert_equal 'file', data['provider']
     assert_equal 'https://christa.town/img/christatown.gif', data['title']

@@ -3,8 +3,8 @@ module Parser
     include ProviderInstagram
 
     INSTAGRAM_ITEM_URL = /^https?:\/\/(www\.)?instagram\.com\/(p|tv|reel)\/([^\/]+)/
-    INSTAGRAM_HOME_URL = /^https?:\/\/(www\.)?instagram\.com\/?$/
-    
+    INSTAGRAM_HOME_URL = /^(https?:\/\/)?(www\.)?instagram\.com\/?$/
+
     class << self
       def type
         'instagram_item'.freeze
@@ -30,12 +30,13 @@ module Parser
         
         if apify_data
           @parsed_data['raw']['apify'] = apify_data[0]
+          description = description(@parsed_data['raw']['apify'])
 
-          set_data_field('title', @parsed_data['raw']['apify']['caption'])
-          set_data_field('description', @parsed_data['raw']['apify']['caption'])
+          set_data_field('title', description)
+          set_data_field('description', description)
           set_data_field('username', "@#{@parsed_data['raw']['apify']['ownerUsername']}")
-          set_data_field('picture', @parsed_data['raw']['apify']['displayUrl'])
-          set_data_field('author_name', @parsed_data['raw']['apify']['ownerFullName'])
+          set_data_field('picture', image(@parsed_data['raw']['apify']))
+          set_data_field('author_name', author_name(@parsed_data['raw']['apify']))
           set_data_field('author_url', "https://instagram.com/#{@parsed_data['raw']['apify']['ownerUsername']}")
           set_data_field('author_picture', @parsed_data['raw']['apify'].dig('latestComments', 0, 'ownerProfilePicUrl'))
           set_data_field('published_at', @parsed_data['raw']['apify']['timestamp'] ? Time.parse(@parsed_data['raw']['apify']['timestamp']) : nil)
@@ -57,6 +58,7 @@ module Parser
 
     # Helper method to retrieve meta tag content
     def get_metadata_from_tag(doc, tag_name)
+      return if doc.nil?
       tag = doc.at("meta[property='#{tag_name}']") || doc.at("meta[name='#{tag_name}']")
       tag['content'] if tag
     end
@@ -72,6 +74,19 @@ module Parser
       request_url = request_url + "/" unless request_url.end_with? "/"
 
       '<div><iframe src="' + request_url + 'embed" width="397" height="477" frameborder="0" scrolling="no" allowtransparency="true"></iframe></div>'
+    end
+
+    def description(apify_data)
+      apify_data['caption'] || apify_data['description']
+    end
+
+    def image(apify_data)
+      apify_data['displayUrl'] || apify_data['image']
+    end
+
+    def author_name(apify_data)
+      name = apify_data['ownerFullName'] || apify_data['title']
+      name.split('•').first.strip if name.present?
     end
   end
 end

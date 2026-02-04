@@ -8,21 +8,21 @@ class MediasControllerTest < ActionController::TestCase
   end
 
   test "should be able to fetch HTML without token" do
-    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', format: :html }
+    get :index, params: { url: 'https://meedan.org/post/annual-report-2022', format: :html }
     assert_response :success
   end
 
   test "should ask to refresh cache" do
     authenticate_with_token
-    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', refresh: '1', format: :json }
+    get :index, params: { url: 'https://meedan.org/post/annual-report-2022', refresh: '1', format: :json }
     first_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
-    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', format: :html }
-    name = Media.get_id('https://meedan.com/post/annual-report-2022')
+    get :index, params: { url: 'https://meedan.org/post/annual-report-2022', format: :html }
+    name = Media.cache_key('https://meedan.org/post/annual-report-2022')
     [:html, :json].each do |type|
       assert Pender::Store.current.read(name, type), "#{name}.#{type} is missing"
     end
     sleep 1
-    get :index, params: { url: 'https://meedan.com/post/annual-report-2022', refresh: '1', format: :json }
+    get :index, params: { url: 'https://meedan.org/post/annual-report-2022', refresh: '1', format: :json }
     assert !Pender::Store.current.read(name, :html), "#{name}.html should not exist"
     second_parsed_at = Time.parse(JSON.parse(@response.body)['data']['parsed_at']).to_i
     assert second_parsed_at > first_parsed_at
@@ -40,9 +40,9 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://meedan.com/post/annual-report-2022'
+    url = 'https://meedan.org/post/annual-report-2022'
     get :index, params: { url: url, refresh: '1', format: :html }
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     first_parsed_at = Pender::Store.current.get(id, :html).last_modified
     sleep 1
     get :index, params: { url: url, refresh: '1', format: :html }
@@ -52,8 +52,8 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should not ask to refresh cache with html format" do
     authenticate_with_token
-    url = 'https://meedan.com/post/annual-report-2022'
-    id = Media.get_id(url)
+    url = 'https://meedan.org/post/annual-report-2022'
+    id = Media.cache_key(url)
     get :index, params: { url: url, refresh: '0', format: :html }
     first_parsed_at = Pender::Store.current.get(id, :html).last_modified
     sleep 1
@@ -74,8 +74,8 @@ class MediasControllerTest < ActionController::TestCase
     assert_not_nil data['embed_tag']
   end
 
-  test "should return error message on hash if as_json raises error" do
-    Media.any_instance.stubs(:as_json).raises(RuntimeError)
+  test "should return error message on hash if process_and_return_json raises error" do
+    Media.any_instance.stubs(:process_and_return_json).raises(RuntimeError)
     authenticate_with_token
     get :index, params: { url: 'http://example.com/', format: :json }
     assert_response 200
@@ -93,7 +93,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should return message with HTML error 2" do
     url = 'https://example.com'
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     Pender::Store.any_instance.stubs(:read).with(id, :json)
     Pender::Store.any_instance.stubs(:read).with(id, :html).raises
     get :index, params: { url: url, format: :html }
@@ -175,14 +175,14 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should clear cache for multiple URLs sent as array" do
     authenticate_with_token
-    url1 = 'https://meedan.com'
-    url2 = 'https://meedan.com/post/annual-report-2022'
+    url1 = 'https://meedan.org'
+    url2 = 'https://meedan.org/post/annual-report-2022'
 
-    normalized_url1 = 'https://meedan.com/'
-    normalized_url2 = 'https://meedan.com/post/annual-report-2022'
+    normalized_url1 = 'https://meedan.org/'
+    normalized_url2 = 'https://meedan.org/post/annual-report-2022'
 
-    id1 = Media.get_id(normalized_url1)
-    id2 = Media.get_id(normalized_url2)
+    id1 = Media.cache_key(normalized_url1)
+    id2 = Media.cache_key(normalized_url2)
 
     [:html, :json].each do |type|
       [id1, id2].each do |id|
@@ -281,7 +281,7 @@ class MediasControllerTest < ActionController::TestCase
       authenticate_with_token
       get :index, params: { url: url, refresh: '1', format: :json }
       assert_response 200
-      Media.minimal_data(OpenStruct.new(url: url)).except(:parsed_at).each_pair do |key, value|
+      MediaData.minimal_data(url).except(:parsed_at).each_pair do |key, value|
         assert_equal value, JSON.parse(@response.body)['data'][key]
       end
       error = JSON.parse(@response.body)['data']['error']
@@ -301,9 +301,9 @@ class MediasControllerTest < ActionController::TestCase
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     authenticate_with_token(a)
-    url = 'https://meedan.com/post/annual-report-2022'
+    url = 'https://meedan.org/post/annual-report-2022'
     get :index, params: { url: url, format: :json }
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives].sort.to_h)
   ensure
     WebMock.disable!
@@ -319,9 +319,9 @@ class MediasControllerTest < ActionController::TestCase
     WebMock.stub_request(:post, /example.com\/webhook/).to_return(status: 200, body: '')
 
     authenticate_with_token(a)
-    url = 'https://meedan.com/post/annual-report-2022'
+    url = 'https://meedan.org/post/annual-report-2022'
     get :index, params: { url: url, archivers: 'none', format: :json }
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     assert_equal({}, Pender::Store.current.read(id, :json)[:archives])
   ensure
     WebMock.disable!
@@ -344,12 +344,12 @@ class MediasControllerTest < ActionController::TestCase
       WebMock.stub_request(:post, /web.archive.org\/save/).to_return(body: {job_id: 'ebb13d31-7fcf-4dce-890c-c256e2823ca0' }.to_json)
       WebMock.stub_request(:get, /web.archive.org\/save\/status/).to_return(body: {status: 'success', timestamp: 'timestamp'}.to_json)
 
-      url = 'https://meedan.com/post/annual-report-2022'
+      url = 'https://meedan.org/post/annual-report-2022'
       archived = {"perma_cc"=>{"location"=>"http://perma.cc/perma-cc-guid-1"}, "archive_org"=>{"location"=>"https://web.archive.org/web/timestamp/#{url}"}}
 
       authenticate_with_token(a)
       get :index, params: { url: url, archivers: archivers.join(','), format: :json }
-      id = Media.get_id(url)
+      id = Media.cache_key(url)
       data = Pender::Store.current.read(id, :json)
       archivers.each do |archiver|
         archiver.strip!
@@ -393,10 +393,10 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should parse multiple URLs sent as list" do
     authenticate_with_token
-    url1 = 'https://meedan.com/check'
-    url2 = 'https://meedan.com/about-us'
-    id1 = Media.get_id(url1)
-    id2 = Media.get_id(url2)
+    url1 = 'https://meedan.org/check'
+    url2 = 'https://meedan.org/about-us'
+    id1 = Media.cache_key(url1)
+    id2 = Media.cache_key(url2)
     assert_nil Pender::Store.current.read(id1, :json)
     assert_nil Pender::Store.current.read(id2, :json)
 
@@ -422,7 +422,7 @@ class MediasControllerTest < ActionController::TestCase
     authenticate_with_token(a)
 
     url = 'https://meedan.com'
-    id = Media.get_id(url)
+    id = Media.cache_key(url)
     timeout_error = {"message" => "Timeout", "code" => Lapis::ErrorCodes::const_get('TIMEOUT')}
 
     assert_equal 0, MediaParserWorker.jobs.size
@@ -446,7 +446,7 @@ class MediasControllerTest < ActionController::TestCase
     webhook_info = { 'webhook_url': 'https://example.com/webhook.php', 'webhook_token': 'test' }
     url = 'https://meedan.com/post/annual-report-2022'
     parse_error = { error: { "message"=>"RuntimeError: RuntimeError", "code"=>5}}
-    required_fields = Media.required_fields(OpenStruct.new(url: url))
+    required_fields = MediaData.required_fields(url)
     Media.stubs(:required_fields).returns(required_fields)
     Media.stubs(:notify_webhook)
     Media.stubs(:notify_webhook).with('media_parsed', url, parse_error.merge(required_fields).with_indifferent_access, webhook_info)
@@ -475,7 +475,7 @@ class MediasControllerTest < ActionController::TestCase
     assert_equal 1, MediaParserWorker.jobs.size
 
     parse_error = { error: { "message"=>"OpenSSL::SSL::SSLError", "code"=> Lapis::ErrorCodes::const_get('UNKNOWN')}}
-    minimal_data = Media.minimal_data(OpenStruct.new(url: url)).merge(title: url)
+    minimal_data = MediaData.minimal_data(url)
     Media.stubs(:minimal_data).returns(minimal_data)
     Media.stubs(:notify_webhook).with('media_parsed', url, minimal_data.merge(parse_error), webhook_info)
     Media.any_instance.stubs(:get_canonical_url).raises(OpenSSL::SSL::SSLError)
@@ -508,7 +508,7 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should rescue and unlock url when raises error" do
     authenticate_with_token
-    url = 'https://meedan.com/post/annual-report-2022'
+    url = 'https://meedan.org/post/annual-report-2022'
     assert !Semaphore.new(url).locked?
     [:js, :json, :html].each do |format|
       @controller.stubs("render_as_#{format}".to_sym).raises(RuntimeError.new('error'))
@@ -595,8 +595,8 @@ class MediasControllerTest < ActionController::TestCase
 
   test "should cache json and html on file" do
     authenticate_with_token
-    url = 'https://meedan.com/post/annual-report-2022'
-    id = Media.get_id(url)
+    url = 'https://meedan.org/post/annual-report-2022'
+    id = Media.cache_key(url)
     [:html, :json].each do |type|
       assert !Pender::Store.current.read(id, type), "#{id}.#{type} should not exist"
     end
@@ -666,7 +666,7 @@ class MediasControllerTest < ActionController::TestCase
     WebMock.enable!
     WebMock.disable_net_connect!(allow: [/minio/])
     WebMock.stub_request(:post, /safebrowsing\.googleapis\.com/).to_return(status: 200, body: '{}')
-    Media.stubs(:get_id).returns('foo', 'bar', 'foo', 'bar')
+    Media.stubs(:cache_key).returns('foo', 'bar', 'foo', 'bar')
     Pender::Store.current.write('foo', :json, { title: 'Meedan 1' })
     Pender::Store.current.write('bar', :json, { title: 'Meedan 2' })
 
@@ -705,7 +705,7 @@ class MediasControllerUnitTest < ActionController::TestCase
         RESPONSE
       end
 
-      def as_json(**args)
+      def process_and_return_json(**args)
         RESPONSE
       end
     end
@@ -714,7 +714,7 @@ class MediasControllerUnitTest < ActionController::TestCase
     RequestHelper.stubs(:validate_url).returns(true)
     Semaphore.any_instance.stubs(:locked?).returns(false)
 
-    id = Media.get_id('https://www.instagram.com/fakeaccount/')
+    id = Media.cache_key('https://www.instagram.com/fakeaccount/')
     Pender::Store.any_instance.expects(:write).with(id).never
 
     Pender::Store.current.delete(id, :json)

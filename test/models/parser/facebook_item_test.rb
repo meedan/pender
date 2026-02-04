@@ -43,6 +43,18 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     JSON
   end
 
+  def apify_content_not_available_response
+    <<~JSON
+    [
+      {
+        "url": "https://www.facebook.com/123456789/posts/123456789",
+        "error": "not_available",
+        "errorDescription": "This content isn't available because the owner only shared it with a small group of people or changed who can see it, or it's been deleted."
+      }
+    ]
+    JSON
+  end
+
   test "returns provider and type" do
     assert_equal Parser::FacebookItem.type, 'facebook_item'
   end
@@ -225,7 +237,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     sentry_call_count = 0
     arguments_checker = Proc.new do |e|
       sentry_call_count += 1
-      assert_includes [MediaApifyItem::ApifyError, NoMethodError], e.class
+      assert_includes [Pender::Exception::ApifyError, NoMethodError], e.class
     end
     PenderSentry.stub(:notify, arguments_checker) do
       data = Parser::FacebookItem.new('https://www.facebook.com/555555/posts/123456789').parse_data(empty_doc, throwaway_url)
@@ -330,7 +342,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, url).to_return(status: 200, body: doc.to_s)
 
     media = Media.new(url: url)
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert_equal url, data['title']
     assert_match '', data['description']
@@ -351,7 +363,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{canonical_url}").to_return(status: 200)
 
     media = Media.new(url: url_from_facebook_object)
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert_match canonical_url, data['url']
   end
@@ -395,7 +407,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
 
     media = Media.new(url: url)
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert_equal url, data['url']
   end
@@ -415,7 +427,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{canonical_url}").to_return(status: 200)
 
     media = Media.new(url: url)
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert_equal canonical_url, data['url']
   end
@@ -442,7 +454,7 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     assert_match "<div class=\"fb-post\" data-href=\"#{url}\"></div>", data['html']
   end
 
-  test "should return html and empty description when FB url is private" do
+  test "should return html and description with the original url when FB url is private" do
     url = 'https://www.facebook.com/caiosba/posts/1913749825339929'
 
     WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response_not_found)
@@ -457,9 +469,9 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
 
     media = Media.new(url: url)
-    data = media.as_json
+    data = media.process_and_return_json
 
-    assert data[:description].empty?
+    assert_equal url, data[:description]
     assert_match "<div class=\"fb-post\" data-href=\"https://www.facebook.com/caiosba/posts/1913749825339929\">", data['html']
   end
 
@@ -486,14 +498,14 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     url = 'https://www.facebook.com/123456789276277/posts/1127489833985824'
 
     WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_response)
-    
+
     WebMock.stub_request(:get, url).to_return(status: 200)
     WebMock.stub_request(:get, "https://www.facebook.com/123456789276277").to_return(status: 200)
     WebMock.stub_request(:get, /fbcdn.net/).to_return(status: 200)
     WebMock.stub_request(:get, "https://www.facebook.com/plugins/post/oembed.json/?url=#{url}").to_return(status: 200)
 
     media = Media.new(url: url)
-    data = media.as_json
+    data = media.process_and_return_json
 
     assert data['oembed'].is_a? Hash
     assert_match /facebook.com/, data['oembed']['provider_url']
@@ -575,5 +587,19 @@ class FacebookItemUnitTest < ActiveSupport::TestCase
     data = parser.parse_data(doc, original_url)
     assert_equal 'Redirected to a dead end', data[:error][:message]
     assert_equal Lapis::ErrorCodes::const_get('DEAD_END'), data[:error][:code]
+  end
+
+  test "event URL: sets fallbacks from metatags for event on apify content not available error" do
+    WebMock.stub_request(:post, /api\.apify\.com\/v2\/acts\/apify/).to_return(status: 200, body: apify_content_not_available_response)
+
+    doc = Nokogiri::HTML(<<~HTML)
+      <meta property="og:title" content="this is a page title | Facebook" />
+      <meta property="og:description" content="this is the page description" />
+      <meta property="og:image" content="https://example.com/image" />
+    HTML
+
+    data = Parser::FacebookItem.new('https://www.facebook.com/events/331430157280289').parse_data(doc, throwaway_url)
+    assert_equal 'this is a page title', data['title']
+    assert_equal 'this is the page description', data['description']
   end
 end

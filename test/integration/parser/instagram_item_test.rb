@@ -3,7 +3,7 @@ require 'test_helper'
 class InstagramItemIntegrationTest < ActiveSupport::TestCase
   test "should get Instagram post with valid data from apify" do
     m = create_media url: 'https://www.instagram.com/p/C-8LjWmuTx1/'
-    data = m.as_json
+    data = m.process_and_return_json
 
     assert_equal 'instagram', data['provider']
     assert_equal 'item', data['type']
@@ -21,10 +21,10 @@ class InstagramItemIntegrationTest < ActiveSupport::TestCase
 
   test "should get Instagram data even if Apify fails" do
     m = create_media url: 'https://www.instagram.com/p/nonexistent_post/'
-    data = m.as_json
+    data = m.process_and_return_json
 
-    assert data['error'].nil?
+    assert !data['url'].blank?
     assert !data['title'].blank?
-    assert !data['username'].blank?
+    assert !data['description'].blank?
   end
 end

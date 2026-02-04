@@ -3,7 +3,7 @@ require 'test_helper'
 class TiktokProfileIntegrationTest < ActiveSupport::TestCase
   test "should parse Tiktok profile for real" do
     m = create_media url: 'https://www.tiktok.com/@scout2015'
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal '@scout2015', data['username']
     assert_equal 'profile', data['type']
     assert_equal 'tiktok', data['provider']

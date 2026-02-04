@@ -3,7 +3,7 @@ require 'test_helper'
 class YoutubeProfileIntegrationTest < ActiveSupport::TestCase
   test "should parse YouTube user" do
     m = create_media url: 'https://www.youtube.com/user/portadosfundos'
-    data = m.as_json
+    data = m.process_and_return_json
     assert_equal 'Porta dos Fundos', data['title']
     assert_equal 'portadosfundos', data['username']
     assert_equal 'Porta dos Fundos', data['author_name']
@@ -19,7 +19,7 @@ class YoutubeProfileIntegrationTest < ActiveSupport::TestCase
   test "should store oembed data of a youtube profile using default oembed" do
     RequestHelper.stubs(:get_html).returns(Nokogiri::HTML("<link rel='alternate' type='application/json+oembed' href='https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ' title='Iron Maiden'>"))
     m = create_media url: 'https://www.youtube.com/channel/UCaisXKBdNOYqGr2qOXCLchQ'
-    data = m.as_json
+    data = m.process_and_return_json
 
     assert data['raw']['oembed'].is_a? Hash
     assert_equal 'Iron Maiden', data['oembed']['author_name']
