@@ -11,57 +11,41 @@ module ProviderTwitter
     "https://publish.twitter.com/oembed?url=#{self.url}"
   end
 
-  def tweet_lookup(tweet_id)
-    params = {
-      "ids": tweet_id,
-      "tweet.fields": "author_id,created_at,text,lang",
-      "expansions": "author_id,attachments.media_keys",
-      "user.fields": "profile_image_url,username,url",
-      "media.fields": "url",
-    }
-
-    get "tweets", params
-  end
-
-  def user_lookup_by_username(username)
-    params = {
-      "usernames": username,
-      "user.fields": "profile_image_url,name,username,description,created_at,url",
-    }
-
-    get "users/by", params
-  end
-
   private
-
-  def get(path, params)
-    uri = URI(URI.join(BASE_URI, path))
-    uri.query = Rack::Utils.build_query(params)
-    
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
-
-    headers = {
-      "Authorization": "Bearer #{PenderConfig.get('twitter_bearer_token')}",
-    }
-    
-    request = Net::HTTP::Get.new(uri.request_uri, headers)
-
-    begin
-      response = http.request(request)
-      raise ApiError.new("#{response.code} - #{response.message}") unless response.code.to_i < 400
-      JSON.parse(response.body) 
-    rescue StandardError => e
-      PenderSentry.notify(e, url: url, response_body: response&.body)
-      { 'errors' => [{ 
-          title: "#{e&.class} - #{e&.message}",
-          detail: response&.body
-        }] 
-      }
-    end
-  end
 
   def replace_subdomain_pattern(original_url)
     original_url.gsub(/:\/\/.*\.twitter\./, '://twitter.')
+  end
+
+  def format_oembed_data(type, oembed_data)
+    embed_data ||= {}
+    return { error: oembed_data[:errors]} unless oembed_data[:errors].blank?
+    html = oembed_data.dig('html')
+    doc = Nokogiri::HTML(html)
+    if type == 'profile'
+     { author_name: doc.css("a").text.gsub('Tweets by ', '').strip }
+   elsif type == 'item'
+    blockquote = doc.at("blockquote.twitter-tweet")
+    text = blockquote.at("p").text
+    {
+      title: text.squish,
+      description: text.squish,
+      published_at: extract_published_at(blockquote),
+      html: html,
+      author_url: oembed_data.dig('author_url'),
+      author_name: oembed_data.dig('author_name'),
+    }
+   else
+    {}
+   end
+  end
+
+  def extract_published_at(blockquote)
+    begin
+      date_text = blockquote.css("a").last&.text
+      Date.parse(date_text)
+    rescue
+      nil
+    end
   end
 end

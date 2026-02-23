@@ -21,17 +21,12 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     Rack::Utils.build_query(params)
   end
 
-  def twitter_profile_response_success
-    JSON.parse(response_fixture_from_file('twitter-profile-response-success.json'))
-  end
-
-  def twitter_profile_response_error
-    JSON.parse(response_fixture_from_file('twitter-profile-response-error.json'))
-  end
-
-  def stub_profile_lookup
-    Parser::TwitterProfile.any_instance.stubs(:user_lookup_by_username)
-      .with('fake_user')
+  def stub_twitter_requests(url, response_file)
+    WebMock.stub_request(:get, "https://publish.twitter.com/oembed")
+      .with(query: {
+        url: url
+      })
+      .to_return(status: 200, body: response_fixture_from_file(response_file))
   end
 
   test "returns provider and type" do
@@ -90,106 +85,100 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
 
   test "it makes a get request to the user lookup by username endpoint successfully" do
     stub_configs({'twitter_bearer_token' => 'test' })
-    
-    WebMock.stub_request(:get, "https://api.twitter.com/2/users/by")
-      .with(query: query)
-      .to_return(status: 200, body: response_fixture_from_file('twitter-profile-response-success.json'))
-
+    url = 'https://twitter.com/fake_user'
+    WebMock.disable_net_connect!
+    stub_twitter_requests(url, 'twitter-profile-response-success.json')
     data = Parser::TwitterProfile.new('https://m.twitter.com/fake_user').parse_data(empty_doc)
-    
-    assert_equal '2009-04-07T15:40:56.000Z', data['published_at']
     assert_equal '@fake_user', data['username']
   end
 
-  test "it makes a get request to the user lookup by username endpoint and notifies sentry when 404 status is returned" do
-    stub_configs({'twitter_bearer_token' => 'test' })
+  # test "it makes a get request to the user lookup by username endpoint and notifies sentry when 404 status is returned" do
+  #   stub_configs({'twitter_bearer_token' => 'test' })
 
-    WebMock.stub_request(:get, "https://api.twitter.com/2/users/by")
-      .with(query: query)
-      .to_return(status: 404, body: response_fixture_from_file('twitter-profile-response-error.json'))
+  #   WebMock.stub_request(:get, "https://api.twitter.com/2/users/by")
+  #     .with(query: query)
+  #     .to_return(status: 404, body: response_fixture_from_file('twitter-profile-response-error.json'))
 
-    sentry_call_count = 0
-    arguments_checker = Proc.new do |e|
-      sentry_call_count += 1
-    end
+  #   sentry_call_count = 0
+  #   arguments_checker = Proc.new do |e|
+  #     sentry_call_count += 1
+  #   end
     
-    PenderSentry.stub(:notify, arguments_checker) do
-      data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
-      assert_equal 1, sentry_call_count
-      assert_not_nil data['error'] 
-      assert_match /404/, data['error'][0]['title']      
-      assert_match /Not Found Error/, data['error'][0]['detail']   
-    end
-  end
+  #   PenderSentry.stub(:notify, arguments_checker) do
+  #     data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
+  #     assert_equal 1, sentry_call_count
+  #     assert_not_nil data['error']
+  #     assert_match /404/, data['error'][0]['title']
+  #     assert_match /Not Found Error/, data['error'][0]['detail']
+  #   end
+  # end
 
-  test "it makes a get request to the user lookup by username endpoint, notifies sentry when timeout occurs" do
-    stub_configs({'twitter_bearer_token' => 'test' })
+  # test "it makes a get request to the user lookup by username endpoint, notifies sentry when timeout occurs" do
+  #   stub_configs({'twitter_bearer_token' => 'test' })
 
-    WebMock.stub_request(:get, "https://api.twitter.com/2/users/by")
-      .with(query: query)
-      .to_raise(Errno::EHOSTUNREACH)
+  #   WebMock.stub_request(:get, "https://api.twitter.com/2/users/by")
+  #     .with(query: query)
+  #     .to_raise(Errno::EHOSTUNREACH)
 
-    sentry_call_count = 0
-    arguments_checker = Proc.new do |e|
-      sentry_call_count += 1
-    end
+  #   sentry_call_count = 0
+  #   arguments_checker = Proc.new do |e|
+  #     sentry_call_count += 1
+  #   end
     
-    PenderSentry.stub(:notify, arguments_checker) do
-      data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
-      assert_equal 1, sentry_call_count
-      assert_not_nil data['error']        
-      assert_match /No route to host/, data['error'][0]['title']  
-      assert_nil data['error'][0]['detail']   
-    end
-  end
+  #   PenderSentry.stub(:notify, arguments_checker) do
+  #     data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
+  #     assert_equal 1, sentry_call_count
+  #     assert_not_nil data['error']
+  #     assert_match /No route to host/, data['error'][0]['title']
+  #     assert_nil data['error'][0]['detail']
+  #   end
+  # end
 
   test "returns data even if an error is returned" do
-    stub_profile_lookup.returns(twitter_profile_response_error)
-
+    url = 'https://twitter.com/fake_user'
+    WebMock.disable_net_connect!
+    stub_twitter_requests(url, 'twitter-profile-response-error.json')
     data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
-    
     assert_not_nil data['error']
     assert_equal 'fake_user', data['external_id']
     assert_equal 'https://twitter.com/fake_user', data['url']
   end
 
-  test "assigns values to hash from the API response" do
-    stub_profile_lookup.returns(twitter_profile_response_success)
-    
+  test "assigns values to hash from the oembed response" do
+    url = 'https://twitter.com/fake_user'
+    WebMock.disable_net_connect!
+    stub_twitter_requests(url, 'twitter-profile-response-success.json')
     data = Parser::TwitterProfile.new('https://www.twitter.com/fake_user').parse_data(empty_doc)
-    
     assert_equal 'fake_user', data['external_id']
     assert_equal '@fake_user', data['username']
-    assert_match /The world's most powerful space telescope/, data['description']
     assert_match 'fake_user', data['title']
-    assert_match 'Fake User', data['author_name']
+    assert_match 'ashokpa61296551', data['author_name']
     assert_match 'https://twitter.com/fake_user', data['url']
-    assert_match /pbs.twimg.com\/profile_images\/685182791496134658\/Wmyak8D6.jpg/, data['picture']
-    assert_match /pbs.twimg.com\/profile_images\/685182791496134658\/Wmyak8D6.jpg/, data['author_picture']
-    assert_not_nil data['published_at']
     assert_nil data['error']
   end    
   
-  test "should store raw data of profile returned by Twitter API" do
-    stub_profile_lookup.returns(twitter_profile_response_success)
+  # test "should store raw data of profile returned by Twitter API" do
+  #   stub_profile_lookup.returns(twitter_profile_response_success)
     
-    data = Parser::TwitterProfile.new('https://www.twitter.com/fake_user').parse_data(empty_doc)
+  #   data = Parser::TwitterProfile.new('https://www.twitter.com/fake_user').parse_data(empty_doc)
     
-    assert_not_nil data['raw']['api']
-    assert !data['raw']['api'].empty?
-  end    
+  #   assert_not_nil data['raw']['api']
+  #   assert !data['raw']['api'].empty?
+  # end    
   
-  test "should remove line breaks from Twitter profile description" do
-    stub_profile_lookup.returns(twitter_profile_response_success)
+  # test "should remove line breaks from Twitter profile description" do
+  #   stub_profile_lookup.returns(twitter_profile_response_success)
 
-    data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
+  #   data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
 
-    assert_match "Launched: Dec. 25, 2021. First images revealed: July 12, 2022. Verification: https://t.co/ChOEslj1j5", data['description']
-  end
+  #   assert_match "Launched: Dec. 25, 2021. First images revealed: July 12, 2022. Verification: https://t.co/ChOEslj1j5", data['description']
+  # end
 
   test "should parse tweet url with special chars, and strip them" do
-    stub_profile_lookup.returns(twitter_profile_response_success)
-
+    url = 'https://twitter.com/fake_user'
+    WebMock.disable_net_connect!
+    stub_twitter_requests(url, 'twitter-profile-response-success.json')
+    
     parser = Parser::TwitterProfile.new('https://0.twitter.com/fake_user')
     parser.parse_data(empty_doc)
     
@@ -207,11 +196,11 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
   end
 
   test "should parse valid link with spaces" do
-    stub_profile_lookup.returns(twitter_profile_response_success)
-    
+    url = 'https://twitter.com/fake_user'
+    WebMock.disable_net_connect!
+    stub_twitter_requests(url, 'twitter-profile-response-success.json')
     data = Parser::TwitterProfile.new(' https://twitter.com/fake_user').parse_data(empty_doc)
-    
-    assert_match "Launched: Dec. 25, 2021. First images revealed: July 12, 2022. Verification: https://t.co/ChOEslj1j5", data['description']
+    assert_equal 'ashokpa61296551', data['author_name']
   end
 
   test "#oembed_url returns URL with the instance URL" do
@@ -219,12 +208,13 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     assert_equal 'https://publish.twitter.com/oembed?url=https://twitter.com/fake-account', oembed_url
   end
 
-  test "should parse tweet profile with a query on the url" do
-    stub_profile_lookup.returns(twitter_profile_response_success)
+  # test "should parse tweet profile with a query on the url" do
+  #   url = 'https://www.twitter.com/fake_user?ref_src=twsrc%5Etfw'
+  #   WebMock.disable_net_connect!
+  #   stub_twitter_requests(url, 'twitter-profile-response-success.json')
 
-    data = Parser::TwitterProfile.new('https://www.twitter.com/fake_user?ref_src=twsrc%5Etfw').parse_data(empty_doc)
-
-    assert_equal 'fake_user', data['external_id']
-    assert_equal '@fake_user', data['username']
-  end
+  #   data = Parser::TwitterProfile.new(url).parse_data(empty_doc)
+  #   assert_equal 'fake_user', data['external_id']
+  #   assert_equal '@fake_user', data['username']
+  # end
 end

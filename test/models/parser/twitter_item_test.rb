@@ -13,36 +13,12 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     Nokogiri::HTML('')
   end
 
-  def query
-    params = {
-      "ids": "1111111111111111111",
-      "tweet.fields": "author_id,created_at,text,lang",
-      "expansions": "author_id,attachments.media_keys",
-      "user.fields": "profile_image_url,username,url",
-      "media.fields": "url",
-    }
-    Rack::Utils.build_query(params)
-  end
-
   def stub_twitter_requests(url, response_file)
     WebMock.stub_request(:get, "https://publish.twitter.com/oembed")
       .with(query: {
         url: url
       })
       .to_return(status: 200, body: response_fixture_from_file(response_file))
-  end
-
-  def twitter_item_response_success
-    JSON.parse(response_fixture_from_file('twitter-item-response-success.json'))
-  end
-
-  def twitter_item_response_error
-    JSON.parse(response_fixture_from_file('twitter-item-response-error.json'))
-  end
-
-  def stub_tweet_lookup
-    Parser::TwitterItem.any_instance.stubs(:tweet_lookup)
-      .with('1111111111111111111')
   end
 
   test "returns provider and type" do
@@ -157,15 +133,6 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     assert_equal 'https://twitter.com/fake_user', data['author_url']
   end
 
-  # test "should store data of post returned by twitter API" do
-  #   stub_tweet_lookup.returns(twitter_item_response_success)
-
-  #   data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
-
-  #   assert data['raw']['api'].is_a? Hash
-  #   assert !data['raw']['api'].empty?
-  # end
-
   test "should remove line breaks from Twitter item title" do
     url = 'https://twitter.com/fake_user/status/1111111111111111111'
     WebMock.disable_net_connect!
@@ -200,7 +167,6 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
   end
 
   test "should parse valid search url" do
-    # stub_tweet_lookup.returns(twitter_item_response_success)
 
     data = Parser::TwitterSearchItem.new('https://twitter.com/search?q=ISS%20from:@Space_Station&src=typed_query&f=live').parse_data(empty_doc)
 

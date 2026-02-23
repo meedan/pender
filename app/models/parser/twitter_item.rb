@@ -32,39 +32,13 @@ module Parser
           username: '@' + user,
           author_url: get_author_url(user)
         )
-        @parsed_data.merge!(format_oembed_data(parsed_data['raw']['oembed']))
+        @parsed_data.merge!(format_oembed_data('item', parsed_data['raw']['oembed']))
       end
       parsed_data
     end
 
     def get_author_url(user)
       'https://twitter.com/' + user
-    end
-
-    def format_oembed_data(oembed_data)
-      return {} unless oembed_data && oembed_data[:error].blank?
-      html = oembed_data.dig('html')
-      doc = Nokogiri::HTML(html)
-      blockquote = doc.at("blockquote.twitter-tweet")
-      return {} unless blockquote
-      text = blockquote.at("p").text
-      {
-        title: text.squish,
-        description: text.squish,
-        published_at: extract_published_at(blockquote),
-        html: html,
-        author_url: oembed_data.dig('author_url'),
-        author_name: oembed_data.dig('author_name'),
-      }
-    end
-
-    def extract_published_at(blockquote)
-      begin
-        date_text = blockquote.css("a").last&.text
-        Date.parse(date_text)
-      rescue
-        nil
-      end
     end
   end
 end
