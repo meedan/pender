@@ -40,8 +40,8 @@ module ProviderTwitter
           author_name: oembed_data.dig('author_name'),
         }
       end
-   end
-   data
+    end
+    data
   end
 
   def extract_published_at(blockquote)
