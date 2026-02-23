@@ -22,22 +22,26 @@ module ProviderTwitter
     return { error: oembed_data[:errors]} unless oembed_data[:errors].blank?
     html = oembed_data.dig('html')
     doc = Nokogiri::HTML(html)
+    data = {}
     if type == 'profile'
-     { author_name: doc.css("a").text.gsub('Tweets by ', '').strip }
-   elsif type == 'item'
-    blockquote = doc.at("blockquote.twitter-tweet")
-    text = blockquote.at("p").text
-    {
-      title: text.squish,
-      description: text.squish,
-      published_at: extract_published_at(blockquote),
-      html: html,
-      author_url: oembed_data.dig('author_url'),
-      author_name: oembed_data.dig('author_name'),
-    }
-   else
-    {}
+      data = {
+        author_name: doc.css("a").text.gsub('Tweets by ', '').strip
+      }
+    elsif type == 'item'
+      blockquote = doc.at("blockquote.twitter-tweet")
+      if blockquote
+        text = blockquote.at("p").text
+        data = {
+          title: text.squish,
+          description: text.squish,
+          published_at: extract_published_at(blockquote),
+          html: html,
+          author_url: oembed_data.dig('author_url'),
+          author_name: oembed_data.dig('author_name'),
+        }
+      end
    end
+   data
   end
 
   def extract_published_at(blockquote)
