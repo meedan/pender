@@ -69,60 +69,15 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
     assert_equal '@fake_user', data['username']
   end
 
-  # test "it makes a get request to the tweet lookup endpoint, and notifies sentry when 404 status is returned" do
-  #   stub_configs({'twitter_bearer_token' => 'test' })
-
-  #   WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
-  #     .with(query: query)
-  #     .to_return(status: 404, body: response_fixture_from_file('twitter-item-response-error.json'))
-
-  #   sentry_call_count = 0
-  #   arguments_checker = Proc.new do |e|
-  #     sentry_call_count += 1
-  #   end
-      
-  #   PenderSentry.stub(:notify, arguments_checker) do
-  #     data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
-  #     assert_equal 1, sentry_call_count
-  #     assert_not_nil data['error']
-  #     assert_match /404/, data['error'][0]['title']
-  #     assert_match /Not Found Error/, data['error'][0]['detail']
-  #   end
-  # end
-  
-  # test "it makes a get request to the tweet lookup endpoint, notifies sentry notifies sentry when timeout occurs" do
-  #   stub_configs({'twitter_bearer_token' => 'test' })
-
-  #   WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
-  #     .with(query: query)
-  #     .to_raise(Errno::EHOSTUNREACH)
-
-  #   sentry_call_count = 0
-  #   arguments_checker = Proc.new do |e|
-  #     sentry_call_count += 1
-  #   end
-    
-  #   PenderSentry.stub(:notify, arguments_checker) do
-  #     data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
-  #     assert_equal 1, sentry_call_count
-  #     assert_not_nil data['error']
-  #     assert_match /No route to host/, data['error'][0]['title']
-  #     assert_nil data['error'][0]['detail']
-  #   end
-  # end
-
-  # test "it returns a response when 429 is returned" do
-  #   stub_configs({'twitter_bearer_token' => 'test' })
-
-  #   WebMock.stub_request(:get, "https://api.twitter.com/2/tweets")
-  #   .with(query: query)
-  #   .to_return(status: 429, body: "{'title':'Too Many Requests','detail':'Too Many Requests','type':'about:blank','status':429}")
-
-  #   data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
-    
-  #   assert_not_nil data['error']
-  #   assert_equal 'https://twitter.com/fake_user', data['author_url']
-  # end
+  test "it returns a response when 429 is returned" do
+    stub_configs({'twitter_bearer_token' => 'test' })
+    url = 'https://twitter.com/fake_user/status/1111111111111111111'
+    WebMock.disable_net_connect!
+    stub_twitter_requests(url, 'twitter-item-response-error.json')
+    data = Parser::TwitterItem.new('https://twitter.com/fake_user/status/1111111111111111111').parse_data(empty_doc)
+    assert_not_nil data['error']
+    assert_equal 'https://twitter.com/fake_user', data['author_url']
+  end
 
   test "sets the author_url o be https://twitter.com/<user_handle> even if an error is returned" do
     url = 'https://twitter.com/fake_user/status/1111111111111111111'
@@ -167,9 +122,7 @@ class TwitterItemUnitTest < ActiveSupport::TestCase
   end
 
   test "should parse valid search url" do
-
     data = Parser::TwitterSearchItem.new('https://twitter.com/search?q=ISS%20from:@Space_Station&src=typed_query&f=live').parse_data(empty_doc)
-
     assert_match 'ISS from:@Space_Station', data['title']
   end
 

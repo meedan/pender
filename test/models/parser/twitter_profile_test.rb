@@ -13,14 +13,6 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     Nokogiri::HTML('')
   end
 
-  def query
-    params = {
-      "usernames": "fake_user",
-      "user.fields": "profile_image_url,name,username,description,created_at,url",
-    }
-    Rack::Utils.build_query(params)
-  end
-
   def stub_twitter_requests(url, response_file)
     WebMock.stub_request(:get, "https://publish.twitter.com/oembed")
       .with(query: {
@@ -92,48 +84,6 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     assert_equal '@fake_user', data['username']
   end
 
-  # test "it makes a get request to the user lookup by username endpoint and notifies sentry when 404 status is returned" do
-  #   stub_configs({'twitter_bearer_token' => 'test' })
-
-  #   WebMock.stub_request(:get, "https://api.twitter.com/2/users/by")
-  #     .with(query: query)
-  #     .to_return(status: 404, body: response_fixture_from_file('twitter-profile-response-error.json'))
-
-  #   sentry_call_count = 0
-  #   arguments_checker = Proc.new do |e|
-  #     sentry_call_count += 1
-  #   end
-    
-  #   PenderSentry.stub(:notify, arguments_checker) do
-  #     data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
-  #     assert_equal 1, sentry_call_count
-  #     assert_not_nil data['error']
-  #     assert_match /404/, data['error'][0]['title']
-  #     assert_match /Not Found Error/, data['error'][0]['detail']
-  #   end
-  # end
-
-  # test "it makes a get request to the user lookup by username endpoint, notifies sentry when timeout occurs" do
-  #   stub_configs({'twitter_bearer_token' => 'test' })
-
-  #   WebMock.stub_request(:get, "https://api.twitter.com/2/users/by")
-  #     .with(query: query)
-  #     .to_raise(Errno::EHOSTUNREACH)
-
-  #   sentry_call_count = 0
-  #   arguments_checker = Proc.new do |e|
-  #     sentry_call_count += 1
-  #   end
-    
-  #   PenderSentry.stub(:notify, arguments_checker) do
-  #     data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
-  #     assert_equal 1, sentry_call_count
-  #     assert_not_nil data['error']
-  #     assert_match /No route to host/, data['error'][0]['title']
-  #     assert_nil data['error'][0]['detail']
-  #   end
-  # end
-
   test "returns data even if an error is returned" do
     url = 'https://twitter.com/fake_user'
     WebMock.disable_net_connect!
@@ -155,24 +105,7 @@ class TwitterProfileUnitTest < ActiveSupport::TestCase
     assert_match 'ashokpa61296551', data['author_name']
     assert_match 'https://twitter.com/fake_user', data['url']
     assert_nil data['error']
-  end    
-  
-  # test "should store raw data of profile returned by Twitter API" do
-  #   stub_profile_lookup.returns(twitter_profile_response_success)
-    
-  #   data = Parser::TwitterProfile.new('https://www.twitter.com/fake_user').parse_data(empty_doc)
-    
-  #   assert_not_nil data['raw']['api']
-  #   assert !data['raw']['api'].empty?
-  # end    
-  
-  # test "should remove line breaks from Twitter profile description" do
-  #   stub_profile_lookup.returns(twitter_profile_response_success)
-
-  #   data = Parser::TwitterProfile.new('https://twitter.com/fake_user').parse_data(empty_doc)
-
-  #   assert_match "Launched: Dec. 25, 2021. First images revealed: July 12, 2022. Verification: https://t.co/ChOEslj1j5", data['description']
-  # end
+  end
 
   test "should parse tweet url with special chars, and strip them" do
     url = 'https://twitter.com/fake_user'
