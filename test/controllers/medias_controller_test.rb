@@ -394,7 +394,7 @@ class MediasControllerTest < ActionController::TestCase
   test "should parse multiple URLs sent as list" do
     authenticate_with_token
     url1 = 'https://meedan.org/check'
-    url2 = 'https://meedan.org/about-us'
+    url2 = 'https://meedan.org/our-tools'
     id1 = Media.cache_key(url1)
     id2 = Media.cache_key(url2)
     assert_nil Pender::Store.current.read(id1, :json)
