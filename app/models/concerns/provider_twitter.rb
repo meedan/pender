@@ -22,10 +22,10 @@ module ProviderTwitter
     OembedItem.new(url, oembed_url(doc)).get_data
   end
 
-  def format_oembed_data(type, oembed_data)
-    embed_data ||= {}
-    return { error: oembed_data[:errors]} unless oembed_data[:errors].blank?
-    html = oembed_data.dig('html')
+  def format_oembed_data(type, oembed)
+    oembed ||= {}
+    return { error: oembed[:errors]} unless oembed[:errors].blank?
+    html = oembed.dig('html')
     doc = Nokogiri::HTML(html)
     data = {}
     if type == 'profile'
@@ -41,8 +41,8 @@ module ProviderTwitter
           description: text.squish,
           published_at: extract_published_at(blockquote),
           html: html,
-          author_url: oembed_data.dig('author_url'),
-          author_name: oembed_data.dig('author_name'),
+          author_url: oembed.dig('author_url'),
+          author_name: oembed.dig('author_name'),
         }
       end
     end
