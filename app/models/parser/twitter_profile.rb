@@ -22,8 +22,7 @@ module Parser
         @url.gsub!(/\s/, '')
         @url = replace_subdomain_pattern(url)
         username = compare_patterns(@url, self.patterns, 'username')
-        doc = refetch_html(url) if doc.nil?
-        @parsed_data.deep_merge!(OembedItem.new(url, oembed_url(doc)).get_data)
+        @parsed_data.deep_merge!(twitter_oembed_data(doc, url))
         @parsed_data.merge!(
           url: url,
           external_id: username,

@@ -25,8 +25,7 @@ module Parser
         @url = replace_subdomain_pattern(url)
         parts = url.match(TWITTER_ITEM_URL)
         user, id = parts['user'], parts['id']
-        doc = refetch_html(url) if doc.nil?
-        @parsed_data.deep_merge!(OembedItem.new(url, oembed_url(doc)).get_data)
+        @parsed_data.deep_merge!(twitter_oembed_data(doc, url))
         @parsed_data.merge!(          
           external_id: id,
           username: '@' + user,

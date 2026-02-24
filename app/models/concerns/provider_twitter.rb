@@ -17,6 +17,11 @@ module ProviderTwitter
     original_url.gsub(/:\/\/.*\.twitter\./, '://twitter.')
   end
 
+  def twitter_oembed_data(doc, url)
+    doc = refetch_html(url) if doc.nil?
+    OembedItem.new(url, oembed_url(doc)).get_data
+  end
+
   def format_oembed_data(type, oembed_data)
     embed_data ||= {}
     return { error: oembed_data[:errors]} unless oembed_data[:errors].blank?
