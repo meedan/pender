@@ -1,37 +1,15 @@
 {
-  "data": [
-    {
-      "id": "1111111111111111111",
-      "edit_history_tweet_ids": [
-        "1111111111111111111"
-      ],
-      "attachments": {
-        "media_keys": [
-          "3_1686748606936612864"
-        ]
-      },
-      "author_id": "29472803",
-      "created_at": "2023-08-02T14:39:42.000Z",
-      "text": "Youths!\n\nWebb observed galaxy cluster El Gordo, a cosmic teen that existed 6.2 billion years after the big bang. The most massive cluster of its era, it’s a perfect gravitational magnifying glass, bending &amp; distorting light from distant objects behind it: https://t.co/BrYH55h77F https://t.co/JK4XFxdUQX",
-      "lang": "en"
-    }
-  ],
-  "includes": {
-    "media": [
-      {
-        "media_key": "3_1686748606936612864",
-        "type": "photo",
-        "url": "https://pbs.twimg.com/media/F2iI69XXgAAUo5Z.jpg"
-      }
-    ],
-    "users": [
-      {
-        "username": "fake_user",
-        "url": "https://t.co/ZpTf8zeokA",
-        "name": "NASA Webb Telescope",
-        "profile_image_url": "https://pbs.twimg.com/profile_images/685182791496134658/Wmyak8D6_normal.jpg",
-        "id": "29472803"
-      }
-    ]
-  }
+  "type": "media",
+  "url": "https://twitter.com/vpotti/status/1968558229253931230",
+  "author_name": "Venuugopal",
+  "author_url": "https://twitter.com/vpotti",
+  "html": "<blockquote class=\"twitter-tweet\"><p lang=\"en\" dir=\"ltr\">Youths!\n\nWebb observed galaxy cluster El Gordo, a cosmic teen that existed 6.2 billion years after the big bang. The most massive cluster of its era, it’s a perfect gravitational magnifying glass, bending &amp; distorting light from distant objects behind it: https://t.co/BrYH55h77F https://t.co/JK4XFxdUQX</p>&mdash; Venuugopal (@vpotti) <a href=\"https://twitter.com/vpotti/status/1968558229253931230?ref_src=twsrc%5Etfw\">September 18, 2025</a></blockquote>\n<script async src=\"https://platform.twitter.com/widgets.js\" charset=\"utf-8\"></script>\n\n",
+  "width": 550,
+  "height": null,
+  "type": "rich",
+  "cache_age": "3153600000",
+  "provider_name": "Twitter",
+  "provider_url": "https://twitter.com",
+  "version": "1.0",
+  "data": {}
 }

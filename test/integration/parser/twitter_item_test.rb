@@ -12,14 +12,12 @@ class TwitterItemIntegrationTest < ActiveSupport::TestCase
   end
 
   test "should return data even if a the twitter item does not exist" do
-    m = create_media url: 'https://twitter.com/caiosba/status/1111111111111111111'
+    url = 'https://twitter.com/caiosba/status/1111111111111111111'
+    m = create_media url: url
     data = m.process_and_return_json
     assert_match /caiosba\/status\/1111111111111111111/, data['title']
     assert_match 'caiosba', data['author_name']
     assert_match '@caiosba', data['username']
-    assert_not_nil data['author_picture']
-    assert_match /Could not find/, data['error'][0]['detail']
-    assert_match /Not Found Error/, data['error'][0]['title']
   end
 end
 
