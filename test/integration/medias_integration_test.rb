@@ -31,19 +31,19 @@ class MediasIntegrationTest < ActionDispatch::IntegrationTest
   end
 
   test "should handle concurrency" do
-    url = 'https://meedan.com/'
+    url = 'https://meedan.org'
     threads = []
 
     threads << Thread.new do
       get "/api/medias.html?url=#{url}", params: {}
       assert_response :success
-      assert_select 'title', 'Meedan'
+      assert_select 'title', 'Meedan mobilizes knowledge networks'
     end
 
     threads << Thread.new do
       get "/api/medias.html?url=#{url}", params: {}
       assert_response :success
-      assert_select 'title', 'Meedan'
+      assert_select 'title', 'Meedan mobilizes knowledge networks'
     end
 
     threads.map(&:join)
