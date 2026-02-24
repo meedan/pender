@@ -29,7 +29,8 @@ module Parser
         @parsed_data.merge!(          
           external_id: id,
           username: '@' + user,
-          author_url: get_author_url(user)
+          author_url: get_author_url(user),
+          author_name: user,
         )
         @parsed_data.merge!(format_oembed_data('item', parsed_data['raw']['oembed']))
       end
