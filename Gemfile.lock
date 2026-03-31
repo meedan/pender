@@ -106,7 +106,7 @@ GEM
     byebug (11.1.3)
     cgi (0.5.1)
     concurrent-ruby (1.3.6)
-    connection_pool (3.0.2)
+    connection_pool (2.5.5)
     crack (1.0.0)
       bigdecimal
       rexml
@@ -531,6 +531,7 @@ DEPENDENCIES
   awesome_print
   aws-sdk-s3
   byebug
+  connection_pool (< 3.0)
   derailed
   gem-licenses
   get_process_mem
