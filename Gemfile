@@ -69,7 +69,7 @@ gem 'opentelemetry-instrumentation-rack'
 gem 'opentelemetry-instrumentation-rails'
 gem 'opentelemetry-instrumentation-rake'
 gem 'opentelemetry-instrumentation-sidekiq'
-gem 'addressable', '2.8.1'
+gem 'addressable', '2.9.0'
 # Adding this removes some deprecation warnings, caused by double-loading of the net-protocol library
 # (see https://github.com/ruby/net-imap/issues/16). We *might* be able to remove this after upgrading to Ruby 3
 gem 'net-http'
