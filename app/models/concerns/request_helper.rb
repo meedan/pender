@@ -1,4 +1,4 @@
-require 'postrank-uri'
+require 'public_suffix'
 
 class RequestHelper
   REDIRECT_HTTP_CODES = %w(301 302 307 308).freeze
@@ -45,14 +45,12 @@ class RequestHelper
     end
 
     def normalize_url(url)
-      # This does a more intensive PostRank normalization, including stripping params
-      # and pre-pending http/https if needed
-      # https://github.com/postrank-labs/postrank-uri/blob/master/lib/postrank-uri.rb#L154
-      begin
-        PostRank::URI.normalize(url).to_s
-      rescue Addressable::URI::InvalidURIError, NoMethodError, TypeError => e
-        raise UrlFormatError.new(e)
-      end
+      uri = parse_url(url)
+      uri.path = uri.path.gsub(/(?<!http:|https:)\/{2}/, '/') if uri.path
+      uri.path = uri.path.chomp('/') if uri.path && uri.path.size > 1
+      uri.query = nil if uri.query&.empty?
+      uri.fragment = nil
+      uri.to_s
     end
 
     def html_options(url)
@@ -226,7 +224,7 @@ class RequestHelper
     def set_cookies(uri)
       empty = ''.freeze
       begin
-        host = uri.domain
+        host = uri.host && PublicSuffix.valid?(uri.host, default_rule: nil) ? PublicSuffix.parse(uri.host).domain : nil
         cookies = []
         PenderConfig.get('cookies', {}).each do |domain, content|
           next unless domain.match?(host)
