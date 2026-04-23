@@ -166,6 +166,15 @@ class MediasControllerTest < ActionController::TestCase
     assert_response :success
   end
 
+  test "should not try to render cached data if none is there" do
+    authenticate_with_token
+    Media.stubs(:new).raises(Net::ReadTimeout)
+    @controller.stubs(:render_as_json).raises(RuntimeError, 'render_as_json should not have been called')
+    get :index, params: { url: 'https://meedan.com', format: :json, refresh: '1' }
+    assert_response :success
+    assert_equal 'Timeout', JSON.parse(@response.body).dig('data', 'error', 'message')
+  end
+
   test "should allow URL with non-latin characters" do
     authenticate_with_token
     url = 'https://martinoei.com/article/13071/林鄭月娥-居港夠廿年嗎？'
