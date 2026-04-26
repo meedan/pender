@@ -54,6 +54,7 @@ gem 'rack', '>= 1.6.11', require: false
 gem 'aws-sdk-s3', require: false
 gem 'lograge'
 gem 'request_store'
+gem 'opentelemetry-sdk'
 gem 'addressable', '2.9.0'
 # Adding this removes some deprecation warnings, caused by double-loading of the net-protocol library
 # (see https://github.com/ruby/net-imap/issues/16). We *might* be able to remove this after upgrading to Ruby 3
