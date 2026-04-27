@@ -98,22 +98,6 @@ development: &default
   #
   perma_cc_key: # 'SECRET'
 
-  # Open Telemetry configuration, for reporting to Honeycomb
-  # See initializers/open_telemetry.rb for usage.
-  #
-  # OPTIONAL (set to report to Honeycomb Dev environment from local)
-  # Note: any values prefixed with `otel_custom` are our own configuration,
-  # which will be used to programmatically set otel-supported env vars
-  #
-  otel_exporter_otlp_endpoint: # "https://api.honeycomb.io"
-  otel_exporter_otlp_headers: # "x-honeycomb-team=<DEV API KEY>"
-  otel_service_name: # "pender"
-  otel_resource_attributes:
-    # developer.name: <DEVELOPER_NAME>
-  otel_log_level: info
-  otel_traces_sampler:
-  otel_custom_sampling_rate:
-
 test:
   <<: *default
   chrome_debug_port: 9444
@@ -122,8 +106,6 @@ test:
   storage_video_asset_path:
   storage_medias_asset_path: 'http://localhost:9000/check-test/medias'
   facebook_app: # 'SECRET'
-  otel_log_level: off
-  otel_traces_sampler:
   sentry_dsn:
 
 production:
