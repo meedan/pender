@@ -54,6 +54,21 @@ gem 'rack', '>= 1.6.11', require: false
 gem 'aws-sdk-s3', require: false
 gem 'lograge'
 gem 'request_store'
+gem 'opentelemetry-sdk'
+gem 'opentelemetry-exporter-otlp'
+gem 'opentelemetry-instrumentation-action_pack'
+gem 'opentelemetry-instrumentation-action_view'
+gem 'opentelemetry-instrumentation-active_job'
+gem 'opentelemetry-instrumentation-active_record'
+gem 'opentelemetry-instrumentation-active_support'
+gem 'opentelemetry-instrumentation-aws_sdk'
+gem 'opentelemetry-instrumentation-concurrent_ruby'
+gem 'opentelemetry-instrumentation-http'
+gem 'opentelemetry-instrumentation-net_http'
+gem 'opentelemetry-instrumentation-rack'
+gem 'opentelemetry-instrumentation-rails'
+gem 'opentelemetry-instrumentation-rake'
+gem 'opentelemetry-instrumentation-sidekiq'
 gem 'addressable', '2.9.0'
 # Adding this removes some deprecation warnings, caused by double-loading of the net-protocol library
 # (see https://github.com/ruby/net-imap/issues/16). We *might* be able to remove this after upgrading to Ruby 3

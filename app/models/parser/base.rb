@@ -47,7 +47,13 @@ module Parser
       set_raw_metatags(doc)
 
       # Parse data (implemented by subclasses)
-      parse_data_for_parser(doc, original_url, jsonld || [])
+      data = parse_data_for_parser(doc, original_url, jsonld || [])
+      TracingService.add_attributes_to_current_span(
+        'app.parser.type' => type,
+        'app.parser.parsed_url' => url,
+        'app.parser.original_url' => original_url
+      )
+      data
     end
 
     # Default implementation, subclasses can override
