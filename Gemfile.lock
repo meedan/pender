@@ -111,7 +111,7 @@ GEM
       bigdecimal
       rexml
     crass (1.0.6)
-    date (3.4.1)
+    date (3.5.1)
     derailed (0.1.0)
       derailed_benchmarks
     derailed_benchmarks (2.2.1)
@@ -207,7 +207,7 @@ GEM
     mutex_m (0.3.0)
     net-http (0.6.0)
       uri
-    net-imap (0.5.7)
+    net-imap (0.5.14)
       date
       net-protocol
     net-pop (0.1.2)
@@ -447,6 +447,7 @@ DEPENDENCIES
   minitest-retry
   mocha (~> 2.7)
   net-http
+  net-imap (>= 0.5.14)
   net-protocol
   nokogiri (= 1.19.1)
   parallel_tests
