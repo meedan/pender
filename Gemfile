@@ -58,6 +58,7 @@ gem 'addressable', '2.9.0'
 # Adding this removes some deprecation warnings, caused by double-loading of the net-protocol library
 # (see https://github.com/ruby/net-imap/issues/16). We *might* be able to remove this after upgrading to Ruby 3
 gem 'net-http'
+gem 'net-imap', '>= 0.5.14'
 gem 'prometheus-client'
 gem 'psych', '< 4'
 gem 'net-protocol'

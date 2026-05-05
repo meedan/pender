@@ -447,6 +447,7 @@ DEPENDENCIES
   minitest-retry
   mocha (~> 2.7)
   net-http
+  net-imap (>= 0.5.14)
   net-protocol
   nokogiri (= 1.19.1)
   parallel_tests
