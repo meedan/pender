@@ -216,7 +216,7 @@ GEM
       timeout
     net-smtp (0.5.0)
       net-protocol
-    nio4r (2.7.4)
+    nio4r (2.7.5)
     nokogiri (1.19.3)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
@@ -245,7 +245,7 @@ GEM
       base64
     psych (3.3.4)
     public_suffix (4.0.7)
-    puma (5.6.9)
+    puma (7.2.1)
       nio4r (~> 2.0)
     racc (1.8.1)
     rack (2.2.23)
@@ -455,7 +455,7 @@ DEPENDENCIES
   prometheus-client
   psych (< 4)
   public_suffix
-  puma (= 5.6.9)
+  puma (= 7.2.1)
   rack (>= 1.6.11)
   rack-cors (>= 2.0.2)
   rack-protection (= 2.0.1)
