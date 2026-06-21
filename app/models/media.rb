@@ -197,7 +197,7 @@ class Media
 
     if self.parser
       self.provider, self.type = self.parser.type.split('_')
-      self.data.deep_merge!(self.parser_parsed_data)
+      self.data.deep_merge!(self.parser_parsed_data || {})
       self.get_oembed_data
       Rails.logger.info level: 'INFO', message: '[Parser] Parsing new URL', url: self.url, parser: self.parser.to_s, provider: self.provider, type: self.type
     end
