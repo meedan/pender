@@ -110,7 +110,7 @@ GEM
     crack (1.0.0)
       bigdecimal
       rexml
-    crass (1.0.6)
+    crass (1.0.7)
     date (3.5.1)
     derailed (0.1.0)
       derailed_benchmarks
@@ -184,9 +184,9 @@ GEM
     logstash-event (1.2.02)
     logstash-logger (0.26.1)
       logstash-event (~> 1.2)
-    loofah (2.21.0)
+    loofah (2.25.2)
       crass (~> 1.0.2)
-      nokogiri (>= 1.5.9)
+      nokogiri (>= 1.12.0)
     mail (2.8.1)
       mini_mime (>= 0.1.1)
       net-imap
@@ -441,7 +441,7 @@ DEPENDENCIES
   htmlentities
   lograge
   logstash-logger
-  loofah (= 2.21)
+  loofah (= 2.25.2)
   memory_profiler
   mini_racer
   minitest (= 5.25.5)
