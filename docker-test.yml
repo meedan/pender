@@ -11,13 +11,13 @@ services:
     networks:
       - test-internal
   minio:
-    image: minio/minio
-    command: server /data
+    image: quay.io/minio/minio:latest
+    command: server /data --console-address ":9001"
     volumes:
       - "minio:/data"
     environment:
-      MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
-      MINIO_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      MINIO_ROOT_USER: AKIAIOSFODNN7EXAMPLE
+      MINIO_ROOT_PASSWORD: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
     networks:
       - test-internal
   postgres:
