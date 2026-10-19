@@ -136,16 +136,9 @@ class RequestHelper
     def request_url(url, verb = 'Get')
       uri = self.parse_url(url)
       self.request_uri(uri, verb, skip_proxy = true)
-      # begin
-      #   self.request_uri(uri, verb, true)
-      # rescue Net::HTTPClientException => e
-      #   handle_http_exception_error(e, url)
-      #   self.request_uri(uri, verb, skip_proxy = true) # retries without the proxy
-      # end
     end
 
     def request_uri(uri, verb = 'Get', skip_proxy = true)
-      skip_proxy = true
       http = self.initialize_http(uri, skip_proxy)
       headers = {
         'User-Agent' => self.html_options(uri)['User-Agent'],
@@ -158,7 +151,7 @@ class RequestHelper
       http.request(request)
     end
 
-    def initialize_http(uri, skip_proxy = false)
+    def initialize_http(uri, skip_proxy = true)
       http = Net::HTTP.new(uri.host, uri.inferred_port)
       proxy_config = self.get_proxy(uri, :hash)
       if proxy_config && !skip_proxy
