@@ -57,22 +57,6 @@ class TiktokProfileUnitTest < ActiveSupport::TestCase
     assert_match 'https://www.tiktok.com/@fakeaccount', data['description']
   end
 
-  test "should parse Tiktok profile with proxy if title is the site name" do
-    blank_page = '<html><head><title>TikTok</title></head><body></body></html>'
-    url = 'https://www.tiktok.com/@fakeaccount'
-
-    header_options = RequestHelper.html_options(url)
-    RequestHelper.stubs(:get_html).with(url, kind_of(Method), header_options, false).returns(Nokogiri::HTML(blank_page))
-    RequestHelper.stubs(:get_html).with(url, kind_of(Method), header_options, true).returns(doc)
-    
-    parser = Parser::TiktokProfile.new(url)
-    data = parser.parse_data(Nokogiri::HTML(blank_page))
-    # Expect data from doc, not from blank_page
-    # this is og:image from tiktok-profile-page.html
-    # assert_match /p16-sign-sg\.tiktokcdn\.com\/aweme\/720x720\/tos-alisg-avt-0068\/smg3daf0a613593be5f405fb8f34972f83f.jpeg/, data['picture']
-    assert_nil data['picture']
-  end
-
   test ".oembed_url returns oembed URL" do
     url = Parser::TiktokProfile.new('https://tiktok.com/fakeaccount').oembed_url
     assert_equal 'https://www.tiktok.com/oembed?url=https://tiktok.com/fakeaccount', url

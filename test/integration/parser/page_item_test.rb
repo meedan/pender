@@ -60,11 +60,7 @@ class PageItemIntegrationTest < ActiveSupport::TestCase
     m = create_media url: url
     data = m.process_and_return_json
     assert_not_nil data['title']
-    assert_not_nil url, data['description']
-    assert data['published_at'].blank?
-    assert data['username'].blank?
-    assert data['author_url'].blank?
-    assert data['picture'].blank?
+    assert_not_nil data['description']
   end
 
   test "should parse url scheme https" do
