@@ -47,7 +47,7 @@ module Parser
 
     def reparse_if_default_tiktok_page(doc, base_url)
       if doc&.css('title')&.text == 'TikTok'
-        refetch_html(base_url, RequestHelper.html_options(base_url), true)
+        refetch_html(base_url, RequestHelper.html_options(base_url), false)
       end
     end
   end
