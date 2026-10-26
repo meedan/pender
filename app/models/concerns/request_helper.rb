@@ -25,7 +25,6 @@ class RequestHelper
           set_error_callback.call(message: 'URL Not Found', code: Lapis::ErrorCodes::const_get('NOT_FOUND'))
           return nil
         end
-        # get_html(url, set_error_callback, header_options, true)
       rescue Net::HTTPClientException => e
         set_error_callback.call(message: 'Proxy Error', code: Lapis::ErrorCodes::const_get('PROXY_ERROR'))
         handle_http_exception_error(e, url)
