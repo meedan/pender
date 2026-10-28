@@ -25,6 +25,7 @@ class RequestHelper
           set_error_callback.call(message: 'URL Not Found', code: Lapis::ErrorCodes::const_get('NOT_FOUND'))
           return nil
         end
+        get_html(url, set_error_callback, header_options, true)
       rescue Net::HTTPClientException => e
         set_error_callback.call(message: 'Proxy Error', code: Lapis::ErrorCodes::const_get('PROXY_ERROR'))
         handle_http_exception_error(e, url)
@@ -122,6 +123,7 @@ class RequestHelper
     def get_proxy(uri, format = :array, force = false)
       proxy = self.valid_proxy
       if proxy || force
+        proxy ||= {}
         country = force ? 'us' : PenderConfig.get('hosts', {}, :json).dig(uri.host, 'country')
         if uri.host.match?(/(tiktok)\.com/)
           proxy['user'] = proxy['user_prefix'] + proxy['country_prefix'] + 'us' + proxy['session_prefix'] + Random.rand(100000).to_s
