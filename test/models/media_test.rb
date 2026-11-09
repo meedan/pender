@@ -406,12 +406,12 @@ class MediaTest < ActiveSupport::TestCase
   end
 
   test "should follow redirections of path relative urls" do
-    url = 'https://www.yousign.org/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358'
+    url = 'https://example.com'
     WebMock.enable!
-    WebMock.stub_request(:any, 'https://www.yousign.org/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358').to_return(body: '', headers: { location: 'v2_404.php?notfound=%2FChina-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358' }, status: 302)
+    WebMock.stub_request(:any, url).to_return(body: '', headers: { location: 'v2_404.php?notfound=%2FChina-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358' }, status: 302)
     Media.any_instance.stubs(:get_canonical_url).returns(false)
     m = create_media url: url
-    assert_equal 'https://www.yousign.org/v2_404.php?notfound=/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358', m.url
+    assert_equal 'https://example.com/v2_404.php?notfound=/China-Lunatic-punches-dog-to-death-in-front-of-his-daughter-sign-now-t-4358', m.url
     WebMock.disable!
   end
 
