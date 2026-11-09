@@ -122,7 +122,7 @@ class RequestHelper
 
     def get_proxy(uri, format = :array, force = false)
       proxy = self.valid_proxy
-      if proxy || force
+      if proxy
         country = force ? 'us' : PenderConfig.get('hosts', {}, :json).dig(uri.host, 'country')
         if uri.host.match?(/(tiktok)\.com/)
           proxy['user'] = proxy['user_prefix'] + proxy['country_prefix'] + 'us' + proxy['session_prefix'] + Random.rand(100000).to_s
