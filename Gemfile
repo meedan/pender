@@ -47,7 +47,7 @@ gem 'redis', '4.3.1'
 gem 'nokogiri', '1.19.5', require: false
 gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
-gem 'loofah', '2.25.2', require: false
+gem 'loofah', '2.25.3', require: false
 gem 'rails-html-sanitizer', '1.7.1'
 gem 'sprockets', '3.7.2'
 gem 'rack', '>= 1.6.11', require: false

@@ -187,9 +187,9 @@ GEM
     logstash-event (1.2.02)
     logstash-logger (0.26.1)
       logstash-event (~> 1.2)
-    loofah (2.25.2)
+    loofah (2.25.3)
       crass (~> 1.0.2)
-      nokogiri (>= 1.12.0)
+      nokogiri (>= 1.19.5)
     mail (2.9.1)
       logger
       mini_mime (>= 0.1.1)
@@ -457,7 +457,7 @@ DEPENDENCIES
   htmlentities
   lograge
   logstash-logger
-  loofah (= 2.25.2)
+  loofah (= 2.25.3)
   memory_profiler
   mini_racer
   minitest (= 5.25.5)
