@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-gem 'rails', '~> 7.2.2'
+gem 'rails', '~> 7.2.4'
 gem 'pg', '~> 1.4'
 group :development, :test do
   gem 'byebug'
@@ -47,8 +47,8 @@ gem 'redis', '4.3.1'
 gem 'nokogiri', '1.19.5', require: false
 gem 'htmlentities', require: false
 gem 'rack-protection', '2.0.1'
-gem 'loofah', '2.25.2', require: false
-gem 'rails-html-sanitizer', '1.7.1'
+gem 'loofah', '2.25.3', require: false
+gem 'rails-html-sanitizer', '1.7.2'
 gem 'sprockets', '3.7.2'
 gem 'rack', '>= 1.6.11', require: false
 gem 'aws-sdk-s3', require: false
